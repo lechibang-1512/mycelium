@@ -20,7 +20,7 @@
                         <h2>Basic Information</h2>
                         <p><strong>Brand:</strong> <%= product.sm_maker %></p>
                         <p><strong>Price:</strong> <%= product.sm_price || 'N/A' %></p>
-                        <p><strong>Availability:</strong> <%= product.sm_inventory > 0 ? 'In Stock' : 'Out of Stock' %></p>
+                        <p><strong>Inventory:</strong> <%= product.sm_inventory || 'N/A' %></p>
                         <p><strong>Color:</strong> <%= product.color || 'N/A' %></p>
                     </div>
 
