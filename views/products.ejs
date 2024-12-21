@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        /* Basic modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto; /* Adjusted margin */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Adjusted width */
+            max-width: 800px; /* Max width for larger screens */
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+            position: relative; /* To position the close button */
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute; /* Position absolutely within the modal-content */
+            top: 10px;
+            right: 20px;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column; /* Stack labels and inputs */
+        }
+        .form-group label {
+           margin-bottom: 5px; /* Space between label and input */
+        }
+         .form-group input, .form-group select, .form-group textarea {
+           padding: 8px;
+           border: 1px solid #ddd;
+           border-radius: 4px;
+           font-size: 1em; /* Consistent font size */
+           resize:vertical;
+        }
+         .modal-btn {
+          background-color: #5cb85c;
+          color: white;
+          padding: 10px 15px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 1em;
+        }
+        .modal-btn:hover {
+            background-color: #4cae4c;
+        }
+
+        /* Responsive adjustments */
+         @media (max-width: 768px) {
+            .modal-content {
+                 margin: 20px auto; /* Less margin for smaller screens */
+                 width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-container">
+        <button class="hamburger" onclick="toggleMenu()">☰</button>
+        <nav id="menu" class="hidden">
+            <a href="/products">Products</a>
+            <a href="/purchaseHistory">Purchase History</a>
+            <a href="/customerInfo">Customer Info</a>
+        </nav>
+    </div>
+
+    <div class="container">
+        <h1 class="text-center">All Products</h1>
+
+         <!-- Add Device Button -->
+        <button class="add-device-btn" onclick="openModal('add', null)">Add Device</button>
+        <!-- Filters Section -->
+        <div class="filters">
+            <form method="GET" action="/products" id="filterForm">
+                <div class="filter">
+                    <label for="brand">Brand:</label>
+                    <select name="brand" id="brand" onchange="this.form.submit()">
+                        <option value="">All Brands</option>
+                        <% brands.forEach(function(brand) { %>
+                            <option value="<%= brand.sm_maker %>"
+                                    <%= selectedBrand === brand.sm_maker ? 'selected' : '' %>>
+                                <%= brand.sm_maker %>
+                            </option>
+                        <% }); %>
+                    </select>
+                </div>
+
+                <div class="filter">
+                    <label for="subbrand">Sub-brand:</label>
+                    <select name="subbrand" id="subbrand" onchange="this.form.submit()">
+                        <option value="">All Sub-brands</option>
+                        <% subbrands.forEach(function(subbrand) { %>
+                            <option value="<%= subbrand.subbrand %>"
+                                    <%= selectedSubbrand === subbrand.subbrand ? 'selected' : '' %>>
+                                <%= subbrand.subbrand %>
+                            </option>
+                        <% }); %>
+                    </select>
+                </div>
+
+                <div class="filter">
+                    <label for="model">Model:</label>
+                    <select name="model" id="model" onchange="this.form.submit()">
+                        <option value="">All Models</option>
+                        <% models.forEach(function(model) { %>
+                            <option value="<%= model.sm_name %>"
+                                    <%= selectedModel === model.sm_name ? 'selected' : '' %>>
+                                <%= model.sm_name %>
+                            </option>
+                        <% }); %>
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <!-- No Results Message -->
+        <% if (products.length === 0) { %>
+            <div class="no-results">
+                <p>No products found matching your criteria.</p>
+            </div>
+        <% } %>
+
+        <!-- Products List -->
+        <!-- Products List -->
+<div class="product-container">
+    <% products.forEach(function(product) { %>
+        <div class="product-card" data-product='<%= JSON.stringify(product) %>'>
+            <img src="<%= product.image_url || '/images/placeholder.png' %>" alt="<%= product.sm_name %>" class="product-image">
+            <div class="product-info">
+                <h2 class="product-name"><%= product.sm_name %></h2>
+                <p class="product-maker">Brand: <%= product.sm_maker %></p>
+                <p class="product-subbrand">Sub-brand: <%= product.subbrand || 'N/A' %></p>
+                <p class="product-price">Price: $<%= Number(product.sm_price).toFixed(2) %></p>
+                <p class="product-inventory">In Stock: <%= product.sm_inventory %></p>
+                <a class="product-link" href="/product/<%= product.id %>">View Details</a>
+                <div class="product-actions">
+                    <button onclick="openModal('update', this.closest('.product-card').dataset.product)">Update</button>
+                </div>
+            </div>
+        </div>
+    <% }); %>
+</div>
+
+<!-- The Modal -->
+        <div id="productModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">×</span>
+            <h2 id="modalTitle"></h2>
+            <form id="productForm" method="post" action="/products/manage">
+                <input type="hidden" id="modalAction" name="action" value="">
+                <input type="hidden" id="productId" name="id" value="">
+            
+                <div class="form-group">
+                    <label for="sm_name">Model Name:</label>
+                    <input type="text" id="sm_name" name="sm_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="sm_maker">Manufacturer:</label>
+                    <input type="text" id="sm_maker" name="sm_maker" required>
+                </div>
+                <div class="form-group">
+                    <label for="sm_price">Price:</label>
+                    <input type="text" id="sm_price" name="sm_price" required>
+                </div>
+                <div class="form-group">
+                    <label for="sm_inventory">Inventory:</label>
+                    <input type="text" id="sm_inventory" name="sm_inventory" required>
+                </div>
+                <div class="form-group">
+                    <label for="subbrand">Sub-brand:</label>
+                    <input type="text" id="subbrand" name="subbrand">
+                </div>
+                <div class="form-group">
+                    <label for="color">Color:</label>
+                    <input type="text" id="color" name="color">
+                </div>
+                <div class="form-group">
+                    <label for="water_and_dust_rating">Water/Dust Rating:</label>
+                    <input type="text" id="water_and_dust_rating" name="water_and_dust_rating">
+                </div>
+                <div class="form-group">
+                    <label for="processor">Processor:</label>
+                    <input type="text" id="processor" name="processor">
+                </div>
+                <div class="form-group">
+                    <label for="process_node">Process Node (nm):</label>
+                    <input type="text" id="process_node" name="process_node">
+                </div>
+                <div class="form-group">
+                    <label for="cpu_cores">CPU Cores:</label>
+                    <input type="text" id="cpu_cores" name="cpu_cores">
+                </div>
+                <div class="form-group">
+                    <label for="cpu_frequency">CPU Frequency (GHz):</label>
+                    <input type="text" id="cpu_frequency" name="cpu_frequency">
+                </div>
+                <div class="form-group">
+                    <label for="gpu">GPU:</label>
+                    <input type="text" id="gpu" name="gpu">
+                </div>
+                <div class="form-group">
+                    <label for="memory_type">Memory Type:</label>
+                    <input type="text" id="memory_type" name="memory_type">
+                </div>
+                <div class="form-group">
+                    <label for="ram">RAM (GB):</label>
+                    <input type="text" id="ram" name="ram">
+                </div>
+                <div class="form-group">
+                    <label for="rom">Storage (ROM) (GB):</label>
+                    <input type="text" id="rom" name="rom">
+                </div>
+                <div class="form-group">
+                    <label for="expandable_memory">Expandable Memory:</label>
+                    <input type="text" id="expandable_memory" name="expandable_memory">
+                </div>
+                <div class="form-group">
+                    <label for="length_mm">Length (mm):</label>
+                    <input type="text" id="length_mm" name="length_mm">
+                </div>
+                <div class="form-group">
+                    <label for="width_mm">Width (mm):</label>
+                    <input type="text" id="width_mm" name="width_mm">
+                </div>
+                <div class="form-group">
+                    <label for="thickness_mm">Thickness (mm):</label>
+                    <input type="text" id="thickness_mm" name="thickness_mm">
+                </div>
+                <div class="form-group">
+                    <label for="weight_g">Weight (grams):</label>
+                    <input type="text" id="weight_g" name="weight_g">
+                </div>
+                <div class="form-group">
+                    <label for="display_size">Display Size (inches):</label>
+                    <input type="text" id="display_size" name="display_size">
+                </div>
+                <div class="form-group">
+                    <label for="resolution">Resolution:</label>
+                    <input type="text" id="resolution" name="resolution">
+                </div>
+                <div class="form-group">
+                    <label for="pixel_density">Pixel Density:</label>
+                    <input type="text" id="pixel_density" name="pixel_density">
+                </div>
+                <div class="form-group">
+                    <label for="refresh_rate">Refresh Rate:</label>
+                    <input type="text" id="refresh_rate" name="refresh_rate">
+                </div>
+                <div class="form-group">
+                    <label for="brightness">Brightness:</label>
+                    <input type="text" id="brightness" name="brightness">
+                </div>
+                <div class="form-group">
+                    <label for="display_features">Display Features:</label>
+                    <textarea id="display_features" name="display_features"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="rear_camera_main">Rear Camera (Main):</label>
+                    <input type="text" id="rear_camera_main" name="rear_camera_main">
+                </div>
+                <div class="form-group">
+                    <label for="rear_camera_macro">Rear Camera (Macro):</label>
+                    <input type="text" id="rear_camera_macro" name="rear_camera_macro">
+                </div>
+                <div class="form-group">
+                    <label for="rear_camera_features">Rear Camera Features:</label>
+                    <textarea id="rear_camera_features" name="rear_camera_features"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="rear_video_resolution">Rear Video Resolution:</label>
+                    <input type="text" id="rear_video_resolution" name="rear_video_resolution">
+                </div>
+                <div class="form-group">
+                    <label for="front_camera">Front Camera:</label>
+                    <input type="text" id="front_camera" name="front_camera">
+                </div>
+                <div class="form-group">
+                    <label for="front_camera_features">Front Camera Features:</label>
+                    <textarea id="front_camera_features" name="front_camera_features"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="front_video_resolution">Front Video Resolution:</label>
+                    <input type="text" id="front_video_resolution" name="front_video_resolution">
+                </div>
+                <div class="form-group">
+                    <label for="battery_capacity">Battery Capacity:</label>
+                    <input type="text" id="battery_capacity" name="battery_capacity">
+                </div>
+                <div class="form-group">
+                    <label for="fast_charging">Fast Charging:</label>
+                    <input type="text" id="fast_charging" name="fast_charging">
+                </div>
+                <div class="form-group">
+                    <label for="connector">Connector:</label>
+                    <input type="text" id="connector" name="connector">
+                </div>
+                <div class="form-group">
+                    <label for="security_features">Security Features:</label>
+                    <textarea id="security_features" name="security_features"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="sim_card">SIM Card:</label>
+                    <input type="text" id="sim_card" name="sim_card">
+                </div>
+                <div class="form-group">
+                    <label for="nfc">NFC:</label>
+                    <input type="text" id="nfc" name="nfc">
+                </div>
+                <div class="form-group">
+                    <label for="network_bands">Network Bands:</label>
+                    <textarea id="network_bands" name="network_bands"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="wireless_connectivity">Wireless Connectivity:</label>
+                    <textarea id="wireless_connectivity" name="wireless_connectivity"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="navigation">Navigation:</label>
+                    <textarea id="navigation" name="navigation"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="audio_jack">Audio Jack:</label>
+                    <input type="text" id="audio_jack" name="audio_jack">
+                </div>
+                <div class="form-group">
+                    <label for="audio_playback">Audio Playback:</label>
+                    <textarea id="audio_playback" name="audio_playback"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="video_playback">Video Playback:</label>
+                    <textarea id="video_playback" name="video_playback"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="sensors">Sensors:</label>
+                    <textarea id="sensors" name="sensors"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="operating_system">Operating System:</label>
+                    <input type="text" id="operating_system" name="operating_system">
+                </div>
+                <div class="form-group">
+                    <label for="package_contents">Package Contents:</label>
+                    <textarea id="package_contents" name="package_contents"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="image_url">Image URL:</label>
+                    <input type="text" id="image_url" name="image_url">
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="modal-btn">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            var menu = document.getElementById('menu');
+            menu.classList.toggle('hidden');
+        }
+
+        function openModal(action, productData) {
+    var modal = document.getElementById('productModal');
+    var form = document.getElementById('productForm');
+    var modalTitle = document.getElementById('modalTitle');
+    var modalAction = document.getElementById('modalAction');
+    var productId = document.getElementById('productId');
+
+    modal.style.display = "block";
+
+    if (action === 'add') {
+        form.reset();
+        modalTitle.innerText = 'Add Product';
+        modalAction.value = 'add';
+        productId.value = '';
+    } else if (action === 'update') {
+        modalTitle.innerText = 'Update Product';
+        modalAction.value = 'update';
+
+        var product = JSON.parse(productData);
+        productId.value = product.id;
+
+        // Populate all fields, including sub-brand
+        document.getElementById('sm_name').value = product.sm_name || '';
+        document.getElementById('sm_maker').value = product.sm_maker || '';
+        document.getElementById('subbrand').value = product.subbrand || '';
+        document.getElementById('sm_price').value = product.sm_price || '';
+        document.getElementById('sm_inventory').value = product.sm_inventory || '';
+        document.getElementById('color').value = product.color || '';
+        document.getElementById('water_and_dust_rating').value = product.water_and_dust_rating || '';
+        document.getElementById('processor').value = product.processor || '';
+        document.getElementById('process_node').value = product.process_node || '';
+        document.getElementById('cpu_cores').value = product.cpu_cores || '';
+        document.getElementById('cpu_frequency').value = product.cpu_frequency || '';
+        document.getElementById('gpu').value = product.gpu || '';
+        document.getElementById('memory_type').value = product.memory_type || '';
+        document.getElementById('ram').value = product.ram || '';
+        document.getElementById('rom').value = product.rom || '';
+        document.getElementById('expandable_memory').value = product.expandable_memory || '';
+        document.getElementById('length_mm').value = product.length_mm || '';
+        document.getElementById('width_mm').value = product.width_mm || '';
+        document.getElementById('thickness_mm').value = product.thickness_mm || '';
+        document.getElementById('weight_g').value = product.weight_g || '';
+        document.getElementById('display_size').value = product.display_size || '';
+        document.getElementById('resolution').value = product.resolution || '';
+        document.getElementById('pixel_density').value = product.pixel_density || '';
+        document.getElementById('refresh_rate').value = product.refresh_rate || '';
+        document.getElementById('brightness').value = product.brightness || '';
+        document.getElementById('display_features').value = product.display_features || '';
+        document.getElementById('rear_camera_main').value = product.rear_camera_main || '';
+        document.getElementById('rear_camera_macro').value = product.rear_camera_macro || '';
+        document.getElementById('rear_camera_features').value = product.rear_camera_features || '';
+        document.getElementById('rear_video_resolution').value = product.rear_video_resolution || '';
+        document.getElementById('front_camera').value = product.front_camera || '';
+        document.getElementById('front_camera_features').value = product.front_camera_features || '';
+        document.getElementById('front_video_resolution').value = product.front_video_resolution || '';
+        document.getElementById('battery_capacity').value = product.battery_capacity || '';
+        document.getElementById('fast_charging').value = product.fast_charging || '';
+        document.getElementById('connector').value = product.connector || '';
+        document.getElementById('security_features').value = product.security_features || '';
+        document.getElementById('sim_card').value = product.sim_card || '';
+        document.getElementById('nfc').value = product.nfc || '';
+        document.getElementById('network_bands').value = product.network_bands || '';
+        document.getElementById('wireless_connectivity').value = product.wireless_connectivity || '';
+        document.getElementById('navigation').value = product.navigation || '';
+        document.getElementById('audio_jack').value = product.audio_jack || '';
+        document.getElementById('audio_playback').value = product.audio_playback || '';
+        document.getElementById('video_playback').value = product.video_playback || '';
+        document.getElementById('sensors').value = product.sensors || '';
+        document.getElementById('operating_system').value = product.operating_system || '';
+        document.getElementById('package_contents').value = product.package_contents || '';
+        document.getElementById('image_url').value = product.image_url || '';
+    }
+}
+
+function closeModal() {
+    var modal = document.getElementById('productModal');
+    modal.style.display = "none";
+}
+    </script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= product.sm_name %> - Details</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="product-details">
+            <div class="product-header">
+                <h1><%= product.sm_name %></h1>
+                <button onclick="window.location.href='/products'" class="back-button">← Back to Products</button>
+            </div>
+
+            <div class="product-content">
+                <div class="product-image-section">
+                    <img src="<%= product.image_url || '/images/placeholder.png' %>"
+                         alt="<%= product.sm_name %>"
+                         class="product-detail-image">
+                </div>
+
+                <div class="product-info-section">
+                    <div class="basic-info">
+                        <h2>Basic Information</h2>
+                        <p><strong>Brand:</strong> <%= product.sm_maker %></p>
+                        <p><strong>Sub-brand:</strong> <%= product.subbrand || 'N/A' %></p>
+                        <p><strong>Price:</strong> $<%= typeof product.sm_price === 'number' ? product.sm_price.toFixed(2) : 'N/A' %></p>
+                        <p><strong>Availability:</strong> <%= product.sm_inventory > 0 ? 'In Stock' : 'Out of Stock' %></p>
+                        <p><strong>Color:</strong> <%= product.color || 'N/A' %></p>
+                    </div>
+
+                    <div class="specifications">
+                        <h2>Technical Specifications</h2>
+
+                        <h3>Performance</h3>
+                        <p><strong>Processor:</strong> <%= product.processor || 'N/A' %></p>
+                        <p><strong>Process Node:</strong> <%= product.process_node || 'N/A' %></p>
+                        <p><strong>CPU Cores:</strong> <%= product.cpu_cores || 'N/A' %></p>
+                        <p><strong>CPU Frequency:</strong> <%= product.cpu_frequency || 'N/A' %></p>
+                        <p><strong>GPU:</strong> <%= product.gpu || 'N/A' %></p>
+
+                        <h3>Memory</h3>
+                        <p><strong>Memory Type:</strong> <%= product.memory_type || 'N/A' %></p>
+                        <p><strong>RAM:</strong> <%= product.ram || 'N/A' %></p>
+                        <p><strong>ROM:</strong> <%= product.rom || 'N/A' %></p>
+                        <p><strong>Expandable Memory:</strong> <%= product.expandable_memory || 'N/A' %></p>
+
+                        <h3>Physical Specifications</h3>
+                        <p><strong>Dimensions:</strong> <%= product.length_mm || 'N/A' %> x <%= product.width_mm || 'N/A' %> x <%= product.thickness_mm || 'N/A' %> mm</p>
+                        <p><strong>Weight:</strong> <%= product.weight_g || 'N/A' %> g</p>
+                        <p><strong>Water/Dust Rating:</strong> <%= product.water_and_dust_rating || 'N/A' %></p>
+
+                        <h3>Display</h3>
+                        <p><strong>Size:</strong> <%= product.display_size || 'N/A' %></p>
+                        <p><strong>Resolution:</strong> <%= product.resolution || 'N/A' %></p>
+                        <p><strong>Pixel Density:</strong> <%= product.pixel_density || 'N/A' %></p>
+                        <p><strong>Refresh Rate:</strong> <%= product.refresh_rate || 'N/A' %></p>
+                        <p><strong>Brightness:</strong> <%= product.brightness || 'N/A' %></p>
+                        <p><strong>Display Features:</strong> <%= product.display_features || 'N/A' %></p>
+
+                        <h3>Camera</h3>
+                        <p><strong>Main Camera:</strong> <%= product.rear_camera_main || 'N/A' %></p>
+                        <p><strong>Macro Camera:</strong> <%= product.rear_camera_macro || 'N/A' %></p>
+                        <p><strong>Camera Features:</strong> <%= product.rear_camera_features || 'N/A' %></p>
+                        <p><strong>Video Resolution:</strong> <%= product.rear_video_resolution || 'N/A' %></p>
+                        <p><strong>Front Camera:</strong> <%= product.front_camera || 'N/A' %></p>
+                        <p><strong>Front Camera Features:</strong> <%= product.front_camera_features || 'N/A' %></p>
+                        <p><strong>Front Video Resolution:</strong> <%= product.front_video_resolution || 'N/A' %></p>
+
+                        <h3>Battery & Charging</h3>
+                        <p><strong>Battery Capacity:</strong> <%= product.battery_capacity || 'N/A' %></p>
+                        <p><strong>Fast Charging:</strong> <%= product.fast_charging || 'N/A' %></p>
+                        <p><strong>Connector Type:</strong> <%= product.connector || 'N/A' %></p>
+
+                        <h3>Additional Features</h3>
+                        <p><strong>Security Features:</strong> <%= product.security_features || 'N/A' %></p>
+                        <p><strong>SIM Card:</strong> <%= product.sim_card || 'N/A' %></p>
+                        <p><strong>NFC:</strong> <%= product.nfc || 'N/A' %></p>
+                        <p><strong>Network Bands:</strong> <%= product.network_bands || 'N/A' %></p>
+                        <p><strong>Wireless Connectivity:</strong> <%= product.wireless_connectivity || 'N/A' %></p>
+                        <p><strong>Navigation:</strong> <%= product.navigation || 'N/A' %></p>
+                        <p><strong>Audio Jack:</strong> <%= product.audio_jack || 'N/A' %></p>
+                        <p><strong>Audio Playback:</strong> <%= product.audio_playback || 'N/A' %></p>
+                        <p><strong>Video Playback:</strong> <%= product.video_playback || 'N/A' %></p>
+                        <p><strong>Sensors:</strong> <%= product.sensors || 'N/A' %></p>
+
+                        <h3>Software</h3>
+                        <p><strong>Operating System:</strong> <%= product.operating_system || 'N/A' %></p>
+
+                        <h3>Package Contents</h3>
+                        <p><%= product.package_contents || 'N/A' %></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

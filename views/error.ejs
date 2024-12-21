@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="menu-container">
+        <button class="hamburger" onclick="toggleMenu()">☰</button> 
+        <nav id="menu" class="hidden">
+            <a href="/products">Products</a>
+            <a href="/purchaseHistory">Purchase History</a>
+            <a href="/customerInfo">Customer Info</a>
+        </nav>
+    </div>
+
+    <div class="container">
+        <div class="error-container">
+            <h1>Error</h1>
+            <p><%= message %></p>
+            <a href="javascript:history.back()" class="back-button">Go Back</a>
+            <a href="/" class="home-button">Go to Homepage</a>
+        </div>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('menu');
+            menu.classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>
