@@ -1,11 +1,10 @@
 const express = require('express');
-const mysql = require('mysql2/promise'); // Using promise-based API
+const mysql = require('mysql2/promise');
 const path = require('path');
 const bodyParser = require('body-parser');
-const { performance } = require('perf_hooks'); // for performance metrics
-const auth = require('./auth'); // Import authentication logic
+const { performance } = require('perf_hooks');
+const auth = require('./auth');
 const app = express();
-
 
 // --- Configuration ---
 const PORT = process.env.PORT || 3000;
@@ -25,13 +24,12 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(auth.sessionMiddleware) // Add express-session middleware
-
+app.use(auth.sessionMiddleware);
 
 // --- Database Connection Pool ---
 const pool = mysql.createPool(DB_CONFIG);
 
-// Database Connection Middleware (Optimized)
+// Database Connection Middleware
 app.use(async (req, res, next) => {
     try {
         req.db = await pool.getConnection();
@@ -39,13 +37,9 @@ app.use(async (req, res, next) => {
         next();
     } catch (err) {
         console.error('Database connection error:', err);
-       // Added error response in the middleware
-       return res.status(500).render('error', { message: 'Database connection error' });
+        return res.status(500).render('error', { message: 'Database connection error' });
     }
 });
-
-
-
 
 // --- Route Handlers ---
 
@@ -54,27 +48,11 @@ app.use((err, req, res, next) => {
     console.error('Error:', err);
     res.status(500).render('error', {
         message: 'An error occurred. Please try again later.',
-         errorDetails: err.message  // Include the error message in the rendered view
+        errorDetails: err.message
     });
 });
 
-// Homepage Route
-app.get('/', (req, res) => {
-    if (!auth.isAuthenticated(req)) {
-      return res.redirect('/admin/login');
-    }
-     res.render('homepage');
-  });
-  
-  
-  app.get('/homepage', (req, res) => {
-      if (!auth.isAuthenticated(req)) {
-           return res.redirect('/admin/login');
-      }
-      res.render('homepage');
-  });
-
-// Helper function for database queries and perf measuring.
+// Helper function for database queries and performance measuring
 async function queryDatabase(db, sql, params = []) {
     const startTime = performance.now();
     try {
@@ -83,54 +61,51 @@ async function queryDatabase(db, sql, params = []) {
         console.log(`Query Time: ${endTime - startTime} ms`);
         return rows;
     } catch (error) {
-         console.error("Database Query Failed:", error);
-         throw error;  // Re-throw error to be handled by the route
+        console.error("Database Query Failed:", error);
+        throw error;
     }
 }
 
+// Authentication Middleware
+function ensureAuthenticated(req, res, next) {
+    if (!auth.isAuthenticated(req)) {
+        return res.redirect('/admin/login');
+    }
+    next();
+}
 
-// Admin login route (show first)
+// Admin login route
 app.get('/admin/login', (req, res) => {
-    if (auth.isAuthenticated(req)) { // If user is already authenticated, redirect
+    if (auth.isAuthenticated(req)) {
         return res.redirect('/products');
     }
     res.render('adminLogin', { error: null });
 });
 
-
 // Admin login POST route
 app.post('/admin/login', (req, res) => {
     const { username, password } = req.body;
     if (auth.loginAdmin(req, username, password)) {
-        return res.redirect('/products'); // Redirect to product page if login is successful.
+        return res.redirect('/products');
     } else {
-       return res.render('adminLogin', { error: 'Invalid username or password' }); // Show error if login fails
+        return res.render('adminLogin', { error: 'Invalid username or password' });
     }
 });
 
-
+// Admin logout route
 app.get('/admin/logout', (req, res) => {
-     auth.logoutAdmin(req);
-     res.redirect('/admin/login'); // Redirect to login page after logout.
+    auth.logoutAdmin(req);
+    res.redirect('/admin/login');
 });
 
-
-// Homepage Route (redirect if not authenticated)
-app.get('/', (req, res) => {
-    if (!auth.isAuthenticated(req)) {
-         return res.redirect('/admin/login');
-    }
-     res.render('homepage'); //Show homepage if authenticated
+// Homepage Route
+app.get(['/', '/homepage'], ensureAuthenticated, (req, res) => {
+    res.render('homepage');
 });
 
 // Products Route with Filtering
-app.get('/products', async (req, res, next) => {
-    if (!auth.isAuthenticated(req)) {
-        return res.redirect('/admin/login');
-    }
-
+app.get('/products', ensureAuthenticated, async (req, res, next) => {
     try {
-        // Build the product query
         let query = `
             SELECT id, sm_name, sm_maker, sm_price, sm_inventory,
                    color, water_and_dust_rating, processor, process_node,
@@ -162,29 +137,30 @@ app.get('/products', async (req, res, next) => {
 
         query += ' ORDER BY sm_maker, sm_name';
 
-        // Execute the query
         const products = await queryDatabase(req.db, query, params);
 
-        // Render the page with results
+        // Fetch brands and models for filtering
+        const brandsQuery = 'SELECT DISTINCT sm_maker FROM phone_specs ORDER BY sm_maker';
+        const modelsQuery = 'SELECT DISTINCT sm_name FROM phone_specs ORDER BY sm_name';
+
+        const brands = await queryDatabase(req.db, brandsQuery);
+        const models = await queryDatabase(req.db, modelsQuery);
+
         res.render('products', {
             products,
-            brands: req.query.brands || [],
-            models: req.query.models || [],
+            brands,
+            models,
             selectedBrand: req.query.brand || '',
             selectedModel: req.query.model || ''
         });
     } catch (error) {
         console.error('Error in /products route:', error);
-        next(error); // Pass the error to the error handling middleware
+        next(error);
     }
 });
 
-
 // Single Product Details Route
-app.get('/product/:id', async (req, res, next) => {
-    if (!auth.isAuthenticated(req)) {
-        return res.redirect('/admin/login');
-    }
+app.get('/product/:id', ensureAuthenticated, async (req, res, next) => {
     try {
         const product = await queryDatabase(req.db, `
             SELECT id, sm_name, sm_maker, sm_price, sm_inventory,
@@ -214,12 +190,9 @@ app.get('/product/:id', async (req, res, next) => {
 });
 
 // Purchase History Route
-app.get('/purchaseHistory', async (req, res, next) => {
-     if(!auth.isAuthenticated(req)){
-        return res.redirect('/admin/login');
-    }
+app.get('/purchaseHistory', ensureAuthenticated, async (req, res, next) => {
     try {
-           const orders =  await queryDatabase(req.db,`
+        const orders = await queryDatabase(req.db, `
             SELECT
                 c.first_name,
                 c.last_name,
@@ -244,7 +217,6 @@ app.get('/purchaseHistory', async (req, res, next) => {
         let deviceSales = {};
         let numberOfOrders = 0;
 
-
         if (orders && orders.length > 0) {
             numberOfOrders = orders.length;
             orders.forEach(order => {
@@ -256,54 +228,36 @@ app.get('/purchaseHistory', async (req, res, next) => {
                     customerSales[customerName] = (customerSales[customerName] || 0) + price;
 
                     deviceSales[order.sm_name] = (deviceSales[order.sm_name] || 0) + price;
-
                 } else {
                     console.warn(`Invalid price encountered: ${order.sm_price}`);
                 }
             });
 
-           // Find Top Customer
             let topCustomer = Object.keys(customerSales).reduce((a, b) => customerSales[a] > customerSales[b] ? a : b, 'N/A');
-
-
-           // Find Top Device
-           let topDevice = Object.keys(deviceSales).reduce((a, b) => deviceSales[a] > deviceSales[b] ? a : b, 'N/A');
-
-
-             //Calculate average sales
-            const avgSalesPerCustomer = Object.keys(customerSales).length > 0 ? totalSales / Object.keys(customerSales).length : 0
-
-            //Get Top 5 Customers
+            let topDevice = Object.keys(deviceSales).reduce((a, b) => deviceSales[a] > deviceSales[b] ? a : b, 'N/A');
+            const avgSalesPerCustomer = Object.keys(customerSales).length > 0 ? totalSales / Object.keys(customerSales).length : 0;
             const topCustomers = Object.entries(customerSales)
                 .sort(([, a], [, b]) => b - a)
                 .slice(0, 5)
-                .map(([name, sales]) => ({name, sales}));
-
-             //Get Top 5 Devices
-             const topDevices = Object.entries(deviceSales)
+                .map(([name, sales]) => ({ name, sales }));
+            const topDevices = Object.entries(deviceSales)
                 .sort(([, a], [, b]) => b - a)
                 .slice(0, 5)
-                .map(([name, sales]) => ({name, sales}));
-
-
-
+                .map(([name, sales]) => ({ name, sales }));
 
             res.render('purchaseHistory', {
                 orders: orders,
                 totalSales: totalSales,
-                topCustomer: topCustomer === 'N/A' ? "No Data Available": topCustomer,
-                topDevice: topDevice === 'N/A' ? "No Data Available": topDevice,
+                topCustomer: topCustomer === 'N/A' ? "No Data Available" : topCustomer,
+                topDevice: topDevice === 'N/A' ? "No Data Available" : topDevice,
                 avgSalesPerCustomer: avgSalesPerCustomer,
                 numberOfOrders: numberOfOrders,
                 topCustomers: topCustomers,
                 topDevices: topDevices
-
             });
-
         } else {
             res.render('purchaseHistory', { orders });
         }
-
     } catch (error) {
         console.error('Error fetching purchase history:', error);
         next(error);
@@ -311,12 +265,9 @@ app.get('/purchaseHistory', async (req, res, next) => {
 });
 
 // Customer Info Route
-app.get('/customerInfo', async (req, res, next) => {
-     if(!auth.isAuthenticated(req)){
-        return res.redirect('/admin/login');
-    }
+app.get('/customerInfo', ensureAuthenticated, async (req, res, next) => {
     try {
-         const { customerId } = req.query;
+        const { customerId } = req.query;
         let query = 'SELECT * FROM customer_data.customer_info';
         let params = [];
 
@@ -327,22 +278,17 @@ app.get('/customerInfo', async (req, res, next) => {
 
         query += ' ORDER BY customer_id';
 
-         const customers = await queryDatabase(req.db, query, params);
+        const customers = await queryDatabase(req.db, query, params);
 
-         res.render('customerInfo', { customers });
+        res.render('customerInfo', { customers });
     } catch (error) {
-         console.error('Error fetching customer info:', error);
-         next(error);
+        console.error('Error fetching customer info:', error);
+        next(error);
     }
 });
 
-
 // Product Management Route (CRUD)
-app.post('/products/manage', async (req, res) => {
-    if (!auth.isAuthenticated(req)) {
-        return res.redirect('/admin/login');
-    }
-
+app.post('/products/manage', ensureAuthenticated, async (req, res) => {
     try {
         console.log('Received Data:', req.body);
 
@@ -365,12 +311,10 @@ app.post('/products/manage', async (req, res) => {
             return res.redirect('/products');
         }
 
-        // Check for required fields for add/update
         if (!req.body.sm_name || !req.body.sm_maker) {
             return res.status(400).json({ error: 'Product name and maker are required' });
         }
 
-        // Preparing product data, excluding the image_url
         const productData = {
             sm_name: req.body.sm_name.trim(),
             sm_maker: req.body.sm_maker.trim(),
@@ -421,7 +365,7 @@ app.post('/products/manage', async (req, res) => {
         };
 
         const decimalFields = ['sm_price', 'sm_inventory', 'length_mm', 'width_mm',
-                               'thickness_mm', 'weight_g', 'display_size', 'battery_capacity'];
+            'thickness_mm', 'weight_g', 'display_size', 'battery_capacity'];
 
         for (const field of decimalFields) {
             if (productData[field] !== null && (isNaN(productData[field]) || !isFinite(productData[field]))) {
@@ -476,7 +420,6 @@ app.post('/products/manage', async (req, res) => {
         }
 
         res.redirect('/products');
-
     } catch (error) {
         console.error('Error during product management:', error);
         res.status(500).json({
@@ -486,23 +429,15 @@ app.post('/products/manage', async (req, res) => {
     }
 });
 
-
-
-
-
-
 // Graceful Shutdown
-// At your server.js where you handle process termination
 process.on('SIGINT', async () => {
     try {
-        // Check if pool exists and isn't already closed
         if (pool && !pool._closed) {
             console.log('Closing database connection pool...');
             await pool.end();
             console.log('Database connection pool closed successfully');
         }
-        
-        // Graceful server shutdown
+
         server.close(() => {
             console.log('Server closed successfully');
             process.exit(0);
@@ -514,6 +449,6 @@ process.on('SIGINT', async () => {
 });
 
 // Start Server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

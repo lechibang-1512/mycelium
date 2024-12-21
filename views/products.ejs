@@ -27,7 +27,7 @@
             <form method="GET" action="/products" id="filterForm">
                 <div class="filter">
                     <label for="brand">Brand:</label>
-                    <select name="brand" id="brand" onchange="this.form.submit()">
+                    <select name="brand" id="brand" onchange="filterProducts()">
                         <option value="">All Brands</option>
                         <% brands.forEach(function(brand) { %>
                             <option value="<%= brand.sm_maker %>"
@@ -40,7 +40,7 @@
 
                 <div class="filter">
                     <label for="model">Model:</label>
-                    <select name="model" id="model" onchange="this.form.submit()">
+                    <select name="model" id="model" onchange="filterProducts()">
                         <option value="">All Models</option>
                         <% models.forEach(function(model) { %>
                             <option value="<%= model.sm_name %>"
@@ -286,6 +286,12 @@
     <script>
         function toggleMenu() {
             document.getElementById('menu').classList.toggle('hidden');
+        }
+
+        function filterProducts() {
+            console.log("Filtering products...");
+            const form = document.getElementById('filterForm');
+            form.submit();
         }
 
         function openModal(action, element) {
