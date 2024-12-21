@@ -113,19 +113,6 @@
                 </div>
 
                 <div class="filter">
-                    <label for="subbrand">Sub-brand:</label>
-                    <select name="subbrand" id="subbrand" onchange="this.form.submit()">
-                        <option value="">All Sub-brands</option>
-                        <% subbrands.forEach(function(subbrand) { %>
-                            <option value="<%= subbrand.subbrand %>"
-                                    <%= selectedSubbrand === subbrand.subbrand ? 'selected' : '' %>>
-                                <%= subbrand.subbrand %>
-                            </option>
-                        <% }); %>
-                    </select>
-                </div>
-
-                <div class="filter">
                     <label for="model">Model:</label>
                     <select name="model" id="model" onchange="this.form.submit()">
                         <option value="">All Models</option>
@@ -155,7 +142,6 @@
             <div class="product-info">
                 <h2 class="product-name"><%= product.sm_name %></h2>
                 <p class="product-maker">Brand: <%= product.sm_maker %></p>
-                <p class="product-subbrand">Sub-brand: <%= product.subbrand || 'N/A' %></p>
                 <p class="product-price">Price: $<%= Number(product.sm_price).toFixed(2) %></p>
                 <p class="product-inventory">In Stock: <%= product.sm_inventory %></p>
                 <a class="product-link" href="/product/<%= product.id %>">View Details</a>
@@ -191,10 +177,6 @@
             <div class="form-group">
                 <label for="sm_inventory">Inventory:</label>
                 <input type="text" id="sm_inventory" name="sm_inventory" required>
-            </div>
-            <div class="form-group">
-                <label for="subbrand">Sub-brand:</label>
-                <input type="text" id="subbrand" name="subbrand">
             </div>
             <div class="form-group">
                 <label for="color">Color:</label>
@@ -406,7 +388,6 @@
             // Populate all fields, excluding image_url
             document.getElementById('sm_name').value = product.sm_name || '';
             document.getElementById('sm_maker').value = product.sm_maker || '';
-            document.getElementById('subbrand').value = product.subbrand || '';
             document.getElementById('sm_price').value = product.sm_price || '';
             document.getElementById('sm_inventory').value = product.sm_inventory || '';
             document.getElementById('color').value = product.color || '';

@@ -132,7 +132,7 @@ app.get('/products', async (req, res, next) => {
     try {
         // Build the product query
         let query = `
-            SELECT id, sm_name, sm_maker, sm_price, sm_inventory, subbrand,
+            SELECT id, sm_name, sm_maker, sm_price, sm_inventory,
                    color, water_and_dust_rating, processor, process_node,
                    cpu_cores, cpu_frequency, gpu, memory_type, ram, rom,
                    expandable_memory, length_mm, width_mm, thickness_mm,
@@ -155,10 +155,6 @@ app.get('/products', async (req, res, next) => {
             query += ' AND sm_maker = ?';
             params.push(req.query.brand);
         }
-        if (req.query.subbrand) {
-            query += ' AND subbrand = ?';
-            params.push(req.query.subbrand);
-        }
         if (req.query.model) {
             query += ' AND sm_name = ?';
             params.push(req.query.model);
@@ -173,10 +169,8 @@ app.get('/products', async (req, res, next) => {
         res.render('products', {
             products,
             brands: req.query.brands || [],
-            subbrands: req.query.subbrands || [],
             models: req.query.models || [],
             selectedBrand: req.query.brand || '',
-            selectedSubbrand: req.query.subbrand || '',
             selectedModel: req.query.model || ''
         });
     } catch (error) {
@@ -193,7 +187,7 @@ app.get('/product/:id', async (req, res, next) => {
     }
     try {
         const product = await queryDatabase(req.db, `
-            SELECT id, sm_name, sm_maker, sm_price, sm_inventory, subbrand,
+            SELECT id, sm_name, sm_maker, sm_price, sm_inventory,
                    color, water_and_dust_rating, processor, process_node,
                    cpu_cores, cpu_frequency, gpu, memory_type, ram, rom,
                    expandable_memory, length_mm, width_mm, thickness_mm,
@@ -234,7 +228,6 @@ app.get('/purchaseHistory', async (req, res, next) => {
                 c.street_address,
                 ps.sm_name,
                 ps.sm_maker,
-                ps.subbrand,
                 ps.sm_price,
                 ps.color,
                 ps.ram,
@@ -390,7 +383,6 @@ app.post('/products/manage', async (req, res) => {
             display_size: req.body.display_size ? parseFloat(parseFloat(req.body.display_size).toFixed(2)) : null,
             battery_capacity: req.body.battery_capacity ? parseFloat(parseFloat(req.body.battery_capacity).toFixed(2)) : null,
             pixel_density: req.body.pixel_density ? parseInt(req.body.pixel_density, 10) : null,
-            subbrand: req.body.subbrand?.trim() || null,
             color: req.body.color?.trim() || null,
             water_and_dust_rating: req.body.water_and_dust_rating?.trim() || null,
             processor: req.body.processor?.trim() || null,

@@ -25,7 +25,6 @@
                     <div class="basic-info">
                         <h2>Basic Information</h2>
                         <p><strong>Brand:</strong> <%= product.sm_maker %></p>
-                        <p><strong>Sub-brand:</strong> <%= product.subbrand || 'N/A' %></p>
                         <p><strong>Price:</strong> $<%= typeof product.sm_price === 'number' ? product.sm_price.toFixed(2) : 'N/A' %></p>
                         <p><strong>Availability:</strong> <%= product.sm_inventory > 0 ? 'In Stock' : 'Out of Stock' %></p>
                         <p><strong>Color:</strong> <%= product.color || 'N/A' %></p>
