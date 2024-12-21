@@ -132,20 +132,20 @@ app.get('/products', async (req, res, next) => {
     try {
         // Build the product query
         let query = `
-            SELECT id, sm_name, image_url, sm_maker, sm_price, sm_inventory, subbrand, 
-                   color, water_and_dust_rating, processor, process_node, 
-                   cpu_cores, cpu_frequency, gpu, memory_type, ram, rom, 
-                   expandable_memory, length_mm, width_mm, thickness_mm, 
-                   weight_g, display_size, resolution, pixel_density, 
-                   refresh_rate, brightness, display_features, 
-                   rear_camera_main, rear_camera_macro, rear_camera_features, 
-                   rear_video_resolution, front_camera, front_camera_features, 
-                   front_video_resolution, battery_capacity, fast_charging, 
-                   connector, security_features, sim_card, nfc, network_bands, 
-                   wireless_connectivity, navigation, audio_jack, 
-                   audio_playback, video_playback, sensors, operating_system, 
+            SELECT id, sm_name, sm_maker, sm_price, sm_inventory, subbrand,
+                   color, water_and_dust_rating, processor, process_node,
+                   cpu_cores, cpu_frequency, gpu, memory_type, ram, rom,
+                   expandable_memory, length_mm, width_mm, thickness_mm,
+                   weight_g, display_size, resolution, pixel_density,
+                   refresh_rate, brightness, display_features,
+                   rear_camera_main, rear_camera_macro, rear_camera_features,
+                   rear_video_resolution, front_camera, front_camera_features,
+                   front_video_resolution, battery_capacity, fast_charging,
+                   connector, security_features, sim_card, nfc, network_bands,
+                   wireless_connectivity, navigation, audio_jack,
+                   audio_playback, video_playback, sensors, operating_system,
                    package_contents
-            FROM phone_specs 
+            FROM phone_specs
             WHERE 1=1
         `;
 
@@ -162,11 +162,6 @@ app.get('/products', async (req, res, next) => {
         if (req.query.model) {
             query += ' AND sm_name = ?';
             params.push(req.query.model);
-        }
-
-        if (req.query.image_url) {
-            query += ' AND image_url = ?';
-            params.push(req.query.image_url);
         }
 
         query += ' ORDER BY sm_maker, sm_name';
@@ -193,11 +188,25 @@ app.get('/products', async (req, res, next) => {
 
 // Single Product Details Route
 app.get('/product/:id', async (req, res, next) => {
-     if(!auth.isAuthenticated(req)){
+    if (!auth.isAuthenticated(req)) {
         return res.redirect('/admin/login');
     }
     try {
-        const product = await queryDatabase(req.db,'SELECT * FROM phone_specs WHERE id = ?', [req.params.id])
+        const product = await queryDatabase(req.db, `
+            SELECT id, sm_name, sm_maker, sm_price, sm_inventory, subbrand,
+                   color, water_and_dust_rating, processor, process_node,
+                   cpu_cores, cpu_frequency, gpu, memory_type, ram, rom,
+                   expandable_memory, length_mm, width_mm, thickness_mm,
+                   weight_g, display_size, resolution, pixel_density,
+                   refresh_rate, brightness, display_features,
+                   rear_camera_main, rear_camera_macro, rear_camera_features,
+                   rear_video_resolution, front_camera, front_camera_features,
+                   front_video_resolution, battery_capacity, fast_charging,
+                   connector, security_features, sim_card, nfc, network_bands,
+                   wireless_connectivity, navigation, audio_jack,
+                   audio_playback, video_playback, sensors, operating_system,
+                   package_contents
+            FROM phone_specs WHERE id = ?`, [req.params.id]);
 
         if (!product || product.length === 0) {
             return res.status(404).render('error', { message: 'Product not found' });
@@ -368,11 +377,10 @@ app.post('/products/manage', async (req, res) => {
             return res.status(400).json({ error: 'Product name and maker are required' });
         }
 
-        // Preparing product data, including the subbrand
+        // Preparing product data, excluding the image_url
         const productData = {
             sm_name: req.body.sm_name.trim(),
             sm_maker: req.body.sm_maker.trim(),
-            image_url: req.body.image_url?.trim() || null,
             sm_price: req.body.sm_price ? parseFloat(parseFloat(req.body.sm_price).toFixed(2)) : null,
             sm_inventory: req.body.sm_inventory ? parseFloat(parseFloat(req.body.sm_inventory).toFixed(2)) : null,
             length_mm: req.body.length_mm ? parseFloat(parseFloat(req.body.length_mm).toFixed(2)) : null,
@@ -382,7 +390,7 @@ app.post('/products/manage', async (req, res) => {
             display_size: req.body.display_size ? parseFloat(parseFloat(req.body.display_size).toFixed(2)) : null,
             battery_capacity: req.body.battery_capacity ? parseFloat(parseFloat(req.body.battery_capacity).toFixed(2)) : null,
             pixel_density: req.body.pixel_density ? parseInt(req.body.pixel_density, 10) : null,
-            subbrand: req.body.subbrand?.trim() || null, // Ensure subbrand is included
+            subbrand: req.body.subbrand?.trim() || null,
             color: req.body.color?.trim() || null,
             water_and_dust_rating: req.body.water_and_dust_rating?.trim() || null,
             processor: req.body.processor?.trim() || null,
@@ -485,6 +493,7 @@ app.post('/products/manage', async (req, res) => {
         });
     }
 });
+
 
 
 
