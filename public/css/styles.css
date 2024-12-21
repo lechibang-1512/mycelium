@@ -27,20 +27,20 @@ body {
 }
 
 #menu { /* Target the nav with ID 'menu' */
-position: absolute;
-top: 60px; /* Adjust as needed */
-left: 0; /* Align to left edge */
-background-color: #fff;
-box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Add shadow */
-border-radius: 5px; /* Rounded corners */
-z-index: 1000;
+  position: absolute;
+  top: 60px; /* Adjust as needed */
+  left: 0; /* Align to left edge */
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Add shadow */
+  border-radius: 5px; /* Rounded corners */
+  z-index: 1000;
 }
 
-#menu a {  
+#menu a {
   display: block; /* Stack links vertically */
   padding: 10px 20px;
   text-decoration: none;
-  color: #333;  
+  color: #333;
   border-bottom: 1px solid #eee; /* Separator between menu items */
 }
 
@@ -50,7 +50,7 @@ z-index: 1000;
 
 /* hidden Utility Class (for toggling) */
 .hidden {
-  display: none; 
+  display: none;
 }
 
 /* Container for product cards */
@@ -197,7 +197,7 @@ z-index: 1000;
 }
 
 .modal-btn {
-   background-color: #5cb85c;
+  background-color: #5cb85c;
   color: white;
   padding: 10px 15px;
   border: none;
@@ -205,12 +205,13 @@ z-index: 1000;
   cursor: pointer;
   font-size: 16px;
   display: block;
-   margin: 10px auto; /* Center the button */
+  margin: 10px auto; /* Center the button */
 }
 
 .modal-btn:hover {
   background-color: #4cae4c;
 }
+
 .add-device-btn {
   background-color: #5cb85c; /* Example background color */
   color: white;
@@ -221,9 +222,11 @@ z-index: 1000;
   font-size: 16px;
   margin-bottom: 20px;
 }
+
 .add-device-btn:hover {
   background-color: #4cae4c; /* Darker shade on hover */
 }
+
 .product-actions button {
   background-color: #007bff;
   color: white;
@@ -235,5 +238,52 @@ z-index: 1000;
 }
 
 .product-actions button:hover {
+  background-color: #0056b3;
+}
+
+/* Login Form Styles */
+.login-form {
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.login-form .form-group {
+  margin-bottom: 15px;
+}
+
+.login-form .form-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.login-form .form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.error-message {
+  color: red;
+  margin-bottom: 10px;
+}
+
+.login-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 1em;
+}
+
+.login-btn:hover {
   background-color: #0056b3;
 }
