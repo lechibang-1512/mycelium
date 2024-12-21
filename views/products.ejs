@@ -20,7 +20,7 @@
         <h1 class="text-center">All Products</h1>
 
         <!-- Add Device Button -->
-        <button class="add-device-btn" onclick="openModal('add', null)">Add Device</button>
+        <button class="add-device-btn" onclick="openModal('add')">Add Device</button>
 
         <!-- Filters Section -->
         <div class="filters">
@@ -71,7 +71,7 @@
                         <p class="product-inventory">In Stock: <%= product.sm_inventory %></p>
                         <a class="product-link" href="/product/<%= product.id %>">View Details</a>
                         <div class="product-actions">
-                            <button onclick="openModal('update', this.closest('.product-card').dataset.product)">Update</button>
+                            <button onclick="openModal('update', this)">Update</button>
                         </div>
                     </div>
                 </div>
@@ -285,16 +285,15 @@
 
     <script>
         function toggleMenu() {
-            var menu = document.getElementById('menu');
-            menu.classList.toggle('hidden');
+            document.getElementById('menu').classList.toggle('hidden');
         }
 
-        function openModal(action, productData) {
-            var modal = document.getElementById('productModal');
-            var form = document.getElementById('productForm');
-            var modalTitle = document.getElementById('modalTitle');
-            var modalAction = document.getElementById('modalAction');
-            var productId = document.getElementById('productId');
+        function openModal(action, element) {
+            const modal = document.getElementById('productModal');
+            const form = document.getElementById('productForm');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalAction = document.getElementById('modalAction');
+            const productId = document.getElementById('productId');
 
             modal.style.display = "block";
 
@@ -307,63 +306,21 @@
                 modalTitle.innerText = 'Update Product';
                 modalAction.value = 'update';
 
-                var product = JSON.parse(productData);
-                productId.value = product.id;
+                const productData = JSON.parse(element.closest('.product-card').dataset.product);
+                productId.value = productData.id;
 
-                // Populate all fields, excluding image_url
-                document.getElementById('sm_name').value = product.sm_name || '';
-                document.getElementById('sm_maker').value = product.sm_maker || '';
-                document.getElementById('sm_price').value = product.sm_price || '';
-                document.getElementById('sm_inventory').value = product.sm_inventory || '';
-                document.getElementById('color').value = product.color || '';
-                document.getElementById('water_and_dust_rating').value = product.water_and_dust_rating || '';
-                document.getElementById('processor').value = product.processor || '';
-                document.getElementById('process_node').value = product.process_node || '';
-                document.getElementById('cpu_cores').value = product.cpu_cores || '';
-                document.getElementById('cpu_frequency').value = product.cpu_frequency || '';
-                document.getElementById('gpu').value = product.gpu || '';
-                document.getElementById('memory_type').value = product.memory_type || '';
-                document.getElementById('ram').value = product.ram || '';
-                document.getElementById('rom').value = product.rom || '';
-                document.getElementById('expandable_memory').value = product.expandable_memory || '';
-                document.getElementById('length_mm').value = product.length_mm || '';
-                document.getElementById('width_mm').value = product.width_mm || '';
-                document.getElementById('thickness_mm').value = product.thickness_mm || '';
-                document.getElementById('weight_g').value = product.weight_g || '';
-                document.getElementById('display_size').value = product.display_size || '';
-                document.getElementById('resolution').value = product.resolution || '';
-                document.getElementById('pixel_density').value = product.pixel_density || '';
-                document.getElementById('refresh_rate').value = product.refresh_rate || '';
-                document.getElementById('brightness').value = product.brightness || '';
-                document.getElementById('display_features').value = product.display_features || '';
-                document.getElementById('rear_camera_main').value = product.rear_camera_main || '';
-                document.getElementById('rear_camera_macro').value = product.rear_camera_macro || '';
-                document.getElementById('rear_camera_features').value = product.rear_camera_features || '';
-                document.getElementById('rear_video_resolution').value = product.rear_video_resolution || '';
-                document.getElementById('front_camera').value = product.front_camera || '';
-                document.getElementById('front_camera_features').value = product.front_camera_features || '';
-                document.getElementById('front_video_resolution').value = product.front_video_resolution || '';
-                document.getElementById('battery_capacity').value = product.battery_capacity || '';
-                document.getElementById('fast_charging').value = product.fast_charging || '';
-                document.getElementById('connector').value = product.connector || '';
-                document.getElementById('security_features').value = product.security_features || '';
-                document.getElementById('sim_card').value = product.sim_card || '';
-                document.getElementById('nfc').value = product.nfc || '';
-                document.getElementById('network_bands').value = product.network_bands || '';
-                document.getElementById('wireless_connectivity').value = product.wireless_connectivity || '';
-                document.getElementById('navigation').value = product.navigation || '';
-                document.getElementById('audio_jack').value = product.audio_jack || '';
-                document.getElementById('audio_playback').value = product.audio_playback || '';
-                document.getElementById('video_playback').value = product.video_playback || '';
-                document.getElementById('sensors').value = product.sensors || '';
-                document.getElementById('operating_system').value = product.operating_system || '';
-                document.getElementById('package_contents').value = product.package_contents || '';
+                // Populate all fields
+                Object.keys(productData).forEach(key => {
+                    const field = document.getElementById(key);
+                    if (field) {
+                        field.value = productData[key] || '';
+                    }
+                });
             }
         }
 
         function closeModal() {
-            var modal = document.getElementById('productModal');
-            modal.style.display = "none";
+            document.getElementById('productModal').style.display = "none";
         }
     </script>
 </body>
