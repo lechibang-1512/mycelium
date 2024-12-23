@@ -287,6 +287,123 @@ app.get('/customerInfo', ensureAuthenticated, async (req, res, next) => {
     }
 });
 
+// Function to update purchase history
+async function updatePurchaseHistory(req) {
+    try {
+        const orders = await queryDatabase(req.db, `
+            SELECT
+                c.first_name,
+                c.last_name,
+                c.email,
+                c.phone_number,
+                c.street_address,
+                ps.sm_name,
+                ps.sm_maker,
+                ps.sm_price,
+                ps.color,
+                ps.ram,
+                ps.rom,
+                od.order_date
+            FROM customer_data.order_details od
+            JOIN master_specs_db.phone_specs ps ON od.phone_id = ps.id
+            JOIN customer_data.customer_info c ON od.customer_id = c.customer_id
+            ORDER BY od.order_date DESC
+        `);
+
+        // Perform any additional processing or calculations if necessary
+    } catch (error) {
+        console.error('Error updating purchase history:', error);
+    }
+}
+
+// Customer Management Route (CRUD)
+app.post('/customers/manage', ensureAuthenticated, async (req, res) => {
+    try {
+        console.log('Received Customer Data:', req.body);
+
+        if (!req.body.action) {
+            return res.status(400).json({ error: 'Action is required' });
+        }
+
+        const { action, customer_id } = req.body;
+        const customerData = {
+            first_name: req.body.first_name,
+            last_name: req.body.last_name,
+            email: req.body.email,
+            phone_number: req.body.phone_number,
+            street_address: req.body.street_address,
+            city: req.body.city,
+            state: req.body.state,
+            postal_code: req.body.postal_code,
+            country: req.body.country
+        };
+        console.log("TEST CUSTOMER_DATA: " + customerData)
+        if (action === 'delete') {
+            if (!customer_id) {
+                return res.status(400).json({ error: 'Customer ID is required for deletion' });
+            }
+            const result = await queryDatabase(req.db, 'DELETE FROM customer_data.customer_info WHERE customer_id = ?', [customer_id]);
+            if (result.affectedRows !== 1) {
+                return res.status(404).json({ error: 'Customer not found' });
+            }
+            updatePurchaseHistory(req); // add this when update/ delete success
+            return res.redirect('/customerInfo');
+        }
+
+        // Check for required fields in add/update
+        if (!customerData.first_name || !customerData.last_name || !customerData.email) {
+            return res.status(400).json({ error: 'First name, last name, and email are required' });
+        }
+
+        if (action === 'add') {
+            const fields = Object.keys(customerData);
+            const placeholders = fields.map(() => '?').join(', ');
+            const values = Object.values(customerData);
+
+            const result = await queryDatabase(
+                req.db,
+                `INSERT INTO customer_data.customer_info (${fields.join(', ')}) VALUES (${placeholders})`,
+                values
+            );
+
+            if (result.affectedRows !== 1) {
+                throw new Error('Failed to add customer');
+            }
+            updatePurchaseHistory(req); // add this when update/ delete success
+        } else if (action === 'update') {
+            if (!customer_id) {
+                return res.status(400).json({ error: 'Customer ID is required for update' });
+            }
+
+            const setClause = Object.keys(customerData)
+                .map(field => `${field} = ?`)
+                .join(', ');
+            const values = [...Object.values(customerData), customer_id];
+
+            const result = await queryDatabase(
+                req.db,
+                `UPDATE customer_data.customer_info SET ${setClause} WHERE customer_id = ?`,
+                values
+            );
+
+            if (result.affectedRows !== 1) {
+                return res.status(404).json({ error: 'Customer not found' });
+            }
+            updatePurchaseHistory(req); // add this when update/ delete success
+        } else {
+            return res.status(400).json({ error: 'Invalid action specified' });
+        }
+
+        res.redirect('/customerInfo');
+    } catch (error) {
+        console.error('Error during customer management:', error);
+        res.status(500).json({
+            error: 'Database operation failed',
+            details: error.message
+        });
+    }
+});
+
 // Product Management Route (CRUD)
 app.post('/products/manage', ensureAuthenticated, async (req, res) => {
     try {
