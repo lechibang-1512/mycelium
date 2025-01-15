@@ -1,0 +1,6683 @@
+{
+  "schemaName": "master_db",
+  "exportedAt": "2026-02-21T04:15:46.656Z",
+  "statistics": {
+    "tables": 25,
+    "views": 0,
+    "totalObjects": 25,
+    "fileSizeKB": 40.98,
+    "linesOfSQL": 968
+  },
+  "tables": {
+    "users": {
+      "columns": [
+        {
+          "name": "username",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "password",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "full_name",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "role",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "user",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "is_active",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 1,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "is_locked",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "failed_login_attempts",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "last_login",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "suppliers": {
+      "columns": [
+        {
+          "name": "name",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "category",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "contact_person",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "contact_position",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "phone",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "website",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "address",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "city",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "province",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "ward",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "district",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "tax_code",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "payment_terms",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "lead_time_days",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "rating",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "brands",
+          "type": "LONGTEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "additional_contacts",
+          "type": "LONGTEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "is_active",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 1,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "supplier_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "phone_specs": {
+      "columns": [
+        {
+          "name": "product_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "device_type",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "smartphone",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "device_name",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "device_maker",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "device_price",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "color",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "attributes",
+          "type": "LONGTEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "processor",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "ram",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "rom",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "display_size",
+          "type": "DECIMAL",
+          "length": 5,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "resolution",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "refresh_rate",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "battery_capacity",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "fast_charging",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "rear_camera_main",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "front_camera",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "operating_system",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "water_and_dust_rating",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "nfc",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "warranty_months",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 12,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "warranty_type",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "MANUFACTURER",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "inv_staging_inventory",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "inv_reorder_point",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "inv_reorder_quantity",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "inv_lead_time_days",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 7,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "inv_safety_stock",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "inv_avg_daily_usage",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "default_supplier_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "is_active",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 1,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "is_discontinued",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "launch_date",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "end_of_life_date",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_maker_name",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_type_active",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "warehouses": {
+      "columns": [
+        {
+          "name": "warehouse_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "warehouse_uuid",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "location",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "contact_phone",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "contact_email",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "contact_manager",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "is_active",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 1,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "products": {
+      "columns": [
+        {
+          "name": "product_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "product_type",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "PHONE",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "sku",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "category",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "subcategory",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "brand",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "model",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "base_price",
+          "type": "DECIMAL",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "currency",
+          "type": "VARCHAR",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "VND",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "specifications",
+          "type": "LONGTEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "requires_serial_tracking",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "serial_format",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "default_supplier_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "reorder_point",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "reorder_quantity",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "lead_time_days",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 7,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "safety_stock",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "is_active",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 1,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "is_discontinued",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_product_type",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_category",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_brand",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_sku",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_supplier",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_products_active",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "spare_parts": {
+      "columns": [
+        {
+          "name": "part_code",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "part_name",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "part_category",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "part_type",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "compatible_product_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "compatible_device_category",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "compatible_brands",
+          "type": "LONGTEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "compatible_models",
+          "type": "LONGTEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "dimensions",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "weight_g",
+          "type": "DECIMAL",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "color_variants",
+          "type": "LONGTEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "quality_grade",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "STANDARD",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "warranty_months",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 3,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "manufacturer",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "manufacturer_part_number",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "default_supplier_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "unit_cost",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "unit_price",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "currency",
+          "type": "VARCHAR",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "USD",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "min_stock_level",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 5,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "max_stock_level",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 50,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "reorder_point",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 10,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "reorder_quantity",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 20,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "lead_time_days",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "is_active",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 1,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "is_hazardous",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "requires_serial_tracking",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_by",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "spare_part_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_part_code",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "smartphone_spare_parts": {
+      "columns": [
+        {
+          "name": "spare_part_uuid",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "part_code",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Unique part code (e.g., DISP-IP15-BLK)"
+        },
+        {
+          "name": "part_name",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Display name (e.g., iPhone 15 Display)"
+        },
+        {
+          "name": "part_category",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "part_type",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Specific type (e.g., OLED, LCD, Li-ion)"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Detailed description"
+        },
+        {
+          "name": "compatible_product_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "compatible_device_category",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Device category (phone, tablet, etc)"
+        },
+        {
+          "name": "compatible_brands",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "JSON array of compatible brands"
+        },
+        {
+          "name": "compatible_models",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "JSON array of compatible models"
+        },
+        {
+          "name": "dimensions",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Length x Width x Height"
+        },
+        {
+          "name": "weight_g",
+          "type": "DECIMAL",
+          "length": 6,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Weight in grams"
+        },
+        {
+          "name": "color_variants",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "JSON array of available colors"
+        },
+        {
+          "name": "quality_grade",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "STANDARD",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Quality tier"
+        },
+        {
+          "name": "warranty_months",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 3,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Warranty period in months"
+        },
+        {
+          "name": "manufacturer",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "manufacturer_part_number",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "OEM part number"
+        },
+        {
+          "name": "unit_cost",
+          "type": "DECIMAL",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Cost per unit"
+        },
+        {
+          "name": "unit_price",
+          "type": "DECIMAL",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Selling price per unit"
+        },
+        {
+          "name": "currency",
+          "type": "VARCHAR",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "USD",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "default_supplier_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Primary supplier"
+        },
+        {
+          "name": "lead_time_days",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Average lead time"
+        },
+        {
+          "name": "minimum_stock_level",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 5,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "max_stock_level",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 50,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Maximum stock level"
+        },
+        {
+          "name": "reorder_point",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 10,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Reorder trigger point"
+        },
+        {
+          "name": "reorder_quantity",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 20,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Standard reorder quantity"
+        },
+        {
+          "name": "is_active",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 1,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "is_hazardous",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Requires special handling (e.g., batteries)"
+        },
+        {
+          "name": "requires_serial_tracking",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Track individual units"
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_by",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_part_category",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_supplier",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_quality_grade",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_is_active",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_manufacturer",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_spare_parts_category_grade",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_spare_parts_active_supplier",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_device_category",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_compatible_product",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "invoices": {
+      "columns": [
+        {
+          "name": "uuid",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "invoice_number",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "pattern_number",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "serial_number",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "supplier_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "status",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "draft",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "verification_status",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "PENDING",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "invoice_date",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "due_date",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "imported_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "subtotal",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "tax_rate",
+          "type": "DECIMAL",
+          "length": 5,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "10.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "tax_amount",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "shipping_fee",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "discount_amount",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "total_amount",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "currency",
+          "type": "VARCHAR",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "VND",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "payment_method",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "TM/CK",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "repair_job_templates": {
+      "columns": [
+        {
+          "name": "template_name",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "template_category",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "OTHER",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "default_priority",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "NORMAL",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "estimated_cost",
+          "type": "DECIMAL",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "estimated_labor_cost",
+          "type": "DECIMAL",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "estimated_duration_hours",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 2,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "default_parts",
+          "type": "LONGTEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Array of {spare_part_id, quantity}"
+        },
+        {
+          "name": "checklist",
+          "type": "LONGTEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Array of task steps"
+        },
+        {
+          "name": "diagnosis_template",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "repair_notes_template",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "warranty_months",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 3,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "is_active",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 1,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_by",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "template_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_category",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_active",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_name",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "warehouse_zones": {
+      "columns": [
+        {
+          "name": "warehouse_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "zone_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "zone_uuid",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "zone_type",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "storage",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "bin_prefix",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "max_bins",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "require_bins",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "default_bin_type",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "bin_layout",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "capacity_limit",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "is_active",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 1,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "invoice_items": {
+      "columns": [
+        {
+          "name": "product_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "spare_part_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "product_name",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "product_uuid",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "unit",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "unit_name",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "quantity",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 1,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "unit_price",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "total_price",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "tax_rate",
+          "type": "DECIMAL",
+          "length": 5,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "10.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "tax_amount",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "discount_rate",
+          "type": "DECIMAL",
+          "length": 5,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "discount_amount",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "total_amount",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "invoice_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "repair_jobs": {
+      "columns": [
+        {
+          "name": "job_number",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "product_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "device_name",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "device_serial_number",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "device_imei",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "customer_name",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "customer_phone",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "customer_email",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "customer_address",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "issue_description",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "diagnosis",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "repair_notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "PENDING",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "priority",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "NORMAL",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "assigned_technician",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "assigned_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "warehouse_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "received_date",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "estimated_completion_date",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "completion_date",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "delivered_date",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "cost_estimated",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "cost_parts",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "cost_labor",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "cost_final",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "cost_customer_charge",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "currency",
+          "type": "VARCHAR",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "USD",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "tested_by",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "test_results",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "quality_check_passed",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "warranty_months",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 3,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "warranty_expires_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_by",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "repair_job_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "repair_job_attachments": {
+      "columns": [
+        {
+          "name": "file_name",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "file_path",
+          "type": "VARCHAR",
+          "length": 500,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "file_type",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "IMAGE",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "file_size_kb",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "mime_type",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "attachment_category",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "OTHER",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "uploaded_by",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "uploaded_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "attachment_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "repair_job_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_category",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_file_type",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_uploaded_at",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "repair_job_parts": {
+      "columns": [
+        {
+          "name": "spare_part_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "inventory_id",
+          "type": "BIGINT",
+          "length": 20,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "quantity_used",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 1,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "unit_cost",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "total_cost",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "installed_date",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "installed_by",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "warranty_months",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "repair_job_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "transactions": {
+      "columns": [
+        {
+          "name": "transaction_group_id",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "receipt_id",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "transaction_type",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "transaction_date",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "warehouse_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "from_warehouse_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "zone_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "bin_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "subtotal",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "tax_amount",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "total_amount",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "shipping_fee",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "discount_amount",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "supplier_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "invoice_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "po_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "user_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "external_doc_no",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "document_reference",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "customer",
+          "type": "LONGTEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "delivery_person",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "internal_notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_date_type",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_group",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "transaction_items": {
+      "columns": [
+        {
+          "name": "transaction_group_id",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "product_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "spare_part_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "batch_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "asset_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "serial_number",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "quantity_changed",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "condition_status",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "NEW",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "unit_cost",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "total_value",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "from_warehouse_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "from_zone_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "from_bin_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "to_warehouse_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "to_zone_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "to_bin_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "new_inventory_level",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "transaction_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "rmas": {
+      "columns": [
+        {
+          "name": "rma_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "customer_name",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "customer_email",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "customer_phone",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "original_receipt_id",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "original_transaction_date",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "reason_code",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "reason_description",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "pending",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "priority",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "medium",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "warehouse_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "quarantine_zone_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "requested_by",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "assigned_to",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "expected_return_date",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "actual_return_date",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "inspection_date",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "completion_date",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "total_value",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "refund_amount",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "restocking_fee",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "internal_notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "rma_items": {
+      "columns": [
+        {
+          "name": "product_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "spare_part_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "serial_number",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "quantity",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 1,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "condition_detail",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "disposition",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "unit_value",
+          "type": "DECIMAL",
+          "length": 15,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "rma_table_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "stocktakes": {
+      "columns": [
+        {
+          "name": "stocktake_uuid",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "stocktake_number",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "zone_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "count_type",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "full",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "status",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "PLANNED",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "initiated_by",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "started_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "completed_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "approved_by",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "approved_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "scheduled_for",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "is_recurring",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "recurrence_rule",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "warehouse_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "stocktake_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_zone",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_status",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_created",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_stocktakes_scheduled",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_stocktakes_count_type",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_warehouse",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_stocktakes_uuid",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "stocktake_items": {
+      "columns": [
+        {
+          "name": "product_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "bin_location",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "system_quantity",
+          "type": "DECIMAL",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "counted_quantity",
+          "type": "DECIMAL",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "variance",
+          "type": "DECIMAL",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "variance_pct",
+          "type": "DECIMAL",
+          "length": 5,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "adjustment_applied",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "adjustment_receipt_id",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "counted_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "counted_by",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "stocktake_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_adjustment_receipt",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_variance",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_product",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "stocktake_status_history": {
+      "columns": [
+        {
+          "name": "old_status",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "new_status",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "changed_by",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "changed_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "stocktake_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_changed_at",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "warehouse_bins": {
+      "columns": [
+        {
+          "name": "warehouse_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "zone_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "bin_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "bin_code",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "bin_type",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "standard",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "product_type",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "row_position",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "column_position",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "bin_position",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "hierarchical_code",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "aisle",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "rack",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "shelf",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "max_capacity",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "weight_capacity",
+          "type": "DECIMAL",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "height_cm",
+          "type": "DECIMAL",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "width_cm",
+          "type": "DECIMAL",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "depth_cm",
+          "type": "DECIMAL",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "temperature_controlled",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "temperature_min",
+          "type": "DECIMAL",
+          "length": 5,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "temperature_max",
+          "type": "DECIMAL",
+          "length": 5,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "priority_level",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "normal",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "accessibility_level",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "easy",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "is_active",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 1,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "warehouse_id",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_bin_code",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "inventory": {
+      "columns": [
+        {
+          "name": "inventory_type",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "product_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "batch_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "batch_no",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "warehouse_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "zone_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "bin_id",
+          "type": "VARCHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "quantity",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "reserved_quantity",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "min_stock_level",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "condition_status",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "NEW",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "serial_number",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "imei_1",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "imei_2",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "available",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "condition_grade",
+          "type": "VARCHAR",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "A",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "quantity_on_hand",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "quantity_reserved",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "quantity_defective",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "quantity_in_transit",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "manufacture_date",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "expiry_date",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "supplier_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "import_invoice_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "last_counted_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "last_counted_by",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "last_movement_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "last_movement_type",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "spare_part_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "product_id",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "warehouse_id",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "bin_id",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_type_loc",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_serial",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_imei",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "product_inventory": {
+      "columns": [
+        {
+          "name": "product_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "serial_number",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "batch_number",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "warehouse_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "zone_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "bin_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "quantity_on_hand",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "quantity_reserved",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "quantity_defective",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "quantity_in_transit",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "status",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "AVAILABLE",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "condition_status",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "NEW",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "purchase_cost",
+          "type": "DECIMAL",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "purchase_date",
+          "type": "DATE",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "manufacture_date",
+          "type": "DATE",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "expiry_date",
+          "type": "DATE",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "warranty_expiry",
+          "type": "DATE",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "last_counted_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "last_counted_by",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "last_movement_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "last_movement_type",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "condition_notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "location_notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "inventory_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_product",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_serial",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_batch",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_warehouse",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_zone",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_bin",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_status",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_condition",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_expiry",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_warranty",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_inventory_location",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_inventory_status",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "inventory_log": {
+      "columns": [
+        {
+          "name": "product_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "spare_part_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "asset_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Liên kết đến bảng assets hợp nhất"
+        },
+        {
+          "name": "transaction_type",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "quantity_changed",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Null for single-asset movements"
+        },
+        {
+          "name": "condition",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "NEW",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "transaction_date",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "from_zone_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Source zone for transfers"
+        },
+        {
+          "name": "zone_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Destination zone"
+        },
+        {
+          "name": "bin_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Bin/basket location for the transaction"
+        },
+        {
+          "name": "receipt_id",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "user_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "supplier_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "unit_cost",
+          "type": "DECIMAL",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Unit cost at time of transaction"
+        },
+        {
+          "name": "total_value",
+          "type": "DECIMAL",
+          "length": 12,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Total value of transaction"
+        },
+        {
+          "name": "batch_no",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Batch number for tracking"
+        },
+        {
+          "name": "lot_id",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Lot identifier for transaction tracking"
+        },
+        {
+          "name": "expiry_date",
+          "type": "DATE",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Expiry date for batch items"
+        },
+        {
+          "name": "new_inventory_level",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Inventory level after transaction"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "serial_number",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Serial number for serialized items"
+        },
+        {
+          "name": "reference_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Reference ID (e.g., RMA ID)"
+        },
+        {
+          "name": "subtotal",
+          "type": "DECIMAL",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Subtotal for multi-item transactions"
+        },
+        {
+          "name": "tax_amount",
+          "type": "DECIMAL",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Tax amount for transaction"
+        },
+        {
+          "name": "total_amount",
+          "type": "DECIMAL",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "0.00",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Total amount for transaction"
+        },
+        {
+          "name": "transaction_group_id",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Groups related log entries from same receipt"
+        },
+        {
+          "name": "item_sequence",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Item order within transaction group"
+        },
+        {
+          "name": "po_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "invoice_id",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "warehouse_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "from_warehouse_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "from_bin_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "external_doc_no",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Reference to external document (e.g. Supplier Invoice, DO) for traceability"
+        },
+        {
+          "name": "customer_name",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Customer/Recipient name for outgoing transactions"
+        },
+        {
+          "name": "customer_address",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Customer/Recipient address"
+        },
+        {
+          "name": "delivery_person",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Person who delivered/received the goods"
+        },
+        {
+          "name": "document_reference",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Reference to source document (PO, Invoice, etc.)"
+        },
+        {
+          "name": "unit_of_measure",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "Unit",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Unit of measurement for the product"
+        },
+        {
+          "name": "doc_type",
+          "type": "VARCHAR",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "GRN for Stock In, GDN for Stock Out"
+        },
+        {
+          "name": "doc_number",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Document number"
+        },
+        {
+          "name": "log_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "batch_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_log_zone",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_log_receipt",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_log_supplier",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_log_transaction_type",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_log_transaction_date",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_log_unit_cost",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_log_batch_no",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_log_asset",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_log_date_type",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_log_product_date",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_log_supplier_date",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_inventory_log_date_type",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_inventory_log_product_date",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_inventory_log_outgoing",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_log_group",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_log_group_product",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_log_type_date",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "fk_log_to_specs",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_spare_part_id",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_condition",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_log_warehouse",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_log_from_warehouse",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_log_warehouse_date",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_log_bin",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_customer_name",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_document_ref",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_inventory_log_doc",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_inventory_log_lot_id",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_from_bin_id",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    }
+  },
+  "views": []
+}

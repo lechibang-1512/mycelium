@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
+build/
+*.log
+*.pid
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Git
+.git/
+.github/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Agent / AI
+.agent/
+.gemini/
+
+# Testing
+coverage/
+.nyc_output/
+scripts/tests/
+*.test.js
+*.test-results.json
+
+# Docs & misc
+docs/
+*.md
+*.sh
+knip.json
+eslint.config.mjs
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp
+tmp/
+temp/
+*.tmp
+*.swp
+server.log
+cookies.txt

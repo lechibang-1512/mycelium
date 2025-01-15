@@ -1,0 +1,53 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mycelium-app
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # Database — points to the db service
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: mycelium
+      DB_PASSWORD: mycelium_pass
+      DB_NAME: master_db
+      # Auth database — same MariaDB instance
+      AUTH_DB_HOST: db
+      AUTH_DB_PORT: 3306
+      AUTH_DB_USER: mycelium
+      AUTH_DB_PASSWORD: mycelium_pass
+      AUTH_DB_NAME: security_db
+    volumes:
+      - uploads:/app/public/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: mariadb:11
+    container_name: mycelium-db
+    environment:
+      MARIADB_ROOT_PASSWORD: root_pass
+      MARIADB_USER: mycelium
+      MARIADB_PASSWORD: mycelium_pass
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./sql/init:/docker-entrypoint-initdb.d
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  uploads:

@@ -1,0 +1,33 @@
+{
+    "$schema": "https://unpkg.com/knip@latest/schema.json",
+    "entry": [
+        "backend/jobs/*.js",
+        "scripts/tools/utils-*.js",
+        "scripts/reports/*.js"
+    ],
+    "project": [
+        "backend/**/*.{js,cjs,mjs}",
+        "frontend/**/*.{js,jsx}",
+        "scripts/**/*.js"
+    ],
+    "ignore": [
+        "dist/**",
+        "node_modules/**",
+        "sql/**",
+        "docs/**",
+        "public/**",
+        "backend/jobs/generate-efficiency-reports.js",
+        "backend/jobs/generate-reorder-recommendations.js"
+    ],
+    "vite": {
+        "config": "backend/config/vite.config.mjs",
+        "entry": [
+            "frontend/main.jsx"
+        ]
+    },
+    "eslint": {
+        "config": [
+            "eslint.config.mjs"
+        ]
+    }
+}

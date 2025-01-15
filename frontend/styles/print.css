@@ -1,0 +1,18 @@
+/* ===========================
+   PRINT STYLES
+   All @media print rules
+   =========================== */
+
+@media print {
+
+    .navbar,
+    .footer,
+    .btn,
+    .no-print {
+        display: none !important;
+    }
+
+    .container {
+        max-width: 100% !important;
+    }
+}

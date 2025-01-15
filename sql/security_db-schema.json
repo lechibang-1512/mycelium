@@ -1,0 +1,1340 @@
+{
+  "schemaName": "security_db",
+  "exportedAt": "2026-02-21T04:15:47.966Z",
+  "statistics": {
+    "tables": 13,
+    "views": 0,
+    "totalObjects": 13,
+    "fileSizeKB": 11.05,
+    "linesOfSQL": 270
+  },
+  "tables": {
+    "users": {
+      "columns": [
+        {
+          "name": "username",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "password",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "bcrypt hashed password"
+        },
+        {
+          "name": "fullName",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "is_active",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 1,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "last_login",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "failed_login_attempts",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "locked_until",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "role",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_username",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_email",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_is_active",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "roles": {
+      "columns": [
+        {
+          "name": "name",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "admin, manager, staff, read_only"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_role_name",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "permissions": {
+      "columns": [
+        {
+          "name": "name",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "inventory.read, inventory.write, users.manage"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "resource",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "inventory, users, warehouses, reports"
+        },
+        {
+          "name": "action",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "read, write, delete, manage"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_permission_name",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_resource_action",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "casbin_rules": {
+      "columns": [
+        {
+          "name": "ptype",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "v0",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "v1",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "v2",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "v3",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "v4",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "v5",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "user_roles": {
+      "columns": [
+        {
+          "name": "assigned_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "assigned_by",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Admin who assigned the role"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "role_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "role_permissions": {
+      "columns": [
+        {
+          "name": "granted_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "role_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "permission_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "sessions": {
+      "columns": [
+        {
+          "name": "session_id",
+          "type": "VARCHAR",
+          "length": 128,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "expires",
+          "type": "BIGINT",
+          "length": 20,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "ip_address",
+          "type": "VARCHAR",
+          "length": 45,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "user_agent",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "data",
+          "type": "MEDIUMTEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "last_activity",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "is_active",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 1,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_expires",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "invalidated_tokens": {
+      "columns": [
+        {
+          "name": "token_hash",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Hashed token for security"
+        },
+        {
+          "name": "invalidated_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "expires_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "reason",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "logout, password_change, force_logout"
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_token_hash",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_expires_at",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_invalidated_at",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "user_token_invalidation": {
+      "columns": [
+        {
+          "name": "invalidated_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "reason",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "security_action",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_invalidated_at",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "password_reset_tokens": {
+      "columns": [
+        {
+          "name": "token",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "expires_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "used",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "used_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_token",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_expires_at",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "failed_login_attempts": {
+      "columns": [
+        {
+          "name": "identifier",
+          "type": "VARCHAR",
+          "length": 255,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Username or email"
+        },
+        {
+          "name": "identifier_type",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "ip_address",
+          "type": "VARCHAR",
+          "length": 45,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "attempt_time",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "user_agent",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_identifier",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_ip_address",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_attempt_time",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "audit_log": {
+      "columns": [
+        {
+          "name": "username",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Preserved even if user deleted"
+        },
+        {
+          "name": "action_type",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "login, logout, create, update, delete, view"
+        },
+        {
+          "name": "resource_type",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "inventory, user, warehouse, receipt"
+        },
+        {
+          "name": "resource_id",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "ID of the affected resource"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "ip_address",
+          "type": "VARCHAR",
+          "length": 45,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "user_agent",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "request_method",
+          "type": "VARCHAR",
+          "length": 10,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "GET, POST, PUT, DELETE"
+        },
+        {
+          "name": "request_url",
+          "type": "VARCHAR",
+          "length": 500,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "status_code",
+          "type": "INT",
+          "length": 11,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "changes",
+          "type": "LONGTEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "JSON of before/after values"
+        },
+        {
+          "name": "severity",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "info",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_action_type",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_resource_type",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_created_at",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_severity",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_audit_resource",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    },
+    "security_events": {
+      "columns": [
+        {
+          "name": "event_type",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "login_success, login_fail, logout, permission_denied, data_access"
+        },
+        {
+          "name": "username",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Preserved even if user deleted"
+        },
+        {
+          "name": "ip_address",
+          "type": "VARCHAR",
+          "length": 45,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "IPv4 or IPv6"
+        },
+        {
+          "name": "user_agent",
+          "type": "TEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "resource",
+          "type": "VARCHAR",
+          "length": 100,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Resource accessed"
+        },
+        {
+          "name": "action",
+          "type": "VARCHAR",
+          "length": 50,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Action attempted"
+        },
+        {
+          "name": "success",
+          "type": "TINYINT",
+          "length": 1,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": 1,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "risk_level",
+          "type": "ENUM",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": "low",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "details",
+          "type": "LONGTEXT",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": "Additional event details"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "length": null,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        },
+        {
+          "name": "id",
+          "type": "CHAR",
+          "length": 36,
+          "nullable": true,
+          "autoIncrement": false,
+          "defaultValue": null,
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_event_type",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_created_at",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_risk_level",
+          "type": "INDEX",
+          "columns": []
+        },
+        {
+          "name": "idx_ip_address",
+          "type": "INDEX",
+          "columns": []
+        }
+      ],
+      "constraints": [],
+      "primaryKey": []
+    }
+  },
+  "views": []
+}
