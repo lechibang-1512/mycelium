@@ -4,6 +4,7 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const { performance } = require('perf_hooks');
 const auth = require('./auth');
+const errors = require('./errors');
 const app = express();
 
 // --- Configuration ---
@@ -19,7 +20,7 @@ const DB_CONFIG = {
 };
 
 // --- Middleware Setup ---
-app.set('view engine', 'ejs');
+app.set('viewEngine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -37,7 +38,7 @@ app.use(async (req, res, next) => {
         next();
     } catch (err) {
         console.error('Database connection error:', err);
-        return res.status(500).render('error', { message: 'Database connection error' });
+        return res.status(500).render('error', { message: errors.DATABASE_CONNECTION_ERROR});
     }
 });
 
@@ -47,7 +48,7 @@ app.use(async (req, res, next) => {
 app.use((err, req, res, next) => {
     console.error('Error:', err);
     res.status(500).render('error', {
-        message: 'An error occurred. Please try again later.',
+        message: errors.ERROR_OCCURED,
         errorDetails: err.message
     });
 });
@@ -84,7 +85,7 @@ app.get('/admin/login', (req, res) => {
 
 // Admin login POST route
 app.post('/admin/login', (req, res) => {
-    const { username, password } = req.body;
+    const { username = "", password = ""} = req.body;
     if (auth.loginAdmin(req, username, password)) {
         return res.redirect('/products');
     } else {
