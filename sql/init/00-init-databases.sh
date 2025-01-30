@@ -15,9 +15,9 @@ mariadb -u root -p"$MARIADB_ROOT_PASSWORD" <<-EOSQL
 EOSQL
 
 echo "📦 Importing master_db schema..."
-mariadb -u root -p"$MARIADB_ROOT_PASSWORD" master_db < /docker-entrypoint-initdb.d/master_db_export.sql
+mariadb -u root -p"$MARIADB_ROOT_PASSWORD" master_db < /docker-entrypoint-initdb.d/master_db.sql
 
 echo "🔐 Importing security_db schema..."
-mariadb -u root -p"$MARIADB_ROOT_PASSWORD" security_db < /docker-entrypoint-initdb.d/security_db_export.sql
+mariadb -u root -p"$MARIADB_ROOT_PASSWORD" security_db < /docker-entrypoint-initdb.d/security_db.sql
 
 echo "✅ Database initialization complete!"

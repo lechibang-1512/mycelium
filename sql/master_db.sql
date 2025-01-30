@@ -965,4 +965,61 @@ CREATE TABLE `inventory_log` (
 ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */
 ;
--- Schema re-created on 2026-02-08
+
+-- ============================================================
+-- VIEWS
+-- ============================================================
+
+DROP VIEW IF EXISTS `view_inventory_summary`;
+CREATE VIEW `view_inventory_summary` AS 
+select 
+  `i`.`product_id` AS `product_id`,
+  coalesce(`p`.`device_name`,`sp`.`part_name`) AS `device_name`,
+  coalesce(`p`.`device_maker`,`sp`.`part_category`) AS `brand`,
+  sum(`i`.`quantity`) AS `total_on_hand`,
+  sum(`i`.`reserved_quantity`) AS `total_reserved`,
+  sum(`i`.`quantity`) - sum(coalesce(`i`.`reserved_quantity`,0)) AS `available_to_promise`,
+  `w`.`name` AS `warehouse_name`,
+  `i`.`warehouse_id` AS `warehouse_id` 
+from (((`inventory` `i` 
+  left join `phone_specs` `p` on(`i`.`product_id` = `p`.`product_id`)) 
+  left join `spare_parts` `sp` on(`i`.`product_id` = `sp`.`spare_part_id`)) 
+  join `warehouses` `w` on(`i`.`warehouse_id` = `w`.`warehouse_id`)) 
+group by `i`.`product_id`,`i`.`warehouse_id`,`w`.`name`;
+
+DROP VIEW IF EXISTS `view_repair_jobs_augmented`;
+CREATE VIEW `view_repair_jobs_augmented` AS 
+select 
+  `r`.`repair_job_id` AS `repair_job_id`,
+  `r`.`job_number` AS `job_number`,
+  `r`.`status` AS `status`,
+  `r`.`priority` AS `priority`,
+  `r`.`customer_name` AS `customer_name`,
+  `r`.`device_name` AS `device_name`,
+  `r`.`cost_estimated` AS `cost_estimated`,
+  `r`.`cost_final` AS `cost_final`,
+  count(`rp`.`id`) AS `parts_count` 
+from (`repair_jobs` `r` 
+  left join `repair_job_parts` `rp` on(`r`.`repair_job_id` = `rp`.`repair_job_id`)) 
+group by `r`.`repair_job_id`;
+
+DROP VIEW IF EXISTS `view_transaction_ledger`;
+CREATE VIEW `view_transaction_ledger` AS 
+select 
+  `t`.`id` AS `transaction_id`,
+  `t`.`transaction_date` AS `transaction_date`,
+  `t`.`transaction_type` AS `transaction_type`,
+  `w_src`.`name` AS `from_warehouse`,
+  `w_dst`.`name` AS `to_warehouse`,
+  `t`.`product_id` AS `product_id`,
+  `p`.`device_name` AS `device_name`,
+  `t`.`quantity_changed` AS `quantity_changed`,
+  `t`.`total_value` AS `total_value`,
+  `t`.`user_id` AS `user_id`,
+  `t`.`notes` AS `notes` 
+from (((`transactions` `t` 
+  left join `warehouses` `w_src` on(`t`.`from_warehouse_id` = `w_src`.`warehouse_id`)) 
+  left join `warehouses` `w_dst` on(`t`.`warehouse_id` = `w_dst`.`warehouse_id`)) 
+  left join `phone_specs` `p` on(`t`.`product_id` = `p`.`product_id`));
+
+-- Schema unified on 2026-05-31
