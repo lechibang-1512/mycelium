@@ -56,8 +56,8 @@ app.get('/products', ensureAuthenticated, async (req, res, next) => {
             products,
             brands,
             models,
-            selectedBrand: req.query.brand || '',
-            selectedModel: req.query.model || ''
+            selectedBrand: req.query?.brand || '',
+            selectedModel: req.query?.model || ''
         });
     } catch (error) {
         console.error('Error in /products route:', error);
@@ -86,6 +86,14 @@ app.get('/purchaseHistory', ensureAuthenticated, async (req, res, next) => {
     try {
         const orders = await dbQueries.getPurchaseHistory(req.db);
 
+        function getTopItems(salesData, count = 1) {
+            const sortedEntries = Object.entries(salesData)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, count)
+                .map(([name, sales]) => ({ name, sales }));
+            return count === 1 ? sortedEntries[0]?.name || 'N/A' : sortedEntries;
+        }
+
         let totalSales = 0;
         let customerSales = {};
         let deviceSales = {};
@@ -106,32 +114,23 @@ app.get('/purchaseHistory', ensureAuthenticated, async (req, res, next) => {
                     console.warn(`Invalid price encountered: ${order.sm_price}`);
                 }
             });
-
-            let topCustomer = Object.keys(customerSales).reduce((a, b) => customerSales[a] > customerSales[b] ? a : b, 'N/A');
-            let topDevice = Object.keys(deviceSales).reduce((a, b) => deviceSales[a] > deviceSales[b] ? a : b, 'N/A');
-            const avgSalesPerCustomer = Object.keys(customerSales).length > 0 ? totalSales / Object.keys(customerSales).length : 0;
-            const topCustomers = Object.entries(customerSales)
-                .sort(([, a], [, b]) => b - a)
-                .slice(0, 5)
-                .map(([name, sales]) => ({ name, sales }));
-            const topDevices = Object.entries(deviceSales)
-                .sort(([, a], [, b]) => b - a)
-                .slice(0, 5)
-                .map(([name, sales]) => ({ name, sales }));
-
-            res.render('purchaseHistory', {
-                orders: orders,
-                totalSales: totalSales,
-                topCustomer: topCustomer === 'N/A' ? "No Data Available" : topCustomer,
-                topDevice: topDevice === 'N/A' ? "No Data Available" : topDevice,
-                avgSalesPerCustomer: avgSalesPerCustomer,
-                numberOfOrders: numberOfOrders,
-                topCustomers: topCustomers,
-                topDevices: topDevices
-            });
-        } else {
-            res.render('purchaseHistory', { orders });
         }
+        const topCustomer = getTopItems(customerSales);
+        const topDevice = getTopItems(deviceSales);
+        const avgSalesPerCustomer = Object.keys(customerSales).length > 0 ? totalSales / Object.keys(customerSales).length : 0;
+        const topCustomers = getTopItems(customerSales, 5);
+        const topDevices = getTopItems(deviceSales, 5);
+
+        res.render('purchaseHistory', {
+            orders: orders,
+            totalSales: totalSales,
+            topCustomer: topCustomer === 'N/A' ? "No Data Available" : topCustomer,
+            topDevice: topDevice === 'N/A' ? "No Data Available" : topDevice,
+            avgSalesPerCustomer: avgSalesPerCustomer,
+            numberOfOrders: numberOfOrders,
+            topCustomers: topCustomers,
+            topDevices: topDevices
+        });
     } catch (error) {
         console.error('Error fetching purchase history:', error);
         next(error);
