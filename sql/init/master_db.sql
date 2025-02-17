@@ -1011,15 +1011,16 @@ select
   `t`.`transaction_type` AS `transaction_type`,
   `w_src`.`name` AS `from_warehouse`,
   `w_dst`.`name` AS `to_warehouse`,
-  `t`.`product_id` AS `product_id`,
+  `ti`.`product_id` AS `product_id`,
   `p`.`device_name` AS `device_name`,
-  `t`.`quantity_changed` AS `quantity_changed`,
-  `t`.`total_value` AS `total_value`,
+  `ti`.`quantity_changed` AS `quantity_changed`,
+  `ti`.`total_value` AS `total_value`,
   `t`.`user_id` AS `user_id`,
   `t`.`notes` AS `notes` 
-from (((`transactions` `t` 
+from ((((`transactions` `t` 
+  left join `transaction_items` `ti` on(`t`.`id` = `ti`.`transaction_id`))
   left join `warehouses` `w_src` on(`t`.`from_warehouse_id` = `w_src`.`warehouse_id`)) 
   left join `warehouses` `w_dst` on(`t`.`warehouse_id` = `w_dst`.`warehouse_id`)) 
-  left join `phone_specs` `p` on(`t`.`product_id` = `p`.`product_id`));
+  left join `phone_specs` `p` on(`ti`.`product_id` = `p`.`product_id`));
 
 -- Schema unified on 2026-05-31

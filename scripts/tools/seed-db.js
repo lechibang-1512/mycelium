@@ -11,13 +11,12 @@ async function seed() {
     const [admin, adminCreated] = await User.findOrCreate({
         where: { username: 'admin' },
         defaults: {
-            user_id: generateId(),
+            id: generateId(),
             password: adminPassword,
             email: 'admin@mycelium.com',
-            full_name: 'System Admin',
+            fullName: 'System Admin',
             role: 'admin',
-            is_active: 1,
-            is_locked: 0
+            is_active: 1
         }
     });
     

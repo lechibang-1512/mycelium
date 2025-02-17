@@ -17,8 +17,8 @@ User.hasMany(AuditLog, { foreignKey: 'user_id' });
 AuditLog.belongsTo(User, { foreignKey: 'user_id' });
 
 // RBAC: User <-> Role (many-to-many via user_roles)
-User.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id', otherKey: 'role_id', sourceKey: 'user_id', targetKey: 'role_id' });
-Role.belongsToMany(User, { through: UserRole, foreignKey: 'role_id', otherKey: 'user_id', sourceKey: 'role_id', targetKey: 'user_id' });
+User.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id', otherKey: 'role_id', sourceKey: 'id', targetKey: 'role_id' });
+Role.belongsToMany(User, { through: UserRole, foreignKey: 'role_id', otherKey: 'user_id', sourceKey: 'role_id', targetKey: 'id' });
 
 // RBAC: Role <-> Permission (many-to-many via role_permissions)
 Role.belongsToMany(Permission, { through: RolePermission, foreignKey: 'role_id', otherKey: 'permission_id', sourceKey: 'role_id', targetKey: 'permission_id' });

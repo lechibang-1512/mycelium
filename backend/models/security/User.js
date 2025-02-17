@@ -2,13 +2,13 @@ const { DataTypes } = require('sequelize');
 const { sequelizeSecurity } = require('../../config/sequelize');
 
 const User = sequelizeSecurity.define('User', {
-    user_id: {
+    id: {
         type: DataTypes.CHAR(36),
         allowNull: false,
         primaryKey: true,
     },
     username: {
-        type: DataTypes.STRING(100),
+        type: DataTypes.STRING(50),
         allowNull: false,
         unique: true
     },
@@ -21,8 +21,8 @@ const User = sequelizeSecurity.define('User', {
         allowNull: true,
         unique: true
     },
-    full_name: {
-        type: DataTypes.STRING(255),
+    fullName: {
+        type: DataTypes.STRING(100),
         allowNull: true,
     },
     is_active: {
@@ -30,15 +30,18 @@ const User = sequelizeSecurity.define('User', {
         allowNull: true,
         defaultValue: 1,
     },
-    is_locked: {
-        type: DataTypes.TINYINT,
+    locked_until: {
+        type: DataTypes.DATE,
         allowNull: true,
-        defaultValue: 0,
     },
     failed_login_attempts: {
         type: DataTypes.INTEGER,
         allowNull: true,
         defaultValue: 0,
+    },
+    role: {
+        type: DataTypes.STRING(50),
+        allowNull: true,
     },
     last_login: {
         type: DataTypes.DATE,
