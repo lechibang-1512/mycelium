@@ -16,6 +16,7 @@ COPY index.html ./
 COPY frontend/ ./frontend/
 COPY backend/ ./backend/
 COPY scripts/tools/clean-simple.js ./scripts/tools/clean-simple.js
+COPY scripts/tools/setup-assets.js ./scripts/tools/setup-assets.js
 
 # Build the frontend (Vite build only, no server start)
 RUN npm run build:only
