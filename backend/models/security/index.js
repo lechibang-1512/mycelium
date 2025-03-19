@@ -27,7 +27,6 @@ Permission.belongsToMany(Role, { through: RolePermission, foreignKey: 'permissio
 module.exports = {
     User,
     Session,
-    AuditLog,
     Role,
     Permission,
     RolePermission,

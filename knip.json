@@ -3,7 +3,9 @@
     "entry": [
         "backend/jobs/*.js",
         "scripts/tools/utils-*.js",
-        "scripts/reports/*.js"
+        "scripts/reports/*.js",
+        "scripts/tools/seed-db.js",
+        "frontend/components/ui/Card.jsx"
     ],
     "project": [
         "backend/**/*.{js,cjs,mjs}",
@@ -15,9 +17,7 @@
         "node_modules/**",
         "sql/**",
         "docs/**",
-        "public/**",
-        "backend/jobs/generate-efficiency-reports.js",
-        "backend/jobs/generate-reorder-recommendations.js"
+        "public/**"
     ],
     "vite": {
         "config": "backend/config/vite.config.mjs",

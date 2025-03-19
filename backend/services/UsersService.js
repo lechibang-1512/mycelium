@@ -15,7 +15,7 @@ class UsersService {
 
     async getAllUsers() {
         const users = await User.findAll({
-            attributes: ['user_id', 'username', 'email', 'full_name', 'is_active', 'last_login', 'created_at', 'updated_at'],
+            attributes: ['id', 'username', 'email', 'fullName', 'is_active', 'last_login', 'created_at', 'updated_at'],
             include: [{
                 model: Role,
                 attributes: ['name'],
@@ -25,13 +25,13 @@ class UsersService {
         });
 
         return users.map((u) => ({
-            id: u.user_id,
-            user_id: u.user_id,
+            id: u.id,
+            user_id: u.id,
             username: u.username,
             email: u.email,
             roles: u.Roles ? u.Roles.map(r => r.name) : [],
-            fullName: u.full_name,
-            full_name: u.full_name,
+            fullName: u.fullName,
+            full_name: u.fullName,
             is_active: !!u.is_active,
             created_at: u.created_at,
             updated_at: u.updated_at,
@@ -43,7 +43,7 @@ class UsersService {
         if (!userId) return null;
 
         const user = await User.findByPk(userId, {
-            attributes: ['user_id', 'username', 'email', 'full_name', 'is_active', 'last_login', 'created_at', 'updated_at'],
+            attributes: ['id', 'username', 'email', 'fullName', 'is_active', 'last_login', 'created_at', 'updated_at'],
             include: [{
                 model: Role,
                 attributes: ['name'],
@@ -54,13 +54,13 @@ class UsersService {
         if (!user) return null;
 
         return {
-            id: user.user_id,
-            user_id: user.user_id,
+            id: user.id,
+            user_id: user.id,
             username: user.username,
             email: user.email,
             roles: user.Roles ? user.Roles.map(r => r.name) : [],
-            fullName: user.full_name,
-            full_name: user.full_name,
+            fullName: user.fullName,
+            full_name: user.fullName,
             is_active: !!user.is_active,
             created_at: user.created_at,
             updated_at: user.updated_at,
@@ -79,11 +79,11 @@ class UsersService {
 
             const userId = generateId();
             await User.create({
-                user_id: userId,
+                id: userId,
                 username,
                 password: hashedPassword,
                 email,
-                full_name: fullName,
+                fullName,
                 is_active: is_active !== undefined ? (is_active ? 1 : 0) : 1
             });
 
@@ -114,16 +114,16 @@ class UsersService {
     async updateUser(userId, userData) {
         const { username, email, fullName, password, is_active } = userData;
 
-        const user = await User.findByPk(userId, { attributes: ['user_id'] });
+        const user = await User.findByPk(userId, { attributes: ['id'] });
         if (!user) return { error: 'User not found' };
 
         if (username || email) {
             const dup = await User.findOne({
                 where: {
                     [Op.or]: [{ username: username || '' }, { email: email || '' }],
-                    user_id: { [Op.ne]: userId }
+                    id: { [Op.ne]: userId }
                 },
-                attributes: ['user_id']
+                attributes: ['id']
             });
             if (dup) return { error: 'Username or email already in use' };
         }
@@ -132,7 +132,7 @@ class UsersService {
 
         if (username) updateData.username = username;
         if (email) updateData.email = email;
-        if (fullName) updateData.full_name = fullName;
+        if (fullName) updateData.fullName = fullName;
         if (is_active !== undefined) updateData.is_active = is_active ? 1 : 0;
 
         if (password) {
@@ -142,12 +142,12 @@ class UsersService {
 
         if (Object.keys(updateData).length === 0) return { success: true };
 
-        await User.update(updateData, { where: { user_id: userId } });
+        await User.update(updateData, { where: { id: userId } });
         return { success: true };
     }
 
     async deleteUser(userId) {
-        await User.destroy({ where: { user_id: userId } });
+        await User.destroy({ where: { id: userId } });
         return { success: true };
     }
 }

@@ -63,19 +63,20 @@ class AuthService {
 
             await Session.create({
                 session_id: sessionId,
-                user_id: user.user_id,
-                expires: expiresAt,
+                user_id: user.id,
+                expires: expiresAt.getTime(),
                 ip_address: ipAddress,
                 is_active: 1,
                 created_at: new Date()
             });
 
             const userObj = {
-                id: user.user_id,
+                id: user.id,
+                user_id: user.id,
                 username: user.username,
                 email: user.email,
-                fullName: user.full_name,
-                full_name: user.full_name,
+                fullName: user.fullName,
+                full_name: user.fullName,
                 is_active: user.is_active,
                 last_login: user.last_login
             };
@@ -101,23 +102,25 @@ class AuthService {
             });
 
             // Ensure session is not expired
-            if (!session || new Date() > new Date(session.expires)) return null;
+            if (!session || new Date() > new Date(Number(session.expires))) return null;
 
             const user = await User.findOne({
-                where: { user_id: session.user_id }
+                where: { id: session.user_id }
             });
 
             if (!user) return null;
 
             // Fetch user roles for the session
             const rbacService = new RBACService();
-            const { roles, permissions } = await rbacService.getUserPermissions(user.user_id);
+            const { roles, permissions } = await rbacService.getUserPermissions(user.id);
 
             return {
-                user_id: user.user_id,
+                id: user.id,
+                user_id: user.id,
                 username: user.username,
                 email: user.email,
-                full_name: user.full_name,
+                fullName: user.fullName,
+                full_name: user.fullName,
                 is_active: user.is_active,
                 roles: roles.map(r => r.name),
                 permissions: permissions.map(p => p.name)

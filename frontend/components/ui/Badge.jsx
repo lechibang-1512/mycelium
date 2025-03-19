@@ -9,16 +9,6 @@ const variantClasses = {
   primary: 'bg-blue-100 text-blue-800 border-blue-200',
 };
 
-// Map old status names to new colors if we need generic getStatusColor logic here
-export function getSemanticColor(status) {
-    const s = (status || '').toLowerCase();
-    if (s.includes('pending') || s.includes('waiting') || s.includes('low')) return 'warning';
-    if (s.includes('progress') || s.includes('diagnosed') || s.includes('inspecting')) return 'info';
-    if (s.includes('complete') || s.includes('resolved') || s.includes('closed') || s.includes('in stock') || s.includes('active')) return 'success';
-    if (s.includes('cancelled') || s.includes('rejected') || s.includes('out') || s.includes('inactive')) return 'danger';
-    return 'secondary';
-}
-
 export function Badge({ children, variant = 'secondary', className = '' }) {
   const classes = variantClasses[variant] || variantClasses.secondary;
   

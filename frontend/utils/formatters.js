@@ -41,13 +41,6 @@ export function formatDateTime(dateString) {
         ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 }
 
-/**
- * Get today's date as ISO string (YYYY-MM-DD)
- * @returns {string}
- */
-export function todayISO() {
-    return new Date().toISOString().slice(0, 10);
-}
 
 /**
  * Format a number with locale-aware thousands separators

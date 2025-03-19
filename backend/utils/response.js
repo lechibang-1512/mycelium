@@ -3,27 +3,6 @@
  * Combines response formatting and Express response helpers.
  */
 
-const ERROR_CODES = {
-    NOT_FOUND: 'NOT_FOUND',
-    VALIDATION_ERROR: 'VALIDATION_ERROR',
-    UNAUTHORIZED: 'UNAUTHORIZED',
-    FORBIDDEN: 'FORBIDDEN',
-    INTERNAL_ERROR: 'INTERNAL_ERROR',
-    BAD_REQUEST: 'BAD_REQUEST',
-    CONFLICT: 'CONFLICT',
-    TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS'
-};
-
-const ERROR_STATUS = {
-    NOT_FOUND: 404,
-    VALIDATION_ERROR: 400,
-    UNAUTHORIZED: 401,
-    FORBIDDEN: 403,
-    INTERNAL_ERROR: 500,
-    BAD_REQUEST: 400,
-    CONFLICT: 409,
-    TOO_MANY_REQUESTS: 429
-};
 
 /**
  * Format a successful response object (internal use or for returning object directly)
@@ -76,8 +55,5 @@ module.exports = {
     success,
     // Express Helpers
     sendSuccess,
-    sendError,
-    // Constants
-    ERROR_CODES,
-    ERROR_STATUS
+    sendError
 };

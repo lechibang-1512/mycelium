@@ -1,13 +1,10 @@
 // Automatically generated from schema
-const User = require('./User');
 const Supplier = require('./Supplier');
 const PhoneSpec = require('./PhoneSpec');
 const Warehouse = require('./Warehouse');
 const Product = require('./Product');
 const SparePart = require('./SparePart');
-const SmartphoneSparePart = require('./SmartphoneSparePart');
 const Invoice = require('./Invoice');
-const RepairJobTemplate = require('./RepairJobTemplate');
 const WarehouseZone = require('./WarehouseZone');
 const InvoiceItem = require('./InvoiceItem');
 const RepairJob = require('./RepairJob');
@@ -22,8 +19,6 @@ const StocktakeItem = require('./StocktakeItem');
 const StocktakeStatusHistory = require('./StocktakeStatusHistory');
 const WarehouseBin = require('./WarehouseBin');
 const Inventory = require('./Inventory');
-const ProductInventory = require('./ProductInventory');
-const InventoryLog = require('./InventoryLog');
 
 // Define associations here
 
@@ -68,29 +63,21 @@ RepairJob.hasMany(RepairJobAttachment, { foreignKey: 'repair_job_id' });
 RepairJobAttachment.belongsTo(RepairJob, { foreignKey: 'repair_job_id' });
 
 module.exports = {
-    User,
     Supplier,
     PhoneSpec,
     Warehouse,
     Product,
     SparePart,
-    SmartphoneSparePart,
     Invoice,
-    RepairJobTemplate,
     WarehouseZone,
     InvoiceItem,
     RepairJob,
-    RepairJobAttachment,
     RepairJobPart,
     Transaction,
-    TransactionItem,
     Rma,
-    RmaItem,
     Stocktake,
     StocktakeItem,
     StocktakeStatusHistory,
     WarehouseBin,
-    Inventory,
-    ProductInventory,
-    InventoryLog
+    Inventory
 };

@@ -56,4 +56,4 @@ function sendCSVResponse(res, filename, columns, rows) {
     res.send(csv);
 }
 
-module.exports = { generateCSV, sendCSVResponse };
+module.exports = { sendCSVResponse };

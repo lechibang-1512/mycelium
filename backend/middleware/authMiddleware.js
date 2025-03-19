@@ -94,21 +94,6 @@ function createAuthMiddleware(options = {}) {
     };
 }
 
-/**
- * Middleware to require authentication
- * Use after authMiddleware to enforce auth on specific routes
- */
-function requireAuth(req, res, next) {
-    if (!req.user || !req.user.id) {
-        return res.status(401).json({
-            error: 'Unauthorized',
-            message: 'Authentication required. Please log in.'
-        });
-    }
-    next();
-}
-
 module.exports = {
-    createAuthMiddleware,
-    requireAuth
+    createAuthMiddleware
 };

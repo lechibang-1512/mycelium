@@ -11,7 +11,7 @@ const Session = sequelizeSecurity.define('Session', {
 
     },
     expires: {
-        type: DataTypes.DATE,
+        type: DataTypes.BIGINT,
         allowNull: true,
 
 

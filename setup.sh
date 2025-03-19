@@ -33,19 +33,19 @@ fi
 
 # 2. Seed Database
 echo "🌱 Phase 2: Seeding Database..."
-node scripts/seed-db.js
+node scripts/tools/seed-db.js
 if [ $? -ne 0 ]; then
     echo "❌ Database seeding failed!"
     exit 1
 fi
 
 # 3. Initialize RBAC
-echo "🔐 Phase 3: Initializing RBAC..."
-node scripts/init-rbac.js
-if [ $? -ne 0 ]; then
-    echo "❌ RBAC initialization failed!"
-    exit 1
-fi
+echo "🔐 Phase 3: Initializing RBAC (Skipped - handled by DB schemas)..."
+# node scripts/init-rbac.js
+# if [ $? -ne 0 ]; then
+#     echo "❌ RBAC initialization failed!"
+#     exit 1
+# fi
 
 echo "============================="
 echo "✅ Setup Complete!"

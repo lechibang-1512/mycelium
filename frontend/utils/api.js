@@ -1,4 +1,4 @@
-export const BASE_URL = '/api';
+const BASE_URL = '/api';
 
 /**
  * Wrapper around fetch() with JSON defaults and credential handling.
