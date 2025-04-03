@@ -29,7 +29,8 @@
     "safety": "bash scripts/tools/safety-check.sh",
     "safety:audit": "npm audit",
     "safety:quick": "bash scripts/tools/safety-check.sh --secrets --sql --auth --errors",
-    "setup:assets": "node scripts/tools/setup-assets.js"
+    "setup:assets": "node scripts/tools/setup-assets.js",
+    "generate:docs": "node scripts/tools/generate-swagger.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
@@ -51,6 +52,7 @@
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.14.0",
     "sequelize": "^6.37.8",
+    "swagger-ui-express": "^5.0.1",
     "uuid": "^13.0.0",
     "xmlbuilder2": "^4.0.3"
   },
@@ -60,6 +62,7 @@
     "eslint": "^9.39.3",
     "globals": "^16.4.0",
     "knip": "^5.82.1",
+    "swagger-autogen": "^2.23.7",
     "vite": "^7.1.7"
   }
 }

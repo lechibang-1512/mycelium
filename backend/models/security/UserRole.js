@@ -2,15 +2,18 @@ const { DataTypes } = require('sequelize');
 const { sequelizeSecurity } = require('../../config/sequelize');
 
 const UserRole = sequelizeSecurity.define('UserRole', {
-    user_id: {
+    id: {
         type: DataTypes.CHAR(36),
         allowNull: false,
         primaryKey: true,
     },
+    user_id: {
+        type: DataTypes.CHAR(36),
+        allowNull: false,
+    },
     role_id: {
         type: DataTypes.CHAR(36),
         allowNull: false,
-        primaryKey: true,
     },
     assigned_at: {
         type: DataTypes.DATE,

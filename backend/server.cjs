@@ -24,6 +24,7 @@ const reportRoutes = require('./routes/reports');
 
 const cookieParser = require('cookie-parser');
 const fs = require('fs');
+const swaggerUi = require('swagger-ui-express');
 
 
 // SQL Pool is loaded by services directly from config/database.js
@@ -90,6 +91,14 @@ async function startServer() {
 
         // Main routes
         app.use('/api', require('./routes/index')());
+
+        // Swagger API Documentation
+        try {
+            const swaggerDocument = require('../swagger-output.json');
+            app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+        } catch (e) {
+            console.warn('⚠️ Swagger documentation not found. Run npm run generate:docs to create it.');
+        }
 
         // Serve SPA
         const distPath2 = path.join(__dirname, '../dist');

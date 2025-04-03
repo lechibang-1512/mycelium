@@ -53,6 +53,7 @@ DROP TABLE IF EXISTS `roles`;
 CREATE TABLE `roles` (
   `name` varchar(50) NOT NULL COMMENT 'admin, manager, staff, read_only',
   `description` text DEFAULT NULL,
+  `is_system` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `id` char(36) NOT NULL,
@@ -76,21 +77,6 @@ CREATE TABLE `permissions` (
   KEY `idx_permission_name` (`name`),
   KEY `idx_resource_action` (`resource`, `action`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'Fine-grained permissions for RBAC system';
---
--- Table: casbin_rules
---
-DROP TABLE IF EXISTS `casbin_rules`;
-CREATE TABLE `casbin_rules` (
-  `ptype` varchar(100) DEFAULT NULL,
-  `v0` varchar(100) DEFAULT NULL,
-  `v1` varchar(100) DEFAULT NULL,
-  `v2` varchar(100) DEFAULT NULL,
-  `v3` varchar(100) DEFAULT NULL,
-  `v4` varchar(100) DEFAULT NULL,
-  `v5` varchar(100) DEFAULT NULL,
-  `id` char(36) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 -- ============================================================
 -- JUNCTION / DEPENDENT TABLES
 -- ============================================================
@@ -111,7 +97,7 @@ CREATE TABLE `user_roles` (
 --
 DROP TABLE IF EXISTS `role_permissions`;
 CREATE TABLE `role_permissions` (
-  `granted_at` timestamp NULL DEFAULT current_timestamp(),
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
   `role_id` char(36) DEFAULT NULL,
   `permission_id` char(36) DEFAULT NULL,
   `id` char(36) NOT NULL,

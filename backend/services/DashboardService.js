@@ -71,9 +71,10 @@ class DashboardService {
         const rows = await sequelizeMaster.query(`
             SELECT
                 DATE(t.transaction_date) AS date,
-                SUM(CASE WHEN t.transaction_type = 'incoming' THEN ABS(t.quantity_changed) ELSE 0 END) AS inbound,
-                SUM(CASE WHEN t.transaction_type = 'outgoing' THEN ABS(t.quantity_changed) ELSE 0 END) AS outbound
+                SUM(CASE WHEN t.transaction_type = 'incoming' THEN ABS(ti.quantity_changed) ELSE 0 END) AS inbound,
+                SUM(CASE WHEN t.transaction_type = 'outgoing' THEN ABS(ti.quantity_changed) ELSE 0 END) AS outbound
             FROM transactions t
+            LEFT JOIN transaction_items ti ON t.id = ti.transaction_id
             WHERE t.transaction_date >= DATE_SUB(CURDATE(), INTERVAL :days DAY)
             GROUP BY DATE(t.transaction_date)
             ORDER BY date ASC
