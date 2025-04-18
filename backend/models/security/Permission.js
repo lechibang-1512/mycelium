@@ -14,7 +14,7 @@ const Permission = sequelizeSecurity.define('Permission', {
         unique: true
     },
     description: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.TEXT,
         allowNull: true,
     },
     category: {

@@ -86,7 +86,6 @@ CREATE TABLE `permissions` (
 DROP TABLE IF EXISTS `user_roles`;
 CREATE TABLE `user_roles` (
   `assigned_at` timestamp NULL DEFAULT current_timestamp(),
-  `assigned_by` int(11) DEFAULT NULL COMMENT 'Admin who assigned the role',
   `user_id` char(36) DEFAULT NULL,
   `role_id` char(36) DEFAULT NULL,
   `id` char(36) NOT NULL,
