@@ -7,7 +7,8 @@ async function seed() {
     console.log('🌱 Seeding security_db...');
     
     // Create admin user
-    const adminPassword = bcrypt.hashSync(process.env.ADMIN_DEFAULT_PASSWORD || 'admin', 10);
+    // Use a hardcoded default for seeding; users should change this immediately
+    const adminPassword = bcrypt.hashSync('admin', 10);
     const [admin, adminCreated] = await User.findOrCreate({
         where: { username: 'admin' },
         defaults: {
