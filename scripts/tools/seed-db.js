@@ -44,12 +44,32 @@ async function seed() {
 
     // Create default permissions
     const permissions = [
-        { name: 'inventory.read', resource: 'inventory', action: 'read', description: 'Read inventory data' },
-        { name: 'inventory.write', resource: 'inventory', action: 'write', description: 'Modify inventory data' },
-        { name: 'users.manage', resource: 'users', action: 'manage', description: 'Manage users and roles' },
-        { name: 'warehouses.manage', resource: 'warehouses', action: 'manage', description: 'Manage warehouses and zones' },
-        { name: 'reports.view', resource: 'reports', action: 'read', description: 'View system reports' },
-        { name: 'settings.manage', resource: 'settings', action: 'manage', description: 'Manage system settings' }
+        { name: 'inventory:read', resource: 'inventory', action: 'read', description: 'Read inventory data' },
+        { name: 'inventory:write', resource: 'inventory', action: 'write', description: 'Modify inventory data' },
+        { name: 'inventory:delete', resource: 'inventory', action: 'delete', description: 'Delete inventory data' },
+        { name: 'invoice:read', resource: 'invoice', action: 'read', description: 'Read invoice data' },
+        { name: 'invoice:write', resource: 'invoice', action: 'write', description: 'Modify invoice data' },
+        { name: 'invoice:delete', resource: 'invoice', action: 'delete', description: 'Delete invoice data' },
+        { name: 'repair:read', resource: 'repair', action: 'read', description: 'Read repair data' },
+        { name: 'repair:write', resource: 'repair', action: 'write', description: 'Modify repair data' },
+        { name: 'repair:delete', resource: 'repair', action: 'delete', description: 'Delete repair data' },
+        { name: 'rma:read', resource: 'rma', action: 'read', description: 'Read RMA data' },
+        { name: 'rma:write', resource: 'rma', action: 'write', description: 'Modify RMA data' },
+        { name: 'rma:delete', resource: 'rma', action: 'delete', description: 'Delete RMA data' },
+        { name: 'serialized:read', resource: 'serialized', action: 'read', description: 'Read serialized inventory data' },
+        { name: 'serialized:write', resource: 'serialized', action: 'write', description: 'Modify serialized inventory data' },
+        { name: 'serialized:delete', resource: 'serialized', action: 'delete', description: 'Delete serialized inventory data' },
+        { name: 'stocktake:read', resource: 'stocktake', action: 'read', description: 'Read stocktake data' },
+        { name: 'stocktake:write', resource: 'stocktake', action: 'write', description: 'Modify stocktake data' },
+        { name: 'stocktake:delete', resource: 'stocktake', action: 'delete', description: 'Delete stocktake data' },
+        { name: 'users:read', resource: 'users', action: 'read', description: 'Read users data' },
+        { name: 'users:write', resource: 'users', action: 'write', description: 'Modify users data' },
+        { name: 'users:delete', resource: 'users', action: 'delete', description: 'Delete users data' },
+        { name: 'warehouse:read', resource: 'warehouse', action: 'read', description: 'Read warehouse data' },
+        { name: 'warehouse:write', resource: 'warehouse', action: 'write', description: 'Modify warehouse data' },
+        { name: 'warehouse:delete', resource: 'warehouse', action: 'delete', description: 'Delete warehouse data' },
+        { name: 'reports:read', resource: 'reports', action: 'read', description: 'View system reports' },
+        { name: 'settings:manage', resource: 'settings', action: 'manage', description: 'Manage system settings' }
     ];
 
     for (const perm of permissions) {
