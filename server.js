@@ -6,16 +6,17 @@ const auth = require('./auth');
 const errors = require('./errors');
 const dbQueries = require('./dbQueries');  // Import the query functions
 const app = express();
+require('dotenv').config();
 
 // --- Configuration ---
 const PORT = process.env.PORT || 3000;
 const DB_CONFIG = {
-    host: 'localhost',
-    user: 'root',
-    password: '1212',
-    database: 'master_specs_db',
+    host: process.env.DB_HOST ,
+    user: process.env.DB_USER ,
+    password: process.env.DB_PASSWORD ,
+    database: process.env.DB_NAME ,
     waitForConnections: true,
-    connectionLimit: 10,
+    connectionLimit: 100,
     queueLimit: 0
 };
 
@@ -71,7 +72,7 @@ app.get('/product/:id', ensureAuthenticated, async (req, res, next) => {
         const product = await dbQueries.getProductById(req.db, req.params.id);
 
         if (!product || product.length === 0) {
-            return res.status(404).render('error', { message: 'Product not found' });
+            return res.status(404).render('error', { message: errors.PRODUCT_NOT_FOUND });
         }
 
         res.render('productDetails', { product: product[0] });
@@ -111,7 +112,7 @@ app.get('/purchaseHistory', ensureAuthenticated, async (req, res, next) => {
 
                     deviceSales[order.sm_name] = (deviceSales[order.sm_name] || 0) + price;
                 } else {
-                    console.warn(`Invalid price encountered: ${order.sm_price}`);
+                    console.warn(`${errors.INVALID_PRICE}: ${order.sm_price}`);
                 }
             });
         }
