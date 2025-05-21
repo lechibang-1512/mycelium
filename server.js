@@ -19,14 +19,6 @@ const DB_CONFIG = {
     queueLimit: 0
 };
 
-//Define the ensureAuthenticated middleware//
-function ensureAuthenticated (req, res, next) {
-    if (req.isAuthenticated()) {
-        return next();
-    }
-    res.redirect('/login');
-}
-
 
 // --- Middleware Setup ---
 app.set('view engine', 'ejs');
@@ -56,6 +48,11 @@ app.use(async (req, res, next) => {
 });
 
 // --- Route Handlers ---
+
+// Redirect root to /products
+app.get('/', (req, res) => {
+    res.redirect('/products');
+});
 
 // Products Route with Filtering
 app.get('/products', async (req, res, next) => {
@@ -94,58 +91,3 @@ app.get('/product/:id', async (req, res, next) => {
     }
 });
 
-// Purchase History Route
-app.get('/purchaseHistory', async (req, res, next) => {
-    try {
-        const orders = await dbQueries.getPurchaseHistory(req.db);
-
-        function getTopItems(salesData, count = 1) {
-            const sortedEntries = Object.entries(salesData)
-                .sort(([, a], [, b]) => b - a)
-                .slice(0, count)
-                .map(([name, sales]) => ({ name, sales }));
-            return count === 1 ? sortedEntries[0]?.name || 'N/A' : sortedEntries;
-        }
-
-        let totalSales = 0;
-        let customerSales = {};
-        let deviceSales = {};
-        let numberOfOrders = 0;
-
-        if (orders && orders.length > 0) {
-            numberOfOrders = orders.length;
-            orders.forEach(order => {
-                const price = parseFloat(order.sm_price);
-                if (!isNaN(price)) {
-                    totalSales += price;
-
-                    const customerName = `${order.first_name} ${order.last_name}`;
-                    customerSales[customerName] = (customerSales[customerName] || 0) + price;
-
-                    deviceSales[order.sm_name] = (deviceSales[order.sm_name] || 0) + price;
-                } else {
-                    console.warn(`${errors.INVALID_PRICE}: ${order.sm_price}`);
-                }
-            });
-        }
-        const topCustomer = getTopItems(customerSales);
-        const topDevice = getTopItems(deviceSales);
-        const avgSalesPerCustomer = Object.keys(customerSales).length > 0 ? totalSales / Object.keys(customerSales).length : 0;
-        const topCustomers = getTopItems(customerSales, 5);
-        const topDevices = getTopItems(deviceSales, 5);
-
-        res.render('purchaseHistory', {
-            orders: orders,
-            totalSales: totalSales,
-            topCustomer: topCustomer === 'N/A' ? "No Data Available" : topCustomer,
-            topDevice: topDevice === 'N/A' ? "No Data Available" : topDevice,
-            avgSalesPerCustomer: avgSalesPerCustomer,
-            numberOfOrders: numberOfOrders,
-            topCustomers: topCustomers,
-            topDevices: topDevices
-        });
-    } catch (error) {
-        console.error('Error fetching purchase history:', error);
-        next(error);
-    }
-});

@@ -81,49 +81,11 @@ async function getProductById(db, productId) {
     return await queryDatabase(db, query, [productId]);
 }
 
-async function getPurchaseHistory(db) {
-    const query = `
-        SELECT
-            c.first_name,
-            c.last_name,
-            c.email,
-            c.phone_number,
-            c.street_address,
-            ps.sm_name,
-            ps.sm_maker,
-            ps.sm_price,
-            ps.color,
-            ps.ram,
-            ps.rom,
-            od.order_date
-        FROM customer_data.order_details od
-        JOIN master_specs_db.phone_specs ps ON od.phone_id = ps.id
-        JOIN customer_data.customer_info c ON od.customer_id = c.customer_id
-        ORDER BY od.order_date DESC
-    `;
-    return await queryDatabase(db, query);
-}
-
-async function getCustomerInfo(db, customerId) {
-    let query = 'SELECT * FROM customer_data.customer_info';
-    let params = [];
-
-    if (customerId) {
-        query += ' WHERE customer_id = ?';
-        params.push(customerId);
-    }
-
-    query += ' ORDER BY customer_id';
-
-    return await queryDatabase(db, query, params);
-}
-
 module.exports = {
     queryDatabase,
     getProducts,
     getBrands,
     getModels,
     getProductById,
-    getPurchaseHistory,
-    getCustomerInfo
+
 };
