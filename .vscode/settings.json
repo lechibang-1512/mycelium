@@ -1,3 +1,18 @@
 {
-    "github.copilot.advanced": {}
+    "github.copilot.advanced": {},
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 3306,
+            "driver": "MariaDB",
+            "name": "lechhibang",
+            "username": "lechibang",
+            "database": "master_specs_db"
+        }
+    ]
 }

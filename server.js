@@ -4,7 +4,7 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const auth = require('./auth');
 const errors = require('./errors');
-const dbQueries = require('./dbQueries');  // Import the query functions
+const dbQueries = require('./dbqueries');  // Import the query functions
 const app = express();
 require('dotenv').config();
 
@@ -19,6 +19,15 @@ const DB_CONFIG = {
     connectionLimit: 100,
     queueLimit: 0
 };
+
+//Define the ensureAuthenticated middleware//
+function ensureAuthenticated (req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    res.redirect('/login');
+}
+
 
 // --- Middleware Setup ---
 app.set('viewEngine', 'ejs');
