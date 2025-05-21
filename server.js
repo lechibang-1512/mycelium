@@ -2,14 +2,13 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const path = require('path');
 const bodyParser = require('body-parser');
-const auth = require('./auth');
 const errors = require('./errors');
 const dbQueries = require('./dbqueries');  // Import the query functions
 const app = express();
 require('dotenv').config();
 
 // --- Configuration ---
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const DB_CONFIG = {
     host: process.env.DB_HOST ,
     user: process.env.DB_USER ,
@@ -30,12 +29,16 @@ function ensureAuthenticated (req, res, next) {
 
 
 // --- Middleware Setup ---
-app.set('viewEngine', 'ejs');
+app.set('view engine', 'ejs');
+// --- Start Server ---
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(auth.sessionMiddleware);
+
 
 // --- Database Connection Pool ---
 const pool = mysql.createPool(DB_CONFIG);
@@ -55,7 +58,7 @@ app.use(async (req, res, next) => {
 // --- Route Handlers ---
 
 // Products Route with Filtering
-app.get('/products', ensureAuthenticated, async (req, res, next) => {
+app.get('/products', async (req, res, next) => {
     try {
         const filters = { brand: req.query.brand, model: req.query.model };
         const products = await dbQueries.getProducts(req.db, filters);
@@ -76,7 +79,7 @@ app.get('/products', ensureAuthenticated, async (req, res, next) => {
 });
 
 // Single Product Details Route
-app.get('/product/:id', ensureAuthenticated, async (req, res, next) => {
+app.get('/product/:id', async (req, res, next) => {
     try {
         const product = await dbQueries.getProductById(req.db, req.params.id);
 
@@ -92,7 +95,7 @@ app.get('/product/:id', ensureAuthenticated, async (req, res, next) => {
 });
 
 // Purchase History Route
-app.get('/purchaseHistory', ensureAuthenticated, async (req, res, next) => {
+app.get('/purchaseHistory', async (req, res, next) => {
     try {
         const orders = await dbQueries.getPurchaseHistory(req.db);
 
