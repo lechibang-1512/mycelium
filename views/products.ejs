@@ -66,215 +66,11 @@
                         <p class="product-inventory">In Stock: <%= product.sm_inventory %></p>
                         <a class="product-link" href="/product/<%= product.id %>">View Details</a>
                         <div class="product-actions">
-                            <button onclick="openModal('update', this)">Update</button>
+                            <button onclick="addToCart('<%= product.id %>')">Add to Cart</button>
                         </div>
                     </div>
                 </div>
             <% }); %>
-        </div>
-    </div>
-
-    <!-- The Modal -->
-    <div id="productModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">×</span>
-            <h2 id="modalTitle"></h2>
-            <form id="productForm" method="post" action="/products/manage">
-                <input type="hidden" id="modalAction" name="action" value="">
-                <input type="hidden" id="productId" name="id" value="">
-
-                <div class="form-group">
-                    <label for="sm_name">Model Name:</label>
-                    <input type="text" id="sm_name" name="sm_name" required>
-                </div>
-                <div class="form-group">
-                    <label for="sm_maker">Manufacturer:</label>
-                    <input type="text" id="sm_maker" name="sm_maker" required>
-                </div>
-                <div class="form-group">
-                    <label for="sm_price">Price:</label>
-                    <input type="text" id="sm_price" name="sm_price" required>
-                </div>
-                <div class="form-group">
-                    <label for="sm_inventory">Inventory:</label>
-                    <input type="text" id="sm_inventory" name="sm_inventory" required>
-                </div>
-                <div class="form-group">
-                    <label for="color">Color:</label>
-                    <input type="text" id="color" name="color">
-                </div>
-                <div class="form-group">
-                    <label for="water_and_dust_rating">Water/Dust Rating:</label>
-                    <input type="text" id="water_and_dust_rating" name="water_and_dust_rating">
-                </div>
-                <div class="form-group">
-                    <label for="processor">Processor:</label>
-                    <input type="text" id="processor" name="processor">
-                </div>
-                <div class="form-group">
-                    <label for="process_node">Process Node (nm):</label>
-                    <input type="text" id="process_node" name="process_node">
-                </div>
-                <div class="form-group">
-                    <label for="cpu_cores">CPU Cores:</label>
-                    <input type="text" id="cpu_cores" name="cpu_cores">
-                </div>
-                <div class="form-group">
-                    <label for="cpu_frequency">CPU Frequency (GHz):</label>
-                    <input type="text" id="cpu_frequency" name="cpu_frequency">
-                </div>
-                <div class="form-group">
-                    <label for="gpu">GPU:</label>
-                    <input type="text" id="gpu" name="gpu">
-                </div>
-                <div class="form-group">
-                    <label for="memory_type">Memory Type:</label>
-                    <input type="text" id="memory_type" name="memory_type">
-                </div>
-                <div class="form-group">
-                    <label for="ram">RAM (GB):</label>
-                    <input type="text" id="ram" name="ram">
-                </div>
-                <div class="form-group">
-                    <label for="rom">Storage (ROM) (GB):</label>
-                    <input type="text" id="rom" name="rom">
-                </div>
-                <div class="form-group">
-                    <label for="expandable_memory">Expandable Memory:</label>
-                    <input type="text" id="expandable_memory" name="expandable_memory">
-                </div>
-                <div class="form-group">
-                    <label for="length_mm">Length (mm):</label>
-                    <input type="text" id="length_mm" name="length_mm">
-                </div>
-                <div class="form-group">
-                    <label for="width_mm">Width (mm):</label>
-                    <input type="text" id="width_mm" name="width_mm">
-                </div>
-                <div class="form-group">
-                    <label for="thickness_mm">Thickness (mm):</label>
-                    <input type="text" id="thickness_mm" name="thickness_mm">
-                </div>
-                <div class="form-group">
-                    <label for="weight_g">Weight (grams):</label>
-                    <input type="text" id="weight_g" name="weight_g">
-                </div>
-                <div class="form-group">
-                    <label for="display_size">Display Size (inches):</label>
-                    <input type="text" id="display_size" name="display_size">
-                </div>
-                <div class="form-group">
-                    <label for="resolution">Resolution:</label>
-                    <input type="text" id="resolution" name="resolution">
-                </div>
-                <div class="form-group">
-                    <label for="pixel_density">Pixel Density:</label>
-                    <input type="text" id="pixel_density" name="pixel_density">
-                </div>
-                <div class="form-group">
-                    <label for="refresh_rate">Refresh Rate:</label>
-                    <input type="text" id="refresh_rate" name="refresh_rate">
-                </div>
-                <div class="form-group">
-                    <label for="brightness">Brightness:</label>
-                    <input type="text" id="brightness" name="brightness">
-                </div>
-                <div class="form-group">
-                    <label for="display_features">Display Features:</label>
-                    <textarea id="display_features" name="display_features"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="rear_camera_main">Rear Camera (Main):</label>
-                    <input type="text" id="rear_camera_main" name="rear_camera_main">
-                </div>
-                <div class="form-group">
-                    <label for="rear_camera_macro">Rear Camera (Macro):</label>
-                    <input type="text" id="rear_camera_macro" name="rear_camera_macro">
-                </div>
-                <div class="form-group">
-                    <label for="rear_camera_features">Rear Camera Features:</label>
-                    <textarea id="rear_camera_features" name="rear_camera_features"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="rear_video_resolution">Rear Video Resolution:</label>
-                    <input type="text" id="rear_video_resolution" name="rear_video_resolution">
-                </div>
-                <div class="form-group">
-                    <label for="front_camera">Front Camera:</label>
-                    <input type="text" id="front_camera" name="front_camera">
-                </div>
-                <div class="form-group">
-                    <label for="front_camera_features">Front Camera Features:</label>
-                    <textarea id="front_camera_features" name="front_camera_features"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="front_video_resolution">Front Video Resolution:</label>
-                    <input type="text" id="front_video_resolution" name="front_video_resolution">
-                </div>
-                <div class="form-group">
-                    <label for="battery_capacity">Battery Capacity:</label>
-                    <input type="text" id="battery_capacity" name="battery_capacity">
-                </div>
-                <div class="form-group">
-                    <label for="fast_charging">Fast Charging:</label>
-                    <input type="text" id="fast_charging" name="fast_charging">
-                </div>
-                <div class="form-group">
-                    <label for="connector">Connector:</label>
-                    <input type="text" id="connector" name="connector">
-                </div>
-                <div class="form-group">
-                    <label for="security_features">Security Features:</label>
-                    <textarea id="security_features" name="security_features"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="sim_card">SIM Card:</label>
-                    <input type="text" id="sim_card" name="sim_card">
-                </div>
-                <div class="form-group">
-                    <label for="nfc">NFC:</label>
-                    <input type="text" id="nfc" name="nfc">
-                </div>
-                <div class="form-group">
-                    <label for="network_bands">Network Bands:</label>
-                    <textarea id="network_bands" name="network_bands"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="wireless_connectivity">Wireless Connectivity:</label>
-                    <textarea id="wireless_connectivity" name="wireless_connectivity"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="navigation">Navigation:</label>
-                    <textarea id="navigation" name="navigation"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="audio_jack">Audio Jack:</label>
-                    <input type="text" id="audio_jack" name="audio_jack">
-                </div>
-                <div class="form-group">
-                    <label for="audio_playback">Audio Playback:</label>
-                    <textarea id="audio_playback" name="audio_playback"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="video_playback">Video Playback:</label>
-                    <textarea id="video_playback" name="video_playback"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="sensors">Sensors:</label>
-                    <textarea id="sensors" name="sensors"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="operating_system">Operating System:</label>
-                    <input type="text" id="operating_system" name="operating_system">
-                </div>
-                <div class="form-group">
-                    <label for="package_contents">Package Contents:</label>
-                    <textarea id="package_contents" name="package_contents"></textarea>
-                </div>
-                <div class="form-group">
-                    <button type="submit" class="modal-btn">Submit</button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -289,39 +85,18 @@
             form.submit();
         }
 
-        function openModal(action, element) {
-            const modal = document.getElementById('productModal');
-            const form = document.getElementById('productForm');
-            const modalTitle = document.getElementById('modalTitle');
-            const modalAction = document.getElementById('modalAction');
-            const productId = document.getElementById('productId');
-
-            modal.style.display = "block";
-
-            if (action === 'add') {
-                form.reset();
-                modalTitle.innerText = 'Add Product';
-                modalAction.value = 'add';
-                productId.value = '';
-            } else if (action === 'update') {
-                modalTitle.innerText = 'Update Product';
-                modalAction.value = 'update';
-
-                const productData = JSON.parse(element.closest('.product-card').dataset.product);
-                productId.value = productData.id;
-
-                // Populate all fields
-                Object.keys(productData).forEach(key => {
-                    const field = document.getElementById(key);
-                    if (field) {
-                        field.value = productData[key] || '';
-                    }
-                });
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('productModal').style.display = "none";
+        function addToCart(productId) {
+            // TODO: Implement add to cart functionality
+            console.log('Adding product to cart:', productId);
+            
+            // Placeholder implementation
+            alert('Product added to cart! (This is a placeholder)');
+            
+            // Future implementation might include:
+            // - Send AJAX request to server to add item to cart
+            // - Update cart counter in UI
+            // - Show confirmation message or animation
+            // - Handle inventory management
         }
     </script>
 </body>
