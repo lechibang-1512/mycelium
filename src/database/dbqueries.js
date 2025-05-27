@@ -302,10 +302,15 @@ async function deleteProduct(db, productId) {
 
 // Advanced product filtering with pagination
 async function getProductsAdvanced(db, filters = {}, page = 1, limit = 12) {
+    // Modified query to group products by model name and maker
+    // We'll select only one product per unique model name and maker combination
     let query = `
-        SELECT id, sm_name, sm_maker, sm_price, sm_inventory,
-            color, processor, ram, rom, display_size, battery_capacity
-        FROM phone_specs
+        SELECT ps1.id, ps1.sm_name, ps1.sm_maker, ps1.sm_price, 
+            IFNULL(SUM(ps2.sm_inventory), ps1.sm_inventory) as total_inventory,
+            ps1.color, ps1.processor, ps1.ram, ps1.rom, ps1.display_size, ps1.battery_capacity,
+            COUNT(ps2.id) as variant_count
+        FROM phone_specs ps1
+        LEFT JOIN phone_specs ps2 ON ps1.sm_name = ps2.sm_name AND ps1.sm_maker = ps2.sm_maker
         WHERE 1=1
     `;
     
@@ -313,14 +318,14 @@ async function getProductsAdvanced(db, filters = {}, page = 1, limit = 12) {
     
     // Search filter
     if (filters.search) {
-        query += ' AND (sm_name LIKE ? OR sm_maker LIKE ? OR processor LIKE ?)';
+        query += ' AND (ps1.sm_name LIKE ? OR ps1.sm_maker LIKE ? OR ps1.processor LIKE ?)';
         const searchTerm = `%${filters.search}%`;
         params.push(searchTerm, searchTerm, searchTerm);
     }
     
     // Brand filter
     if (filters.brand) {
-        query += ' AND sm_maker = ?';
+        query += ' AND ps1.sm_maker = ?';
         params.push(filters.brand);
     }
     
@@ -329,63 +334,108 @@ async function getProductsAdvanced(db, filters = {}, page = 1, limit = 12) {
         const [min, max] = filters.price.split('-');
         if (max === undefined) {
             // Handle "1000+" case
-            query += ' AND sm_price >= ?';
+            query += ' AND ps1.sm_price >= ?';
             params.push(parseInt(min));
         } else {
-            query += ' AND sm_price BETWEEN ? AND ?';
+            query += ' AND ps1.sm_price BETWEEN ? AND ?';
             params.push(parseInt(min), parseInt(max));
         }
     }
     
-    // Stock filter
+    // Stock filter - now applies to total inventory across variants
     if (filters.stock) {
         switch (filters.stock) {
             case 'in-stock':
-                query += ' AND sm_inventory > 10';
+                query += ' AND ps1.sm_inventory > 10';
                 break;
             case 'low-stock':
-                query += ' AND sm_inventory BETWEEN 1 AND 10';
+                query += ' AND ps1.sm_inventory BETWEEN 1 AND 10';
                 break;
             case 'out-of-stock':
-                query += ' AND sm_inventory = 0';
+                query += ' AND ps1.sm_inventory = 0';
+                break;
+        }
+    }
+
+    // Group by to get only unique model+maker combinations
+    query += ' GROUP BY ps1.sm_name, ps1.sm_maker';
+    
+    // Sorting - now must be done after GROUP BY
+    let orderBy;
+    switch (filters.sort) {
+        case 'price-low':
+            orderBy = ' ORDER BY ps1.sm_price ASC';
+            break;
+        case 'price-high':
+            orderBy = ' ORDER BY ps1.sm_price DESC';
+            break;
+        case 'brand':
+            orderBy = ' ORDER BY ps1.sm_maker ASC, ps1.sm_name ASC';
+            break;
+        case 'stock':
+            orderBy = ' ORDER BY total_inventory DESC';
+            break;
+        default:
+            orderBy = ' ORDER BY ps1.sm_name ASC';
+    }
+    
+    // Get total count of unique products for pagination
+    const countQuery = `
+        SELECT COUNT(*) as total FROM (
+            SELECT DISTINCT sm_name, sm_maker
+            FROM phone_specs
+            WHERE 1=1
+    `;
+    
+    let countParams = [...params]; // Copy the params for the count query
+    
+    if (filters.search) {
+        countQuery += ' AND (sm_name LIKE ? OR sm_maker LIKE ? OR processor LIKE ?)';
+        // searchTerm params are already in countParams
+    }
+    
+    if (filters.brand) {
+        countQuery += ' AND sm_maker = ?';
+        // brand param is already in countParams
+    }
+    
+    // Price and stock filters need to be applied for count query too
+    if (filters.price) {
+        const [min, max] = filters.price.split('-');
+        if (max === undefined) {
+            countQuery += ' AND sm_price >= ?';
+            // price param is already in countParams
+        } else {
+            countQuery += ' AND sm_price BETWEEN ? AND ?';
+            // price params are already in countParams
+        }
+    }
+    
+    if (filters.stock) {
+        switch (filters.stock) {
+            case 'in-stock':
+                countQuery += ' AND sm_inventory > 10';
+                break;
+            case 'low-stock':
+                countQuery += ' AND sm_inventory BETWEEN 1 AND 10';
+                break;
+            case 'out-of-stock':
+                countQuery += ' AND sm_inventory = 0';
                 break;
         }
     }
     
-    // Sorting
-    switch (filters.sort) {
-        case 'price-low':
-            query += ' ORDER BY sm_price ASC';
-            break;
-        case 'price-high':
-            query += ' ORDER BY sm_price DESC';
-            break;
-        case 'brand':
-            query += ' ORDER BY sm_maker ASC, sm_name ASC';
-            break;
-        case 'stock':
-            query += ' ORDER BY sm_inventory DESC';
-            break;
-        default:
-            query += ' ORDER BY sm_name ASC';
-    }
-    
-    // Get total count for pagination
-    const countQuery = query.replace(
-        'SELECT id, sm_name, sm_maker, sm_price, sm_inventory, color, processor, ram, rom, display_size, battery_capacity',
-        'SELECT COUNT(*) as total'
-    ).replace(/ORDER BY.*$/, '');
-    
-    const countResult = await queryDatabase(db, countQuery, params);
+    const finalCountQuery = countQuery + ') as unique_products';
+    const countResult = await queryDatabase(db, finalCountQuery, countParams);
     const total = countResult[0].total;
     const totalPages = Math.ceil(total / limit);
     
-    // Add pagination
+    // Apply ordering and pagination
+    const finalQuery = query + orderBy + ' LIMIT ? OFFSET ?';
     const offset = (page - 1) * limit;
-    query += ' LIMIT ? OFFSET ?';
     params.push(limit, offset);
     
-    const products = await queryDatabase(db, query, params);
+    const products = await queryDatabase(db, finalQuery, params);
     
     return {
         products,

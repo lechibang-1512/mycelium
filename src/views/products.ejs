@@ -98,8 +98,22 @@
             <% } else { %>
                 <!-- Product Grid/List -->
                 <div id="productGrid" class="product-grid">
-                    <% products.forEach(product => { %>
-                        <div class="product-card" data-brand="<%= product.sm_maker %>" data-price="<%= product.sm_price %>" data-stock="<%= product.sm_inventory %>">
+                    <% 
+                    // Create a map to store unique products by their model name and maker
+                    const uniqueProducts = new Map();
+                    
+                    // Process products to only keep one product per model/maker combination
+                    products.forEach(product => {
+                        const key = `${product.sm_name}-${product.sm_maker}`;
+                        if (!uniqueProducts.has(key)) {
+                            uniqueProducts.set(key, product);
+                        }
+                    });
+                    
+                    // Iterate through the unique products
+                    Array.from(uniqueProducts.values()).forEach(product => { 
+                    %>
+                        <div class="product-card" data-brand="<%= product.sm_maker %>" data-price="<%= product.sm_price %>" data-stock="<%= product.total_inventory || product.sm_inventory %>">
                             <div class="product-image-placeholder">
                                 <span class="product-icon">📱</span>
                             </div>
@@ -108,16 +122,17 @@
                                 <p class="product-brand">Brand: <%= product.sm_maker %></p>
                                 <p class="product-price">$<%= Number(product.sm_price).toFixed(2) %></p>
                                 <div class="stock-info">
-                                    <% if (product.sm_inventory > 10) { %>
-                                        <span class="stock-status in-stock">In Stock (<%= product.sm_inventory %>)</span>
-                                    <% } else if (product.sm_inventory > 0) { %>
-                                        <span class="stock-status low-stock">Low Stock (<%= product.sm_inventory %>)</span>
+                                    <% const inventory = product.sm_inventory; %>
+                                    <% if (inventory > 10) { %>
+                                        <span class="stock-status in-stock">In Stock (<%= inventory %>)</span>
+                                    <% } else if (inventory > 0) { %>
+                                        <span class="stock-status low-stock">Low Stock (<%= inventory %>)</span>
                                     <% } else { %>
                                         <span class="stock-status out-of-stock">Out of Stock</span>
                                     <% } %>
                                 </div>
-                                <% if (typeof variantsCount !== 'undefined' && variantsCount > 0) { %>
-                                    <p class="product-variants">Available in <%= variantsCount %> variants</p>
+                                <% if (product.variant_count && product.variant_count > 1) { %>
+                                    <p class="product-variants">Available with <%= product.variant_count - 1 %> other variants</p>
                                 <% } %>
                                 <div class="product-actions">
                                     <a class="product-link primary" href="/product/<%= product.id %>">View Details</a>
@@ -264,8 +279,22 @@
                 return;
             }
 
-            productGrid.innerHTML = products.map(product => `
-                <div class="product-card" data-brand="${product.sm_maker}" data-price="${product.sm_price}" data-stock="${product.sm_inventory}">
+            // Create a map to store unique products by their model name and maker
+            const uniqueProducts = new Map();
+            
+            // Process products to only keep one product per model/maker combination
+            products.forEach(product => {
+                const key = `${product.sm_name}-${product.sm_maker}`;
+                if (!uniqueProducts.has(key)) {
+                    uniqueProducts.set(key, product);
+                }
+            });
+            
+            // Convert map values back to an array
+            const displayedProducts = Array.from(uniqueProducts.values());
+
+            productGrid.innerHTML = displayedProducts.map(product => `
+                <div class="product-card" data-brand="${product.sm_maker}" data-price="${product.sm_price}" data-stock="${product.total_inventory || product.sm_inventory}">
                     <div class="product-image-placeholder">
                         <span class="product-icon">📱</span>
                     </div>
@@ -276,6 +305,8 @@
                         <div class="stock-info">
                             ${getStockStatusHTML(product.sm_inventory)}
                         </div>
+                        ${product.variant_count > 1 ? 
+                            `<p class="product-variants">Available with ${product.variant_count - 1} other variants</p>` : ''}
                         <div class="product-actions">
                             <a class="product-link primary" href="/product/${product.id}">View Details</a>
                             <button class="product-link secondary" onclick="quickView(${product.id})">Quick View</button>
