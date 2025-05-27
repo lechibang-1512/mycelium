@@ -46,12 +46,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// --- Start Server ---
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
-
-
 // --- Database Connection Pool ---
 const pool = mysql.createPool(DB_CONFIG);
 
@@ -66,6 +60,12 @@ app.use(async (req, res, next) => {
         return res.status(500).render('error', { message: errors.DATABASE_CONNECTION_ERROR });
     }
 });
+
+// --- Start Server ---
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
+
 
 // --- Route Handlers ---
 

@@ -47,27 +47,13 @@
                         <% } %>
                     </select>
                     
-                    <select id="priceFilter" class="filter-select" onchange="applyFilters()">
-                        <option value="">All Prices</option>
-                        <option value="0-300">Under $300</option>
-                        <option value="300-600">$300 - $600</option>
-                        <option value="600-1000">$600 - $1000</option>
-                        <option value="1000+">$1000+</option>
-                    </select>
+
                     
-                    <select id="stockFilter" class="filter-select" onchange="applyFilters()">
-                        <option value="">All Stock</option>
-                        <option value="in-stock">In Stock</option>
-                        <option value="low-stock">Low Stock</option>
-                        <option value="out-of-stock">Out of Stock</option>
-                    </select>
+
                     
                     <select id="sortBy" class="filter-select" onchange="applyFilters()">
                         <option value="name">Sort by Name</option>
-                        <option value="price-low">Price: Low to High</option>
-                        <option value="price-high">Price: High to Low</option>
                         <option value="brand">Brand A-Z</option>
-                        <option value="stock">Stock Level</option>
                     </select>
                     
                     <button onclick="clearFilters()" class="clear-filters-btn">Clear Filters</button>
@@ -113,30 +99,15 @@
                     // Iterate through the unique products
                     Array.from(uniqueProducts.values()).forEach(product => { 
                     %>
-                        <div class="product-card" data-brand="<%= product.sm_maker %>" data-price="<%= product.sm_price %>" data-stock="<%= product.total_inventory || product.sm_inventory %>">
+                        <div class="product-card" data-brand="<%= product.sm_maker %>">
                             <div class="product-image-placeholder">
                                 <span class="product-icon">📱</span>
                             </div>
                             <div class="product-info">
                                 <h3 class="product-name"><%= product.sm_name %></h3>
                                 <p class="product-brand">Brand: <%= product.sm_maker %></p>
-                                <p class="product-price">$<%= Number(product.sm_price).toFixed(2) %></p>
-                                <div class="stock-info">
-                                    <% const inventory = product.sm_inventory; %>
-                                    <% if (inventory > 10) { %>
-                                        <span class="stock-status in-stock">In Stock (<%= inventory %>)</span>
-                                    <% } else if (inventory > 0) { %>
-                                        <span class="stock-status low-stock">Low Stock (<%= inventory %>)</span>
-                                    <% } else { %>
-                                        <span class="stock-status out-of-stock">Out of Stock</span>
-                                    <% } %>
-                                </div>
-                                <% if (product.variant_count && product.variant_count > 1) { %>
-                                    <p class="product-variants">Available with <%= product.variant_count - 1 %> other variants</p>
-                                <% } %>
                                 <div class="product-actions">
                                     <a class="product-link primary" href="/product/<%= product.id %>">View Details</a>
-                                    <button class="product-link secondary" onclick="quickView('<%= product.id %>')">Quick View</button>
                                 </div>
                             </div>
                         </div>
@@ -151,16 +122,6 @@
                 <button id="prevPage" class="pagination-btn" onclick="changePage(-1)" disabled>Previous</button>
                 <span id="pageNumbers" class="page-numbers"></span>
                 <button id="nextPage" class="pagination-btn" onclick="changePage(1)">Next</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick View Modal -->
-    <div id="quickViewModal" class="modal">
-        <div class="modal-content quick-view-content">
-            <span class="close" onclick="closeQuickView()">&times;</span>
-            <div id="quickViewContent">
-                <!-- Quick view content will be loaded here -->
             </div>
         </div>
     </div>
@@ -186,15 +147,11 @@
         // Apply filters
         function applyFilters() {
             const brand = document.getElementById('brandFilter').value;
-            const price = document.getElementById('priceFilter').value;
-            const stock = document.getElementById('stockFilter').value;
             const sort = document.getElementById('sortBy').value;
 
             currentFilters = {
                 ...currentFilters,
                 brand,
-                price,
-                stock,
                 sort
             };
 
@@ -206,8 +163,6 @@
         function clearFilters() {
             document.getElementById('productSearch').value = '';
             document.getElementById('brandFilter').value = '';
-            document.getElementById('priceFilter').value = '';
-            document.getElementById('stockFilter').value = '';
             document.getElementById('sortBy').value = 'name';
             
             currentFilters = {};
@@ -294,38 +249,22 @@
             const displayedProducts = Array.from(uniqueProducts.values());
 
             productGrid.innerHTML = displayedProducts.map(product => `
-                <div class="product-card" data-brand="${product.sm_maker}" data-price="${product.sm_price}" data-stock="${product.total_inventory || product.sm_inventory}">
+                <div class="product-card" data-brand="${product.sm_maker}">
                     <div class="product-image-placeholder">
                         <span class="product-icon">📱</span>
                     </div>
                     <div class="product-info">
                         <h3 class="product-name">${product.sm_name}</h3>
                         <p class="product-brand">Brand: ${product.sm_maker}</p>
-                        <p class="product-price">$${Number(product.sm_price).toFixed(2)}</p>
-                        <div class="stock-info">
-                            ${getStockStatusHTML(product.sm_inventory)}
-                        </div>
-                        ${product.variant_count > 1 ? 
-                            `<p class="product-variants">Available with ${product.variant_count - 1} other variants</p>` : ''}
                         <div class="product-actions">
                             <a class="product-link primary" href="/product/${product.id}">View Details</a>
-                            <button class="product-link secondary" onclick="quickView(${product.id})">Quick View</button>
                         </div>
                     </div>
                 </div>
             `).join('');
         }
 
-        // Get stock status HTML
-        function getStockStatusHTML(inventory) {
-            if (inventory > 10) {
-                return `<span class="stock-status in-stock">In Stock (${inventory})</span>`;
-            } else if (inventory > 0) {
-                return `<span class="stock-status low-stock">Low Stock (${inventory})</span>`;
-            } else {
-                return `<span class="stock-status out-of-stock">Out of Stock</span>`;
-            }
-        }
+
 
         // Pagination
         function updatePagination(page, totalPages, total) {
@@ -365,59 +304,10 @@
             loadProducts();
         }
 
-        // Quick view functionality
-        async function quickView(productId) {
-            const modal = document.getElementById('quickViewModal');
-            const content = document.getElementById('quickViewContent');
-            
-            content.innerHTML = '<p>Loading...</p>';
-            modal.style.display = 'block';
-            
-            try {
-                const response = await fetch(`/api/product/${productId}/quick`);
-                const product = await response.json();
-                
-                if (response.ok) {
-                    content.innerHTML = `
-                        <h2>${product.sm_name}</h2>
-                        <div class="quick-view-details">
-                            <p><strong>Brand:</strong> ${product.sm_maker}</p>
-                            <p><strong>Price:</strong> $${Number(product.sm_price).toFixed(2)}</p>
-                            <p><strong>Stock:</strong> ${product.sm_inventory}</p>
-                            <p><strong>RAM:</strong> ${product.ram || 'N/A'}</p>
-                            <p><strong>Storage:</strong> ${product.rom || 'N/A'}</p>
-                            <p><strong>Display:</strong> ${product.display_size || 'N/A'}</p>
-                            <p><strong>Battery:</strong> ${product.battery_capacity || 'N/A'}</p>
-                        </div>
-                        <div class="quick-view-actions">
-                            <a href="/product/${productId}" class="action-btn primary">View Full Details</a>
-                            <button onclick="closeQuickView()" class="action-btn secondary">Close</button>
-                        </div>
-                    `;
-                } else {
-                    content.innerHTML = '<p>Error loading product details.</p>';
-                }
-            } catch (error) {
-                content.innerHTML = '<p>Error loading product details.</p>';
-            }
-        }
-
-        function closeQuickView() {
-            document.getElementById('quickViewModal').style.display = 'none';
-        }
-
         // Search on Enter key
         document.getElementById('productSearch').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 searchProducts();
-            }
-        });
-
-        // Close modal when clicking outside
-        window.addEventListener('click', function(e) {
-            const modal = document.getElementById('quickViewModal');
-            if (e.target === modal) {
-                closeQuickView();
             }
         });
 
