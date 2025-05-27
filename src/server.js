@@ -21,6 +21,10 @@ const DB_CONFIG = {
     queueLimit: 0
 };
 
+// Add a warning if the default session secret is used
+if (!process.env.SESSION_SECRET) {
+    console.warn('WARNING: SESSION_SECRET is not set in environment variables. Using a default, insecure secret. This is NOT safe for production. Please set a strong secret in your .env file.');
+}
 
 // --- Middleware Setup ---
 app.set('view engine', 'ejs');
@@ -246,8 +250,12 @@ app.get('/inventory', userAuth.requirePermission('write'), async (req, res, next
 // Get inventory data (for AJAX requests)
 app.get('/api/inventory', userAuth.requireAuth, async (req, res, next) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
+        let page = parseInt(req.query.page);
+        let limit = parseInt(req.query.limit);
+
+        page = (Number.isInteger(page) && page > 0) ? page : 1;
+        limit = (Number.isInteger(limit) && limit > 0) ? limit : 20; // Default limit for inventory
+
         const filters = {
             search: req.query.search,
             category: req.query.category,
@@ -332,8 +340,12 @@ app.delete('/api/inventory/:id', userAuth.requirePermission('delete'), async (re
 // Get products with advanced filtering and pagination
 app.get('/api/products', userAuth.requireAuth, async (req, res, next) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 12;
+        let page = parseInt(req.query.page);
+        let limit = parseInt(req.query.limit);
+
+        page = (Number.isInteger(page) && page > 0) ? page : 1;
+        limit = (Number.isInteger(limit) && limit > 0) ? limit : 12; // Default limit for products
+
         const filters = {
             search: req.query.search,
             brand: req.query.brand,
