@@ -77,23 +77,28 @@ class LRUCache {
     
     // Periodically clean up expired items
     periodicCleanup() {
-        const now = Date.now();
-        let removed = 0;
-        
-        for (const [key, item] of this.cache.entries()) {
-            if (now - item.timestamp > this.ttl) {
-                this.cache.delete(key);
-                removed++;
-            }
-        }
-        
-        // Log cache performance stats
-        const hitRate = this.getTotalRequests() > 0 ? 
-            (this.hits / this.getTotalRequests() * 100).toFixed(2) : 0;
+        try {
+            const now = Date.now();
+            let removed = 0;
             
-        console.log(`Cache cleanup: removed ${removed} items. Stats: ${this.size()} items, ${hitRate}% hit rate`);
-        
-        this.lastCleanup = now;
+            for (const [key, item] of this.cache.entries()) {
+                if (now - item.timestamp > this.ttl) {
+                    this.cache.delete(key);
+                    removed++;
+                }
+            }
+            
+            // Log cache performance stats
+            const hitRate = this.getTotalRequests() > 0 ? 
+                (this.hits / this.getTotalRequests() * 100).toFixed(2) : 0;
+                
+            console.log(`Cache cleanup: removed ${removed} items. Stats: ${this.size()} items, ${hitRate}% hit rate`);
+            
+            this.lastCleanup = now;
+        } catch (error) {
+            console.error('Error during cache cleanup:', error);
+            // Don't let failures in cleanup break the cache functionality
+        }
     }
     
     clear() {
@@ -180,8 +185,8 @@ async function queryDatabase(db, sql, params = [], cacheOptions = { use: false, 
         
         // Only cache read operations with reasonable result sizes
         if (useCache && cacheKey && isSelect && 
-           (Array.isArray(rows) && rows.length < 10000) || 
-           (!Array.isArray(rows) && Object.keys(rows).length < 100)) {
+           ((Array.isArray(rows) && rows.length < 10000) || 
+           (!Array.isArray(rows) && Object.keys(rows).length < 100))) {
             queryCache.set(cacheKey, rows);
         }
         
@@ -483,8 +488,45 @@ async function getInventoryData(db, filters = {}, page = 1, limit = 20) {
 
 async function updateProductStock(db, productId, newStock) {
     try {
+        // Validate stock value
+        if (newStock < 0 || !Number.isInteger(newStock)) {
+            return { success: false, error: 'Invalid stock value' };
+        }
+
+        // First get the product to know what to invalidate
+        const productQuery = 'SELECT sm_name, sm_maker FROM phone_specs WHERE id = ?';
+        const product = await queryDatabase(db, productQuery, [productId], { use: false });
+        
+        if (!product || product.length === 0) {
+            return { success: false, error: 'Product not found' };
+        }
+        
         const query = 'UPDATE phone_specs SET sm_inventory = ? WHERE id = ?';
         await queryDatabase(db, query, [newStock, productId]);
+        
+        // Selective cache invalidation for inventory-related data
+        const cacheKeysToInvalidate = [
+            'inventory',
+            'stats',
+            `product.*${productId}`,
+            `${product[0].sm_name.toLowerCase()}`
+        ];
+        
+        let invalidated = 0;
+        const cacheSize = queryCache.size();
+        
+        for (const key of queryCache.cache.keys()) {
+            for (const pattern of cacheKeysToInvalidate) {
+                if (key.includes(pattern)) {
+                    queryCache.cache.delete(key);
+                    invalidated++;
+                    break;
+                }
+            }
+        }
+        
+        console.log(`Selectively invalidated ${invalidated}/${cacheSize} cache entries after stock update`);
+        
         return { success: true };
     } catch (error) {
         console.error('Error updating product stock:', error);
@@ -494,6 +536,24 @@ async function updateProductStock(db, productId, newStock) {
 
 async function addNewProduct(db, productData) {
     try {
+        // Validate required data - Do validation FIRST
+        if (!productData.productName || !productData.productBrand || !productData.productPrice) {
+            return { success: false, error: 'Missing required product information' };
+        }
+        
+        // Ensure price and stock are valid numbers
+        const price = parseFloat(productData.productPrice);
+        const stock = parseInt(productData.initialStock || 0); // Default to 0 if not provided
+        
+        if (isNaN(price) || price <= 0) {
+            return { success: false, error: 'Invalid product price' };
+        }
+        
+        if (isNaN(stock) || stock < 0) {
+            return { success: false, error: 'Invalid stock value' };
+        }
+        
+        // Prepare SQL query AFTER validation passes
         const query = `
             INSERT INTO phone_specs (
                 sm_name, sm_maker, sm_price, sm_inventory, color, ram, rom
@@ -501,16 +561,42 @@ async function addNewProduct(db, productData) {
         `;
         
         const params = [
-            productData.productName,
-            productData.productBrand,
-            productData.productPrice,
-            productData.initialStock,
-            productData.color || 'Standard',
-            productData.ram || '8GB',
-            productData.rom || '128GB'
+            productData.productName.trim(),
+            productData.productBrand.trim(),
+            price, // Use the validated price
+            stock, // Use the validated stock
+            productData.color?.trim() || 'Standard',
+            productData.ram?.trim() || '8GB',
+            productData.rom?.trim() || '128GB'
         ];
         
         const result = await queryDatabase(db, query, params);
+        
+        // Selective cache invalidation instead of clearing everything
+        // Clear only product-related cache entries but not static data like brands
+        // Create a regex to match keys related to products
+        const cacheKeysToInvalidate = [
+            'SELECT.*FROM phone_specs',
+            'products',
+            'inventory'
+        ];
+        
+        // Iterate through cache and delete matching entries
+        const cacheSize = queryCache.size();
+        let invalidated = 0;
+        
+        for (const key of queryCache.cache.keys()) {
+            for (const pattern of cacheKeysToInvalidate) {
+                if (key.includes(pattern)) {
+                    queryCache.cache.delete(key);
+                    invalidated++;
+                    break;
+                }
+            }
+        }
+        
+        console.log(`Selectively invalidated ${invalidated}/${cacheSize} cache entries after adding product`);
+        
         return { success: true, id: result.insertId };
     } catch (error) {
         console.error('Error adding new product:', error);
@@ -520,8 +606,16 @@ async function addNewProduct(db, productData) {
 
 async function deleteProduct(db, productId) {
     try {
+        // First get the product to know what to invalidate
+        const productQuery = 'SELECT sm_name, sm_maker FROM phone_specs WHERE id = ?';
+        const product = await queryDatabase(db, productQuery, [productId], { use: false });
+        
         const query = 'DELETE FROM phone_specs WHERE id = ?';
         await queryDatabase(db, query, [productId]);
+        
+        // Invalidate caches
+        queryCache.clear(); // For production, implement more selective cache invalidation
+        
         return { success: true };
     } catch (error) {
         console.error('Error deleting product:', error);
@@ -537,6 +631,7 @@ async function getProductsAdvanced(db, filters = {}, page = 1, limit = 12) {
             search: filters.search?.toLowerCase().trim() || '',
             brand: filters.brand || '',
             price: filters.price || '',
+            stock: filters.stock || '',
             sort: filters.sort || 'name',
             page,
             limit
