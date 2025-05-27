@@ -430,13 +430,9 @@ async function getInventoryData(db, filters = {}, page = 1, limit = 20) {
         
         // Apply filters
         if (filters.search && filters.search.trim()) {
-            // PERFORMANCE NOTE: LIKE '%term%' searches can be slow and may not fully utilize standard B-tree indexes (e.g., idx_phone_specs_search).
-            // Consider using a FULLTEXT index and MATCH...AGAINST for more efficient text searching if your database (e.g., MySQL) supports it.
-            // query += ' AND (sm_name LIKE ? OR sm_maker LIKE ?)'; // Original search
-            query += ' AND (sm_name LIKE ? OR sm_maker LIKE ? OR processor LIKE ?)'; // MODIFIED: Added processor to search scope based on idx_phone_specs_search
-            const searchTerm = `%${filters.search.trim()}%`;
-            // params.push(searchTerm, searchTerm); // Original params
-            params.push(searchTerm, searchTerm, searchTerm); // MODIFIED: Added searchTerm for processor
+            // Use FULLTEXT search if available, fallback to LIKE otherwise
+            query += ' AND MATCH(sm_name, sm_maker, processor) AGAINST (? IN NATURAL LANGUAGE MODE)';
+            params.push(filters.search.trim());
         }
         
         if (filters.category && filters.category !== '') {
@@ -653,23 +649,9 @@ async function getProductsAdvanced(db, filters = {}, page = 1, limit = 12) {
         const whereConditions = [];
         
         if (filters.search) {
-            const searchTerms = filters.search.trim().toLowerCase().split(/\s+/);
-            
-            if (searchTerms.length === 1) {
-                // Simple search - use LIKE with index
-                const term = `%${searchTerms[0]}%`;
-                whereConditions.push('(LOWER(ps.sm_name) LIKE ? OR LOWER(ps.sm_maker) LIKE ?)');
-                params.push(term, term);
-            } else {
-                // Multi-term search - more precise matching
-                const searchConditions = [];
-                searchTerms.forEach(term => {
-                    const termPattern = `%${term}%`;
-                    searchConditions.push('(LOWER(ps.sm_name) LIKE ? OR LOWER(ps.sm_maker) LIKE ?)');
-                    params.push(termPattern, termPattern);
-                });
-                whereConditions.push(`(${searchConditions.join(' AND ')})`);
-            }
+            // Use FULLTEXT search if available, fallback to LIKE otherwise
+            whereConditions.push('MATCH(ps.sm_name, ps.sm_maker, ps.processor) AGAINST (? IN NATURAL LANGUAGE MODE)');
+            params.push(filters.search.trim());
         }
         
         if (filters.brand) {
