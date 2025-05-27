@@ -1,0 +1,35 @@
+<header class="app-header">
+    <div class="header-content">
+        <div class="header-left">
+            <h1 class="app-title">📱 Phone Store Inventory</h1>
+            <nav class="main-nav">
+                <a href="/products" class="nav-link <%= locals.currentPage === 'products' ? 'active' : '' %>">
+                    📋 Products
+                </a>
+                <% if (user && (user.role === 'admin' || user.role === 'manager')) { %>
+                <a href="/inventory" class="nav-link <%= locals.currentPage === 'inventory' ? 'active' : '' %>">
+                    📦 Inventory
+                </a>
+                <% } %>
+            </nav>
+        </div>
+        
+        <div class="header-right">
+            <% if (user) { %>
+            <div class="user-info">
+                <div class="user-details">
+                    <span class="username">👤 <%= user.username %></span>
+                    <span class="user-role role-badge <%= user.role %>"><%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %></span>
+                </div>
+                <div class="user-actions">
+                    <form action="/auth/logout" method="POST" style="display: inline;">
+                        <button type="submit" class="logout-btn">
+                            🚪 Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <% } %>
+        </div>
+    </div>
+</header>

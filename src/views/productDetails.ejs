@@ -7,12 +7,8 @@
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-    <div class="menu-container">
-        <button class="hamburger" onclick="toggleMenu()">☰</button>
-        <nav id="menu" class="hidden">
-            <a href="/products">Products</a>
-        </nav>
-    </div>
+    <% locals.currentPage = 'products' %>
+    <%- include('partials/header') %>
 
     <div class="container">
         <div class="product-details-card">

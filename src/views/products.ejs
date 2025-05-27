@@ -3,48 +3,402 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Products</title>
+    <title>Products - Inventory Management</title>
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-    <div class="menu-container">
-        <button class="hamburger" onclick="toggleMenu()">☰</button>
-        <nav id="menu" class="hidden">
-            <a href="/products">Products</a>
-        </nav>
-    </div>
+    <% locals.currentPage = 'products' %>
+    <%- include('partials/header') %>
 
     <div class="container">
-        <h1 class="text-center">Products</h1>
-
-        <!-- No Results Message -->
-        <% if (products.length === 0) { %>
-            <div class="no-results">
-                <p>No phone models available.</p>
-            </div>
-        <% } else { %>
-            <!-- Single Representative Product Card -->
-            <div class="product-container">
-                <div class="product-card">
-                    <div class="product-info">
-                        <h2 class="product-name"><%= products[0].sm_name %></h2>
-                        <p class="product-maker">Brand: <%= products[0].sm_maker %></p>
-                        <% if (typeof variantsCount !== 'undefined' && variantsCount > 0) { %>
-                        <p class="product-variants">Available in <%= variantsCount %> variants</p>
-                        <% } %>
-                        <a class="product-link" href="/product/<%= products[0].id %>">See More</a>
-                    </div>
-                </div>
+        <h1 class="text-center">Products Catalog</h1>
+        
+        <% if (user) { %>
+            <div class="welcome-message">
+                <p>Welcome back, <strong><%= user.username %></strong>! 
+                <% if (user.role === 'staff') { %>
+                    You have view access to browse our product catalog.
+                <% } else if (user.role === 'manager') { %>
+                    You can manage inventory and view reports.
+                <% } else if (user.role === 'admin') { %>
+                    You have full administrative access to all features.
+                <% } %>
+                </p>
             </div>
         <% } %>
+
+        <!-- Advanced Search and Filters -->
+        <div class="products-controls">
+            <div class="search-filter-section">
+                <div class="search-bar">
+                    <input type="text" id="productSearch" placeholder="Search products by name, brand, or model..." class="search-input">
+                    <button onclick="searchProducts()" class="search-btn">Search</button>
+                </div>
+                
+                <div class="filter-row">
+                    <select id="brandFilter" class="filter-select" onchange="applyFilters()">
+                        <option value="">All Brands</option>
+                        <% if (typeof brands !== 'undefined' && brands) { %>
+                            <% brands.forEach(brand => { %>
+                                <option value="<%= brand.sm_maker %>" <%= selectedBrand === brand.sm_maker ? 'selected' : '' %>>
+                                    <%= brand.sm_maker %>
+                                </option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                    
+                    <select id="priceFilter" class="filter-select" onchange="applyFilters()">
+                        <option value="">All Prices</option>
+                        <option value="0-300">Under $300</option>
+                        <option value="300-600">$300 - $600</option>
+                        <option value="600-1000">$600 - $1000</option>
+                        <option value="1000+">$1000+</option>
+                    </select>
+                    
+                    <select id="stockFilter" class="filter-select" onchange="applyFilters()">
+                        <option value="">All Stock</option>
+                        <option value="in-stock">In Stock</option>
+                        <option value="low-stock">Low Stock</option>
+                        <option value="out-of-stock">Out of Stock</option>
+                    </select>
+                    
+                    <select id="sortBy" class="filter-select" onchange="applyFilters()">
+                        <option value="name">Sort by Name</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="brand">Brand A-Z</option>
+                        <option value="stock">Stock Level</option>
+                    </select>
+                    
+                    <button onclick="clearFilters()" class="clear-filters-btn">Clear Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Grid View Toggle -->
+        <div class="view-controls">
+            <button id="gridViewBtn" onclick="toggleView('grid')" class="view-btn active">Grid View</button>
+            <button id="listViewBtn" onclick="toggleView('list')" class="view-btn">List View</button>
+            <span class="results-count">Showing <span id="resultCount">0</span> products</span>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+            <p>Loading products...</p>
+        </div>
+
+        <!-- Products Container -->
+        <div id="productsContainer" class="products-container">
+            <!-- No Results Message -->
+            <% if (products.length === 0) { %>
+                <div class="no-results">
+                    <h3>No phone models available</h3>
+                    <p>Try adjusting your search criteria or check back later.</p>
+                </div>
+            <% } else { %>
+                <!-- Product Grid/List -->
+                <div id="productGrid" class="product-grid">
+                    <% products.forEach(product => { %>
+                        <div class="product-card" data-brand="<%= product.sm_maker %>" data-price="<%= product.sm_price %>" data-stock="<%= product.sm_inventory %>">
+                            <div class="product-image-placeholder">
+                                <span class="product-icon">📱</span>
+                            </div>
+                            <div class="product-info">
+                                <h3 class="product-name"><%= product.sm_name %></h3>
+                                <p class="product-brand">Brand: <%= product.sm_maker %></p>
+                                <p class="product-price">$<%= Number(product.sm_price).toFixed(2) %></p>
+                                <div class="stock-info">
+                                    <% if (product.sm_inventory > 10) { %>
+                                        <span class="stock-status in-stock">In Stock (<%= product.sm_inventory %>)</span>
+                                    <% } else if (product.sm_inventory > 0) { %>
+                                        <span class="stock-status low-stock">Low Stock (<%= product.sm_inventory %>)</span>
+                                    <% } else { %>
+                                        <span class="stock-status out-of-stock">Out of Stock</span>
+                                    <% } %>
+                                </div>
+                                <% if (typeof variantsCount !== 'undefined' && variantsCount > 0) { %>
+                                    <p class="product-variants">Available in <%= variantsCount %> variants</p>
+                                <% } %>
+                                <div class="product-actions">
+                                    <a class="product-link primary" href="/product/<%= product.id %>">View Details</a>
+                                    <button class="product-link secondary" onclick="quickView('<%= product.id %>')">Quick View</button>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Pagination -->
+        <div id="paginationContainer" class="pagination-container">
+            <div class="pagination-controls">
+                <button id="prevPage" class="pagination-btn" onclick="changePage(-1)" disabled>Previous</button>
+                <span id="pageNumbers" class="page-numbers"></span>
+                <button id="nextPage" class="pagination-btn" onclick="changePage(1)">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick View Modal -->
+    <div id="quickViewModal" class="modal">
+        <div class="modal-content quick-view-content">
+            <span class="close" onclick="closeQuickView()">&times;</span>
+            <div id="quickViewContent">
+                <!-- Quick view content will be loaded here -->
+            </div>
+        </div>
     </div>
 
     <script>
+        let currentView = 'grid';
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentFilters = {};
+
         function toggleMenu() {
             document.getElementById('menu').classList.toggle('hidden');
         }
 
-        // No addToCart function needed for simplified view
+        // Search functionality
+        function searchProducts() {
+            const searchTerm = document.getElementById('productSearch').value;
+            currentFilters.search = searchTerm;
+            currentPage = 1;
+            loadProducts();
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const brand = document.getElementById('brandFilter').value;
+            const price = document.getElementById('priceFilter').value;
+            const stock = document.getElementById('stockFilter').value;
+            const sort = document.getElementById('sortBy').value;
+
+            currentFilters = {
+                ...currentFilters,
+                brand,
+                price,
+                stock,
+                sort
+            };
+
+            currentPage = 1;
+            loadProducts();
+        }
+
+        // Clear all filters
+        function clearFilters() {
+            document.getElementById('productSearch').value = '';
+            document.getElementById('brandFilter').value = '';
+            document.getElementById('priceFilter').value = '';
+            document.getElementById('stockFilter').value = '';
+            document.getElementById('sortBy').value = 'name';
+            
+            currentFilters = {};
+            currentPage = 1;
+            loadProducts();
+        }
+
+        // Toggle between grid and list view
+        function toggleView(view) {
+            currentView = view;
+            const gridBtn = document.getElementById('gridViewBtn');
+            const listBtn = document.getElementById('listViewBtn');
+            const productGrid = document.getElementById('productGrid');
+
+            if (view === 'grid') {
+                gridBtn.classList.add('active');
+                listBtn.classList.remove('active');
+                productGrid.className = 'product-grid';
+            } else {
+                listBtn.classList.add('active');
+                gridBtn.classList.remove('active');
+                productGrid.className = 'product-list';
+            }
+        }
+
+        // Load products with AJAX
+        async function loadProducts() {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const productsContainer = document.getElementById('productsContainer');
+            
+            loadingIndicator.style.display = 'block';
+            
+            try {
+                const queryParams = new URLSearchParams({
+                    page: currentPage,
+                    limit: 12,
+                    ...currentFilters
+                });
+
+                const response = await fetch(`/api/products?${queryParams}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayProducts(data.products);
+                    updatePagination(data.currentPage, data.totalPages, data.total);
+                    document.getElementById('resultCount').textContent = data.total;
+                } else {
+                    console.error('Error loading products:', data.error);
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+            } finally {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        // Display products
+        function displayProducts(products) {
+            const productGrid = document.getElementById('productGrid');
+            
+            if (products.length === 0) {
+                productGrid.innerHTML = `
+                    <div class="no-results">
+                        <h3>No products found</h3>
+                        <p>Try adjusting your search criteria.</p>
+                        <button onclick="clearFilters()" class="action-btn primary">Clear Filters</button>
+                    </div>
+                `;
+                return;
+            }
+
+            productGrid.innerHTML = products.map(product => `
+                <div class="product-card" data-brand="${product.sm_maker}" data-price="${product.sm_price}" data-stock="${product.sm_inventory}">
+                    <div class="product-image-placeholder">
+                        <span class="product-icon">📱</span>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">${product.sm_name}</h3>
+                        <p class="product-brand">Brand: ${product.sm_maker}</p>
+                        <p class="product-price">$${Number(product.sm_price).toFixed(2)}</p>
+                        <div class="stock-info">
+                            ${getStockStatusHTML(product.sm_inventory)}
+                        </div>
+                        <div class="product-actions">
+                            <a class="product-link primary" href="/product/${product.id}">View Details</a>
+                            <button class="product-link secondary" onclick="quickView(${product.id})">Quick View</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Get stock status HTML
+        function getStockStatusHTML(inventory) {
+            if (inventory > 10) {
+                return `<span class="stock-status in-stock">In Stock (${inventory})</span>`;
+            } else if (inventory > 0) {
+                return `<span class="stock-status low-stock">Low Stock (${inventory})</span>`;
+            } else {
+                return `<span class="stock-status out-of-stock">Out of Stock</span>`;
+            }
+        }
+
+        // Pagination
+        function updatePagination(page, totalPages, total) {
+            currentPage = page;
+            const prevBtn = document.getElementById('prevPage');
+            const nextBtn = document.getElementById('nextPage');
+            const pageNumbers = document.getElementById('pageNumbers');
+
+            prevBtn.disabled = page <= 1;
+            nextBtn.disabled = page >= totalPages;
+
+            // Generate page numbers
+            let paginationHTML = '';
+            const start = Math.max(1, page - 2);
+            const end = Math.min(totalPages, page + 2);
+
+            for (let i = start; i <= end; i++) {
+                paginationHTML += `
+                    <button class="page-btn ${i === page ? 'active' : ''}" onclick="goToPage(${i})">
+                        ${i}
+                    </button>
+                `;
+            }
+
+            pageNumbers.innerHTML = paginationHTML;
+        }
+
+        function changePage(direction) {
+            const newPage = currentPage + direction;
+            if (newPage >= 1 && newPage <= totalPages) {
+                goToPage(newPage);
+            }
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            loadProducts();
+        }
+
+        // Quick view functionality
+        async function quickView(productId) {
+            const modal = document.getElementById('quickViewModal');
+            const content = document.getElementById('quickViewContent');
+            
+            content.innerHTML = '<p>Loading...</p>';
+            modal.style.display = 'block';
+            
+            try {
+                const response = await fetch(`/api/product/${productId}/quick`);
+                const product = await response.json();
+                
+                if (response.ok) {
+                    content.innerHTML = `
+                        <h2>${product.sm_name}</h2>
+                        <div class="quick-view-details">
+                            <p><strong>Brand:</strong> ${product.sm_maker}</p>
+                            <p><strong>Price:</strong> $${Number(product.sm_price).toFixed(2)}</p>
+                            <p><strong>Stock:</strong> ${product.sm_inventory}</p>
+                            <p><strong>RAM:</strong> ${product.ram || 'N/A'}</p>
+                            <p><strong>Storage:</strong> ${product.rom || 'N/A'}</p>
+                            <p><strong>Display:</strong> ${product.display_size || 'N/A'}</p>
+                            <p><strong>Battery:</strong> ${product.battery_capacity || 'N/A'}</p>
+                        </div>
+                        <div class="quick-view-actions">
+                            <a href="/product/${productId}" class="action-btn primary">View Full Details</a>
+                            <button onclick="closeQuickView()" class="action-btn secondary">Close</button>
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = '<p>Error loading product details.</p>';
+                }
+            } catch (error) {
+                content.innerHTML = '<p>Error loading product details.</p>';
+            }
+        }
+
+        function closeQuickView() {
+            document.getElementById('quickViewModal').style.display = 'none';
+        }
+
+        // Search on Enter key
+        document.getElementById('productSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchProducts();
+            }
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(e) {
+            const modal = document.getElementById('quickViewModal');
+            if (e.target === modal) {
+                closeQuickView();
+            }
+        });
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            updateResultCount();
+        });
+
+        function updateResultCount() {
+            const cards = document.querySelectorAll('.product-card');
+            document.getElementById('resultCount').textContent = cards.length;
+        }
     </script>
 </body>
 </html>
