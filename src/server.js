@@ -2,8 +2,8 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const path = require('path');
 const bodyParser = require('body-parser');
-const errors = require('./errors');
-const dbQueries = require('./dbqueries');  // Import the query functions
+const errors = require('./utils/errors');
+const dbQueries = require('./database/dbqueries');  // Import the query functions
 const app = express();
 require('dotenv').config();
 
@@ -27,7 +27,7 @@ app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
 app.set('views', path.join(__dirname, 'views'));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '../public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
