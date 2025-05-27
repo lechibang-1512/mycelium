@@ -15,63 +15,28 @@
     </div>
 
     <div class="container">
-        <h1 class="text-center">All Products</h1>
-
-        <!-- Filters Section -->
-        <div class="filters">
-            <form method="GET" action="/products" id="filterForm">
-                <div class="filter">
-                    <label for="brand">Brand:</label>
-                    <select name="brand" id="brand" onchange="filterProducts()">
-                        <option value="">All Brands</option>
-                        <% brands.forEach(function(brand) { %>
-                            <option value="<%= brand.sm_maker %>"
-                                    <%= selectedBrand === brand.sm_maker ? 'selected' : '' %>>
-                                <%= brand.sm_maker %>
-                            </option>
-                        <% }); %>
-                    </select>
-                </div>
-
-                <div class="filter">
-                    <label for="model">Model:</label>
-                    <select name="model" id="model" onchange="filterProducts()">
-                        <option value="">All Models</option>
-                        <% models.forEach(function(model) { %>
-                            <option value="<%= model.sm_name %>"
-                                    <%= selectedModel === model.sm_name ? 'selected' : '' %>>
-                                <%= model.sm_name %>
-                            </option>
-                        <% }); %>
-                    </select>
-                </div>
-            </form>
-        </div>
+        <h1 class="text-center">Products</h1>
 
         <!-- No Results Message -->
         <% if (products.length === 0) { %>
             <div class="no-results">
-                <p>No products found matching your criteria.</p>
+                <p>No phone models available.</p>
             </div>
-        <% } %>
-
-        <!-- Products List -->
-        <div class="product-container">
-            <% products.forEach(function(product) { %>
-                <div class="product-card" data-product='<%= JSON.stringify(product) %>'>
+        <% } else { %>
+            <!-- Single Representative Product Card -->
+            <div class="product-container">
+                <div class="product-card">
                     <div class="product-info">
-                        <h2 class="product-name"><%= product.sm_name %></h2>
-                        <p class="product-maker">Brand: <%= product.sm_maker %></p>
-                        <p class="product-price">Price: $<%= Number(product.sm_price).toFixed(2) %></p>
-                        <p class="product-inventory">In Stock: <%= product.sm_inventory %></p>
-                        <a class="product-link" href="/product/<%= product.id %>">View Details</a>
-                        <div class="product-actions">
-                            <button onclick="addToCart('<%= product.id %>')">Add to Cart</button>
-                        </div>
+                        <h2 class="product-name"><%= products[0].sm_name %></h2>
+                        <p class="product-maker">Brand: <%= products[0].sm_maker %></p>
+                        <% if (typeof variantsCount !== 'undefined' && variantsCount > 0) { %>
+                        <p class="product-variants">Available in <%= variantsCount %> variants</p>
+                        <% } %>
+                        <a class="product-link" href="/product/<%= products[0].id %>">See More</a>
                     </div>
                 </div>
-            <% }); %>
-        </div>
+            </div>
+        <% } %>
     </div>
 
     <script>
@@ -79,25 +44,7 @@
             document.getElementById('menu').classList.toggle('hidden');
         }
 
-        function filterProducts() {
-            console.log("Filtering products...");
-            const form = document.getElementById('filterForm');
-            form.submit();
-        }
-
-        function addToCart(productId) {
-            // TODO: Implement add to cart functionality
-            console.log('Adding product to cart:', productId);
-            
-            // Placeholder implementation
-            alert('Product added to cart! (This is a placeholder)');
-            
-            // Future implementation might include:
-            // - Send AJAX request to server to add item to cart
-            // - Update cart counter in UI
-            // - Show confirmation message or animation
-            // - Handle inventory management
-        }
+        // No addToCart function needed for simplified view
     </script>
 </body>
 </html>

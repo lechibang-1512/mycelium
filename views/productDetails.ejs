@@ -20,6 +20,70 @@
             <div class="product-details-link">
                 <button onclick="window.location.href='/products'" class="back-button">← Back to Products</button>
             </div>
+            
+            <% if(typeof variants !== 'undefined' && Array.isArray(variants) && variants.length > 0) { %>
+                <div class="variant-summary">
+                    <span class="variant-count"><%= variants.length %> variants available for <%= modelName || product.sm_name %></span>
+                </div>
+                
+                <div class="all-variants-section">
+                    <h2>All Available Variants</h2>
+                    
+                    <div id="allVariantsTable" class="variants-table-container">
+                        <h3>Compare All <%= variants.length %> Variants</h3>
+                        <div class="table-controls">
+                            <select id="sortVariants">
+                                <option value="color">Sort by Color</option>
+                                <option value="price-low">Sort by Price (Low to High)</option>
+                                <option value="price-high">Sort by Price (High to Low)</option>
+                                <option value="ram">Sort by RAM</option>
+                                <option value="storage">Sort by Storage</option>
+                            </select>
+                        </div>
+                        <table class="variants-table">
+                            <thead>
+                                <tr>
+                                    <th>Color</th>
+                                    <th>RAM</th>
+                                    <th>Storage</th>
+                                    <th>Processor</th>
+                                    <th>Display</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="variantsTableBody">
+                                <% variants.forEach(function(variant) { %>
+                                    <tr class="<%= variant.id == currentId ? 'current-variant' : '' %>" data-price="<%= variant.sm_price %>" data-ram="<%= variant.ram %>" data-color="<%= variant.color %>">
+                                        <td><%= variant.color || 'Standard' %></td>
+                                        <td><%= variant.ram || 'N/A' %></td>
+                                        <td><%= variant.rom || 'N/A' %></td>
+                                        <td><%= variant.processor || 'Same' %></td>
+                                        <td><%= variant.display_size || 'Same' %></td>
+                                        <td>$<%= Number(variant.sm_price).toFixed(2) %></td>
+                                        <td>
+                                            <% if(variant.sm_inventory > 0) { %>
+                                                <span class="stock-status in-stock"><%= variant.sm_inventory %></span>
+                                            <% } else { %>
+                                                <span class="stock-status out-of-stock">Out of Stock</span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <% if(variant.id != currentId) { %>
+                                                <a href="/product/<%= variant.id %>" class="select-variant-btn">Select</a>
+                                            <% } else { %>
+                                                <span class="current-label">Current</span>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            <% } %>
+            
             <div class="product-specs">
                 <h2>Technical Specifications</h2>
                 <ul>
@@ -72,6 +136,71 @@
         function toggleMenu() {
             document.getElementById('menu').classList.toggle('hidden');
         }
+
+        // Handle variants sorting
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle sorting of variants
+            const sortSelect = document.getElementById('sortVariants');
+            if (sortSelect) {
+                sortSelect.addEventListener('change', function() {
+                    sortVariants(this.value);
+                });
+            }
+
+            // Function to sort variants table
+            function sortVariants(sortBy) {
+                const tableBody = document.getElementById('variantsTableBody');
+                if (!tableBody) return;
+
+                const rows = Array.from(tableBody.querySelectorAll('tr'));
+                
+                rows.sort((a, b) => {
+                    switch(sortBy) {
+                        case 'color':
+                            return a.querySelector('td:nth-child(1)').textContent.localeCompare(
+                                b.querySelector('td:nth-child(1)').textContent
+                            );
+                        case 'price-low':
+                            return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+                        case 'price-high':
+                            return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+                        case 'ram':
+                            return compareSizes(
+                                a.querySelector('td:nth-child(2)').textContent,
+                                b.querySelector('td:nth-child(2)').textContent
+                            );
+                        case 'storage':
+                            return compareSizes(
+                                a.querySelector('td:nth-child(3)').textContent,
+                                b.querySelector('td:nth-child(3)').textContent
+                            );
+                        default:
+                            return 0;
+                    }
+                });
+
+                // Clear and re-append sorted rows
+                while (tableBody.firstChild) {
+                    tableBody.removeChild(tableBody.firstChild);
+                }
+                
+                rows.forEach(row => tableBody.appendChild(row));
+            }
+
+            // Helper function to compare sizes like "8GB", "12GB", etc.
+            function compareSizes(a, b) {
+                // Extract numeric part
+                const numA = parseInt(a.match(/\d+/) || ['0']);
+                const numB = parseInt(b.match(/\d+/) || ['0']);
+                
+                if (numA === numB) {
+                    // If numbers are the same, sort by the unit
+                    return a.localeCompare(b);
+                }
+                
+                return numA - numB;
+            }
+        });
     </script>
 </body>
 </html>

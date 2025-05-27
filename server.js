@@ -61,11 +61,18 @@ app.get('/products', async (req, res, next) => {
         const products = await dbQueries.getProducts(req.db, filters);
         const brands = await dbQueries.getBrands(req.db);
         const models = await dbQueries.getModels(req.db);
+        
+        // Get variants count for the first product if available
+        let variantsCount = 0;
+        if (products && products.length > 0) {
+            variantsCount = await dbQueries.getVariantsCount(req.db, products[0].id);
+        }
 
         res.render('products', {
             products,
             brands,
             models,
+            variantsCount,
             selectedBrand: req.query?.brand || '',
             selectedModel: req.query?.model || ''
         });
@@ -84,7 +91,42 @@ app.get('/product/:id', async (req, res, next) => {
             return res.status(404).render('error', { message: errors.PRODUCT_NOT_FOUND });
         }
 
-        res.render('productDetails', { product: product[0] });
+        try {
+            console.log(`Fetching variants for product ID: ${req.params.id}`);
+            
+            // Get all variants of this product model
+            const variants = await dbQueries.getProductVariants(req.db, req.params.id) || [];
+            
+            console.log(`Successfully retrieved ${variants.length} variants`);
+            
+            // Group variants by their properties
+            const colorVariants = [...new Set(variants.map(v => v.color))]
+                .filter(color => color !== null && color !== undefined);
+                
+            const storageVariants = [...new Set(variants.map(v => 
+                `${v.ram || 'N/A'} RAM | ${v.rom || 'N/A'} Storage`
+            ))];
+            
+            res.render('productDetails', { 
+                product: product[0],
+                variants: variants,
+                colorVariants: colorVariants,
+                storageVariants: storageVariants,
+                currentId: req.params.id,
+                modelName: product[0].sm_name
+            });
+        } catch (variantError) {
+            console.error('Error fetching variants:', variantError);
+            // If there's an error with variants, continue with the base product
+            res.render('productDetails', { 
+                product: product[0],
+                variants: [],
+                colorVariants: [],
+                storageVariants: [],
+                currentId: req.params.id,
+                modelName: product[0].sm_name
+            });
+        }
     } catch (error) {
         console.error('Error fetching product details:', error);
         next(error);
