@@ -138,6 +138,55 @@ module.exports = () => {
     }));
 
     /**
+     * @route GET /api/serialized-inventory/stats
+     * @route GET /api/serialized-inventory/stats/summary
+     * @desc Get inventory statistics summary
+     */
+    router.get(['/stats', '/stats/summary'], requirePermission('serialized:read'), asyncHandler(async (req, res) => {
+        try {
+            // Get summary stats by status
+            const items = await serializedInventoryService.getAll({ limit: 10000 });
+
+            const summary = {
+                total: items.length,
+                byStatus: {},
+                byCondition: {},
+                devices: 0,
+                spareParts: 0
+            };
+
+            items.forEach(item => {
+                // Count by status
+                const status = item.status || 'unknown';
+                summary.byStatus[status] = (summary.byStatus[status] || 0) + 1;
+
+                // Count by condition
+                const condition = item.condition_grade || 'unknown';
+                summary.byCondition[condition] = (summary.byCondition[condition] || 0) + 1;
+
+                // Count by type (devices have IMEI, spare parts don't or have serial)
+                if (item.imei_1) {
+                    summary.devices++;
+                } else {
+                    summary.spareParts++;
+                }
+            });
+
+            res.json({
+                success: true,
+                data: summary
+            });
+        } catch (error) {
+            console.error('Error fetching stats:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to fetch statistics',
+                details: error.message
+            });
+        }
+    }));
+
+    /**
      * @route GET /api/serialized-inventory/:id
      * @desc Get single serialized inventory item by ID
      */
@@ -301,53 +350,7 @@ module.exports = () => {
         }
     }));
 
-    /**
-     * @route GET /api/serialized-inventory/stats/summary
-     * @desc Get inventory statistics summary
-     */
-    router.get('/stats/summary', requirePermission('serialized:read'), asyncHandler(async (req, res) => {
-        try {
-            // Get summary stats by status
-            const items = await serializedInventoryService.getAll({ limit: 10000 });
 
-            const summary = {
-                total: items.length,
-                byStatus: {},
-                byCondition: {},
-                devices: 0,
-                spareParts: 0
-            };
-
-            items.forEach(item => {
-                // Count by status
-                const status = item.status || 'unknown';
-                summary.byStatus[status] = (summary.byStatus[status] || 0) + 1;
-
-                // Count by condition
-                const condition = item.condition_grade || 'unknown';
-                summary.byCondition[condition] = (summary.byCondition[condition] || 0) + 1;
-
-                // Count by type (devices have IMEI, spare parts don't or have serial)
-                if (item.imei_1) {
-                    summary.devices++;
-                } else {
-                    summary.spareParts++;
-                }
-            });
-
-            res.json({
-                success: true,
-                data: summary
-            });
-        } catch (error) {
-            console.error('Error fetching stats:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to fetch statistics',
-                details: error.message
-            });
-        }
-    }));
 
     return router;
 };

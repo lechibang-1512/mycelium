@@ -119,24 +119,34 @@ class InventoryTransactionService {
                     });
                 }
 
+                const parentTransId = generateId();
+                await sequelizeMaster.query(`
+                    INSERT INTO transactions (
+                        id, transaction_group_id, receipt_id, transaction_type, transaction_date,
+                        warehouse_id, bin_id, supplier_id, invoice_id, po_id, user_id,
+                        notes, subtotal, tax_amount, total_amount
+                    ) VALUES (?, ?, ?, 'incoming', NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `, {
+                    replacements: [
+                        parentTransId, receiptId, receiptId, warehouse_id, bin_id, supplier_id, invoice_id, po_id,
+                        user_id, notes, totalSubtotal, totalTaxAmount, totalSubtotal + totalTaxAmount
+                    ],
+                    type: QueryTypes.INSERT,
+                    transaction: t
+                });
+
                 for (const tItem of transactionItems) {
-                    const transId = generateId();
+                    const transItemId = generateId();
                     await sequelizeMaster.query(`
-                        INSERT INTO transactions (
-                            id, transaction_group_id, receipt_id, transaction_type, transaction_date,
-                            warehouse_id, bin_id, supplier_id, invoice_id, po_id, user_id,
-                            notes, subtotal, tax_amount, total_amount,
-                            product_id, spare_part_id, serial_number, quantity_changed,
-                            condition_status, unit_cost, total_value,
-                            to_warehouse_id, to_bin_id, new_inventory_level, item_notes
-                        ) VALUES (?, ?, ?, 'incoming', NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                                  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO transaction_items (
+                            id, transaction_id, transaction_group_id, product_id, spare_part_id,
+                            serial_number, quantity_changed, condition_status, unit_cost, total_value,
+                            to_warehouse_id, to_bin_id, new_inventory_level, notes
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     `, {
                         replacements: [
-                            transId, receiptId, receiptId, warehouse_id, bin_id, supplier_id, invoice_id, po_id,
-                            user_id, notes, totalSubtotal, totalTaxAmount, totalSubtotal + totalTaxAmount,
-                            tItem.product_id, tItem.spare_part_id, tItem.serial_number, tItem.quantity_changed,
-                            tItem.condition, tItem.unit_cost, tItem.total_value,
+                            transItemId, parentTransId, receiptId, tItem.product_id, tItem.spare_part_id,
+                            tItem.serial_number, tItem.quantity_changed, tItem.condition, tItem.unit_cost, tItem.total_value,
                             tItem.to_bucket.warehouse_id, tItem.to_bucket.bin_id, tItem.new_inventory_level, tItem.notes
                         ],
                         type: QueryTypes.INSERT,
@@ -304,25 +314,34 @@ class InventoryTransactionService {
                 }
 
                 const customerJson = JSON.stringify({ name: customer_name, address: customer_address });
+                const parentTransId = generateId();
+                await sequelizeMaster.query(`
+                    INSERT INTO transactions (
+                        id, transaction_group_id, receipt_id, transaction_type, transaction_date,
+                        warehouse_id, bin_id, invoice_id, po_id, user_id, notes,
+                        customer, delivery_person, subtotal, tax_amount, total_amount
+                    ) VALUES (?, ?, ?, 'outgoing', NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `, {
+                    replacements: [
+                        parentTransId, receiptId, receiptId, warehouse_id, bin_id, invoice_id, po_id, user_id, userNotes,
+                        customerJson, delivery_person, totalSubtotal, totalTaxAmount, totalSubtotal + totalTaxAmount
+                    ],
+                    type: QueryTypes.INSERT,
+                    transaction: t
+                });
+
                 for (const tItem of transactionItems) {
-                    const transId = generateId();
+                    const transItemId = generateId();
                     await sequelizeMaster.query(`
-                        INSERT INTO transactions (
-                            id, transaction_group_id, receipt_id, transaction_type, transaction_date,
-                            warehouse_id, bin_id, invoice_id, po_id, user_id, notes,
-                            customer, delivery_person, subtotal, tax_amount, total_amount,
-                            product_id, spare_part_id, serial_number, quantity_changed,
-                            condition_status, unit_cost, total_value,
-                            from_warehouse_id, from_bin_id, new_inventory_level, item_notes
-                        ) VALUES (?, ?, ?, 'outgoing', NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                                  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO transaction_items (
+                            id, transaction_id, transaction_group_id, product_id, spare_part_id,
+                            serial_number, quantity_changed, condition_status, unit_cost, total_value,
+                            from_warehouse_id, from_bin_id, new_inventory_level, notes
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     `, {
                         replacements: [
-                            transId, receiptId, receiptId, warehouse_id, bin_id, invoice_id, po_id, user_id, userNotes,
-                            customerJson, delivery_person,
-                            totalSubtotal, totalTaxAmount, totalSubtotal + totalTaxAmount,
-                            tItem.product_id, tItem.spare_part_id, tItem.serial_number, tItem.quantity_changed,
-                            tItem.condition, tItem.unit_cost, tItem.total_value,
+                            transItemId, parentTransId, receiptId, tItem.product_id, tItem.spare_part_id,
+                            tItem.serial_number, tItem.quantity_changed, tItem.condition, tItem.unit_cost, tItem.total_value,
                             tItem.from_bucket.warehouse_id, tItem.from_bucket.bin_id, tItem.new_inventory_level, tItem.notes
                         ],
                         type: QueryTypes.INSERT,

@@ -11,12 +11,9 @@ const InvoiceItem = sequelizeMaster.define('InvoiceItem', {
                 
             },
             spare_part_id: {
-                type: DataTypes.INTEGER,
+                type: DataTypes.STRING(36),
                 allowNull: true,
         primaryKey: true,
-                
-                
-                
             },
             product_name: {
                 type: DataTypes.STRING(255),

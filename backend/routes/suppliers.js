@@ -67,44 +67,15 @@ module.exports = () => {
   }));
 
   // ========================================================================
-  // SUPPLIER DETAILS
-  // ========================================================================
-
-
-  router.get('/:id', requirePermission('inventory:read'), asyncHandler(async (req, res) => {
-    try {
-      const supplier = await supplierService.getSupplierById(req.params.id);
-
-      if (!supplier) {
-        return res.status(404).json({
-          success: false,
-          error: 'Supplier not found'
-        });
-      }
-
-      res.json({
-        success: true,
-        supplier: convertBigIntToNumber(supplier)
-      });
-    } catch (error) {
-      console.error('Error fetching supplier:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch supplier',
-        message: error.message
-      });
-    }
-  }));
-
-  // ========================================================================
-  // SUPPLIER METADATA
+  // SUPPLIER METADATA (must come before /:id)
   // ========================================================================
 
   /**
+   * GET /api/suppliers/categories
    * GET /api/suppliers/meta/categories
    * Get all distinct supplier categories
    */
-  router.get('/meta/categories', requirePermission('inventory:read'), asyncHandler(async (req, res) => {
+  router.get(['/categories', '/meta/categories'], requirePermission('inventory:read'), asyncHandler(async (req, res) => {
     try {
       const categories = await supplierService.getCategories();
 
@@ -142,6 +113,38 @@ module.exports = () => {
       });
     }
   }));
+
+  // ========================================================================
+  // SUPPLIER DETAILS
+  // ========================================================================
+
+
+  router.get('/:id', requirePermission('inventory:read'), asyncHandler(async (req, res) => {
+    try {
+      const supplier = await supplierService.getSupplierById(req.params.id);
+
+      if (!supplier) {
+        return res.status(404).json({
+          success: false,
+          error: 'Supplier not found'
+        });
+      }
+
+      res.json({
+        success: true,
+        supplier: convertBigIntToNumber(supplier)
+      });
+    } catch (error) {
+      console.error('Error fetching supplier:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch supplier',
+        message: error.message
+      });
+    }
+  }));
+
+
 
   // ========================================================================
   // SUPPLIER CREATION

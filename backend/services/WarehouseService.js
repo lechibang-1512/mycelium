@@ -329,7 +329,7 @@ class WarehouseService {
         const phones = await sequelizeMaster.query(sqlPhones, { replacements: paramsPhones, type: QueryTypes.SELECT });
 
         let sqlParts = `
-            SELECT i.*, s.part_name, s.part_number, w.name as warehouse_name
+            SELECT i.*, s.part_name, s.part_code as part_number, w.name as warehouse_name
             FROM inventory i
             LEFT JOIN spare_parts s ON i.spare_part_id = s.spare_part_id
             LEFT JOIN warehouses w ON i.warehouse_id = w.warehouse_id
