@@ -11,12 +11,12 @@
     <%- include('partials/header') %>
 
     <div class="container">
-        <h1 class="text-center">Inventory Management</h1>
+        <h1 class="text-center">CPU Inventory Management</h1>
         
         <!-- Dashboard Cards -->
         <div class="dashboard-cards">
             <div class="dashboard-card">
-                <h3>Total Products</h3>
+                <h3>Total CPUs</h3>
                 <div class="dashboard-number" id="totalProducts">
                     <% if (typeof stats !== 'undefined' && stats) { %>
                         <%= stats.totalProducts %>
@@ -24,7 +24,7 @@
                         --
                     <% } %>
                 </div>
-                <p class="dashboard-subtitle">Items in catalog</p>
+                <p class="dashboard-subtitle">CPU models in catalog</p>
             </div>
             <div class="dashboard-card">
                 <h3>Low Stock Alert</h3>
@@ -79,10 +79,11 @@
             <div class="search-section">
                 <input type="text" id="searchInput" placeholder="Search products..." class="search-input">
                 <select id="categoryFilter" class="filter-select">
-                    <option value="">All Categories</option>
-                    <option value="smartphones">Smartphones</option>
-                    <option value="tablets">Tablets</option>
-                    <option value="accessories">Accessories</option>
+                    <option value="">All Collections</option>
+                    <option value="Core">Core Processors</option>
+                    <option value="Xeon">Xeon Processors</option>
+                    <option value="Pentium">Pentium</option>
+                    <option value="Celeron">Celeron</option>
                 </select>
                 <select id="stockFilter" class="filter-select">
                     <option value="">All Stock Levels</option>
@@ -98,13 +99,13 @@
             <table class="inventory-table">
                 <thead>
                     <tr>
-                        <th>Product ID</th>
-                        <th>Product Name</th>
-                        <th>Brand</th>
-                        <th>Category</th>
-                        <th>Current Stock</th>
-                        <th>Min. Stock</th>
-                        <th>Price</th>
+                        <th>ID</th>
+                        <th>Processor Number</th>
+                        <th>Manufacturer</th>
+                        <th>Product Collection</th>
+                        <th>Cores/Threads</th>
+                        <th>Price Range</th>
+                        <th>Launch Date</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -141,50 +142,65 @@
         </div>
     </div>
 
-    <!-- Add Product Modal -->
+    <!-- Add CPU Modal -->
     <div id="addProductModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeAddProductModal()">&times;</span>
-            <h2>Add New Product</h2>
+            <h2>Add New CPU</h2>
             <form id="addProductForm">
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="productName">Product Name</label>
-                        <input type="text" id="productName" name="productName" required>
+                        <label for="processor_number">Processor Number</label>
+                        <input type="text" id="processor_number" name="processor_number" required>
                     </div>
                     <div class="form-group">
-                        <label for="productBrand">Brand</label>
-                        <input type="text" id="productBrand" name="productBrand" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="productCategory">Category</label>
-                        <select id="productCategory" name="productCategory" required>
-                            <option value="">Select Category</option>
-                            <option value="smartphones">Smartphones</option>
-                            <option value="tablets">Tablets</option>
-                            <option value="accessories">Accessories</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="productPrice">Price ($)</label>
-                        <input type="number" id="productPrice" name="productPrice" step="0.01" required>
+                        <label for="manufacturer">Manufacturer</label>
+                        <input type="text" id="manufacturer" name="manufacturer" required>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="initialStock">Initial Stock</label>
-                        <input type="number" id="initialStock" name="initialStock" min="0" required>
+                        <label for="product_collection">Product Collection</label>
+                        <input type="text" id="product_collection" name="product_collection" required>
                     </div>
                     <div class="form-group">
-                        <label for="minStock">Minimum Stock Threshold</label>
-                        <input type="number" id="minStock" name="minStock" min="0" required>
+                        <label for="code_name">Code Name</label>
+                        <input type="text" id="code_name" name="code_name">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="recommended_customer_price_min">Min Price ($)</label>
+                        <input type="number" id="recommended_customer_price_min" name="recommended_customer_price_min" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="recommended_customer_price_max">Max Price ($)</label>
+                        <input type="number" id="recommended_customer_price_max" name="recommended_customer_price_max" step="0.01">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="total_cores">Total Cores</label>
+                        <input type="number" id="total_cores" name="total_cores" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="total_threads">Total Threads</label>
+                        <input type="number" id="total_threads" name="total_threads" min="1">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="launch_date">Launch Date</label>
+                        <input type="text" id="launch_date" name="launch_date" placeholder="Q1'24">
+                    </div>
+                    <div class="form-group">
+                        <label for="lithography">Lithography</label>
+                        <input type="text" id="lithography" name="lithography" placeholder="e.g., 7nm">
                     </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="action-btn secondary" onclick="closeAddProductModal()">Cancel</button>
-                    <button type="submit" class="action-btn primary">Add Product</button>
+                    <button type="submit" class="action-btn primary">Add CPU</button>
                 </div>
             </form>
         </div>
@@ -212,15 +228,18 @@
             document.getElementById('addProductForm').reset();
         }
 
-        // Load inventory data
+        // Load CPU inventory data
         async function loadInventoryData(page = 1, filters = {}) {
             try {
-                const queryParams = new URLSearchParams({
+                // Map filter names to CPU fields
+                const cpuFilters = {
                     page: page,
                     limit: 20,
-                    ...filters
-                });
+                    search: filters.search || '',
+                    category: filters.category || '', // Maps to product_collection
+                };
 
+                const queryParams = new URLSearchParams(cpuFilters);
                 const response = await fetch(`/api/inventory?${queryParams}`);
                 const data = await response.json();
 
@@ -261,20 +280,20 @@
             tbody.innerHTML = data.map(item => `
                 <tr>
                     <td>${item.id}</td>
-                    <td>${item.productName}</td>
-                    <td>${item.brand}</td>
-                    <td>${item.category}</td>
-                    <td>${item.currentStock}</td>
-                    <td>${item.minStock}</td>
-                    <td>$${Number(item.price).toFixed(2)}</td>
+                    <td>${item.processor_number || 'N/A'}</td>
+                    <td>${item.manufacturer || 'N/A'}</td>
+                    <td>${item.product_collection || 'N/A'}</td>
+                    <td>${item.total_cores || 0}/${item.total_threads || 0}</td>
+                    <td>$${item.recommended_customer_price_min ? Number(item.recommended_customer_price_min).toFixed(2) : '0.00'} - $${item.recommended_customer_price_max ? Number(item.recommended_customer_price_max).toFixed(2) : '0.00'}</td>
+                    <td>${item.launch_date || 'N/A'}</td>
                     <td>
-                        <span class="status-badge ${item.status}">
+                        <span class="status-badge ${item.status || 'unknown'}">
                             ${getStatusText(item.status)}
                         </span>
                     </td>
                     <td>
-                        <button class="action-btn success" onclick="updateStock(${item.id}, ${item.currentStock})">
-                            Update Stock
+                        <button class="action-btn success" onclick="editCPU(${item.id})">
+                            Edit
                         </button>
                         <button class="action-btn danger" onclick="deleteProduct(${item.id})">
                             Delete
@@ -372,51 +391,44 @@
             document.getElementById('totalValue').textContent = `$${Number(stats.totalValue).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         }
 
-        // Update product stock
-        async function updateStock(productId, currentStock) {
-            const newStock = prompt(`Enter new stock quantity for product ${productId}:`, currentStock);
-            if (newStock !== null && !isNaN(newStock) && newStock >= 0) {
-                try {
-                    const response = await fetch(`/api/inventory/${productId}/stock`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ stock: parseInt(newStock) })
-                    });
-
-                    const result = await response.json();
-                    if (response.ok) {
-                        showSuccessMessage('Stock updated successfully');
-                        refreshInventory();
-                    } else {
-                        showErrorMessage(result.error || 'Failed to update stock');
-                    }
-                } catch (error) {
-                    console.error('Error updating stock:', error);
-                    showErrorMessage('Failed to update stock');
+        // Edit CPU
+        async function editCPU(cpuId) {
+            try {
+                // Fetch the current CPU data to pre-fill the form
+                const response = await fetch(`/api/product/${cpuId}/quick`);
+                if (response.ok) {
+                    const cpu = await response.json();
+                    
+                    // In a real implementation, you'd create a modal form to edit the CPU
+                    // For now, we'll just display an alert with the CPU details
+                    alert(`Editing CPU:\nID: ${cpuId}\nProcessor: ${cpu.processor_number}\nManufacturer: ${cpu.manufacturer}\n\nThis functionality will be fully implemented in a future update.`);
+                } else {
+                    showErrorMessage('Failed to fetch CPU data for editing');
                 }
+            } catch (error) {
+                console.error('Error fetching CPU for edit:', error);
+                showErrorMessage('Error preparing CPU edit form');
             }
         }
 
-        // Delete product
-        async function deleteProduct(productId) {
-            if (confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+        // Delete CPU
+        async function deleteProduct(cpuId) {
+            if (confirm('Are you sure you want to delete this CPU? This action cannot be undone.')) {
                 try {
-                    const response = await fetch(`/api/inventory/${productId}`, {
+                    const response = await fetch(`/api/inventory/${cpuId}`, {
                         method: 'DELETE'
                     });
 
                     const result = await response.json();
                     if (response.ok) {
-                        showSuccessMessage('Product deleted successfully');
+                        showSuccessMessage('CPU deleted successfully');
                         refreshInventory();
                     } else {
-                        showErrorMessage(result.error || 'Failed to delete product');
+                        showErrorMessage(result.error || 'Failed to delete CPU');
                     }
                 } catch (error) {
-                    console.error('Error deleting product:', error);
-                    showErrorMessage('Failed to delete product');
+                    console.error('Error deleting CPU:', error);
+                    showErrorMessage('Failed to delete CPU');
                 }
             }
         }
@@ -461,11 +473,11 @@
             loadInventoryData(1, currentFilters);
         });
 
-        // Form submission for adding new product
+        // Form submission for adding new CPU
         document.getElementById('addProductForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const formData = new FormData(e.target);
-            const productData = Object.fromEntries(formData.entries());
+            const cpuData = Object.fromEntries(formData.entries());
 
             try {
                 const response = await fetch('/api/inventory/products', {
@@ -473,20 +485,20 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(productData)
+                    body: JSON.stringify(cpuData)
                 });
 
                 const result = await response.json();
                 if (response.ok) {
-                    showSuccessMessage('Product added successfully');
+                    showSuccessMessage('CPU added successfully');
                     closeAddProductModal();
                     refreshInventory();
                 } else {
-                    showErrorMessage(result.error || 'Failed to add product');
+                    showErrorMessage(result.error || 'Failed to add CPU');
                 }
             } catch (error) {
-                console.error('Error adding product:', error);
-                showErrorMessage('Failed to add product');
+                console.error('Error adding CPU:', error);
+                showErrorMessage('Failed to add CPU');
             }
         });
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= product.sm_name %> - Details</title>
+    <title><%= product.processor_number %> - Details</title>
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
@@ -12,14 +12,14 @@
 
     <div class="container">
         <div class="product-details-card">
-            <h1 class="text-center"><%= product.sm_name %></h1>
+            <h1 class="text-center"><%= product.processor_number %></h1>
             <div class="product-details-link">
-                <button onclick="window.location.href='/products'" class="back-button">← Back to Products</button>
+                <button onclick="window.location.href='/products'" class="back-button">← Back to CPUs</button>
             </div>
             
             <% if(typeof variants !== 'undefined' && Array.isArray(variants) && variants.length > 0) { %>
                 <div class="variant-summary">
-                    <span class="variant-count"><%= variants.length %> variants available for <%= modelName || product.sm_name %></span>
+                    <span class="variant-count"><%= variants.length %> variants available for <%= modelName || product.processor_number %></span>
                 </div>
                 
                 <div class="all-variants-section">
@@ -29,21 +29,21 @@
                         <h3>Compare All <%= variants.length %> Variants</h3>
                         <div class="table-controls">
                             <select id="sortVariants">
-                                <option value="color">Sort by Color</option>
+                                <option value="model">Sort by Model</option>
                                 <option value="price-low">Sort by Price (Low to High)</option>
                                 <option value="price-high">Sort by Price (High to Low)</option>
-                                <option value="ram">Sort by RAM</option>
-                                <option value="storage">Sort by Storage</option>
+                                <option value="cores">Sort by Core Count</option>
+                                <option value="frequency">Sort by Frequency</option>
                             </select>
                         </div>
                         <table class="variants-table">
                             <thead>
                                 <tr>
-                                    <th>Color</th>
-                                    <th>RAM</th>
-                                    <th>Storage</th>
-                                    <th>Processor</th>
-                                    <th>Display</th>
+                                    <th>Model</th>
+                                    <th>Cores</th>
+                                    <th>Frequency</th>
+                                    <th>Cache</th>
+                                    <th>TDP</th>
                                     <th>Price</th>
                                     <th>Stock</th>
                                     <th></th>
@@ -83,46 +83,31 @@
             <div class="product-specs">
                 <h2>Technical Specifications</h2>
                 <ul>
-                    <li><strong>Processor:</strong> <%= product.processor || 'N/A' %></li>
-                    <li><strong>Process Node:</strong> <%= product.process_node || 'N/A' %></li>
-                    <li><strong>CPU Cores:</strong> <%= product.cpu_cores || 'N/A' %></li>
-                    <li><strong>CPU Frequency:</strong> <%= product.cpu_frequency || 'N/A' %></li>
-                    <li><strong>GPU:</strong> <%= product.gpu || 'N/A' %></li>
-                    <li><strong>Memory Type:</strong> <%= product.memory_type || 'N/A' %></li>
-                    <li><strong>RAM:</strong> <%= product.ram || 'N/A' %></li>
-                    <li><strong>ROM:</strong> <%= product.rom || 'N/A' %></li>
-                    <li><strong>Expandable Memory:</strong> <%= product.expandable_memory || 'N/A' %></li>
-                    <li><strong>Dimensions:</strong> <%= product.length_mm || 'N/A' %> x <%= product.width_mm || 'N/A' %> x <%= product.thickness_mm || 'N/A' %> mm</li>
-                    <li><strong>Weight:</strong> <%= product.weight_g || 'N/A' %> g</li>
-                    <li><strong>Water/Dust Rating:</strong> <%= product.water_and_dust_rating || 'N/A' %></li>
-                    <li><strong>Display Size:</strong> <%= product.display_size || 'N/A' %></li>
-                    <li><strong>Resolution:</strong> <%= product.resolution || 'N/A' %></li>
-                    <li><strong>Pixel Density:</strong> <%= product.pixel_density || 'N/A' %></li>
-                    <li><strong>Refresh Rate:</strong> <%= product.refresh_rate || 'N/A' %></li>
-                    <li><strong>Brightness:</strong> <%= product.brightness || 'N/A' %></li>
-                    <li><strong>Display Features:</strong> <%= product.display_features || 'N/A' %></li>
-                    <li><strong>Main Camera:</strong> <%= product.rear_camera_main || 'N/A' %></li>
-                    <li><strong>Macro Camera:</strong> <%= product.rear_camera_macro || 'N/A' %></li>
-                    <li><strong>Camera Features:</strong> <%= product.rear_camera_features || 'N/A' %></li>
-                    <li><strong>Video Resolution:</strong> <%= product.rear_video_resolution || 'N/A' %></li>
-                    <li><strong>Front Camera:</strong> <%= product.front_camera || 'N/A' %></li>
-                    <li><strong>Front Camera Features:</strong> <%= product.front_camera_features || 'N/A' %></li>
-                    <li><strong>Front Video Resolution:</strong> <%= product.front_video_resolution || 'N/A' %></li>
-                    <li><strong>Battery Capacity:</strong> <%= product.battery_capacity || 'N/A' %></li>
-                    <li><strong>Fast Charging:</strong> <%= product.fast_charging || 'N/A' %></li>
-                    <li><strong>Connector Type:</strong> <%= product.connector || 'N/A' %></li>
-                    <li><strong>Security Features:</strong> <%= product.security_features || 'N/A' %></li>
-                    <li><strong>SIM Card:</strong> <%= product.sim_card || 'N/A' %></li>
-                    <li><strong>NFC:</strong> <%= product.nfc || 'N/A' %></li>
-                    <li><strong>Network Bands:</strong> <%= product.network_bands || 'N/A' %></li>
-                    <li><strong>Wireless Connectivity:</strong> <%= product.wireless_connectivity || 'N/A' %></li>
-                    <li><strong>Navigation:</strong> <%= product.navigation || 'N/A' %></li>
-                    <li><strong>Audio Jack:</strong> <%= product.audio_jack || 'N/A' %></li>
-                    <li><strong>Audio Playback:</strong> <%= product.audio_playback || 'N/A' %></li>
-                    <li><strong>Video Playback:</strong> <%= product.video_playback || 'N/A' %></li>
-                    <li><strong>Sensors:</strong> <%= product.sensors || 'N/A' %></li>
-                    <li><strong>Operating System:</strong> <%= product.operating_system || 'N/A' %></li>
-                    <li><strong>Package Contents:</strong> <%= product.package_contents || 'N/A' %></li>
+                    <li><strong>Product Collection:</strong> <%= product.product_collection || 'N/A' %></li>
+                    <li><strong>Code Name:</strong> <%= product.code_name || 'N/A' %></li>
+                    <li><strong>Manufacturer:</strong> <%= product.manufacturer || 'N/A' %></li>
+                    <li><strong>Processor Number:</strong> <%= product.processor_number || 'N/A' %></li>
+                    <li><strong>Lithography:</strong> <%= product.lithography || 'N/A' %></li>
+                    <li><strong>Recommended Price:</strong> $<%= product.recommended_customer_price_min || 'N/A' %> - $<%= product.recommended_customer_price_max || 'N/A' %></li>
+                    <li><strong>Total Cores:</strong> <%= product.total_cores || 'N/A' %> (P-cores: <%= product.performance_cores || 'N/A' %>, E-cores: <%= product.efficient_cores || 'N/A' %>)</li>
+                    <li><strong>Total Threads:</strong> <%= product.total_threads || 'N/A' %></li>
+                    <li><strong>Max Turbo Frequency:</strong> <%= product.max_turbo_frequency_ghz || 'N/A' %> GHz</li>
+                    <li><strong>Base Frequency:</strong> P-core: <%= product.performance_core_base_frequency_ghz || 'N/A' %> GHz, E-core: <%= product.efficient_core_base_frequency_ghz || 'N/A' %> GHz</li>
+                    <li><strong>Cache:</strong> <%= product.cache_mb || 'N/A' %> MB (L2: <%= product.total_l2_cache_mb || 'N/A' %> MB)</li>
+                    <li><strong>TDP:</strong> Base <%= product.processor_base_power_w || 'N/A' %>W, Max <%= product.maximum_turbo_power_w || 'N/A' %>W</li>
+                    <li><strong>Launch Date:</strong> <%= product.launch_date || 'N/A' %></li>
+                    <li><strong>Memory Support:</strong> Up to <%= product.max_memory_size_gb || 'N/A' %> GB, <%= product.memory_types || 'N/A' %></li>
+                    <li><strong>Memory Channels:</strong> <%= product.max_memory_channels || 'N/A' %></li>
+                    <li><strong>Graphics:</strong> <%= product.gpu_name || 'N/A' %></li>
+                    <li><strong>Graphics Base Frequency:</strong> <%= product.graphics_base_frequency_mhz || 'N/A' %> MHz</li>
+                    <li><strong>Graphics Max Frequency:</strong> <%= product.graphics_max_dynamic_frequency_ghz || 'N/A' %> GHz</li>
+                    <li><strong>DirectX Support:</strong> <%= product.directx_support || 'N/A' %></li>
+                    <li><strong>OpenGL Support:</strong> <%= product.opengl_support || 'N/A' %></li>
+                    <li><strong>Execution Units:</strong> <%= product.execution_units || 'N/A' %></li>
+                    <li><strong>Sockets Supported:</strong> <%= product.sockets_supported || 'N/A' %></li>
+                    <li><strong>Package Size:</strong> <%= product.package_size_mm || 'N/A' %> mm</li>
+                    <li><strong>Virtualization Technology:</strong> <%= product.intel_virtualization_technology_vtx || 'N/A' %></li>
+                    <li><strong>Hyper-Threading:</strong> <%= product.intel_hyper_threading_technology || 'N/A' %></li>
                 </ul>
             </div>
         </div>

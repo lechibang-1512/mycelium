@@ -10,9 +10,10 @@
             "server": "localhost",
             "port": 3306,
             "driver": "MariaDB",
-            "name": "lechhibang",
+            "name": "inventory",
+            "database": "master_specs_db",
             "username": "lechibang",
-            "database": "master_specs_db"
+            "askForPassword": true
         }
     ]
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Products - Inventory Management</title>
+    <title>CPUs - Inventory Management</title>
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
     <%- include('partials/header') %>
 
     <div class="container">
-        <h1 class="text-center">Products Catalog</h1>
+        <h1 class="text-center">CPU Catalog</h1>
         
         <% if (user) { %>
             <div class="welcome-message">
@@ -37,7 +37,7 @@
                 
                 <div class="filter-row">
                     <select id="brandFilter" class="filter-select" onchange="applyFilters()">
-                        <option value="">All Brands</option>
+                        <option value="">All Manufacturers</option>
                         <% if (typeof brands !== 'undefined' && brands) { %>
                             <% brands.forEach(brand => { %>
                                 <option value="<%= brand.sm_maker %>" <%= selectedBrand === brand.sm_maker ? 'selected' : '' %>>
@@ -47,9 +47,13 @@
                         <% } %>
                     </select>
                     
-
-                    
-
+                    <select id="collectionFilter" class="filter-select" onchange="applyFilters()">
+                        <option value="">All Collections</option>
+                        <option value="Core">Core</option>
+                        <option value="Xeon">Xeon</option>
+                        <option value="Pentium">Pentium</option>
+                        <option value="Celeron">Celeron</option>
+                    </select>
                     
                     <select id="sortBy" class="filter-select" onchange="applyFilters()">
                         <option value="name">Sort by Name</option>
@@ -78,19 +82,19 @@
             <!-- No Results Message -->
             <% if (products.length === 0) { %>
                 <div class="no-results">
-                    <h3>No phone models available</h3>
+                    <h3>No CPU models available</h3>
                     <p>Try adjusting your search criteria or check back later.</p>
                 </div>
             <% } else { %>
                 <!-- Product Grid/List -->
                 <div id="productGrid" class="product-grid">
                     <% 
-                    // Create a map to store unique products by their model name and maker
+                    // Create a map to store unique products by their processor number and manufacturer
                     const uniqueProducts = new Map();
                     
-                    // Process products to only keep one product per model/maker combination
+                    // Process products to only keep one product per processor/manufacturer combination
                     products.forEach(product => {
-                        const key = `${product.sm_name}-${product.sm_maker}`;
+                        const key = `${product.processor_number || ''}-${product.manufacturer || ''}`;
                         if (!uniqueProducts.has(key)) {
                             uniqueProducts.set(key, product);
                         }
@@ -99,13 +103,13 @@
                     // Iterate through the unique products
                     Array.from(uniqueProducts.values()).forEach(product => { 
                     %>
-                        <div class="product-card" data-brand="<%= product.sm_maker %>">
+                        <div class="product-card" data-brand="<%= product.manufacturer || 'Unknown' %>">
                             <div class="product-image-placeholder">
-                                <span class="product-icon">📱</span>
+                                <span class="product-icon">💻</span>
                             </div>
                             <div class="product-info">
-                                <h3 class="product-name"><%= product.sm_name %></h3>
-                                <p class="product-brand">Brand: <%= product.sm_maker %></p>
+                                <h3 class="product-name"><%= product.processor_number || 'Unknown Model' %></h3>
+                                <p class="product-brand">Brand: <%= product.manufacturer || 'Unknown' %></p>
                                 <div class="product-actions">
                                     <a class="product-link primary" href="/product/<%= product.id %>">View Details</a>
                                 </div>
@@ -147,11 +151,13 @@
         // Apply filters
         function applyFilters() {
             const brand = document.getElementById('brandFilter').value;
+            const collection = document.getElementById('collectionFilter').value;
             const sort = document.getElementById('sortBy').value;
 
             currentFilters = {
                 ...currentFilters,
-                brand,
+                brand,     // For CPU data, this maps to manufacturer
+                collection, // This is the new product_collection filter
                 sort
             };
 
@@ -163,6 +169,7 @@
         function clearFilters() {
             document.getElementById('productSearch').value = '';
             document.getElementById('brandFilter').value = '';
+            document.getElementById('collectionFilter').value = '';
             document.getElementById('sortBy').value = 'name';
             
             currentFilters = {};
@@ -188,7 +195,7 @@
             }
         }
 
-        // Load products with AJAX
+        // Load CPU products with AJAX - client-side filtering
         async function loadProducts() {
             const loadingIndicator = document.getElementById('loadingIndicator');
             const productsContainer = document.getElementById('productsContainer');
@@ -196,37 +203,61 @@
             loadingIndicator.style.display = 'block';
             
             try {
+                // For this version, we'll use server-rendered data and filter client-side
+                // When the server-side API is fully updated, this can be switched to use that
+                
+                // Get all products from the server-rendered HTML
+                const allProducts = Array.from(document.querySelectorAll('.product-card'));
+                
+                // Filter products based on current filters
+                let filteredProducts = allProducts;
+                
+                // Filter by brand/manufacturer
+                if (currentFilters.brand) {
+                    filteredProducts = filteredProducts.filter(card => 
+                        card.getAttribute('data-brand').toLowerCase() === currentFilters.brand.toLowerCase()
+                    );
+                }
+                
+                // Show/hide based on filtering
+                allProducts.forEach(card => card.style.display = 'none');
+                filteredProducts.forEach(card => card.style.display = '');
+                
+                // Update count
+                document.getElementById('resultCount').textContent = filteredProducts.length;
+                
+                // For future API implementation:
+                /*
                 const queryParams = new URLSearchParams({
                     page: currentPage,
                     limit: 12,
                     ...currentFilters
                 });
 
-                const response = await fetch(`/api/products?${queryParams}`);
+                const response = await fetch(`/api/cpus?${queryParams}`);
                 const data = await response.json();
 
                 if (response.ok) {
-                    displayProducts(data.products);
+                    displayProducts(data.cpus);
                     updatePagination(data.currentPage, data.totalPages, data.total);
                     document.getElementById('resultCount').textContent = data.total;
-                } else {
-                    console.error('Error loading products:', data.error);
                 }
+                */
             } catch (error) {
-                console.error('Error loading products:', error);
+                console.error('Error handling products:', error);
             } finally {
                 loadingIndicator.style.display = 'none';
             }
         }
 
-        // Display products
+        // Display CPUs
         function displayProducts(products) {
             const productGrid = document.getElementById('productGrid');
             
             if (products.length === 0) {
                 productGrid.innerHTML = `
                     <div class="no-results">
-                        <h3>No products found</h3>
+                        <h3>No CPUs found</h3>
                         <p>Try adjusting your search criteria.</p>
                         <button onclick="clearFilters()" class="action-btn primary">Clear Filters</button>
                     </div>
@@ -234,12 +265,12 @@
                 return;
             }
 
-            // Create a map to store unique products by their model name and maker
+            // Create a map to store unique products by their processor number and manufacturer
             const uniqueProducts = new Map();
             
-            // Process products to only keep one product per model/maker combination
+            // Process products to only keep one product per processor/manufacturer combination
             products.forEach(product => {
-                const key = `${product.sm_name}-${product.sm_maker}`;
+                const key = `${product.processor_number || ''}-${product.manufacturer || ''}`;
                 if (!uniqueProducts.has(key)) {
                     uniqueProducts.set(key, product);
                 }
@@ -249,13 +280,13 @@
             const displayedProducts = Array.from(uniqueProducts.values());
 
             productGrid.innerHTML = displayedProducts.map(product => `
-                <div class="product-card" data-brand="${product.sm_maker}">
+                <div class="product-card" data-brand="${product.manufacturer || 'Unknown'}">
                     <div class="product-image-placeholder">
-                        <span class="product-icon">📱</span>
+                        <span class="product-icon">💻</span>
                     </div>
                     <div class="product-info">
-                        <h3 class="product-name">${product.sm_name}</h3>
-                        <p class="product-brand">Brand: ${product.sm_maker}</p>
+                        <h3 class="product-name">${product.processor_number || 'Unknown Model'}</h3>
+                        <p class="product-brand">Brand: ${product.manufacturer || 'Unknown'}</p>
                         <div class="product-actions">
                             <a class="product-link primary" href="/product/${product.id}">View Details</a>
                         </div>

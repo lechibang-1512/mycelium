@@ -1,4 +1,4 @@
-// dbQueries.js
+// dbQueries.js (CPU version)
 const { performance } = require('perf_hooks');
 
 // Enhanced LRU Cache implementation for better memory management and performance
@@ -239,576 +239,204 @@ function updateQueryStats(type, sql, duration) {
     }
 }
 
-// Query functions
+// CPU Query functions
 
-async function getProducts(db, filters = {}) {
+async function getCPUs(db, filters = {}) {
     let query = `
-        SELECT id, sm_name, sm_maker, sm_price, sm_inventory,
-            color, water_and_dust_rating, processor, process_node,
-            cpu_cores, cpu_frequency, gpu, memory_type, ram, rom,
-            expandable_memory, length_mm, width_mm, thickness_mm,
-            weight_g, display_size, resolution, pixel_density,
-            refresh_rate, brightness, display_features,
-            rear_camera_main, rear_camera_macro, rear_camera_features,
-            rear_video_resolution, front_camera, front_camera_features,
-            front_video_resolution, battery_capacity, fast_charging,
-            connector, security_features, sim_card, nfc, network_bands,
-            wireless_connectivity, navigation, audio_jack,
-            audio_playback, video_playback, sensors, operating_system,
-            package_contents
-        FROM phone_specs
+        SELECT id, product_collection, code_name, vertical_segment, processor_number, lithography,
+            recommended_customer_price_min, recommended_customer_price_max, total_cores, performance_cores, efficient_cores,
+            total_threads, max_turbo_frequency_ghz, turbo_boost_max_3_0_frequency_ghz, performance_core_max_turbo_frequency_ghz,
+            efficient_core_max_turbo_frequency_ghz, performance_core_base_frequency_ghz, efficient_core_base_frequency_ghz,
+            cache_mb, total_l2_cache_mb, processor_base_power_w, maximum_turbo_power_w, launch_date, embedded_options_available,
+            max_memory_size_gb, memory_types, max_memory_channels, max_memory_bandwidth_gb_s, ecc_memory_supported, gpu_name,
+            graphics_base_frequency_mhz, graphics_max_dynamic_frequency_ghz, graphics_output, execution_units, max_resolution_hdmi,
+            max_resolution_dp, max_resolution_edp, directx_support, opengl_support, opencl_support, multi_format_codec_engines,
+            intel_quick_sync_video, intel_clear_video_hd_technology, displays_supported, device_id, dmi_revision, max_dmi_lanes,
+            scalability, pci_express_revision, pci_express_configurations, max_pci_express_lanes, sockets_supported, max_cpu_configuration,
+            thermal_solution_specification, tjunction_celsius, package_size_mm, intel_gaussian_neural_accelerator_version,
+            intel_thread_director, intel_dl_boost, intel_optane_memory_supported, intel_speed_shift_technology,
+            intel_turbo_boost_max_technology_3_0, intel_turbo_boost_technology_version, intel_hyper_threading_technology, intel_64,
+            instruction_set, instruction_set_extensions, idle_states, enhanced_intel_speedstep_technology, thermal_monitoring_technologies,
+            intel_volume_management_device_vmd, intel_vpro_eligibility, intel_threat_detection_technology_tdt, intel_active_management_technology_amt,
+            intel_standard_manageability_ism, intel_one_click_recovery, intel_hardware_shield_eligibility, intel_control_flow_enforcement_technology,
+            intel_total_memory_encryption_multi_key, intel_total_memory_encryption, intel_aes_new_instructions, intel_secure_key, intel_os_guard,
+            intel_trusted_execution_technology, execute_disable_bit, intel_boot_guard, mode_based_execute_control_mbec, intel_stable_it_platform_program_sipp,
+            intel_virtualization_technology_with_redirect_protection_vt_rp, intel_virtualization_technology_vtx, intel_virtualization_technology_for_directed_io_vtd,
+            intel_vtx_with_extended_page_tables_ept, manufacturer
+        FROM cpu_specs
         WHERE 1=1
     `;
-
     const params = [];
-
-    if (filters.brand) {
-        query += ' AND sm_maker = ?';
-        params.push(filters.brand);
+    if (filters.product_collection) {
+        query += ' AND product_collection = ?';
+        params.push(filters.product_collection);
     }
-    if (filters.model) {
-        query += ' AND sm_name = ?';
-        params.push(filters.model);
+    if (filters.code_name) {
+        query += ' AND code_name = ?';
+        params.push(filters.code_name);
     }
-
-    query += ' ORDER BY sm_maker, sm_name';
-
-    // return await queryDatabase(db, query, params); // Old line
-    // MODIFIED: Enabled caching. TTL choice depends on data volatility and filter commonality.
-    // Using 'short' TTL as an example. If filters are very dynamic, caching might be less effective.
+    query += ' ORDER BY manufacturer, processor_number';
     return await queryDatabase(db, query, params, { use: true, ttl: 'short' });
 }
 
-async function getBrands(db) {
-    const query = 'SELECT DISTINCT sm_maker FROM phone_specs ORDER BY sm_maker';
-    return await queryDatabase(db, query, [], { use: true, ttl: 'long' }); // CORRECTED: Caching for brands, brands are fairly static
-}
-
-async function getModels(db) {
-    const query = 'SELECT DISTINCT sm_name FROM phone_specs ORDER BY sm_name';
-    return await queryDatabase(db, query, [], { use: true, ttl: 'long' }); // CORRECTED: Caching for models, models are fairly static
-}
-
-async function getProductById(db, productId) {
+async function getCPUById(db, cpuId) {
     const query = `
-        SELECT id, sm_name, sm_maker, sm_price, sm_inventory,
-               color, water_and_dust_rating, processor, process_node,
-               cpu_cores, cpu_frequency, gpu, memory_type, ram, rom,
-               expandable_memory, length_mm, width_mm, thickness_mm,
-               weight_g, display_size, resolution, pixel_density,
-               refresh_rate, brightness, display_features,
-               rear_camera_main, rear_camera_macro, rear_camera_features,
-               rear_video_resolution, front_camera, front_camera_features,
-               front_video_resolution, battery_capacity, fast_charging,
-               connector, security_features, sim_card, nfc, network_bands,
-               wireless_connectivity, navigation, audio_jack,
-               audio_playback, video_playback, sensors, operating_system,
-               package_contents
-        FROM phone_specs WHERE id = ?`;
-    return await queryDatabase(db, query, [productId], { use: true, ttl: 'medium' }); // MODIFIED: Enabled caching
+        SELECT * FROM cpu_specs WHERE id = ?`;
+    return await queryDatabase(db, query, [cpuId], { use: true, ttl: 'medium' });
 }
 
-// REFACTORED: Optimized to avoid fetching all product details if only count is needed.
-async function getVariantsCount(db, productId) {
+async function addNewCPU(db, cpuData) {
     try {
-        // Select only necessary fields for identifying the base product model
-        const productInfoQuery = 'SELECT sm_name, sm_maker FROM phone_specs WHERE id = ? LIMIT 1';
-        // Cache this lookup as product ID to name/maker mapping is stable
-        const productInfoResult = await queryDatabase(db, productInfoQuery, [productId], { use: true, ttl: 'medium' });
-
-        if (!productInfoResult || productInfoResult.length === 0) {
-            console.warn(`No product found for ID ${productId} in getVariantsCount`);
-            return 0;
+        // Validate required data
+        if (!cpuData.product_collection || !cpuData.processor_number || !cpuData.manufacturer) {
+            return { success: false, error: 'Missing required CPU information' };
         }
-        const { sm_name, sm_maker } = productInfoResult[0];
-
-        // Count variants based on the fetched name and maker
-        const countQuery = 'SELECT COUNT(*) as count FROM phone_specs WHERE sm_name = ? AND sm_maker = ?';
-        // Cache the count result as it can be frequently requested
-        const result = await queryDatabase(db, countQuery, [sm_name, sm_maker], { use: true, ttl: 'medium' });
-        return result[0].count;
-    } catch (error) {
-        console.error(`Error getting variants count for product ID ${productId}:`, error);
-        return 0;
-    }
-}
-
-async function getProductVariants(db, productId) {
-    try {
-        // OPTIMIZED: Single query using JOIN instead of multiple queries
-        // PERFORMANCE NOTE: The ORDER BY clause on RAM and ROM involves string manipulation (REGEXP, CAST, SUBSTRING, LOCATE)
-        // which can be inefficient and may prevent optimal index usage for sorting.
-        // Ideal solution: Add numerical columns for RAM/ROM (e.g., ram_gb, rom_gb) in the database schema
-        // and sort by those numerical columns for significantly better performance.
+        // Prepare SQL query
         const query = `
-            SELECT 
-                v.id, v.sm_name, v.sm_maker, v.sm_price, v.sm_inventory,
-                v.color, v.ram, v.rom, v.processor, v.display_size, v.battery_capacity,
-                v.rear_camera_main, v.front_camera
-            FROM phone_specs p
-            INNER JOIN phone_specs v ON p.sm_name = v.sm_name AND p.sm_maker = v.sm_maker
-            WHERE p.id = ?
-            ORDER BY 
-                v.color,
-                CASE 
-                    WHEN v.ram REGEXP '^[0-9]+GB$' THEN CAST(SUBSTRING(v.ram, 1, LOCATE('GB', v.ram) - 1) AS UNSIGNED)
-                    ELSE 0 
-                END DESC,
-                CASE 
-                    WHEN v.rom REGEXP '^[0-9]+GB$' THEN CAST(SUBSTRING(v.rom, 1, LOCATE('GB', v.rom) - 1) AS UNSIGNED)
-                    WHEN v.rom REGEXP '^[0-9]+TB$' THEN CAST(SUBSTRING(v.rom, 1, LOCATE('TB', v.rom) - 1) AS UNSIGNED) * 1024
-                    ELSE 0 
-                END DESC,
-                v.sm_price ASC
+            INSERT INTO cpu_specs (
+                product_collection, code_name, vertical_segment, processor_number, lithography,
+                recommended_customer_price_min, recommended_customer_price_max, total_cores, performance_cores, efficient_cores,
+                total_threads, max_turbo_frequency_ghz, turbo_boost_max_3_0_frequency_ghz, performance_core_max_turbo_frequency_ghz,
+                efficient_core_max_turbo_frequency_ghz, performance_core_base_frequency_ghz, efficient_core_base_frequency_ghz,
+                cache_mb, total_l2_cache_mb, processor_base_power_w, maximum_turbo_power_w, launch_date, embedded_options_available,
+                max_memory_size_gb, memory_types, max_memory_channels, max_memory_bandwidth_gb_s, ecc_memory_supported, gpu_name,
+                graphics_base_frequency_mhz, graphics_max_dynamic_frequency_ghz, graphics_output, execution_units, max_resolution_hdmi,
+                max_resolution_dp, max_resolution_edp, directx_support, opengl_support, opencl_support, multi_format_codec_engines,
+                intel_quick_sync_video, intel_clear_video_hd_technology, displays_supported, device_id, dmi_revision, max_dmi_lanes,
+                scalability, pci_express_revision, pci_express_configurations, max_pci_express_lanes, sockets_supported, max_cpu_configuration,
+                thermal_solution_specification, tjunction_celsius, package_size_mm, intel_gaussian_neural_accelerator_version,
+                intel_thread_director, intel_dl_boost, intel_optane_memory_supported, intel_speed_shift_technology,
+                intel_turbo_boost_max_technology_3_0, intel_turbo_boost_technology_version, intel_hyper_threading_technology, intel_64,
+                instruction_set, instruction_set_extensions, idle_states, enhanced_intel_speedstep_technology, thermal_monitoring_technologies,
+                intel_volume_management_device_vmd, intel_vpro_eligibility, intel_threat_detection_technology_tdt, intel_active_management_technology_amt,
+                intel_standard_manageability_ism, intel_one_click_recovery, intel_hardware_shield_eligibility, intel_control_flow_enforcement_technology,
+                intel_total_memory_encryption_multi_key, intel_total_memory_encryption, intel_aes_new_instructions, intel_secure_key, intel_os_guard,
+                intel_trusted_execution_technology, execute_disable_bit, intel_boot_guard, mode_based_execute_control_mbec, intel_stable_it_platform_program_sipp,
+                intel_virtualization_technology_with_redirect_protection_vt_rp, intel_virtualization_technology_vtx, intel_virtualization_technology_for_directed_io_vtd,
+                intel_vtx_with_extended_page_tables_ept, manufacturer
+            ) VALUES (
+                ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+            )
         `;
-        
-        // const variants = await queryDatabase(db, query, [productId], true); // Old incorrect call
-        // CORRECTED: Ensure caching is explicitly defined with a TTL from config
-        const variants = await queryDatabase(db, query, [productId], { use: true, ttl: 'medium' }); 
-        console.log(`Found ${variants.length} variants for product ID: ${productId}`);
-        
-        return variants;
-    } catch (error) {
-        console.error('Error in getProductVariants:', error);
-        return [];
-    }
-}
-
-// Inventory Management Functions
-
-async function getInventoryStats(db) {
-    try {
-        // OPTIMIZED: Single query with better indexing support
-        const statsQuery = `
-            SELECT 
-                COUNT(*) as totalProducts,
-                SUM(CASE WHEN sm_inventory > 0 AND sm_inventory <= 10 THEN 1 ELSE 0 END) as lowStock,
-                SUM(CASE WHEN sm_inventory = 0 THEN 1 ELSE 0 END) as outOfStock,
-                ROUND(SUM(sm_price * sm_inventory), 2) as totalValue
-            FROM phone_specs
-        `;
-        
-        // const result = await queryDatabase(db, statsQuery, [], true); // Old incorrect call
-        // CORRECTED: Caching for stats, using 'short' TTL as inventory can change frequently.
-        const result = await queryDatabase(db, statsQuery, [], { use: true, ttl: 'short' }); 
-        return result[0];
-    } catch (error) {
-        console.error('Error getting inventory stats:', error);
-        return {
-            totalProducts: 0,
-            lowStock: 0,
-            outOfStock: 0,
-            totalValue: 0
-        };
-    }
-}
-
-async function getInventoryData(db, filters = {}, page = 1, limit = 20) {
-    try {
-        let query = `
-            SELECT 
-                id,
-                sm_name as productName,
-                sm_maker as brand,
-                'smartphones' as category,
-                sm_inventory as currentStock,
-                10 as minStock,
-                sm_price as price,
-                CASE 
-                    WHEN sm_inventory = 0 THEN 'out-of-stock'
-                    WHEN sm_inventory <= 10 THEN 'low-stock'
-                    ELSE 'in-stock'
-                END as status,
-                color,
-                ram,
-                rom
-            FROM phone_specs 
-            WHERE 1=1
-        `;
-        
-        const params = [];
-        
-        // Apply filters
-        if (filters.search && filters.search.trim()) {
-            // Use FULLTEXT search if available, fallback to LIKE otherwise
-            query += ' AND MATCH(sm_name, sm_maker, processor) AGAINST (? IN NATURAL LANGUAGE MODE)';
-            params.push(filters.search.trim());
-        }
-        
-        if (filters.category && filters.category !== '') {
-            // For now, all products are smartphones, but we can extend this later
-            query += ' AND 1=1'; // Placeholder for category filter
-        }
-        
-        if (filters.stockLevel && filters.stockLevel !== '') {
-            switch (filters.stockLevel) {
-                case 'in-stock':
-                    break;
-                case 'out-of-stock':
-                    query += ' AND sm_inventory = 0';
-                    break;
-            }
-        }
-        
-        // Add ordering and pagination
-        query += ' ORDER BY sm_maker, sm_name';
-        
-        // Get total count for pagination
-        const countQuery = query.replace(/SELECT[\s\S]*?FROM/, 'SELECT COUNT(*) as total FROM');
-        const totalResult = await queryDatabase(db, countQuery, params);
-        const total = totalResult[0].total;
-        
-        // Add pagination
-        const offset = (page - 1) * limit;
-        query += ' LIMIT ? OFFSET ?';
-        params.push(limit, offset);
-        
-        const data = await queryDatabase(db, query, params);
-        
-        return {
-            data,
-            total,
-            page,
-            totalPages: Math.ceil(total / limit)
-        };
-    } catch (error) {
-        console.error('Error getting inventory data:', error);
-        return {
-            data: [],
-            total: 0,
-            page: 1,
-            totalPages: 0
-        };
-    }
-}
-
-async function updateProductStock(db, productId, newStock) {
-    try {
-        // Validate stock value
-        if (newStock < 0 || !Number.isInteger(newStock)) {
-            return { success: false, error: 'Invalid stock value' };
-        }
-
-        // First get the product to know what to invalidate
-        const productQuery = 'SELECT sm_name, sm_maker FROM phone_specs WHERE id = ?';
-        const product = await queryDatabase(db, productQuery, [productId], { use: false });
-        
-        if (!product || product.length === 0) {
-            return { success: false, error: 'Product not found' };
-        }
-        
-        const query = 'UPDATE phone_specs SET sm_inventory = ? WHERE id = ?';
-        await queryDatabase(db, query, [newStock, productId]);
-        
-        // Selective cache invalidation for inventory-related data
-        const cacheKeysToInvalidate = [
-            'inventory',
-            'stats',
-            `product.*${productId}`,
-            `${product[0].sm_name.toLowerCase()}`
-        ];
-        
-        let invalidated = 0;
-        const cacheSize = queryCache.size();
-        
-        for (const key of queryCache.cache.keys()) {
-            for (const pattern of cacheKeysToInvalidate) {
-                if (key.includes(pattern)) {
-                    queryCache.cache.delete(key);
-                    invalidated++;
-                    break;
-                }
-            }
-        }
-        
-        console.log(`Selectively invalidated ${invalidated}/${cacheSize} cache entries after stock update`);
-        
-        return { success: true };
-    } catch (error) {
-        console.error('Error updating product stock:', error);
-        return { success: false, error: error.message };
-    }
-}
-
-async function addNewProduct(db, productData) {
-    try {
-        // Validate required data - Do validation FIRST
-        if (!productData.productName || !productData.productBrand || !productData.productPrice) {
-            return { success: false, error: 'Missing required product information' };
-        }
-        
-        // Ensure price and stock are valid numbers
-        const price = parseFloat(productData.productPrice);
-        const stock = parseInt(productData.initialStock || 0); // Default to 0 if not provided
-        
-        if (isNaN(price) || price <= 0) {
-            return { success: false, error: 'Invalid product price' };
-        }
-        
-        if (isNaN(stock) || stock < 0) {
-            return { success: false, error: 'Invalid stock value' };
-        }
-        
-        // Prepare SQL query AFTER validation passes
-        const query = `
-            INSERT INTO phone_specs (
-                sm_name, sm_maker, sm_price, sm_inventory, color, ram, rom
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
-        `;
-        
         const params = [
-            productData.productName.trim(),
-            productData.productBrand.trim(),
-            price, // Use the validated price
-            stock, // Use the validated stock
-            productData.color?.trim() || 'Standard',
-            productData.ram?.trim() || '8GB',
-            productData.rom?.trim() || '128GB'
+            cpuData.product_collection,
+            cpuData.code_name,
+            cpuData.vertical_segment,
+            cpuData.processor_number,
+            cpuData.lithography,
+            cpuData.recommended_customer_price_min,
+            cpuData.recommended_customer_price_max,
+            cpuData.total_cores,
+            cpuData.performance_cores,
+            cpuData.efficient_cores,
+            cpuData.total_threads,
+            cpuData.max_turbo_frequency_ghz,
+            cpuData.turbo_boost_max_3_0_frequency_ghz,
+            cpuData.performance_core_max_turbo_frequency_ghz,
+            cpuData.efficient_core_max_turbo_frequency_ghz,
+            cpuData.performance_core_base_frequency_ghz,
+            cpuData.efficient_core_base_frequency_ghz,
+            cpuData.cache_mb,
+            cpuData.total_l2_cache_mb,
+            cpuData.processor_base_power_w,
+            cpuData.maximum_turbo_power_w,
+            cpuData.launch_date,
+            cpuData.embedded_options_available,
+            cpuData.max_memory_size_gb,
+            cpuData.memory_types,
+            cpuData.max_memory_channels,
+            cpuData.max_memory_bandwidth_gb_s,
+            cpuData.ecc_memory_supported,
+            cpuData.gpu_name,
+            cpuData.graphics_base_frequency_mhz,
+            cpuData.graphics_max_dynamic_frequency_ghz,
+            cpuData.graphics_output,
+            cpuData.execution_units,
+            cpuData.max_resolution_hdmi,
+            cpuData.max_resolution_dp,
+            cpuData.max_resolution_edp,
+            cpuData.directx_support,
+            cpuData.opengl_support,
+            cpuData.opencl_support,
+            cpuData.multi_format_codec_engines,
+            cpuData.intel_quick_sync_video,
+            cpuData.intel_clear_video_hd_technology,
+            cpuData.displays_supported,
+            cpuData.device_id,
+            cpuData.dmi_revision,
+            cpuData.max_dmi_lanes,
+            cpuData.scalability,
+            cpuData.pci_express_revision,
+            cpuData.pci_express_configurations,
+            cpuData.max_pci_express_lanes,
+            cpuData.sockets_supported,
+            cpuData.max_cpu_configuration,
+            cpuData.thermal_solution_specification,
+            cpuData.tjunction_celsius,
+            cpuData.package_size_mm,
+            cpuData.intel_gaussian_neural_accelerator_version,
+            cpuData.intel_thread_director,
+            cpuData.intel_dl_boost,
+            cpuData.intel_optane_memory_supported,
+            cpuData.intel_speed_shift_technology,
+            cpuData.intel_turbo_boost_max_technology_3_0,
+            cpuData.intel_turbo_boost_technology_version,
+            cpuData.intel_hyper_threading_technology,
+            cpuData.intel_64,
+            cpuData.instruction_set,
+            cpuData.instruction_set_extensions,
+            cpuData.idle_states,
+            cpuData.enhanced_intel_speedstep_technology,
+            cpuData.thermal_monitoring_technologies,
+            cpuData.intel_volume_management_device_vmd,
+            cpuData.intel_vpro_eligibility,
+            cpuData.intel_threat_detection_technology_tdt,
+            cpuData.intel_active_management_technology_amt,
+            cpuData.intel_standard_manageability_ism,
+            cpuData.intel_one_click_recovery,
+            cpuData.intel_hardware_shield_eligibility,
+            cpuData.intel_control_flow_enforcement_technology,
+            cpuData.intel_total_memory_encryption_multi_key,
+            cpuData.intel_total_memory_encryption,
+            cpuData.intel_aes_new_instructions,
+            cpuData.intel_secure_key,
+            cpuData.intel_os_guard,
+            cpuData.intel_trusted_execution_technology,
+            cpuData.execute_disable_bit,
+            cpuData.intel_boot_guard,
+            cpuData.mode_based_execute_control_mbec,
+            cpuData.intel_stable_it_platform_program_sipp,
+            cpuData.intel_virtualization_technology_with_redirect_protection_vt_rp,
+            cpuData.intel_virtualization_technology_vtx,
+            cpuData.intel_virtualization_technology_for_directed_io_vtd,
+            cpuData.intel_vtx_with_extended_page_tables_ept,
+            cpuData.manufacturer
         ];
-        
         const result = await queryDatabase(db, query, params);
-        
-        // Selective cache invalidation instead of clearing everything
-        // Clear only product-related cache entries but not static data like brands
-        // Create a regex to match keys related to products
-        const cacheKeysToInvalidate = [
-            'SELECT.*FROM phone_specs',
-            'products',
-            'inventory'
-        ];
-        
-        // Iterate through cache and delete matching entries
-        const cacheSize = queryCache.size();
-        let invalidated = 0;
-        
-        for (const key of queryCache.cache.keys()) {
-            for (const pattern of cacheKeysToInvalidate) {
-                if (key.includes(pattern)) {
-                    queryCache.cache.delete(key);
-                    invalidated++;
-                    break;
-                }
-            }
-        }
-        
-        console.log(`Selectively invalidated ${invalidated}/${cacheSize} cache entries after adding product`);
-        
+        queryCache.clear(); // Invalidate all cache after insert
         return { success: true, id: result.insertId };
     } catch (error) {
-        console.error('Error adding new product:', error);
+        console.error('Error adding new CPU:', error);
         return { success: false, error: error.message };
     }
 }
 
-async function deleteProduct(db, productId) {
+async function deleteCPU(db, cpuId) {
     try {
-        // First get the product to know what to invalidate
-        const productQuery = 'SELECT sm_name, sm_maker FROM phone_specs WHERE id = ?';
-        const product = await queryDatabase(db, productQuery, [productId], { use: false });
-        
-        const query = 'DELETE FROM phone_specs WHERE id = ?';
-        await queryDatabase(db, query, [productId]);
-        
-        // Invalidate caches
-        queryCache.clear(); // For production, implement more selective cache invalidation
-        
+        const query = 'DELETE FROM cpu_specs WHERE id = ?';
+        await queryDatabase(db, query, [cpuId]);
+        queryCache.clear();
         return { success: true };
     } catch (error) {
-        console.error('Error deleting product:', error);
+        console.error('Error deleting CPU:', error);
         return { success: false, error: error.message };
-    }
-}
-
-// FURTHER OPTIMIZED: Advanced product filtering with pagination and query optimization
-async function getProductsAdvanced(db, filters = {}, page = 1, limit = 12) {
-    try {
-        // Cache key construction using normalized filter values
-        const cacheKey = JSON.stringify({
-            search: filters.search?.toLowerCase().trim() || '',
-            brand: filters.brand || '',
-            price: filters.price || '',
-            stock: filters.stock || '',
-            sort: filters.sort || 'name',
-            page,
-            limit
-        });
-        
-        // Try cache first for common queries with consistent parameters
-        const cachedResult = queryCache.get(cacheKey);
-        if (cachedResult) {
-            console.log('Returning cached products result');
-            return cachedResult;
-        }
-        
-        const offset = (page - 1) * limit;
-        
-        // Prepare collections for query parameters
-        const params = []; // Use a single params array
-        
-        // Efficiently build WHERE clause for both queries
-        const whereConditions = [];
-        
-        if (filters.search) {
-            // Use FULLTEXT search if available, fallback to LIKE otherwise
-            whereConditions.push('MATCH(ps.sm_name, ps.sm_maker, ps.processor) AGAINST (? IN NATURAL LANGUAGE MODE)');
-            params.push(filters.search.trim());
-        }
-        
-        if (filters.brand) {
-            whereConditions.push('ps.sm_maker = ?');
-            params.push(filters.brand);
-        }
-        
-        if (filters.price) {
-            const [min, max] = filters.price.split('-');
-            if (max === undefined && min.endsWith('+')) {
-                // Handle price range like "1000+"
-                const minPrice = parseInt(min.slice(0, -1));
-                whereConditions.push('ps.sm_price >= ?');
-                params.push(minPrice);
-            } else if (max) {
-                // Regular range like "300-600"
-                whereConditions.push('ps.sm_price BETWEEN ? AND ?');
-                params.push(parseInt(min), parseInt(max));
-            } else {
-                // Single value
-                whereConditions.push('ps.sm_price >= ?');
-                params.push(parseInt(min));
-            }
-        }
-        
-        if (filters.stock) {
-            switch (filters.stock) {
-                case 'in-stock':
-                    whereConditions.push('ps.sm_inventory > 10');
-                    break;
-                case 'low-stock':
-                    whereConditions.push('ps.sm_inventory BETWEEN 1 AND 10');
-                    break;
-                case 'out-of-stock':
-                    whereConditions.push('ps.sm_inventory = 0');
-                    break;
-            }
-        }
-        
-        // Build the WHERE clause string
-        const whereClause = whereConditions.length > 0 
-            ? 'WHERE ' + whereConditions.join(' AND ') 
-            : '';
-            
-        // Use a common table expression (CTE) for much better performance
-        // This avoids redundant subqueries and uses indexed columns efficiently
-        const mainQuery = `
-            WITH unique_products AS (
-                SELECT 
-                    MIN(id) AS id,
-                    sm_name,
-                    sm_maker
-                FROM phone_specs
-                GROUP BY sm_name, sm_maker
-            )
-            SELECT 
-                ps.id, 
-                ps.sm_name, 
-                ps.sm_maker, 
-                ps.sm_price, 
-                ps.sm_inventory,
-                ps.color, 
-                ps.processor, 
-                ps.ram, 
-                ps.rom, 
-                ps.display_size, 
-                ps.battery_capacity
-            FROM phone_specs ps
-            INNER JOIN unique_products up 
-                ON ps.id = up.id
-            ${whereClause}
-        `;
-        
-        // Optimized COUNT query using a covering index where possible
-        const countQuery = `
-            SELECT COUNT(*) as total
-            FROM (
-                SELECT MIN(id) as id
-                FROM phone_specs ps
-                ${whereClause}
-                GROUP BY sm_name, sm_maker
-            ) AS unique_count
-        `;
-        
-        // Apply sorting - use indexed columns for better performance
-        let sortClause;
-        switch (filters.sort) {
-            case 'price-low':
-                sortClause = 'ORDER BY ps.sm_price ASC, ps.sm_name ASC';
-                break;
-            case 'price-high':
-                sortClause = 'ORDER BY ps.sm_price DESC, ps.sm_name ASC';
-                break;
-            case 'brand':
-                sortClause = 'ORDER BY ps.sm_maker ASC, ps.sm_name ASC';
-                break;
-            default:
-                sortClause = 'ORDER BY ps.sm_name ASC, ps.sm_maker ASC';
-        }
-        
-        // Execute count query first with short caching (1 minute)
-        const countResult = await queryDatabase(db, countQuery, params, // Use the unified params array
-            { use: true, ttl: 'short' });
-        
-        const total = countResult[0].total;
-        const totalPages = Math.ceil(total / limit);
-        
-        // Build final query with pagination
-        const finalQuery = `${mainQuery} ${sortClause} LIMIT ? OFFSET ?`;
-        const queryParams = [...params]; // Create a copy for the final query if params are modified later, or use params directly if not.
-        queryParams.push(limit, offset);
-        
-        // Execute main query with caching appropriate to the query type
-        const products = await queryDatabase(db, finalQuery, queryParams, // Use the (potentially extended) params array
-            { use: true, ttl: filters.search ? 'short' : 'medium' });
-        
-        // Prepare response object
-        const result = {
-            products,
-            total,
-            currentPage: page,
-            totalPages,
-            hasNext: page < totalPages,
-            hasPrev: page > 1
-        };
-        
-        // Cache the result for future requests
-        queryCache.set(cacheKey, result);
-        
-        return result;
-    } catch (error) {
-        console.error('Error in getProductsAdvanced:', error);
-        return {
-            products: [],
-            total: 0,
-            currentPage: page,
-            totalPages: 0,
-            hasNext: false,
-            hasPrev: false
-        };
     }
 }
 
 module.exports = {
     queryDatabase,
-    getProducts,
-    getBrands,
-    getModels,
-    getProductById,
-    getVariantsCount,
-    getProductVariants,
-    // Inventory Management Functions
-    getInventoryStats,
-    getInventoryData,
-    updateProductStock,
-    addNewProduct,
-    deleteProduct,
-    // Advanced Product Functions
-    getProductsAdvanced
+    getCPUs,
+    getCPUById,
+    addNewCPU,
+    deleteCPU
 };

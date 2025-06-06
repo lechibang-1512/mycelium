@@ -150,27 +150,25 @@ app.get('/', userAuth.requireAuth, (req, res) => {
     res.redirect('/products');
 });
 
-// Products Route with Filtering
+// CPUs Route with Filtering
 app.get('/products', userAuth.requireAuth, async (req, res, next) => {
     try {
-        const filters = { brand: req.query.brand, model: req.query.model };
-        const products = await dbQueries.getProducts(req.db, filters);
-        const brands = await dbQueries.getBrands(req.db);
-        const models = await dbQueries.getModels(req.db);
+        const filters = { 
+            product_collection: req.query.collection, 
+            code_name: req.query.code_name 
+        };
+        const cpus = await dbQueries.getCPUs(req.db, filters);
         
-        // Get variants count for the first product if available
-        let variantsCount = 0;
-        if (products && products.length > 0) {
-            variantsCount = await dbQueries.getVariantsCount(req.db, products[0].id);
-        }
-
+        // Extract unique values for filters
+        const collections = [...new Set(cpus.map(cpu => cpu.product_collection).filter(Boolean))];
+        const codeNames = [...new Set(cpus.map(cpu => cpu.code_name).filter(Boolean))];
+        
         res.render('products', {
-            products,
-            brands,
-            models,
-            variantsCount,
-            selectedBrand: req.query?.brand || '',
-            selectedModel: req.query?.model || ''
+            products: cpus,
+            collections,
+            codeNames,
+            selectedCollection: req.query?.collection || '',
+            selectedCodeName: req.query?.code_name || ''
         });
     } catch (error) {
         console.error('Error in /products route:', error);
@@ -178,65 +176,68 @@ app.get('/products', userAuth.requireAuth, async (req, res, next) => {
     }
 });
 
-// Single Product Details Route
+// Single CPU Details Route
 app.get('/product/:id', userAuth.requireAuth, async (req, res, next) => {
     try {
-        const product = await dbQueries.getProductById(req.db, req.params.id);
+        const cpu = await dbQueries.getCPUById(req.db, req.params.id);
 
-        if (!product || product.length === 0) {
+        if (!cpu || cpu.length === 0) {
             return res.status(404).render('error', { message: errors.PRODUCT_NOT_FOUND });
         }
 
-        try {
-            console.log(`Fetching variants for product ID: ${req.params.id}`);
-            
-            // Get all variants of this product model
-            const variants = await dbQueries.getProductVariants(req.db, req.params.id) || [];
-            
-            console.log(`Successfully retrieved ${variants.length} variants`);
-            
-            // Group variants by their properties
-            const colorVariants = [...new Set(variants.map(v => v.color))]
-                .filter(color => color !== null && color !== undefined);
-                
-            const storageVariants = [...new Set(variants.map(v => 
-                `${v.ram || 'N/A'} RAM | ${v.rom || 'N/A'} Storage`
-            ))];
-            
-            res.render('productDetails', { 
-                product: product[0],
-                variants: variants,
-                colorVariants: colorVariants,
-                storageVariants: storageVariants,
-                currentId: req.params.id,
-                modelName: product[0].sm_name
-            });
-        } catch (variantError) {
-            console.error('Error fetching variants:', variantError);
-            // If there's an error with variants, continue with the base product
-            res.render('productDetails', { 
-                product: product[0],
-                variants: [],
-                colorVariants: [],
-                storageVariants: [],
-                currentId: req.params.id,
-                modelName: product[0].sm_name
-            });
-        }
+        // Get all CPUs with the same product collection for comparison
+        const relatedCPUs = await dbQueries.getCPUs(req.db, {
+            product_collection: cpu[0].product_collection
+        }).then(cpus => cpus.filter(c => c.id !== cpu[0].id));
+        
+        console.log(`Found ${relatedCPUs.length} related CPUs`);
+        
+        res.render('productDetails', { 
+            product: cpu[0],
+            relatedProducts: relatedCPUs,
+            currentId: req.params.id,
+            modelName: cpu[0].processor_number
+        });
     } catch (error) {
         console.error('Error fetching product details:', error);
         next(error);
     }
 });
 
-// Inventory Management Route
+// CPU Inventory Management Route
 app.get('/inventory', userAuth.requirePermission('write'), async (req, res, next) => {
     try {
-        // Get inventory statistics for the dashboard
-        const stats = await dbQueries.getInventoryStats(req.db);
+        // Get CPUs
+        const cpus = await dbQueries.getCPUs(req.db);
+        
+        // Calculate basic stats
+        const totalProducts = cpus.length;
+        
+        // For demonstration, we'll use price range as a substitute for "in stock" status
+        const lowStock = cpus.filter(cpu => 
+            cpu.recommended_customer_price_min && 
+            cpu.recommended_customer_price_min < 200
+        ).length;
+        
+        const outOfStock = cpus.filter(cpu => 
+            !cpu.recommended_customer_price_min && 
+            !cpu.recommended_customer_price_max
+        ).length;
+        
+        // Calculate total value (using max price as an estimate)
+        const totalValue = cpus.reduce((sum, cpu) => {
+            return sum + (cpu.recommended_customer_price_max || 0);
+        }, 0);
+        
+        const stats = {
+            totalProducts,
+            lowStock,
+            outOfStock,
+            totalValue
+        };
         
         res.render('inventoryManagement', {
-            title: 'Inventory Management',
+            title: 'CPU Inventory Management',
             stats: stats
         });
     } catch (error) {
@@ -247,7 +248,7 @@ app.get('/inventory', userAuth.requirePermission('write'), async (req, res, next
 
 // API Routes for Inventory Management
 
-// Get inventory data (for AJAX requests)
+// Get CPU inventory data (for AJAX requests)
 app.get('/api/inventory', userAuth.requireAuth, async (req, res, next) => {
     try {
         let page = parseInt(req.query.page);
@@ -258,11 +259,24 @@ app.get('/api/inventory', userAuth.requireAuth, async (req, res, next) => {
 
         const filters = {
             search: req.query.search,
-            category: req.query.category,
-            stockLevel: req.query.stockLevel
+            product_collection: req.query.category, // Map category filter to product_collection
+            code_name: req.query.code_name
         };
         
-        const result = await dbQueries.getInventoryData(req.db, filters, page, limit);
+        const cpus = await dbQueries.getCPUs(req.db, filters);
+        
+        // Manual pagination since we don't have a specific inventory data function
+        const total = cpus.length;
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const paginatedCPUs = cpus.slice(startIndex, endIndex);
+        
+        const result = {
+            data: paginatedCPUs,
+            total: total,
+            page: page,
+            totalPages: Math.ceil(total / limit)
+        };
         res.json(result);
     } catch (error) {
         console.error('Error in /api/inventory route:', error);
@@ -270,10 +284,40 @@ app.get('/api/inventory', userAuth.requireAuth, async (req, res, next) => {
     }
 });
 
-// Get inventory stats (for dashboard updates)
+// Get CPU inventory stats (for dashboard updates)
 app.get('/api/inventory/stats', userAuth.requireAuth, async (req, res, next) => {
     try {
-        const stats = await dbQueries.getInventoryStats(req.db);
+        // Since we don't have a separate inventory stats function for CPUs,
+        // we'll calculate basic stats from the CPUs we get
+        const cpus = await dbQueries.getCPUs(req.db);
+        
+        // Calculate basic stats
+        const totalProducts = cpus.length;
+        
+        // For demonstration, we'll use price range as a substitute for "in stock" status
+        // In a real application, you would have an inventory field
+        const lowStock = cpus.filter(cpu => 
+            cpu.recommended_customer_price_min && 
+            cpu.recommended_customer_price_min < 200
+        ).length;
+        
+        const outOfStock = cpus.filter(cpu => 
+            !cpu.recommended_customer_price_min && 
+            !cpu.recommended_customer_price_max
+        ).length;
+        
+        // Calculate total value (using max price as an estimate)
+        const totalValue = cpus.reduce((sum, cpu) => {
+            return sum + (cpu.recommended_customer_price_max || 0);
+        }, 0);
+        
+        const stats = {
+            totalProducts,
+            lowStock,
+            outOfStock,
+            totalValue
+        };
+        
         res.json(stats);
     } catch (error) {
         console.error('Error in /api/inventory/stats route:', error);
@@ -281,100 +325,94 @@ app.get('/api/inventory/stats', userAuth.requireAuth, async (req, res, next) => 
     }
 });
 
-// Update product stock
-app.put('/api/inventory/:id/stock', userAuth.requirePermission('write'), async (req, res, next) => {
-    try {
-        const productId = req.params.id;
-        const { stock } = req.body;
-        
-        if (stock === undefined || stock < 0) {
-            return res.status(400).json({ error: 'Invalid stock value' });
-        }
-        
-        const result = await dbQueries.updateProductStock(req.db, productId, stock);
-        if (result.success) {
-            res.json({ success: true, message: 'Stock updated successfully' });
-        } else {
-            res.status(500).json({ error: result.error });
-        }
-    } catch (error) {
-        console.error('Error updating stock:', error);
-        res.status(500).json({ error: 'Failed to update stock' });
-    }
-});
+// This endpoint would be replaced with edit CPU functionality
+// For now, we're removing it as we don't have a direct updateStock function for CPUs
 
-// Add new product
+// Add new CPU
 app.post('/api/inventory/products', userAuth.requirePermission('write'), async (req, res, next) => {
     try {
-        const result = await dbQueries.addNewProduct(req.db, req.body);
+        const result = await dbQueries.addNewCPU(req.db, req.body);
         if (result.success) {
-            res.json({ success: true, id: result.id, message: 'Product added successfully' });
+            res.json({ success: true, id: result.id, message: 'CPU added successfully' });
         } else {
             res.status(500).json({ error: result.error });
         }
     } catch (error) {
-        console.error('Error adding product:', error);
-        res.status(500).json({ error: 'Failed to add product' });
+        console.error('Error adding CPU:', error);
+        res.status(500).json({ error: 'Failed to add CPU' });
     }
 });
 
-// Delete product
+// Delete CPU
 app.delete('/api/inventory/:id', userAuth.requirePermission('delete'), async (req, res, next) => {
     try {
-        const productId = req.params.id;
-        const result = await dbQueries.deleteProduct(req.db, productId);
+        const cpuId = req.params.id;
+        const result = await dbQueries.deleteCPU(req.db, cpuId);
         
         if (result.success) {
-            res.json({ success: true, message: 'Product deleted successfully' });
+            res.json({ success: true, message: 'CPU deleted successfully' });
         } else {
             res.status(500).json({ error: result.error });
         }
     } catch (error) {
-        console.error('Error deleting product:', error);
-        res.status(500).json({ error: 'Failed to delete product' });
+        console.error('Error deleting CPU:', error);
+        res.status(500).json({ error: 'Failed to delete CPU' });
     }
 });
 
 // Enhanced API Routes for Products
 
-// Get products with advanced filtering and pagination
-app.get('/api/products', userAuth.requireAuth, async (req, res, next) => {
+// Get CPUs with filtering and pagination
+app.get('/api/cpus', userAuth.requireAuth, async (req, res, next) => {
     try {
         let page = parseInt(req.query.page);
         let limit = parseInt(req.query.limit);
 
         page = (Number.isInteger(page) && page > 0) ? page : 1;
-        limit = (Number.isInteger(limit) && limit > 0) ? limit : 12; // Default limit for products
+        limit = (Number.isInteger(limit) && limit > 0) ? limit : 12;
 
         const filters = {
-            search: req.query.search,
-            brand: req.query.brand,
-            price: req.query.price,
-            stock: req.query.stock,
-            sort: req.query.sort || 'name'
+            product_collection: req.query.collection,
+            code_name: req.query.code_name
         };
         
-        const result = await dbQueries.getProductsAdvanced(req.db, filters, page, limit);
-        res.json(result);
+        // Get all CPUs matching the filters
+        const cpus = await dbQueries.getCPUs(req.db, filters);
+        
+        // Manual pagination
+        const total = cpus.length;
+        const totalPages = Math.ceil(total / limit);
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const paginatedCPUs = cpus.slice(startIndex, endIndex);
+        
+        res.json({
+            cpus: paginatedCPUs,
+            total: total,
+            currentPage: page,
+            totalPages: totalPages,
+            hasNext: page < totalPages,
+            hasPrev: page > 1
+        });
     } catch (error) {
-        console.error('Error in /api/products route:', error);
-        res.status(500).json({ error: 'Failed to fetch products' });
+        console.error('Error in /api/cpus route:', error);
+        res.status(500).json({ error: 'Failed to fetch CPUs' });
     }
 });
 
-// Get product quick view data
+// Get CPU quick view data
 app.get('/api/product/:id/quick', userAuth.requireAuth, async (req, res, next) => {
     try {
-        const product = await dbQueries.getProductById(req.db, req.params.id);
+        const cpu = await dbQueries.getCPUById(req.db, req.params.id);
         
-        if (!product || product.length === 0) {
-            return res.status(404).json({ error: 'Product not found' });
+        if (!cpu || cpu.length === 0) {
+            return res.status(404).json({ error: 'CPU not found' });
         }
         
-        res.json(product[0]);
+        res.json(cpu[0]);
     } catch (error) {
         console.error('Error in /api/product/:id/quick route:', error);
-        res.status(500).json({ error: 'Failed to fetch product details' });
+        res.status(500).json({ error: 'Failed to fetch CPU details' });
     }
 });
 

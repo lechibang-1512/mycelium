@@ -1,10 +1,10 @@
 <header class="app-header">
     <div class="header-content">
         <div class="header-left">
-            <h1 class="app-title">📱 Phone Store Inventory</h1>
+            <h1 class="app-title">💻 CPU Store Inventory</h1>
             <nav class="main-nav">
                 <a href="/products" class="nav-link <%= locals.currentPage === 'products' ? 'active' : '' %>">
-                    📋 Products
+                    📋 CPUs
                 </a>
                 <% if (user && (user.role === 'admin' || user.role === 'manager')) { %>
                 <a href="/inventory" class="nav-link <%= locals.currentPage === 'inventory' ? 'active' : '' %>">
