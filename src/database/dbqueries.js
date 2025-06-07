@@ -262,7 +262,7 @@ async function getCPUs(db, filters = {}) {
             intel_total_memory_encryption_multi_key, intel_total_memory_encryption, intel_aes_new_instructions, intel_secure_key, intel_os_guard,
             intel_trusted_execution_technology, execute_disable_bit, intel_boot_guard, mode_based_execute_control_mbec, intel_stable_it_platform_program_sipp,
             intel_virtualization_technology_with_redirect_protection_vt_rp, intel_virtualization_technology_vtx, intel_virtualization_technology_for_directed_io_vtd,
-            intel_vtx_with_extended_page_tables_ept, manufacturer
+            intel_vtx_with_extended_page_tables_ept, manufacturer, inventory
         FROM cpu_specs
         WHERE 1=1
     `;
@@ -313,9 +313,9 @@ async function addNewCPU(db, cpuData) {
                 intel_total_memory_encryption_multi_key, intel_total_memory_encryption, intel_aes_new_instructions, intel_secure_key, intel_os_guard,
                 intel_trusted_execution_technology, execute_disable_bit, intel_boot_guard, mode_based_execute_control_mbec, intel_stable_it_platform_program_sipp,
                 intel_virtualization_technology_with_redirect_protection_vt_rp, intel_virtualization_technology_vtx, intel_virtualization_technology_for_directed_io_vtd,
-                intel_vtx_with_extended_page_tables_ept, manufacturer
+                intel_vtx_with_extended_page_tables_ept, manufacturer, inventory
             ) VALUES (
-                ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+                ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
             )
         `;
         const params = [
@@ -410,7 +410,8 @@ async function addNewCPU(db, cpuData) {
             cpuData.intel_virtualization_technology_vtx,
             cpuData.intel_virtualization_technology_for_directed_io_vtd,
             cpuData.intel_vtx_with_extended_page_tables_ept,
-            cpuData.manufacturer
+            cpuData.manufacturer,
+            cpuData.inventory
         ];
         const result = await queryDatabase(db, query, params);
         queryCache.clear(); // Invalidate all cache after insert

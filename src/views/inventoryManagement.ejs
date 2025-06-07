@@ -105,6 +105,7 @@
                         <th>Product Collection</th>
                         <th>Cores/Threads</th>
                         <th>Price Range</th>
+                        <th>Inventory</th>
                         <th>Launch Date</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -113,7 +114,7 @@
                 <tbody id="inventoryTableBody">
                     <!-- Placeholder rows - will be populated with actual data -->
                     <tr>
-                        <td colspan="9" class="no-data">
+                        <td colspan="10" class="no-data">
                             <div class="placeholder-message">
                                 <h3>No inventory data available</h3>
                                 <p>Connect to your database to view and manage inventory items.</p>
@@ -190,9 +191,15 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
+                        <label for="inventory">Inventory</label>
+                        <input type="number" id="inventory" name="inventory" min="0" placeholder="Stock quantity">
+                    </div>
+                    <div class="form-group">
                         <label for="launch_date">Launch Date</label>
                         <input type="text" id="launch_date" name="launch_date" placeholder="Q1'24">
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label for="lithography">Lithography</label>
                         <input type="text" id="lithography" name="lithography" placeholder="e.g., 7nm">
@@ -263,7 +270,7 @@
             if (data.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="9" class="no-data">
+                        <td colspan="10" class="no-data">
                             <div class="placeholder-message">
                                 <h3>No inventory data found</h3>
                                 <p>No products match your current filters.</p>
@@ -285,6 +292,7 @@
                     <td>${item.product_collection || 'N/A'}</td>
                     <td>${item.total_cores || 0}/${item.total_threads || 0}</td>
                     <td>$${item.recommended_customer_price_min ? Number(item.recommended_customer_price_min).toFixed(2) : '0.00'} - $${item.recommended_customer_price_max ? Number(item.recommended_customer_price_max).toFixed(2) : '0.00'}</td>
+                    <td>${item.inventory !== null && item.inventory !== undefined ? item.inventory : 'N/A'}</td>
                     <td>${item.launch_date || 'N/A'}</td>
                     <td>
                         <span class="status-badge ${item.status || 'unknown'}">

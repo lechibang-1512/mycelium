@@ -228,28 +228,29 @@ app.get('/inventory', userAuth.requirePermission('write'), async (req, res, next
         // Get all CPUs
         const cpus = await dbQueries.getCPUs(req.db);
         
-        // Calculate inventory statistics
+        // Calculate inventory statistics using actual inventory field
         const totalProducts = cpus.length;
         
-        // Define criteria for low stock (CPUs with price under $200)
-        // In a real application, you'd have an actual inventory_count field
+        // Use actual inventory field for stock status
         const lowStock = cpus.filter(cpu => 
-            cpu.recommended_customer_price_min && 
-            cpu.recommended_customer_price_min < 200
+            cpu.inventory !== null && cpu.inventory !== undefined && 
+            cpu.inventory > 0 && cpu.inventory <= 10
         ).length;
         
-        // Define criteria for out of stock (CPUs with no price data)
+        // Define criteria for out of stock (CPUs with 0 or null inventory)
         const outOfStock = cpus.filter(cpu => 
-            !cpu.recommended_customer_price_min && 
-            !cpu.recommended_customer_price_max
+            cpu.inventory === null || cpu.inventory === undefined || cpu.inventory === 0
         ).length;
         
         // Calculate total inventory value (using max price or average of min/max)
         const totalValue = cpus.reduce((sum, cpu) => {
-            if (cpu.recommended_customer_price_max) {
-                return sum + cpu.recommended_customer_price_max;
-            } else if (cpu.recommended_customer_price_min) {
-                return sum + cpu.recommended_customer_price_min;
+            const maxPrice = parseFloat(cpu.recommended_customer_price_max) || 0;
+            const minPrice = parseFloat(cpu.recommended_customer_price_min) || 0;
+            
+            if (maxPrice > 0) {
+                return sum + maxPrice;
+            } else if (minPrice > 0) {
+                return sum + minPrice;
             }
             return sum;
         }, 0);
@@ -258,10 +259,10 @@ app.get('/inventory', userAuth.requirePermission('write'), async (req, res, next
             totalProducts,
             lowStock,
             outOfStock,
-            totalValue
+            totalValue: totalValue || 0 // Ensure totalValue is always a number
         };
         
-        console.log(`Inventory stats: ${totalProducts} total CPUs, ${lowStock} low stock, ${outOfStock} out of stock, $${totalValue.toFixed(2)} total value`);
+        console.log(`Inventory stats: ${totalProducts} total CPUs, ${lowStock} low stock, ${outOfStock} out of stock, $${(totalValue || 0).toFixed(2)} total value`);
         
         res.render('inventoryManagement', {
             title: 'CPU Inventory Management',
@@ -317,15 +318,15 @@ app.get('/api/inventory', userAuth.requireAuth, async (req, res, next) => {
             );
         }
         
-        // Add status field based on price range
-        // In a real application, this would come from a proper inventory field
+        // Add status field based on inventory levels
         const data = filteredCPUs.map(cpu => {
             let status = 'in-stock';
             
-            // For demo purposes, use price to determine status
-            if (!cpu.recommended_customer_price_min && !cpu.recommended_customer_price_max) {
+            // Use actual inventory field for status determination
+            const inventory = cpu.inventory;
+            if (inventory === null || inventory === undefined || inventory === 0) {
                 status = 'out-of-stock';
-            } else if (cpu.recommended_customer_price_min && cpu.recommended_customer_price_min < 200) {
+            } else if (inventory <= 10) { // Low stock threshold
                 status = 'low-stock';
             }
             
@@ -356,33 +357,39 @@ app.get('/api/inventory/stats', userAuth.requireAuth, async (req, res, next) => 
         // Get all CPUs first
         const cpus = await dbQueries.getCPUs(req.db, {});
         
-        // Calculate stats
+        // Calculate stats using actual inventory field
         const totalProducts = cpus.length;
         
-        // For demonstration, we'll use price range as a substitute for "in stock" status
+        // Use actual inventory field for stock status
         const lowStock = cpus.filter(cpu => 
-            cpu.recommended_customer_price_min && 
-            cpu.recommended_customer_price_min < 200
+            cpu.inventory !== null && cpu.inventory !== undefined && 
+            cpu.inventory > 0 && cpu.inventory <= 10
         ).length;
         
         const outOfStock = cpus.filter(cpu => 
-            !cpu.recommended_customer_price_min && 
-            !cpu.recommended_customer_price_max
+            cpu.inventory === null || cpu.inventory === undefined || cpu.inventory === 0
         ).length;
         
         // Calculate total value based on average of min/max prices
         let totalValue = 0;
         cpus.forEach(cpu => {
-            const minPrice = cpu.recommended_customer_price_min || 0;
-            const maxPrice = cpu.recommended_customer_price_max || minPrice || 0;
-            totalValue += (minPrice + maxPrice) / 2;
+            const minPrice = parseFloat(cpu.recommended_customer_price_min) || 0;
+            const maxPrice = parseFloat(cpu.recommended_customer_price_max) || 0;
+            
+            if (maxPrice > 0 && minPrice > 0) {
+                totalValue += (minPrice + maxPrice) / 2;
+            } else if (maxPrice > 0) {
+                totalValue += maxPrice;
+            } else if (minPrice > 0) {
+                totalValue += minPrice;
+            }
         });
         
         const stats = {
             totalProducts,
             lowStock,
             outOfStock,
-            totalValue
+            totalValue: totalValue || 0 // Ensure it's always a number
         };
         
         res.json(stats);
