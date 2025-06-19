@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= supplier.supplier_name || 'Supplier Details' %> - Suppliers Database</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .spec-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .spec-item {
+            border-bottom: 1px solid #dee2e6;
+            padding: 0.75rem 0;
+        }
+        .spec-item:last-child {
+            border-bottom: none;
+        }
+        .spec-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        .spec-value {
+            color: #212529;
+        }
+        .supplier-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 2rem 0;
+        }
+        .back-btn {
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-mobile-alt me-2"></i>
+                Phone Specs Database
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">
+                    <i class="fas fa-mobile-alt me-1"></i>
+                    Phones
+                </a>
+                <a class="nav-link" href="/suppliers">
+                    <i class="fas fa-truck me-1"></i>
+                    Suppliers
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="supplier-header">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h1 class="display-4">
+                        <i class="fas fa-building me-3"></i>
+                        <%= supplier.name || 'Unknown Supplier' %>
+                    </h1>
+                    <p class="lead">
+                        <i class="fas fa-user me-2"></i>
+                        Contact: <%= supplier.contact_person || 'No Contact Person' %>
+                        <% if (supplier.contact_position) { %>
+                            - <%= supplier.contact_position %>
+                        <% } %>
+                    </p>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <% if (supplier.category) { %>
+                                <h5>
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-tag"></i>
+                                        <%= supplier.category %>
+                                    </span>
+                                </h5>
+                            <% } %>
+                        </div>
+                        <div class="col-md-3">
+                            <% if (supplier.contact_email) { %>
+                                <h5>
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-envelope"></i>
+                                        <%= supplier.contact_email %>
+                                    </span>
+                                </h5>
+                            <% } %>
+                        </div>
+                        <div class="col-md-3">
+                            <% if (supplier.phone) { %>
+                                <h5>
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="fas fa-phone"></i>
+                                        <%= supplier.phone %>
+                                    </span>
+                                </h5>
+                            <% } %>
+                        </div>
+                        <div class="col-md-3">
+                            <h5>
+                                <span class="badge <%= supplier.is_active ? 'bg-success' : 'bg-danger' %>">
+                                    <i class="fas fa-<%= supplier.is_active ? 'check' : 'times' %>"></i>
+                                    <%= supplier.is_active ? 'Active' : 'Inactive' %>
+                                </span>
+                            </h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container my-4">
+        <!-- Success Messages -->
+        <% if (typeof success !== 'undefined') { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <% if (success === 'created') { %>
+                    <i class="fas fa-check-circle me-2"></i>Supplier created successfully!
+                <% } else if (success === 'updated') { %>
+                    <i class="fas fa-check-circle me-2"></i>Supplier updated successfully!
+                <% } %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="/suppliers" class="btn btn-outline-success">
+                <i class="fas fa-arrow-left me-2"></i>
+                Back to Suppliers List
+            </a>
+            
+            <div class="btn-group" role="group">
+                <a href="/suppliers/edit/<%= supplier.id %>" class="btn btn-warning">
+                    <i class="fas fa-edit me-2"></i>Edit
+                </a>
+                <button class="btn btn-<%= supplier.is_active ? 'secondary' : 'success' %>" 
+                        onclick="toggleStatus('<%= supplier.id %>')">
+                    <i class="fas fa-<%= supplier.is_active ? 'pause' : 'play' %> me-2"></i>
+                    <%= supplier.is_active ? 'Deactivate' : 'Activate' %>
+                </button>
+                <button class="btn btn-danger" onclick="deleteSupplier('<%= supplier.id %>')">
+                    <i class="fas fa-trash me-2"></i>Delete
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Basic Information -->
+            <div class="col-md-6 mb-4">
+                <div class="spec-section">
+                    <h4 class="mb-3">
+                        <i class="fas fa-info-circle me-2 text-success"></i>
+                        Basic Information
+                    </h4>
+                    <div class="spec-item">
+                        <div class="row">
+                            <div class="col-5 spec-label">Supplier ID:</div>
+                            <div class="col-7 spec-value"><%= supplier.id || 'N/A' %></div>
+                        </div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="row">
+                            <div class="col-5 spec-label">Supplier Code:</div>
+                            <div class="col-7 spec-value"><%= supplier.supplier_id || 'N/A' %></div>
+                        </div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="row">
+                            <div class="col-5 spec-label">Company Name:</div>
+                            <div class="col-7 spec-value"><%= supplier.name || 'N/A' %></div>
+                        </div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="row">
+                            <div class="col-5 spec-label">Category:</div>
+                            <div class="col-7 spec-value">
+                                <% if (supplier.category) { %>
+                                    <span class="badge bg-secondary"><%= supplier.category %></span>
+                                <% } else { %>
+                                    N/A
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="row">
+                            <div class="col-5 spec-label">Status:</div>
+                            <div class="col-7 spec-value">
+                                <span class="badge <%= supplier.is_active ? 'bg-success' : 'bg-danger' %>">
+                                    <%= supplier.is_active ? 'Active' : 'Inactive' %>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="col-md-6 mb-4">
+                <div class="spec-section">
+                    <h4 class="mb-3">
+                        <i class="fas fa-user me-2 text-info"></i>
+                        Contact Information
+                    </h4>
+                    <div class="spec-item">
+                        <div class="row">
+                            <div class="col-5 spec-label">Contact Person:</div>
+                            <div class="col-7 spec-value"><%= supplier.contact_person || 'N/A' %></div>
+                        </div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="row">
+                            <div class="col-5 spec-label">Position:</div>
+                            <div class="col-7 spec-value"><%= supplier.contact_position || 'N/A' %></div>
+                        </div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="row">
+                            <div class="col-5 spec-label">Direct Email:</div>
+                            <div class="col-7 spec-value">
+                                <% if (supplier.contact_email) { %>
+                                    <a href="mailto:<%= supplier.contact_email %>" class="text-decoration-none">
+                                        <%= supplier.contact_email %>
+                                    </a>
+                                <% } else { %>
+                                    N/A
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="row">
+                            <div class="col-5 spec-label">General Email:</div>
+                            <div class="col-7 spec-value">
+                                <% if (supplier.email) { %>
+                                    <a href="mailto:<%= supplier.email %>" class="text-decoration-none">
+                                        <%= supplier.email %>
+                                    </a>
+                                <% } else { %>
+                                    N/A
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="row">
+                            <div class="col-5 spec-label">Phone:</div>
+                            <div class="col-7 spec-value">
+                                <% if (supplier.phone) { %>
+                                    <a href="tel:<%= supplier.phone %>" class="text-decoration-none">
+                                        <%= supplier.phone %>
+                                    </a>
+                                <% } else { %>
+                                    N/A
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="row">
+                            <div class="col-5 spec-label">Website:</div>
+                            <div class="col-7 spec-value">
+                                <% if (supplier.website) { %>
+                                    <a href="<%= supplier.website %>" target="_blank" class="text-decoration-none">
+                                        <%= supplier.website %>
+                                        <i class="fas fa-external-link-alt ms-1"></i>
+                                    </a>
+                                <% } else { %>
+                                    N/A
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address & Notes -->
+            <div class="col-md-6 mb-4">
+                <div class="spec-section">
+                    <h4 class="mb-3">
+                        <i class="fas fa-map-marker-alt me-2 text-warning"></i>
+                        Address & Notes
+                    </h4>
+                    <div class="spec-item">
+                        <div class="row">
+                            <div class="col-5 spec-label">Address:</div>
+                            <div class="col-7 spec-value"><%= supplier.address || 'N/A' %></div>
+                        </div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="row">
+                            <div class="col-5 spec-label">Created Date:</div>
+                            <div class="col-7 spec-value">
+                                <% if (supplier.created_at) { %>
+                                    <%= new Date(supplier.created_at).toLocaleDateString() %>
+                                <% } else { %>
+                                    N/A
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="row">
+                            <div class="col-5 spec-label">Last Updated:</div>
+                            <div class="col-7 spec-value">
+                                <% if (supplier.updated_at) { %>
+                                    <%= new Date(supplier.updated_at).toLocaleDateString() %>
+                                <% } else { %>
+                                    N/A
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <% if (supplier.notes) { %>
+                        <div class="spec-item">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="spec-label mb-2">Notes:</div>
+                                    <div class="spec-value">
+                                        <div class="alert alert-light">
+                                            <%= supplier.notes %>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center my-4">
+            <a href="/suppliers" class="btn btn-success btn-lg">
+                <i class="fas fa-arrow-left me-2"></i>
+                Back to Suppliers List
+            </a>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <div class="container">
+            <p>&copy; 2025 Phone Specs & Suppliers Database Viewer. Built with Node.js, Express & MariaDB.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleStatus(supplierId) {
+            if (confirm('Are you sure you want to change the supplier status?')) {
+                fetch(`/suppliers/${supplierId}/toggle-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error updating status: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error updating status. Please try again.');
+                });
+            }
+        }
+
+        function deleteSupplier(supplierId) {
+            if (confirm('Are you sure you want to delete this supplier? This action cannot be undone.')) {
+                // Create a form and submit it
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/suppliers/${supplierId}/delete`;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html>

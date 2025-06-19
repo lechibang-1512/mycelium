@@ -1,16 +1,24 @@
-# Phone Specs Database Viewer
+# Phone Specs & Suppliers Database Viewer
 
-A modern web application for viewing and managing phone specifications stored in a MariaDB database.
+A modern web application for viewing and managing phone specifications and supplier information stored in MariaDB databases.
 
 ## Features
 
 - **Modern Web Interface**: Clean, responsive design with Bootstrap 5
-- **Database Integration**: Connects to MariaDB database with connection pooling
-- **Search & Filter**: Search phones by name or manufacturer
+- **Dual Database Support**: Connects to both phone specs and suppliers databases
+- **Phone Specifications Viewer**: Complete phone database with detailed specs
+- **Suppliers Management**: Complete CRUD system for supplier management
+  - Add new suppliers with comprehensive information
+  - Edit existing supplier details
+  - Toggle supplier active/inactive status
+  - Delete suppliers with confirmation
+  - Search and filter capabilities
+- **Search & Filter**: Search phones by name/manufacturer, suppliers by name/contact/email
 - **Pagination**: Efficient data browsing with customizable page sizes
-- **Detailed Views**: Complete specification sheets for each phone
-- **REST API**: JSON endpoints for programmatic access
+- **Detailed Views**: Complete specification sheets for phones and supplier details
+- **REST API**: JSON endpoints for programmatic access to both databases
 - **Error handling**: Graceful error handling and user feedback
+- **Navigation**: Easy switching between phones and suppliers sections
 
 ## Technologies Used
 
@@ -33,11 +41,15 @@ A modern web application for viewing and managing phone specifications stored in
 
 3. **Database Setup**:
    - Make sure MariaDB/MySQL is installed and running
-   - Create the database and table using the provided SQL script:
+   - Create the phone specifications database and table:
      ```bash
      mysql -u root -p < database_setup.sql
      ```
-   - Or manually run the SQL commands in `database_setup.sql`
+   - Create the suppliers database and table:
+     ```bash
+     mysql -u root -p < suppliers_db_setup.sql
+     ```
+   - Or manually run the SQL commands in both files
 
 4. **Configure Database Connection**:
    - Edit `server.js` and update the database configuration:
@@ -78,15 +90,31 @@ A modern web application for viewing and managing phone specifications stored in
    - Search by phone name or manufacturer
    - Navigate through pages with pagination
    - Adjust items per page (10, 20, 50)
+   - Access suppliers section via navigation
 
 2. **Phone Details** (`http://localhost:3000/phone/:id`):
    - View complete specifications for a specific phone
    - Organized into categories: Basic Info, Performance, Memory & Storage, Display, Camera, etc.
 
+3. **Suppliers Page** (`http://localhost:3000/suppliers`):
+   - View all suppliers in a card layout
+   - Search by supplier name, contact person, or email
+   - Navigate through pages with pagination
+   - Access phone specs section via navigation
+
+4. **Supplier Details** (`http://localhost:3000/supplier/:id`):
+   - View complete supplier information
+   - Organized into categories: Basic Info, Address & Location, Business Info, Status & Notes
+
 ### API Endpoints
 
+**Phone Specifications:**
 - **GET `/api/phones`**: Returns all phones in JSON format
 - **GET `/api/phones/:id`**: Returns specific phone details in JSON format
+
+**Suppliers:**
+- **GET `/api/suppliers`**: Returns all suppliers in JSON format  
+- **GET `/api/suppliers/:id`**: Returns specific supplier details in JSON format
 
 Example API usage:
 ```bash
@@ -95,9 +123,17 @@ curl http://localhost:3000/api/phones
 
 # Get specific phone
 curl http://localhost:3000/api/phones/1
+
+# Get all suppliers
+curl http://localhost:3000/api/suppliers
+
+# Get specific supplier
+curl http://localhost:3000/api/suppliers/1
 ```
 
-## Database Schema
+## Database Schemas
+
+### Phone Specifications Database (`master_specs_db`)
 
 The `phone_specs` table includes the following fields:
 
@@ -159,22 +195,58 @@ The `phone_specs` table includes the following fields:
 - `operating_system` - OS version
 - `package_contents` - Included accessories
 
+### Suppliers Database (`suppliers_db`)
+
+The `suppliers` table includes the following fields:
+
+#### Basic Information
+- `supplier_id` - Primary key
+- `supplier_name` - Company name
+- `contact_person` - Main contact person
+- `email` - Contact email
+- `phone` - Contact phone number
+- `website` - Company website
+
+#### Address & Location
+- `address` - Street address
+- `city` - City
+- `state_province` - State or province
+- `postal_code` - ZIP/postal code
+- `country` - Country
+
+#### Business Information  
+- `business_type` - Type of business (manufacturer, distributor, etc.)
+- `tax_id` - Tax identification number
+- `registration_number` - Business registration number
+- `payment_terms` - Payment terms (Net 30, etc.)
+- `credit_limit` - Credit limit amount
+
+#### Status & Management
+- `status` - Active, inactive, or pending
+- `rating` - Supplier rating (1-5 stars)
+- `notes` - Additional notes
+- `created_at` - Record creation timestamp
+- `updated_at` - Last update timestamp
+
 ## File Structure
 
 ```
 Project-1/
-├── server.js              # Main application server
-├── package.json           # Dependencies and scripts
-├── database_setup.sql     # Database creation script
+├── server.js                    # Main application server
+├── package.json                 # Dependencies and scripts
+├── database_setup.sql          # Phone specs database creation script
+├── suppliers_db_setup.sql      # Suppliers database creation script
 ├── config/
-│   └── database.js        # Database configuration
+│   └── database.js             # Database configuration
 ├── views/
-│   ├── index.ejs          # Home page template
-│   ├── details.ejs        # Phone details template
-│   └── error.ejs          # Error page template
+│   ├── index.ejs               # Phone specs home page
+│   ├── details.ejs             # Phone details page
+│   ├── suppliers.ejs           # Suppliers home page
+│   ├── supplier-details.ejs    # Supplier details page
+│   └── error.ejs               # Error page template
 ├── public/
-│   └── style.css          # Custom styles
-└── README.md              # This file
+│   └── style.css               # Custom styles
+└── README.md                   # This file
 ```
 
 ## Scripts

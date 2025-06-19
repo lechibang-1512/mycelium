@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Suppliers Database</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .form-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 2rem 0;
+        }
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .required {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-mobile-alt me-2"></i>
+                Phone Specs Database
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">
+                    <i class="fas fa-mobile-alt me-1"></i>
+                    Phones
+                </a>
+                <a class="nav-link" href="/suppliers">
+                    <i class="fas fa-truck me-1"></i>
+                    Suppliers
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="form-header">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h1 class="display-4">
+                        <i class="fas fa-<%= action === 'add' ? 'plus' : 'edit' %> me-3"></i>
+                        <%= title %>
+                    </h1>
+                    <p class="lead">
+                        <%= action === 'add' ? 'Add a new supplier to the database' : 'Update supplier information' %>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container my-4">
+        <a href="/suppliers" class="btn btn-outline-success mb-4">
+            <i class="fas fa-arrow-left me-2"></i>
+            Back to Suppliers List
+        </a>
+
+        <form method="POST" action="<%= action === 'add' ? '/suppliers' : '/suppliers/' + supplier.id %>">
+            <div class="row">
+                <!-- Basic Information -->
+                <div class="col-md-6">
+                    <div class="form-section">
+                        <h4 class="mb-3">
+                            <i class="fas fa-info-circle me-2 text-success"></i>
+                            Basic Information
+                        </h4>
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">
+                                Company Name <span class="required">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="<%= supplier ? supplier.name : '' %>" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="supplier_id" class="form-label">
+                                Supplier ID <span class="required">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="supplier_id" name="supplier_id" 
+                                   value="<%= supplier ? supplier.supplier_id : '' %>" required
+                                   placeholder="e.g., SUP001">
+                            <div class="form-text">Unique identifier for the supplier</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="">Select Category</option>
+                                <option value="Manufacturer" <%= supplier && supplier.category === 'Manufacturer' ? 'selected' : '' %>>Manufacturer</option>
+                                <option value="Distributor" <%= supplier && supplier.category === 'Distributor' ? 'selected' : '' %>>Distributor</option>
+                                <option value="Wholesaler" <%= supplier && supplier.category === 'Wholesaler' ? 'selected' : '' %>>Wholesaler</option>
+                                <option value="Retailer" <%= supplier && supplier.category === 'Retailer' ? 'selected' : '' %>>Retailer</option>
+                                <option value="OEM Manufacturer" <%= supplier && supplier.category === 'OEM Manufacturer' ? 'selected' : '' %>>OEM Manufacturer</option>
+                                <option value="Technology Solutions" <%= supplier && supplier.category === 'Technology Solutions' ? 'selected' : '' %>>Technology Solutions</option>
+                                <option value="Electronics Distributor" <%= supplier && supplier.category === 'Electronics Distributor' ? 'selected' : '' %>>Electronics Distributor</option>
+                                <option value="Retail Supplier" <%= supplier && supplier.category === 'Retail Supplier' ? 'selected' : '' %>>Retail Supplier</option>
+                                <option value="Other" <%= supplier && supplier.category === 'Other' ? 'selected' : '' %>>Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                                   <%= !supplier || supplier.is_active ? 'checked' : '' %>>
+                            <label class="form-check-label" for="is_active">
+                                Active Supplier
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="col-md-6">
+                    <div class="form-section">
+                        <h4 class="mb-3">
+                            <i class="fas fa-user me-2 text-info"></i>
+                            Contact Information
+                        </h4>
+                        
+                        <div class="mb-3">
+                            <label for="contact_person" class="form-label">Contact Person</label>
+                            <input type="text" class="form-control" id="contact_person" name="contact_person" 
+                                   value="<%= supplier ? supplier.contact_person : '' %>">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="contact_position" class="form-label">Contact Position</label>
+                            <input type="text" class="form-control" id="contact_position" name="contact_position" 
+                                   value="<%= supplier ? supplier.contact_position : '' %>"
+                                   placeholder="e.g., Sales Manager, Business Development Director">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="contact_email" class="form-label">Contact Email</label>
+                            <input type="email" class="form-control" id="contact_email" name="contact_email" 
+                                   value="<%= supplier ? supplier.contact_email : '' %>">
+                            <div class="form-text">Direct email for the contact person</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">General Email</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="<%= supplier ? supplier.email : '' %>">
+                            <div class="form-text">General company email address</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   value="<%= supplier ? supplier.phone : '' %>"
+                                   placeholder="+1-555-0123">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="website" class="form-label">Website</label>
+                            <input type="url" class="form-control" id="website" name="website" 
+                                   value="<%= supplier ? supplier.website : '' %>"
+                                   placeholder="https://www.example.com">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address & Notes -->
+                <div class="col-12">
+                    <div class="form-section">
+                        <h4 class="mb-3">
+                            <i class="fas fa-map-marker-alt me-2 text-warning"></i>
+                            Address & Additional Information
+                        </h4>
+                        
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Full Address</label>
+                            <textarea class="form-control" id="address" name="address" rows="3" 
+                                      placeholder="Street address, city, state/province, postal code, country"><%= supplier ? supplier.address : '' %></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="4" 
+                                      placeholder="Additional notes about the supplier, special terms, capabilities, etc."><%= supplier ? supplier.notes : '' %></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a href="/suppliers" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-<%= action === 'add' ? 'plus' : 'save' %> me-2"></i>
+                                <%= action === 'add' ? 'Add Supplier' : 'Update Supplier' %>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <div class="container">
+            <p>&copy; 2025 Phone Specs & Suppliers Database Viewer. Built with Node.js, Express & MariaDB.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Form validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const name = document.getElementById('name').value.trim();
+            const supplierId = document.getElementById('supplier_id').value.trim();
+            
+            if (!name) {
+                e.preventDefault();
+                alert('Company name is required');
+                document.getElementById('name').focus();
+                return;
+            }
+            
+            if (!supplierId) {
+                e.preventDefault();
+                alert('Supplier ID is required');
+                document.getElementById('supplier_id').focus();
+                return;
+            }
+        });
+
+        // Auto-generate supplier ID based on company name if empty
+        document.getElementById('name').addEventListener('blur', function() {
+            const supplierIdField = document.getElementById('supplier_id');
+            if (!supplierIdField.value.trim() && this.value.trim()) {
+                const name = this.value.trim().toUpperCase();
+                const words = name.split(' ');
+                let id = '';
+                
+                if (words.length >= 2) {
+                    id = words[0].substring(0, 2) + words[1].substring(0, 2);
+                } else {
+                    id = words[0].substring(0, 4);
+                }
+                
+                // Add random number
+                id += Math.floor(Math.random() * 900 + 100);
+                supplierIdField.value = id;
+            }
+        });
+    </script>
+</body>
+</html>

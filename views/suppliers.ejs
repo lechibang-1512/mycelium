@@ -3,23 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phone Specs Database Viewer</title>
+    <title>Suppliers Database Viewer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        .phone-card {
+        .supplier-card {
             transition: transform 0.2s;
             cursor: pointer;
         }
-        .phone-card:hover {
+        .supplier-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        .spec-badge {
-            font-size: 0.8rem;
-        }
         .search-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             color: white;
             padding: 2rem 0;
             margin-bottom: 2rem;
@@ -34,11 +31,11 @@
                 Phone Specs Database
             </a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link active" href="/">
+                <a class="nav-link" href="/">
                     <i class="fas fa-mobile-alt me-1"></i>
                     Phones
                 </a>
-                <a class="nav-link" href="/suppliers">
+                <a class="nav-link active" href="/suppliers">
                     <i class="fas fa-truck me-1"></i>
                     Suppliers
                 </a>
@@ -52,12 +49,12 @@
                 <div class="col-md-8 mx-auto">
                     <h2 class="text-center mb-4">
                         <i class="fas fa-search me-2"></i>
-                        Search Phone Specifications
+                        Search Suppliers
                     </h2>
-                    <form method="GET" action="/">
+                    <form method="GET" action="/suppliers">
                         <div class="input-group mb-3">
                             <input type="text" class="form-control form-control-lg" 
-                                   placeholder="Search by phone name or manufacturer..." 
+                                   placeholder="Search by supplier name, contact person, or email..." 
                                    name="search" value="<%= search %>">
                             <button class="btn btn-light btn-lg" type="submit">
                                 <i class="fas fa-search"></i>
@@ -70,78 +67,96 @@
     </div>
 
     <div class="container">
+        <!-- Success/Error Messages -->
+        <% if (typeof success !== 'undefined') { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <% if (success === 'deleted') { %>
+                    <i class="fas fa-check-circle me-2"></i>Supplier deleted successfully!
+                <% } %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
+
         <div class="row mb-4">
             <div class="col-md-6">
                 <h4>
                     <% if (search) { %>
                         Search Results for "<%= search %>" (<%= total %> found)
                     <% } else { %>
-                        All Phone Specifications (<%= total %> total)
+                        All Suppliers (<%= total %> total)
                     <% } %>
                 </h4>
             </div>
             <div class="col-md-6 text-end">
-                <div class="d-flex justify-content-end align-items-center">
-                    <label class="me-2">Items per page:</label>
-                    <select class="form-select w-auto" onchange="changeLimit(this.value)">
-                        <option value="10" <%= limit === 10 ? 'selected' : '' %>>10</option>
-                        <option value="20" <%= limit === 20 ? 'selected' : '' %>>20</option>
-                        <option value="50" <%= limit === 50 ? 'selected' : '' %>>50</option>
-                    </select>
+                <div class="d-flex justify-content-end align-items-center gap-3">
+                    <a href="/suppliers/add" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>Add New Supplier
+                    </a>
+                    <div class="d-flex align-items-center">
+                        <label class="me-2">Items per page:</label>
+                        <select class="form-select w-auto" onchange="changeLimit(this.value)">
+                            <option value="10" <%= limit === 10 ? 'selected' : '' %>>10</option>
+                            <option value="20" <%= limit === 20 ? 'selected' : '' %>>20</option>
+                            <option value="50" <%= limit === 50 ? 'selected' : '' %>>50</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="row">
-            <% phones.forEach(phone => { %>
+            <% suppliers.forEach(supplier => { %>
                 <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="card phone-card h-100" onclick="window.location.href='/phone/<%= phone.id %>'">
-                        <div class="card-header bg-primary text-white">
+                    <div class="card supplier-card h-100" onclick="window.location.href='/supplier/<%= supplier.id %>'">>
+                        <div class="card-header bg-success text-white">
                             <h5 class="card-title mb-0">
-                                <i class="fas fa-mobile-alt me-2"></i>
-                                <%= phone.sm_name || 'Unknown Model' %>
+                                <i class="fas fa-building me-2"></i>
+                                <%= supplier.name || 'Unknown Supplier' %>
                             </h5>
-                            <small><%= phone.sm_maker || 'Unknown Manufacturer' %></small>
+                            <small><%= supplier.contact_person || 'No Contact Person' %></small>
                         </div>
                         <div class="card-body">
                             <div class="row mb-2">
-                                <div class="col-sm-6">
-                                    <strong>Price:</strong> 
-                                    <span class="badge bg-success">$<%= phone.sm_price || 'N/A' %></span>
+                                <div class="col-12">
+                                    <strong>Category:</strong> 
+                                    <span class="badge bg-info"><%= supplier.category || 'N/A' %></span>
                                 </div>
-                                <div class="col-sm-6">
-                                    <strong>Stock:</strong> 
-                                    <span class="badge <%= phone.sm_inventory > 0 ? 'bg-success' : 'bg-danger' %>">
-                                        <%= phone.sm_inventory || 0 %>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-12">
+                                    <strong>Contact Email:</strong> 
+                                    <span class="text-primary"><%= supplier.contact_email || 'N/A' %></span>
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-12">
+                                    <strong>Phone:</strong> 
+                                    <%= supplier.phone || 'N/A' %>
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-12">
+                                    <strong>Status:</strong> 
+                                    <span class="badge <%= supplier.is_active ? 'bg-success' : 'bg-danger' %>">
+                                        <%= supplier.is_active ? 'Active' : 'Inactive' %>
                                     </span>
                                 </div>
                             </div>
-                            <div class="row mb-2">
-                                <div class="col-sm-6">
-                                    <small><strong>Display:</strong> <%= phone.display_size || 'N/A' %>"</small>
+                            <% if (supplier.website) { %>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <strong>Website:</strong> 
+                                        <a href="<%= supplier.website %>" target="_blank" class="text-decoration-none">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                    </div>
                                 </div>
-                                <div class="col-sm-6">
-                                    <small><strong>RAM:</strong> <%= phone.ram || 'N/A' %></small>
-                                </div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-sm-6">
-                                    <small><strong>Storage:</strong> <%= phone.rom || 'N/A' %></small>
-                                </div>
-                                <div class="col-sm-6">
-                                    <small><strong>Battery:</strong> <%= phone.battery_capacity || 'N/A' %></small>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-12">
-                                    <small><strong>Processor:</strong> <%= phone.processor || 'N/A' %></small>
-                                </div>
-                            </div>
+                            <% } %>
                         </div>
                         <div class="card-footer text-muted">
                             <small>
                                 <i class="fas fa-eye me-1"></i>
-                                Click to view full specifications
+                                Click to view full details
                             </small>
                         </div>
                     </div>
@@ -149,35 +164,35 @@
             <% }); %>
         </div>
 
-        <% if (phones.length === 0) { %>
+        <% if (suppliers.length === 0) { %>
             <div class="text-center py-5">
                 <i class="fas fa-search fa-3x text-muted mb-3"></i>
-                <h4 class="text-muted">No phones found</h4>
+                <h4 class="text-muted">No suppliers found</h4>
                 <p class="text-muted">Try adjusting your search criteria.</p>
-                <a href="/" class="btn btn-primary">View All Phones</a>
+                <a href="/suppliers" class="btn btn-success">View All Suppliers</a>
             </div>
         <% } %>
 
         <!-- Pagination -->
         <% if (totalPages > 1) { %>
-            <nav aria-label="Phone list pagination">
+            <nav aria-label="Suppliers list pagination">
                 <ul class="pagination justify-content-center">
                     <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
-                        <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>&search=<%= search %>">
+                        <a class="page-link" href="/suppliers?page=<%= currentPage - 1 %>&limit=<%= limit %>&search=<%= search %>">
                             <i class="fas fa-chevron-left"></i>
                         </a>
                     </li>
                     
                     <% for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) { %>
                         <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                            <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&search=<%= search %>">
+                            <a class="page-link" href="/suppliers?page=<%= i %>&limit=<%= limit %>&search=<%= search %>">
                                 <%= i %>
                             </a>
                         </li>
                     <% } %>
                     
                     <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
-                        <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>&search=<%= search %>">
+                        <a class="page-link" href="/suppliers?page=<%= currentPage + 1 %>&limit=<%= limit %>&search=<%= search %>">
                             <i class="fas fa-chevron-right"></i>
                         </a>
                     </li>
@@ -188,7 +203,7 @@
 
     <footer class="bg-dark text-white text-center py-3 mt-5">
         <div class="container">
-            <p>&copy; 2025 Phone Specs Database Viewer. Built with Node.js, Express & MariaDB.</p>
+            <p>&copy; 2025 Phone Specs & Suppliers Database Viewer. Built with Node.js, Express & MariaDB.</p>
         </div>
     </footer>
 
