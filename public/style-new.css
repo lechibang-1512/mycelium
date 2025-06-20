@@ -14,6 +14,10 @@ body {
     background-color: #f8f9fa;
 }
 
+/* ============================================
+   CARD COMPONENTS
+   ============================================ */
+
 .phone-card, .supplier-card {
     border: none;
     border-radius: var(--border-radius);
@@ -38,125 +42,20 @@ body {
     border: none;
 }
 
-.phone-header {
-    background: var(--primary-gradient);
-    color: white;
-    padding: 2rem 0;
-    position: relative;
-    overflow: hidden;
+.spec-badge {
+    font-size: 0.8rem;
 }
 
-.phone-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+.card-footer {
+    background: rgba(0,0,0,0.02);
+    border-top: 1px solid rgba(0,0,0,0.1);
 }
 
-.phone-header .container {
-    position: relative;
-    z-index: 1;
-}
+/* ============================================
+   HEADER SECTIONS
+   ============================================ */
 
-.supplier-header {
-    background: var(--success-gradient);
-    color: white;
-    padding: 2rem 0;
-    position: relative;
-    overflow: hidden;
-}
-
-.supplier-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-    opacity: 0.3;
-}
-
-.supplier-header .container {
-    position: relative;
-    z-index: 1;
-}
-
-.form-header {
-    background: var(--success-gradient);
-    color: white;
-    padding: 2rem 0;
-    position: relative;
-    overflow: hidden;
-}
-
-.form-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-    opacity: 0.3;
-}
-
-.form-header .container {
-    position: relative;
-    z-index: 1;
-}
-
-.sell-header {
-    background: var(--danger-gradient);
-    color: white;
-    padding: 2rem 0;
-    position: relative;
-    overflow: hidden;
-}
-
-.sell-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-    opacity: 0.3;
-}
-
-.sell-header .container {
-    position: relative;
-    z-index: 1;
-}
-
-.receive-header {
-    background: var(--primary-gradient);
-    color: white;
-    padding: 2rem 0;
-    position: relative;
-    overflow: hidden;
-}
-
-.receive-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-    opacity: 0.3;
-}
-
-.receive-header .container {
-    position: relative;
-    z-index: 1;
-}
-
+/* Search Sections for different pages */
 .search-section {
     background: var(--primary-gradient);
     color: white;
@@ -185,6 +84,155 @@ body {
     position: relative;
     z-index: 1;
 }
+
+/* Phone Details Header */
+.phone-header {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 2rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.phone-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+}
+
+.phone-header .container {
+    position: relative;
+    z-index: 1;
+}
+
+/* Supplier Header */
+.supplier-header {
+    background: var(--success-gradient);
+    color: white;
+    padding: 2rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.supplier-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.supplier-header .container {
+    position: relative;
+    z-index: 1;
+}
+
+/* Form Header */
+.form-header {
+    background: var(--success-gradient);
+    color: white;
+    padding: 2rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.form-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.form-header .container {
+    position: relative;
+    z-index: 1;
+}
+
+/* Sell Stock Header */
+.sell-header {
+    background: var(--danger-gradient);
+    color: white;
+    padding: 2rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.sell-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.sell-header .container {
+    position: relative;
+    z-index: 1;
+}
+
+/* Receive Stock Header */
+.receive-header {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 2rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.receive-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.receive-header .container {
+    position: relative;
+    z-index: 1;
+}
+
+/* ============================================
+   FORM SECTIONS
+   ============================================ */
+
+.form-section {
+    background: #f8f9fa;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s ease;
+}
+
+.form-section:hover {
+    box-shadow: var(--hover-shadow);
+}
+
+.required {
+    color: #dc3545;
+}
+
+/* ============================================
+   SPEC SECTIONS
+   ============================================ */
 
 .spec-section {
     background: white;
@@ -223,9 +271,9 @@ body {
     color: #212529;
 }
 
-.spec-badge {
-    font-size: 0.8rem;
-}
+/* ============================================
+   NAVIGATION & BUTTONS
+   ============================================ */
 
 .back-btn {
     margin-bottom: 1rem;
@@ -241,213 +289,37 @@ body {
     padding: 0.5em 0.75em;
 }
 
-/* Enhanced button styling */
 .btn-primary {
     background: var(--primary-gradient);
     border: none;
     border-radius: 50px;
     padding: 0.5rem 1.5rem;
     transition: all 0.3s ease;
-    font-weight: 500;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-    background: var(--primary-gradient);
-    border: none;
 }
 
-.btn-success {
-    background: var(--success-gradient);
-    border: none;
-    border-radius: 50px;
-    padding: 0.5rem 1.5rem;
-    transition: all 0.3s ease;
-    font-weight: 500;
-}
-
-.btn-success:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
-    background: var(--success-gradient);
-    border: none;
-}
-
-.btn-danger {
-    background: var(--danger-gradient);
-    border: none;
-    border-radius: 50px;
-    padding: 0.5rem 1.5rem;
-    transition: all 0.3s ease;
-    font-weight: 500;
-}
-
-.btn-danger:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
-    background: var(--danger-gradient);
-    border: none;
-}
-
-/* Form section styling */
-.form-section {
-    background: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--card-shadow);
-    transition: all 0.3s ease;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.form-section:hover {
-    box-shadow: var(--hover-shadow);
-}
-
-.form-section h3 {
-    color: #495057;
-    font-weight: 600;
-}
-
-.form-section h4 {
-    margin-bottom: 1rem;
-    font-weight: 600;
-}
-
-.required {
-    color: #dc3545;
-    font-weight: bold;
-}
-
-/* Header styling for different pages */
-.page-header {
-    color: white;
-    padding: 2rem 0;
-    position: relative;
-    overflow: hidden;
-}
-
-.page-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-    opacity: 0.3;
-}
-
-.page-header .container {
-    position: relative;
-    z-index: 1;
-}
-
-.page-header.primary {
-    background: var(--primary-gradient);
-}
-
-.page-header.success {
-    background: var(--success-gradient);
-}
-
-.page-header.danger {
-    background: var(--danger-gradient);
-}
-
-/* Enhanced form controls */
-.form-control:focus, .form-select:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-}
-
-/* Enhanced navbar styling */
-.navbar-nav .nav-link {
-    transition: all 0.3s ease;
-    border-radius: 5px;
-    margin: 0 2px;
-}
-
-.navbar-nav .nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    transform: translateY(-1px);
-}
-
-.navbar-brand:hover {
-    transform: scale(1.05);
-    transition: all 0.3s ease;
-}
-
-/* Enhanced dropdown styling */
-.dropdown-menu {
-    border: none;
-    box-shadow: var(--hover-shadow);
-    border-radius: var(--border-radius);
-}
-
-.dropdown-item {
-    transition: all 0.3s ease;
-    border-radius: 5px;
-    margin: 2px 4px;
-}
-
-.dropdown-item:hover {
-    background: var(--primary-gradient);
-    color: white;
-    transform: translateX(5px);
-}
-
-/* Enhanced alert styling */
-.alert {
-    border: none;
-    border-radius: var(--border-radius);
-    box-shadow: var(--card-shadow);
-}
-
-/* Enhanced footer */
-footer {
-    background: linear-gradient(135deg, #343a40 0%, #495057 100%) !important;
-}
-
-/* Icon enhancements */
-.fas, .far {
-    transition: all 0.3s ease;
-}
-
-.btn:hover .fas, .btn:hover .far {
-    transform: scale(1.1);
-}
-
-/* Loading states */
-.btn[disabled] {
-    opacity: 0.6;
-    pointer-events: none;
-}
-
-/* Enhanced pagination */
 .pagination .page-link {
     border-radius: 50px;
     margin: 0 2px;
     border: none;
     color: #667eea;
-    transition: all 0.3s ease;
-}
-
-.pagination .page-link:hover {
-    background: rgba(102, 126, 234, 0.1);
-    color: #667eea;
-    transform: translateY(-2px);
 }
 
 .pagination .page-item.active .page-link {
     background: var(--primary-gradient);
     border: none;
-    transform: scale(1.1);
 }
 
-/* Responsive improvements */
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
 @media (max-width: 768px) {
-    .phone-header h1 {
+    .phone-header h1, .supplier-header h1, .form-header h1, .sell-header h1, .receive-header h1 {
         font-size: 2rem;
     }
     
@@ -465,6 +337,10 @@ footer {
         margin-bottom: 0.25rem;
     }
 }
+
+/* ============================================
+   UTILITY STYLES
+   ============================================ */
 
 /* Loading animation for better UX */
 .loading {

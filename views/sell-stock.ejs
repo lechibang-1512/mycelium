@@ -1,5 +1,4 @@
-<!DOCT    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">PE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -12,16 +11,16 @@
 <body>
     <%- include('partials/navbar') %>
 
-    <div class="page-header primary">
+    <div class="page-header danger">
         <div class="container">
             <div class="row">
                 <div class="col-12">
                     <h1 class="display-4">
-                        <i class="fas fa-plus-circle me-3"></i>
+                        <i class="fas fa-minus-circle me-3"></i>
                         <%= title %>
                     </h1>
                     <p class="lead">
-                        Add new inventory to stock levels
+                        Record a sale and update inventory levels
                     </p>
                 </div>
             </div>
@@ -38,52 +37,43 @@
             <div class="col-md-8">
                 <div class="form-section">
                     <h3 class="mb-4">
-                        <i class="fas fa-box me-2 text-primary"></i>
-                        Stock Information
+                        <i class="fas fa-shopping-cart me-2 text-danger"></i>
+                        Sale Information
                     </h3>
                     
-                    <form action="/inventory/receive" method="POST">
+                    <form action="/inventory/sell" method="POST">
                         <div class="mb-3">
                             <label for="phone_id" class="form-label">Phone Model *</label>
                             <select class="form-select" id="phone_id" name="phone_id" required>
-                                <option value="" disabled selected>Select a phone...</option>
+                                <option value="" disabled selected>Select a phone to sell...</option>
                                 <% phones.forEach(phone => { %>
-                                    <option value="<%= phone.id %>"><%= phone.sm_name %></option>
+                                    <option value="<%= phone.id %>">
+                                        <%= phone.sm_name %> (Stock: <%= phone.sm_inventory %>)
+                                    </option>
                                 <% }); %>
                             </select>
-                            <div class="form-text">Choose the phone model to restock</div>
+                            <div class="form-text">Only phones with available stock are shown</div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="supplier_id" class="form-label">Supplier *</label>
-                            <select class="form-select" id="supplier_id" name="supplier_id" required>
-                                <option value="" disabled selected>Select a supplier...</option>
-                                <% suppliers.forEach(supplier => { %>
-                                    <option value="<%= supplier.supplier_id %>"><%= supplier.name %></option>
-                                <% }); %>
-                            </select>
-                            <div class="form-text">Choose the supplier providing the stock</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="quantity" class="form-label">Quantity Received *</label>
+                            <label for="quantity" class="form-label">Quantity Sold *</label>
                             <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
-                            <div class="form-text">Enter the number of units received</div>
+                            <div class="form-text">Enter the number of units sold</div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="notes" class="form-label">Notes (Optional)</label>
+                            <label for="notes" class="form-label">Sale Notes (Optional)</label>
                             <textarea class="form-control" id="notes" name="notes" rows="3" 
-                                      placeholder="e.g., Purchase Order #12345, Delivery receipt number..."></textarea>
+                                      placeholder="e.g., Customer name, receipt number, special notes..."></textarea>
                         </div>
 
                         <div class="d-flex justify-content-between">
                             <a href="/" class="btn btn-outline-secondary btn-lg">
                                 <i class="fas fa-times me-2"></i>Cancel
                             </a>
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-plus-circle me-2"></i>
-                                Add to Inventory
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="fas fa-minus-circle me-2"></i>
+                                Record Sale
                             </button>
                         </div>
                     </form>
@@ -99,7 +89,6 @@
         // Form validation
         document.querySelector('form').addEventListener('submit', function(e) {
             const phoneId = document.getElementById('phone_id').value;
-            const supplierId = document.getElementById('supplier_id').value;
             const quantity = document.getElementById('quantity').value;
             
             if (!phoneId) {
@@ -109,18 +98,25 @@
                 return;
             }
             
-            if (!supplierId) {
-                e.preventDefault();
-                alert('Please select a supplier');
-                document.getElementById('supplier_id').focus();
-                return;
-            }
-            
             if (!quantity || quantity < 1) {
                 e.preventDefault();
                 alert('Please enter a valid quantity');
                 document.getElementById('quantity').focus();
                 return;
+            }
+        });
+
+        // Update max quantity based on selected phone's stock
+        document.getElementById('phone_id').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                const stockText = selectedOption.text;
+                const stockMatch = stockText.match(/Stock: (\d+)/);
+                if (stockMatch) {
+                    const maxStock = parseInt(stockMatch[1]);
+                    document.getElementById('quantity').setAttribute('max', maxStock);
+                    document.getElementById('quantity').placeholder = `Max available: ${maxStock}`;
+                }
             }
         });
     </script>

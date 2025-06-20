@@ -106,7 +106,8 @@ app.get('/', async (req, res) => {
             totalPages,
             limit,
             search,
-            total
+            total,
+            req
         });
     } catch (err) {
         console.error('Database error:', err);
@@ -587,6 +588,18 @@ app.get('/api/suppliers/:id', async (req, res) => {
         console.error('Database error:', err);
         res.status(500).json({ error: 'Suppliers database connection failed' });
     }
+});
+
+
+// ===============================================
+// AUTHENTICATION ROUTES
+// ===============================================
+
+// Logout route
+app.get('/logout', (req, res) => {
+    // For now, just redirect to home with a logout message
+    // In a real app, you would destroy the session here
+    res.redirect('/?logout=true');
 });
 
 
