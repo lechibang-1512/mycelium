@@ -7,17 +7,17 @@ const PORT = process.env.PORT || 3000;
 
 // Database configuration
 const dbConfig = {
-    host: 'localhost',
+    host: '127.0.0.1', // Note: If you have issues, try changing this back to 'localhost'
     user: 'lechibang', // Change this to your database user
     password: '1212', // Change this to your database password
     database: 'master_specs_db',
     connectionLimit: 5,
-    bigIntAsNumber: true  // Convert BigInt to Number
+    bigIntAsNumber: true // Convert BigInt to Number
 };
 
 // Suppliers database configuration
 const suppliersDbConfig = {
-    host: 'localhost',
+    host: '127.0.0.1', // Note: If you have issues, try changing this back to 'localhost'
     user: 'lechibang',
     password: '1212',
     database: 'suppliers_db',
@@ -32,15 +32,15 @@ const suppliersPool = mariadb.createPool(suppliersDbConfig);
 // Helper function to convert BigInt values to numbers
 function convertBigIntToNumber(obj) {
     if (obj === null || obj === undefined) return obj;
-    
+
     if (typeof obj === 'bigint') {
         return Number(obj);
     }
-    
+
     if (Array.isArray(obj)) {
         return obj.map(convertBigIntToNumber);
     }
-    
+
     if (typeof obj === 'object') {
         const converted = {};
         for (const [key, value] of Object.entries(obj)) {
@@ -48,20 +48,24 @@ function convertBigIntToNumber(obj) {
         }
         return converted;
     }
-    
+
     return obj;
 }
 
 // Middleware
 app.use(express.static('public'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // For form data
+app.use(express.urlencoded({
+    extended: true
+})); // For form data
 
 // Set view engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Routes
+// ===============================================
+// ROUTES
+// ===============================================
 
 // Home page - display all phone specs
 app.get('/', async (req, res) => {
@@ -71,31 +75,31 @@ app.get('/', async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
         const search = req.query.search || '';
-        
+
         let query = 'SELECT * FROM phone_specs';
         let countQuery = 'SELECT COUNT(*) as total FROM phone_specs';
         let params = [];
-        
+
         if (search) {
             query += ' WHERE sm_name LIKE ? OR sm_maker LIKE ?';
             countQuery += ' WHERE sm_name LIKE ? OR sm_maker LIKE ?';
             params = [`%${search}%`, `%${search}%`];
         }
-        
+
         // Get total count
         const countResult = await conn.query(countQuery, params);
         const total = convertBigIntToNumber(countResult[0].total);
-        
+
         // Get paginated results
         query += ' ORDER BY id LIMIT ? OFFSET ?';
         params.push(limit, offset);
-        
+
         const phonesResult = await conn.query(query, params);
         const phones = convertBigIntToNumber(phonesResult);
         conn.end();
-        
+
         const totalPages = Math.ceil(total / limit);
-        
+
         res.render('index', {
             phones,
             currentPage: page,
@@ -106,7 +110,9 @@ app.get('/', async (req, res) => {
         });
     } catch (err) {
         console.error('Database error:', err);
-        res.status(500).render('error', { error: 'Database connection failed' });
+        res.status(500).render('error', {
+            error: 'Database connection failed'
+        });
     }
 });
 
@@ -117,19 +123,410 @@ app.get('/phone/:id', async (req, res) => {
         const phonesResult = await conn.query('SELECT * FROM phone_specs WHERE id = ?', [req.params.id]);
         const phones = convertBigIntToNumber(phonesResult);
         conn.end();
-        
+
         if (phones.length === 0) {
-            return res.status(404).render('error', { error: 'Phone not found' });
+            return res.status(404).render('error', {
+                error: 'Phone not found'
+            });
         }
-        
-        res.render('details', { phone: phones[0] });
+
+        res.render('details', {
+            phone: phones[0]
+        });
     } catch (err) {
         console.error('Database error:', err);
-        res.status(500).render('error', { error: 'Database connection failed' });
+        res.status(500).render('error', {
+            error: 'Database connection failed'
+        });
     }
 });
 
-// API endpoint to get all phones (JSON)
+
+// ===============================================
+// SUPPLIERS ROUTES
+// ===============================================
+
+// Suppliers page - display all suppliers
+app.get('/suppliers', async (req, res) => {
+    try {
+        const conn = await suppliersPool.getConnection();
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+        const search = req.query.search || '';
+
+        let query = 'SELECT * FROM suppliers';
+        let countQuery = 'SELECT COUNT(*) as total FROM suppliers';
+        let params = [];
+
+        if (search) {
+            query += ' WHERE name LIKE ? OR contact_person LIKE ? OR contact_email LIKE ? OR email LIKE ? OR category LIKE ?';
+            countQuery += ' WHERE name LIKE ? OR contact_person LIKE ? OR contact_email LIKE ? OR email LIKE ? OR category LIKE ?';
+            params = [`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`];
+        }
+
+        const countResult = await conn.query(countQuery, params);
+        const total = convertBigIntToNumber(countResult[0].total);
+
+        query += ' ORDER BY id LIMIT ? OFFSET ?';
+        params.push(limit, offset);
+
+        const suppliersResult = await conn.query(query, params);
+        const suppliers = convertBigIntToNumber(suppliersResult);
+        conn.end();
+
+        const totalPages = Math.ceil(total / limit);
+
+        res.render('suppliers', {
+            suppliers,
+            currentPage: page,
+            totalPages,
+            limit,
+            search,
+            total,
+            success: req.query.success
+        });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).render('error', {
+            error: 'Suppliers database connection failed'
+        });
+    }
+});
+
+// Supplier details page
+app.get('/supplier/:id', async (req, res) => {
+    try {
+        const conn = await suppliersPool.getConnection();
+        const suppliersResult = await conn.query('SELECT * FROM suppliers WHERE id = ?', [req.params.id]);
+        const suppliers = convertBigIntToNumber(suppliersResult);
+        conn.end();
+
+        if (suppliers.length === 0) {
+            return res.status(404).render('error', {
+                error: 'Supplier not found'
+            });
+        }
+
+        res.render('supplier-details', {
+            supplier: suppliers[0],
+            success: req.query.success
+        });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).render('error', {
+            error: 'Suppliers database connection failed'
+        });
+    }
+});
+
+
+// ===============================================
+// SUPPLIER MANAGEMENT ROUTES
+// ===============================================
+
+// Add supplier form page
+app.get('/suppliers/add', (req, res) => {
+    res.render('supplier-form', {
+        supplier: null,
+        action: 'add',
+        title: 'Add New Supplier'
+    });
+});
+
+// Edit supplier form page
+app.get('/suppliers/edit/:id', async (req, res) => {
+    try {
+        const conn = await suppliersPool.getConnection();
+        const suppliersResult = await conn.query('SELECT * FROM suppliers WHERE id = ?', [req.params.id]);
+        const suppliers = convertBigIntToNumber(suppliersResult);
+        conn.end();
+
+        if (suppliers.length === 0) {
+            return res.status(404).render('error', {
+                error: 'Supplier not found'
+            });
+        }
+
+        res.render('supplier-form', {
+            supplier: suppliers[0],
+            action: 'edit',
+            title: 'Edit Supplier'
+        });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).render('error', {
+            error: 'Suppliers database connection failed'
+        });
+    }
+});
+
+// Create new supplier (POST)
+app.post('/suppliers', async (req, res) => {
+    try {
+        const {
+            name,
+            category,
+            contact_person,
+            contact_position,
+            contact_email,
+            email,
+            phone,
+            website,
+            address,
+            notes,
+            is_active,
+            supplier_id
+        } = req.body;
+
+        const conn = await suppliersPool.getConnection();
+        const result = await conn.query(
+            `INSERT INTO suppliers (name, category, contact_person, contact_position, contact_email, email, phone, website, address, notes, is_active, supplier_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [name, category, contact_person, contact_position, contact_email, email, phone, website, address, notes, is_active ? 1 : 0, supplier_id]
+        );
+        conn.end();
+
+        res.redirect(`/supplier/${result.insertId}?success=created`);
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).render('error', {
+            error: 'Failed to create supplier: ' + err.message
+        });
+    }
+});
+
+// Update supplier (POST)
+app.post('/suppliers/:id', async (req, res) => {
+    try {
+        const {
+            name,
+            category,
+            contact_person,
+            contact_position,
+            contact_email,
+            email,
+            phone,
+            website,
+            address,
+            notes,
+            is_active,
+            supplier_id
+        } = req.body;
+
+        const conn = await suppliersPool.getConnection();
+        const result = await conn.query(
+            `UPDATE suppliers SET name = ?, category = ?, contact_person = ?, contact_position = ?, contact_email = ?, email = ?, phone = ?, website = ?, address = ?, notes = ?, is_active = ?, supplier_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+            [name, category, contact_person, contact_position, contact_email, email, phone, website, address, notes, is_active ? 1 : 0, supplier_id, req.params.id]
+        );
+        conn.end();
+
+        if (result.affectedRows === 0) {
+            return res.status(404).render('error', {
+                error: 'Supplier not found'
+            });
+        }
+
+        res.redirect(`/supplier/${req.params.id}?success=updated`);
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).render('error', {
+            error: 'Failed to update supplier: ' + err.message
+        });
+    }
+});
+
+// Delete supplier (POST)
+app.post('/suppliers/:id/delete', async (req, res) => {
+    try {
+        const conn = await suppliersPool.getConnection();
+        const result = await conn.query('DELETE FROM suppliers WHERE id = ?', [req.params.id]);
+        conn.end();
+
+        if (result.affectedRows === 0) {
+            return res.status(404).render('error', {
+                error: 'Supplier not found'
+            });
+        }
+
+        res.redirect('/suppliers?success=deleted');
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).render('error', {
+            error: 'Failed to delete supplier: ' + err.message
+        });
+    }
+});
+
+// Toggle supplier active status (POST)
+app.post('/suppliers/:id/toggle-status', async (req, res) => {
+    try {
+        const conn = await suppliersPool.getConnection();
+        const currentResult = await conn.query('SELECT is_active FROM suppliers WHERE id = ?', [req.params.id]);
+
+        if (currentResult.length === 0) {
+            conn.end();
+            return res.status(404).json({
+                error: 'Supplier not found'
+            });
+        }
+
+        const newStatus = currentResult[0].is_active ? 0 : 1;
+        await conn.query(
+            'UPDATE suppliers SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [newStatus, req.params.id]
+        );
+        conn.end();
+
+        res.json({
+            success: true,
+            is_active: newStatus
+        });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({
+            error: 'Failed to toggle supplier status: ' + err.message
+        });
+    }
+});
+
+
+// ===============================================
+// INVENTORY MANAGEMENT ROUTES
+// ===============================================
+
+// Display form to receive new stock
+app.get('/inventory/receive', async (req, res) => {
+    try {
+        const conn = await pool.getConnection();
+        const suppliersConn = await suppliersPool.getConnection();
+
+        const phonesResult = await conn.query('SELECT id, sm_name FROM phone_specs ORDER BY sm_name');
+        const phones = convertBigIntToNumber(phonesResult);
+
+        const suppliersResult = await suppliersConn.query("SELECT supplier_id, name FROM suppliers WHERE is_active = 1 ORDER BY name");
+        const suppliers = convertBigIntToNumber(suppliersResult);
+
+        conn.end();
+        suppliersConn.end();
+
+        res.render('receive-stock', {
+            phones,
+            suppliers,
+            title: 'Receive New Stock'
+        });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).render('error', {
+            error: 'Database connection failed'
+        });
+    }
+});
+
+// Handle the form submission for receiving stock
+app.post('/inventory/receive', async (req, res) => {
+    const {
+        phone_id,
+        supplier_id,
+        quantity,
+        notes
+    } = req.body;
+    const conn = await pool.getConnection();
+
+    try {
+        await conn.beginTransaction();
+
+        const currentStockResult = await conn.query('SELECT sm_inventory FROM phone_specs WHERE id = ?', [phone_id]);
+        const currentStock = currentStockResult[0].sm_inventory;
+        const newStockLevel = parseInt(currentStock) + parseInt(quantity);
+
+        await conn.query('UPDATE phone_specs SET sm_inventory = ? WHERE id = ?', [newStockLevel, phone_id]);
+
+        await conn.query(
+            `INSERT INTO inventory_log (phone_id, transaction_type, quantity_changed, new_inventory_level, supplier_id, notes) VALUES (?, 'incoming', ?, ?, ?, ?)`,
+            [phone_id, quantity, newStockLevel, supplier_id, notes]
+        );
+
+        await conn.commit();
+        conn.end();
+
+        res.redirect(`/phone/${phone_id}?success=stock_received`);
+
+    } catch (err) {
+        await conn.rollback();
+        conn.end();
+        console.error('Transaction Error:', err);
+        res.status(500).render('error', {
+            error: 'Failed to update stock: ' + err.message
+        });
+    }
+});
+
+// Display form to sell stock
+app.get('/inventory/sell', async (req, res) => {
+    try {
+        const conn = await pool.getConnection();
+        const phonesResult = await conn.query('SELECT id, sm_name, sm_inventory FROM phone_specs WHERE sm_inventory > 0 ORDER BY sm_name');
+        const phones = convertBigIntToNumber(phonesResult);
+        conn.end();
+
+        res.render('sell-stock', {
+            phones,
+            title: 'Record a Sale'
+        });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).render('error', {
+            error: 'Database connection failed'
+        });
+    }
+});
+
+// Handle the form submission for selling stock
+app.post('/inventory/sell', async (req, res) => {
+    const {
+        phone_id,
+        quantity,
+        notes
+    } = req.body;
+    const conn = await pool.getConnection();
+
+    try {
+        await conn.beginTransaction();
+
+        const stockResult = await conn.query('SELECT sm_inventory FROM phone_specs WHERE id = ? FOR UPDATE', [phone_id]);
+        const currentStock = stockResult[0].sm_inventory;
+
+        if (currentStock < quantity) {
+            throw new Error('Insufficient stock to complete the sale.');
+        }
+
+        const newStockLevel = parseInt(currentStock) - parseInt(quantity);
+
+        await conn.query('UPDATE phone_specs SET sm_inventory = ? WHERE id = ?', [newStockLevel, phone_id]);
+
+        await conn.query(
+            `INSERT INTO inventory_log (phone_id, transaction_type, quantity_changed, new_inventory_level, notes) VALUES (?, 'outgoing', ?, ?, ?)`,
+            [phone_id, quantity, newStockLevel, notes]
+        );
+
+        await conn.commit();
+        conn.end();
+
+        res.redirect(`/phone/${phone_id}?success=stock_sold`);
+
+    } catch (err) {
+        await conn.rollback();
+        conn.end();
+        console.error('Transaction Error:', err);
+        res.status(500).render('error', {
+            error: 'Failed to record sale: ' + err.message
+        });
+    }
+});
+
+// ===============================================
+// API ROUTES
+// ===============================================
 app.get('/api/phones', async (req, res) => {
     try {
         const conn = await pool.getConnection();
@@ -143,7 +540,6 @@ app.get('/api/phones', async (req, res) => {
     }
 });
 
-// API endpoint to get phone by ID (JSON)
 app.get('/api/phones/:id', async (req, res) => {
     try {
         const conn = await pool.getConnection();
@@ -162,79 +558,6 @@ app.get('/api/phones/:id', async (req, res) => {
     }
 });
 
-// SUPPLIERS ROUTES
-
-// Suppliers page - display all suppliers
-app.get('/suppliers', async (req, res) => {
-    try {
-        const conn = await suppliersPool.getConnection();
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const offset = (page - 1) * limit;
-        const search = req.query.search || '';
-        
-        let query = 'SELECT * FROM suppliers';
-        let countQuery = 'SELECT COUNT(*) as total FROM suppliers';
-        let params = [];
-        
-        if (search) {
-            query += ' WHERE name LIKE ? OR contact_person LIKE ? OR contact_email LIKE ? OR email LIKE ? OR category LIKE ?';
-            countQuery += ' WHERE name LIKE ? OR contact_person LIKE ? OR contact_email LIKE ? OR email LIKE ? OR category LIKE ?';
-            params = [`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`];
-        }
-        
-        // Get total count
-        const countResult = await conn.query(countQuery, params);
-        const total = convertBigIntToNumber(countResult[0].total);
-        
-        // Get paginated results
-        query += ' ORDER BY id LIMIT ? OFFSET ?';
-        params.push(limit, offset);
-        
-        const suppliersResult = await conn.query(query, params);
-        const suppliers = convertBigIntToNumber(suppliersResult);
-        conn.end();
-        
-        const totalPages = Math.ceil(total / limit);
-        
-        res.render('suppliers', {
-            suppliers,
-            currentPage: page,
-            totalPages,
-            limit,
-            search,
-            total,
-            success: req.query.success
-        });
-    } catch (err) {
-        console.error('Database error:', err);
-        res.status(500).render('error', { error: 'Suppliers database connection failed' });
-    }
-});
-
-// Supplier details page
-app.get('/supplier/:id', async (req, res) => {
-    try {
-        const conn = await suppliersPool.getConnection();
-        const suppliersResult = await conn.query('SELECT * FROM suppliers WHERE id = ?', [req.params.id]);
-        const suppliers = convertBigIntToNumber(suppliersResult);
-        conn.end();
-        
-        if (suppliers.length === 0) {
-            return res.status(404).render('error', { error: 'Supplier not found' });
-        }
-        
-        res.render('supplier-details', { 
-            supplier: suppliers[0],
-            success: req.query.success
-        });
-    } catch (err) {
-        console.error('Database error:', err);
-        res.status(500).render('error', { error: 'Suppliers database connection failed' });
-    }
-});
-
-// API endpoint to get all suppliers (JSON)
 app.get('/api/suppliers', async (req, res) => {
     try {
         const conn = await suppliersPool.getConnection();
@@ -248,7 +571,6 @@ app.get('/api/suppliers', async (req, res) => {
     }
 });
 
-// API endpoint to get supplier by ID (JSON)
 app.get('/api/suppliers/:id', async (req, res) => {
     try {
         const conn = await suppliersPool.getConnection();
@@ -267,164 +589,22 @@ app.get('/api/suppliers/:id', async (req, res) => {
     }
 });
 
-// SUPPLIER MANAGEMENT ROUTES
 
-// Add supplier form page
-app.get('/suppliers/add', (req, res) => {
-    res.render('supplier-form', { 
-        supplier: null, 
-        action: 'add',
-        title: 'Add New Supplier'
-    });
-});
-
-// Edit supplier form page
-app.get('/suppliers/edit/:id', async (req, res) => {
-    try {
-        const conn = await suppliersPool.getConnection();
-        const suppliersResult = await conn.query('SELECT * FROM suppliers WHERE id = ?', [req.params.id]);
-        const suppliers = convertBigIntToNumber(suppliersResult);
-        conn.end();
-        
-        if (suppliers.length === 0) {
-            return res.status(404).render('error', { error: 'Supplier not found' });
-        }
-        
-        res.render('supplier-form', { 
-            supplier: suppliers[0], 
-            action: 'edit',
-            title: 'Edit Supplier'
-        });
-    } catch (err) {
-        console.error('Database error:', err);
-        res.status(500).render('error', { error: 'Suppliers database connection failed' });
-    }
-});
-
-// Create new supplier (POST)
-app.post('/suppliers', async (req, res) => {
-    try {
-        const {
-            name, category, contact_person, contact_position, contact_email,
-            email, phone, website, address, notes, is_active, supplier_id
-        } = req.body;
-        
-        const conn = await suppliersPool.getConnection();
-        
-        const result = await conn.query(
-            `INSERT INTO suppliers (
-                name, category, contact_person, contact_position, contact_email,
-                email, phone, website, address, notes, is_active, supplier_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-                name, category, contact_person, contact_position, contact_email,
-                email, phone, website, address, notes, is_active ? 1 : 0, supplier_id
-            ]
-        );
-        
-        conn.end();
-        
-        res.redirect(`/supplier/${result.insertId}?success=created`);
-    } catch (err) {
-        console.error('Database error:', err);
-        res.status(500).render('error', { error: 'Failed to create supplier: ' + err.message });
-    }
-});
-
-// Update supplier (PUT/POST)
-app.post('/suppliers/:id', async (req, res) => {
-    try {
-        const {
-            name, category, contact_person, contact_position, contact_email,
-            email, phone, website, address, notes, is_active, supplier_id
-        } = req.body;
-        
-        const conn = await suppliersPool.getConnection();
-        
-        const result = await conn.query(
-            `UPDATE suppliers SET 
-                name = ?, category = ?, contact_person = ?, contact_position = ?, 
-                contact_email = ?, email = ?, phone = ?, website = ?, address = ?, 
-                notes = ?, is_active = ?, supplier_id = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?`,
-            [
-                name, category, contact_person, contact_position, contact_email,
-                email, phone, website, address, notes, is_active ? 1 : 0, supplier_id,
-                req.params.id
-            ]
-        );
-        
-        conn.end();
-        
-        if (result.affectedRows === 0) {
-            return res.status(404).render('error', { error: 'Supplier not found' });
-        }
-        
-        res.redirect(`/supplier/${req.params.id}?success=updated`);
-    } catch (err) {
-        console.error('Database error:', err);
-        res.status(500).render('error', { error: 'Failed to update supplier: ' + err.message });
-    }
-});
-
-// Delete supplier (POST)
-app.post('/suppliers/:id/delete', async (req, res) => {
-    try {
-        const conn = await suppliersPool.getConnection();
-        
-        const result = await conn.query('DELETE FROM suppliers WHERE id = ?', [req.params.id]);
-        
-        conn.end();
-        
-        if (result.affectedRows === 0) {
-            return res.status(404).render('error', { error: 'Supplier not found' });
-        }
-        
-        res.redirect('/suppliers?success=deleted');
-    } catch (err) {
-        console.error('Database error:', err);
-        res.status(500).render('error', { error: 'Failed to delete supplier: ' + err.message });
-    }
-});
-
-// Toggle supplier active status (POST)
-app.post('/suppliers/:id/toggle-status', async (req, res) => {
-    try {
-        const conn = await suppliersPool.getConnection();
-        
-        // First get current status
-        const currentResult = await conn.query('SELECT is_active FROM suppliers WHERE id = ?', [req.params.id]);
-        
-        if (currentResult.length === 0) {
-            conn.end();
-            return res.status(404).json({ error: 'Supplier not found' });
-        }
-        
-        const newStatus = currentResult[0].is_active ? 0 : 1;
-        
-        const result = await conn.query(
-            'UPDATE suppliers SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-            [newStatus, req.params.id]
-        );
-        
-        conn.end();
-        
-        res.json({ success: true, is_active: newStatus });
-    } catch (err) {
-        console.error('Database error:', err);
-        res.status(500).json({ error: 'Failed to toggle supplier status: ' + err.message });
-    }
-});
-
-// Error handling middleware
+// ===============================================
+// ERROR HANDLING
+// ===============================================
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).render('error', { error: 'Something went wrong!' });
+    res.status(500).render('error', {
+        error: 'Something went wrong!'
+    });
 });
 
 // 404 handler
 app.use((req, res) => {
-    res.status(404).render('error', { error: 'Page not found' });
+    res.status(404).render('error', {
+        error: 'Page not found'
+    });
 });
 
 app.listen(PORT, () => {
