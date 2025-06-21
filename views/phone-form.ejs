@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Phone Specs Database</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <%- include('partials/navbar') %>
+
+    <div class="page-header primary">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h1 class="display-4">
+                        <i class="fas fa-<%= action === 'add' ? 'plus' : 'edit' %> me-3"></i>
+                        <%= title %>
+                    </h1>
+                    <p class="lead">
+                        <%= action === 'add' ? 'Add a new phone to the database' : 'Update phone specifications' %>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container my-4">
+        <a href="<%= action === 'edit' ? '/phone/' + phone.id : '/' %>" class="btn btn-outline-primary mb-4">
+            <i class="fas fa-arrow-left me-2"></i>
+            <%= action === 'edit' ? 'Back to Phone Details' : 'Back to Phone List' %>
+        </a>
+
+        <form method="POST" action="<%= action === 'add' ? '/phones' : '/phones/' + phone.id %>">
+            <!-- Basic Information -->
+            <div class="form-section mb-5">
+                <h4 class="mb-3">
+                    <i class="fas fa-info-circle me-2 text-primary"></i>
+                    Basic Information
+                </h4>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="sm_name" class="form-label">
+                            <i class="fas fa-mobile-alt me-1"></i>
+                            Phone Name *
+                        </label>
+                        <input type="text" class="form-control" id="sm_name" name="sm_name" 
+                               value="<%= phone ? phone.sm_name : '' %>" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="sm_maker" class="form-label">
+                            <i class="fas fa-industry me-1"></i>
+                            Manufacturer *
+                        </label>
+                        <input type="text" class="form-control" id="sm_maker" name="sm_maker" 
+                               value="<%= phone ? phone.sm_maker : '' %>" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="sm_price" class="form-label">
+                            <i class="fas fa-dollar-sign me-1"></i>
+                            Price
+                        </label>
+                        <input type="number" class="form-control" id="sm_price" name="sm_price" 
+                               step="0.01" min="0" value="<%= phone ? phone.sm_price : '' %>" placeholder="0.00">
+                        <div class="form-text">Leave empty if price is unknown</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="sm_inventory" class="form-label">
+                            <i class="fas fa-box me-1"></i>
+                            Inventory
+                        </label>
+                        <input type="number" class="form-control" id="sm_inventory" name="sm_inventory" 
+                               min="0" value="<%= phone ? phone.sm_inventory : 0 %>">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="color" class="form-label">
+                            <i class="fas fa-palette me-1"></i>
+                            Color
+                        </label>
+                        <input type="text" class="form-control" id="color" name="color" 
+                               value="<%= phone ? phone.color : '' %>">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="water_and_dust_rating" class="form-label">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            Water & Dust Rating
+                        </label>
+                        <input type="text" class="form-control" id="water_and_dust_rating" name="water_and_dust_rating" 
+                               value="<%= phone ? phone.water_and_dust_rating : '' %>" placeholder="e.g., IP68">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hardware Specifications -->
+            <div class="form-section mb-5">
+                <h4 class="mb-3">
+                    <i class="fas fa-microchip me-2 text-success"></i>
+                    Hardware Specifications
+                </h4>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="processor" class="form-label">
+                            <i class="fas fa-microchip me-1"></i>
+                            Processor
+                        </label>
+                        <input type="text" class="form-control" id="processor" name="processor" 
+                               value="<%= phone ? phone.processor : '' %>" placeholder="e.g., A17 Pro">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="process_node" class="form-label">Process Node</label>
+                        <input type="text" class="form-control" id="process_node" name="process_node" 
+                               value="<%= phone ? phone.process_node : '' %>" placeholder="e.g., 3nm">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="cpu_cores" class="form-label">CPU Cores</label>
+                        <input type="text" class="form-control" id="cpu_cores" name="cpu_cores" 
+                               value="<%= phone ? phone.cpu_cores : '' %>" placeholder="e.g., 6">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="cpu_frequency" class="form-label">CPU Frequency</label>
+                        <input type="text" class="form-control" id="cpu_frequency" name="cpu_frequency" 
+                               value="<%= phone ? phone.cpu_frequency : '' %>" placeholder="e.g., 3.78 GHz">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="gpu" class="form-label">
+                            <i class="fas fa-tv me-1"></i>
+                            GPU
+                        </label>
+                        <input type="text" class="form-control" id="gpu" name="gpu" 
+                               value="<%= phone ? phone.gpu : '' %>" placeholder="e.g., 6-core GPU">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="memory_type" class="form-label">Memory Type</label>
+                        <input type="text" class="form-control" id="memory_type" name="memory_type" 
+                               value="<%= phone ? phone.memory_type : '' %>" placeholder="e.g., LPDDR5">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="ram" class="form-label">
+                            <i class="fas fa-memory me-1"></i>
+                            RAM
+                        </label>
+                        <input type="text" class="form-control" id="ram" name="ram" 
+                               value="<%= phone ? phone.ram : '' %>" placeholder="e.g., 8GB">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="rom" class="form-label">
+                            <i class="fas fa-hdd me-1"></i>
+                            Storage (ROM)
+                        </label>
+                        <input type="text" class="form-control" id="rom" name="rom" 
+                               value="<%= phone ? phone.rom : '' %>" placeholder="e.g., 128GB">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="expandable_memory" class="form-label">Expandable Memory</label>
+                        <input type="text" class="form-control" id="expandable_memory" name="expandable_memory" 
+                               value="<%= phone ? phone.expandable_memory : '' %>" placeholder="e.g., MicroSD up to 1TB">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Physical Dimensions -->
+            <div class="form-section mb-5">
+                <h4 class="mb-3">
+                    <i class="fas fa-ruler me-2 text-warning"></i>
+                    Physical Dimensions
+                </h4>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label for="length_mm" class="form-label">Length (mm)</label>
+                        <input type="number" class="form-control" id="length_mm" name="length_mm" 
+                               step="0.1" min="0" value="<%= phone ? phone.length_mm : '' %>">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="width_mm" class="form-label">Width (mm)</label>
+                        <input type="number" class="form-control" id="width_mm" name="width_mm" 
+                               step="0.1" min="0" value="<%= phone ? phone.width_mm : '' %>">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="thickness_mm" class="form-label">Thickness (mm)</label>
+                        <input type="number" class="form-control" id="thickness_mm" name="thickness_mm" 
+                               step="0.1" min="0" value="<%= phone ? phone.thickness_mm : '' %>">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="weight_g" class="form-label">Weight (g)</label>
+                        <input type="number" class="form-control" id="weight_g" name="weight_g" 
+                               step="0.1" min="0" value="<%= phone ? phone.weight_g : '' %>">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Display Specifications -->
+            <div class="form-section mb-5">
+                <h4 class="mb-3">
+                    <i class="fas fa-desktop me-2 text-info"></i>
+                    Display Specifications
+                </h4>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="display_size" class="form-label">
+                            <i class="fas fa-expand me-1"></i>
+                            Display Size (inches)
+                        </label>
+                        <input type="number" class="form-control" id="display_size" name="display_size" 
+                               step="0.1" min="0" value="<%= phone ? phone.display_size : '' %>">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="resolution" class="form-label">Resolution</label>
+                        <input type="text" class="form-control" id="resolution" name="resolution" 
+                               value="<%= phone ? phone.resolution : '' %>" placeholder="e.g., 2556x1179">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="pixel_density" class="form-label">Pixel Density</label>
+                        <input type="text" class="form-control" id="pixel_density" name="pixel_density" 
+                               value="<%= phone ? phone.pixel_density : '' %>" placeholder="e.g., 460 ppi">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="refresh_rate" class="form-label">Refresh Rate</label>
+                        <input type="text" class="form-control" id="refresh_rate" name="refresh_rate" 
+                               value="<%= phone ? phone.refresh_rate : '' %>" placeholder="e.g., 120Hz">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="brightness" class="form-label">Brightness</label>
+                        <input type="text" class="form-control" id="brightness" name="brightness" 
+                               value="<%= phone ? phone.brightness : '' %>" placeholder="e.g., 1000 nits">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label for="display_features" class="form-label">Display Features</label>
+                        <textarea class="form-control" id="display_features" name="display_features" rows="3" 
+                                  placeholder="e.g., ProMotion, Always-On display, HDR10, Dolby Vision"><%= phone ? phone.display_features : '' %></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Camera Specifications -->
+            <div class="form-section mb-5">
+                <h4 class="mb-3">
+                    <i class="fas fa-camera me-2 text-danger"></i>
+                    Camera Specifications
+                </h4>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="rear_camera_main" class="form-label">
+                            <i class="fas fa-camera me-1"></i>
+                            Rear Camera (Main)
+                        </label>
+                        <input type="text" class="form-control" id="rear_camera_main" name="rear_camera_main" 
+                               value="<%= phone ? phone.rear_camera_main : '' %>" placeholder="e.g., 48MP">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="rear_camera_macro" class="form-label">Rear Camera (Macro/Ultra-wide)</label>
+                        <input type="text" class="form-control" id="rear_camera_macro" name="rear_camera_macro" 
+                               value="<%= phone ? phone.rear_camera_macro : '' %>" placeholder="e.g., 12MP">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="rear_video_resolution" class="form-label">Rear Video Resolution</label>
+                        <input type="text" class="form-control" id="rear_video_resolution" name="rear_video_resolution" 
+                               value="<%= phone ? phone.rear_video_resolution : '' %>" placeholder="e.g., 4K@60fps">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="front_camera" class="form-label">
+                            <i class="fas fa-camera me-1"></i>
+                            Front Camera
+                        </label>
+                        <input type="text" class="form-control" id="front_camera" name="front_camera" 
+                               value="<%= phone ? phone.front_camera : '' %>" placeholder="e.g., 12MP">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="front_video_resolution" class="form-label">Front Video Resolution</label>
+                        <input type="text" class="form-control" id="front_video_resolution" name="front_video_resolution" 
+                               value="<%= phone ? phone.front_video_resolution : '' %>" placeholder="e.g., 4K@60fps">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="rear_camera_features" class="form-label">Rear Camera Features</label>
+                        <textarea class="form-control" id="rear_camera_features" name="rear_camera_features" rows="3" 
+                                  placeholder="e.g., Night mode, Portrait mode, 4K video"><%= phone ? phone.rear_camera_features : '' %></textarea>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="front_camera_features" class="form-label">Front Camera Features</label>
+                        <textarea class="form-control" id="front_camera_features" name="front_camera_features" rows="3" 
+                                  placeholder="e.g., Portrait mode, Night mode"><%= phone ? phone.front_camera_features : '' %></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Battery & Charging -->
+            <div class="form-section mb-5">
+                <h4 class="mb-3">
+                    <i class="fas fa-battery-half me-2 text-success"></i>
+                    Battery & Charging
+                </h4>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="battery_capacity" class="form-label">
+                            <i class="fas fa-battery-full me-1"></i>
+                            Battery Capacity
+                        </label>
+                        <input type="text" class="form-control" id="battery_capacity" name="battery_capacity" 
+                               value="<%= phone ? phone.battery_capacity : '' %>" placeholder="e.g., 3274mAh">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="fast_charging" class="form-label">
+                            <i class="fas fa-bolt me-1"></i>
+                            Fast Charging
+                        </label>
+                        <input type="text" class="form-control" id="fast_charging" name="fast_charging" 
+                               value="<%= phone ? phone.fast_charging : '' %>" placeholder="e.g., 20W wired, 15W MagSafe">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="connector" class="form-label">
+                            <i class="fas fa-plug me-1"></i>
+                            Connector
+                        </label>
+                        <input type="text" class="form-control" id="connector" name="connector" 
+                               value="<%= phone ? phone.connector : '' %>" placeholder="e.g., USB-C">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connectivity & Features -->
+            <div class="form-section mb-5">
+                <h4 class="mb-3">
+                    <i class="fas fa-wifi me-2 text-info"></i>
+                    Connectivity & Features
+                </h4>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="sim_card" class="form-label">
+                            <i class="fas fa-sim-card me-1"></i>
+                            SIM Card
+                        </label>
+                        <input type="text" class="form-control" id="sim_card" name="sim_card" 
+                               value="<%= phone ? phone.sim_card : '' %>" placeholder="e.g., Nano-SIM + eSIM">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="nfc" class="form-label">
+                            <i class="fas fa-wifi me-1"></i>
+                            NFC
+                        </label>
+                        <select class="form-select" id="nfc" name="nfc">
+                            <option value="">Select NFC support</option>
+                            <option value="Yes" <%= phone && phone.nfc === 'Yes' ? 'selected' : '' %>>Yes</option>
+                            <option value="No" <%= phone && phone.nfc === 'No' ? 'selected' : '' %>>No</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="audio_jack" class="form-label">
+                            <i class="fas fa-headphones me-1"></i>
+                            Audio Jack
+                        </label>
+                        <select class="form-select" id="audio_jack" name="audio_jack">
+                            <option value="">Select audio jack availability</option>
+                            <option value="Yes" <%= phone && phone.audio_jack === 'Yes' ? 'selected' : '' %>>Yes</option>
+                            <option value="No" <%= phone && phone.audio_jack === 'No' ? 'selected' : '' %>>No</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="network_bands" class="form-label">Network Bands</label>
+                        <textarea class="form-control" id="network_bands" name="network_bands" rows="3" 
+                                  placeholder="e.g., 5G, 4G LTE"><%= phone ? phone.network_bands : '' %></textarea>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="wireless_connectivity" class="form-label">Wireless Connectivity</label>
+                        <textarea class="form-control" id="wireless_connectivity" name="wireless_connectivity" rows="3" 
+                                  placeholder="e.g., Wi-Fi 6E, Bluetooth 5.3"><%= phone ? phone.wireless_connectivity : '' %></textarea>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="navigation" class="form-label">Navigation</label>
+                        <textarea class="form-control" id="navigation" name="navigation" rows="3" 
+                                  placeholder="e.g., GPS, GLONASS, Galileo, QZSS, BeiDou"><%= phone ? phone.navigation : '' %></textarea>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="sensors" class="form-label">Sensors</label>
+                        <textarea class="form-control" id="sensors" name="sensors" rows="3" 
+                                  placeholder="e.g., LiDAR, Accelerometer, Gyroscope, Proximity, Ambient light"><%= phone ? phone.sensors : '' %></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security & Software -->
+            <div class="form-section mb-5">
+                <h4 class="mb-3">
+                    <i class="fas fa-shield-alt me-2 text-warning"></i>
+                    Security & Software
+                </h4>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="security_features" class="form-label">
+                            <i class="fas fa-fingerprint me-1"></i>
+                            Security Features
+                        </label>
+                        <textarea class="form-control" id="security_features" name="security_features" rows="3" 
+                                  placeholder="e.g., Face ID, Secure Enclave, Fingerprint"><%= phone ? phone.security_features : '' %></textarea>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="operating_system" class="form-label">
+                            <i class="fas fa-cog me-1"></i>
+                            Operating System
+                        </label>
+                        <input type="text" class="form-control" id="operating_system" name="operating_system" 
+                               value="<%= phone ? phone.operating_system : '' %>" placeholder="e.g., iOS 17, Android 14">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Media & Audio -->
+            <div class="form-section mb-5">
+                <h4 class="mb-3">
+                    <i class="fas fa-music me-2 text-primary"></i>
+                    Media & Audio
+                </h4>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="audio_playback" class="form-label">
+                            <i class="fas fa-volume-up me-1"></i>
+                            Audio Playback
+                        </label>
+                        <textarea class="form-control" id="audio_playback" name="audio_playback" rows="3" 
+                                  placeholder="e.g., Spatial Audio, Dolby Atmos"><%= phone ? phone.audio_playback : '' %></textarea>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="video_playback" class="form-label">
+                            <i class="fas fa-video me-1"></i>
+                            Video Playback
+                        </label>
+                        <textarea class="form-control" id="video_playback" name="video_playback" rows="3" 
+                                  placeholder="e.g., 4K HDR, Dolby Vision"><%= phone ? phone.video_playback : '' %></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Package Contents -->
+            <div class="form-section mb-5">
+                <h4 class="mb-3">
+                    <i class="fas fa-box me-2 text-secondary"></i>
+                    Package Contents
+                </h4>
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label for="package_contents" class="form-label">
+                            <i class="fas fa-list me-1"></i>
+                            What's in the Box
+                        </label>
+                        <textarea class="form-control" id="package_contents" name="package_contents" rows="4" 
+                                  placeholder="e.g., iPhone, USB-C cable, Documentation"><%= phone ? phone.package_contents : '' %></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between">
+                        <a href="<%= action === 'edit' ? '/phone/' + phone.id : '/' %>" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-<%= action === 'add' ? 'plus' : 'save' %> me-2"></i>
+                            <%= action === 'add' ? 'Create Phone' : 'Update Phone' %>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <%- include('partials/footer') %>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Form validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const name = document.getElementById('sm_name').value.trim();
+            const maker = document.getElementById('sm_maker').value.trim();
+            
+            if (!name) {
+                e.preventDefault();
+                alert('Phone name is required');
+                document.getElementById('sm_name').focus();
+                return;
+            }
+            
+            if (!maker) {
+                e.preventDefault();
+                alert('Manufacturer is required');
+                document.getElementById('sm_maker').focus();
+                return;
+            }
+        });
+    </script>
+</body>
+</html>

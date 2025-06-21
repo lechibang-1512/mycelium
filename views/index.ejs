@@ -35,11 +35,20 @@
     </div>
 
     <div class="container">
-        <!-- Logout Success Message -->
+        <!-- Success/Error Messages -->
         <% if (typeof req !== 'undefined' && req.query && req.query.logout) { %>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <i class="fas fa-check-circle me-2"></i>
                 You have been successfully logged out.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
+        
+        <% if (typeof req !== 'undefined' && req.query && req.query.success) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <% if (req.query.success === 'deleted') { %>
+                    <i class="fas fa-check-circle me-2"></i>Phone deleted successfully!
+                <% } %>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         <% } %>
@@ -55,13 +64,18 @@
                 </h4>
             </div>
             <div class="col-md-6 text-end">
-                <div class="d-flex justify-content-end align-items-center">
-                    <label class="me-2">Items per page:</label>
-                    <select class="form-select w-auto" onchange="changeLimit(this.value)">
-                        <option value="10" <%= limit === 10 ? 'selected' : '' %>>10</option>
-                        <option value="20" <%= limit === 20 ? 'selected' : '' %>>20</option>
-                        <option value="50" <%= limit === 50 ? 'selected' : '' %>>50</option>
-                    </select>
+                <div class="d-flex justify-content-end align-items-center gap-3">
+                    <a href="/phones/add" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add New Phone
+                    </a>
+                    <div class="d-flex align-items-center">
+                        <label class="me-2">Items per page:</label>
+                        <select class="form-select w-auto" onchange="changeLimit(this.value)">
+                            <option value="10" <%= limit === 10 ? 'selected' : '' %>>10</option>
+                            <option value="20" <%= limit === 20 ? 'selected' : '' %>>20</option>
+                            <option value="50" <%= limit === 50 ? 'selected' : '' %>>50</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>

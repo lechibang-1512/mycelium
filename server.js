@@ -133,7 +133,8 @@ app.get('/phone/:id', async (req, res) => {
         }
 
         res.render('details', {
-            phone: phones[0]
+            phone: phones[0],
+            success: req.query.success
         });
     } catch (err) {
         console.error('Database error:', err);
@@ -142,7 +143,6 @@ app.get('/phone/:id', async (req, res) => {
         });
     }
 });
-
 
 // ===============================================
 // SUPPLIERS ROUTES
@@ -704,6 +704,265 @@ app.get('/api/suppliers/:id', async (req, res) => {
     } catch (err) {
         console.error('Database error:', err);
         res.status(500).json({ error: 'Suppliers database connection failed' });
+    }
+});
+
+
+// ===============================================
+// PHONE MANAGEMENT ROUTES
+// ===============================================
+
+// Add phone form page
+app.get('/phones/add', (req, res) => {
+    res.render('phone-form', {
+        phone: null,
+        action: 'add',
+        title: 'Add New Phone'
+    });
+});
+
+// Edit phone form page
+app.get('/phones/edit/:id', async (req, res) => {
+    try {
+        const conn = await pool.getConnection();
+        const phonesResult = await conn.query('SELECT * FROM phone_specs WHERE id = ?', [req.params.id]);
+        const phones = convertBigIntToNumber(phonesResult);
+        conn.end();
+
+        if (phones.length === 0) {
+            return res.status(404).render('error', {
+                error: 'Phone not found'
+            });
+        }
+
+        res.render('phone-form', {
+            phone: phones[0],
+            action: 'edit',
+            title: 'Edit Phone'
+        });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).render('error', {
+            error: 'Database connection failed'
+        });
+    }
+});
+
+// Create new phone (POST)
+app.post('/phones', async (req, res) => {
+    try {
+        const conn = await pool.getConnection();
+        
+        // Helper function to convert empty strings to null for numeric fields
+        const parseNumeric = (value) => {
+            if (value === '' || value === null || value === undefined) return null;
+            const parsed = parseFloat(value);
+            return isNaN(parsed) ? null : parsed;
+        };
+
+        // Helper function to convert empty strings to null for integer fields
+        const parseInteger = (value) => {
+            if (value === '' || value === null || value === undefined) return null;
+            const parsed = parseInt(value);
+            return isNaN(parsed) ? null : parsed;
+        };
+
+        // Helper function to handle empty strings
+        const parseString = (value) => {
+            return (value === '' || value === null || value === undefined) ? null : value;
+        };
+
+        const insertQuery = `
+            INSERT INTO phone_specs (
+                sm_name, sm_maker, sm_price, sm_inventory, color, water_and_dust_rating,
+                processor, process_node, cpu_cores, cpu_frequency, gpu, memory_type,
+                ram, rom, expandable_memory, length_mm, width_mm, thickness_mm, weight_g,
+                display_size, resolution, pixel_density, refresh_rate, brightness, display_features,
+                rear_camera_main, rear_camera_macro, rear_camera_features, rear_video_resolution,
+                front_camera, front_camera_features, front_video_resolution,
+                battery_capacity, fast_charging, connector, security_features, sim_card,
+                nfc, network_bands, wireless_connectivity, navigation, audio_jack,
+                audio_playback, video_playback, sensors, operating_system, package_contents
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        const values = [
+            parseString(req.body.sm_name),
+            parseString(req.body.sm_maker),
+            parseNumeric(req.body.sm_price),
+            parseInteger(req.body.sm_inventory) || 0,
+            parseString(req.body.color),
+            parseString(req.body.water_and_dust_rating),
+            parseString(req.body.processor),
+            parseString(req.body.process_node),
+            parseString(req.body.cpu_cores),
+            parseString(req.body.cpu_frequency),
+            parseString(req.body.gpu),
+            parseString(req.body.memory_type),
+            parseString(req.body.ram),
+            parseString(req.body.rom),
+            parseString(req.body.expandable_memory),
+            parseNumeric(req.body.length_mm),
+            parseNumeric(req.body.width_mm),
+            parseNumeric(req.body.thickness_mm),
+            parseNumeric(req.body.weight_g),
+            parseNumeric(req.body.display_size),
+            parseString(req.body.resolution),
+            parseString(req.body.pixel_density),
+            parseString(req.body.refresh_rate),
+            parseString(req.body.brightness),
+            parseString(req.body.display_features),
+            parseString(req.body.rear_camera_main),
+            parseString(req.body.rear_camera_macro),
+            parseString(req.body.rear_camera_features),
+            parseString(req.body.rear_video_resolution),
+            parseString(req.body.front_camera),
+            parseString(req.body.front_camera_features),
+            parseString(req.body.front_video_resolution),
+            parseString(req.body.battery_capacity),
+            parseString(req.body.fast_charging),
+            parseString(req.body.connector),
+            parseString(req.body.security_features),
+            parseString(req.body.sim_card),
+            parseString(req.body.nfc),
+            parseString(req.body.network_bands),
+            parseString(req.body.wireless_connectivity),
+            parseString(req.body.navigation),
+            parseString(req.body.audio_jack),
+            parseString(req.body.audio_playback),
+            parseString(req.body.video_playback),
+            parseString(req.body.sensors),
+            parseString(req.body.operating_system),
+            parseString(req.body.package_contents)
+        ];
+
+        const result = await conn.query(insertQuery, values);
+        conn.end();
+
+        res.redirect(`/phone/${result.insertId}?success=created`);
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).render('error', {
+            error: 'Failed to create phone: ' + err.message
+        });
+    }
+});
+
+// Update phone (POST)
+app.post('/phones/:id', async (req, res) => {
+    try {
+        const conn = await pool.getConnection();
+        
+        // Helper function to convert empty strings to null for numeric fields
+        const parseNumeric = (value) => {
+            if (value === '' || value === null || value === undefined) return null;
+            const parsed = parseFloat(value);
+            return isNaN(parsed) ? null : parsed;
+        };
+
+        // Helper function to convert empty strings to null for integer fields
+        const parseInteger = (value) => {
+            if (value === '' || value === null || value === undefined) return null;
+            const parsed = parseInt(value);
+            return isNaN(parsed) ? null : parsed;
+        };
+
+        // Helper function to handle empty strings
+        const parseString = (value) => {
+            return (value === '' || value === null || value === undefined) ? null : value;
+        };
+        
+        const updateQuery = `
+            UPDATE phone_specs SET
+                sm_name = ?, sm_maker = ?, sm_price = ?, sm_inventory = ?, color = ?, water_and_dust_rating = ?,
+                processor = ?, process_node = ?, cpu_cores = ?, cpu_frequency = ?, gpu = ?, memory_type = ?,
+                ram = ?, rom = ?, expandable_memory = ?, length_mm = ?, width_mm = ?, thickness_mm = ?, weight_g = ?,
+                display_size = ?, resolution = ?, pixel_density = ?, refresh_rate = ?, brightness = ?, display_features = ?,
+                rear_camera_main = ?, rear_camera_macro = ?, rear_camera_features = ?, rear_video_resolution = ?,
+                front_camera = ?, front_camera_features = ?, front_video_resolution = ?,
+                battery_capacity = ?, fast_charging = ?, connector = ?, security_features = ?, sim_card = ?,
+                nfc = ?, network_bands = ?, wireless_connectivity = ?, navigation = ?, audio_jack = ?,
+                audio_playback = ?, video_playback = ?, sensors = ?,
+                operating_system = ?, package_contents = ?
+            WHERE id = ?
+        `;
+
+        const values = [
+            parseString(req.body.sm_name),
+            parseString(req.body.sm_maker),
+            parseNumeric(req.body.sm_price),
+            parseInteger(req.body.sm_inventory) || 0,
+            parseString(req.body.color),
+            parseString(req.body.water_and_dust_rating),
+            parseString(req.body.processor),
+            parseString(req.body.process_node),
+            parseString(req.body.cpu_cores),
+            parseString(req.body.cpu_frequency),
+            parseString(req.body.gpu),
+            parseString(req.body.memory_type),
+            parseString(req.body.ram),
+            parseString(req.body.rom),
+            parseString(req.body.expandable_memory),
+            parseNumeric(req.body.length_mm),
+            parseNumeric(req.body.width_mm),
+            parseNumeric(req.body.thickness_mm),
+            parseNumeric(req.body.weight_g),
+            parseNumeric(req.body.display_size),
+            parseString(req.body.resolution),
+            parseString(req.body.pixel_density),
+            parseString(req.body.refresh_rate),
+            parseString(req.body.brightness),
+            parseString(req.body.display_features),
+            parseString(req.body.rear_camera_main),
+            parseString(req.body.rear_camera_macro),
+            parseString(req.body.rear_camera_features),
+            parseString(req.body.rear_video_resolution),
+            parseString(req.body.front_camera),
+            parseString(req.body.front_camera_features),
+            parseString(req.body.front_video_resolution),
+            parseString(req.body.battery_capacity),
+            parseString(req.body.fast_charging),
+            parseString(req.body.connector),
+            parseString(req.body.security_features),
+            parseString(req.body.sim_card),
+            parseString(req.body.nfc),
+            parseString(req.body.network_bands),
+            parseString(req.body.wireless_connectivity),
+            parseString(req.body.navigation),
+            parseString(req.body.audio_jack),
+            parseString(req.body.audio_playback),
+            parseString(req.body.video_playback),
+            parseString(req.body.sensors),
+            parseString(req.body.operating_system),
+            parseString(req.body.package_contents),
+            req.params.id
+        ];
+
+        await conn.query(updateQuery, values);
+        conn.end();
+
+        res.redirect(`/phone/${req.params.id}?success=updated`);
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).render('error', {
+            error: 'Failed to update phone: ' + err.message
+        });
+    }
+});
+
+// Delete phone (POST)
+app.post('/phones/:id/delete', async (req, res) => {
+    try {
+        const conn = await pool.getConnection();
+        await conn.query('DELETE FROM phone_specs WHERE id = ?', [req.params.id]);
+        conn.end();
+
+        res.redirect('/?success=deleted');
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).render('error', {
+            error: 'Failed to delete phone'
+        });
     }
 });
 
