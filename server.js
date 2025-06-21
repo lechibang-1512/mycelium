@@ -1,6 +1,7 @@
 const express = require('express');
 const mariadb = require('mariadb');
 const path = require('path');
+const { format, isValid, parseISO } = require('date-fns');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -540,7 +541,11 @@ app.get('/reports', async (req, res) => {
         const endDate = req.query.end_date || '';
 
         let query = `
-            SELECT il.*, ps.sm_name, ps.sm_maker
+            SELECT il.log_id, il.phone_id, il.transaction_type, il.quantity_changed, 
+                   il.new_inventory_level, il.supplier_id, il.notes,
+                   DATE_FORMAT(il.transaction_date, '%Y-%m-%d %H:%i:%s') as formatted_date,
+                   il.transaction_date,
+                   ps.sm_name, ps.sm_maker
             FROM inventory_log il 
             LEFT JOIN phone_specs ps ON il.phone_id = ps.id
             WHERE 1=1
@@ -598,10 +603,13 @@ app.get('/reports', async (req, res) => {
         });
 
         // Add supplier names to reports
-        reports = reports.map(report => ({
-            ...report,
-            supplier_name: report.supplier_id ? supplierMap[report.supplier_id] : null
-        }));
+        reports = reports.map(report => {
+            return {
+                ...report,
+                supplier_name: report.supplier_id ? supplierMap[report.supplier_id] : null
+                // formatted_date is already correctly formatted by MySQL DATE_FORMAT
+            };
+        });
 
         // Get unique phones for filter dropdown
         const phonesResult = await conn.query('SELECT id, sm_name, sm_maker FROM phone_specs ORDER BY sm_name');

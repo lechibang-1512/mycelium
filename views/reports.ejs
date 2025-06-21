@@ -83,8 +83,11 @@
                                                 <td><span class="badge bg-secondary">#<%= report.log_id %></span></td>
                                                 <td>
                                                     <small class="text-muted">
-                                                        <%= new Date(report.transaction_date).toLocaleDateString() %><br>
-                                                        <%= new Date(report.transaction_date).toLocaleTimeString() %>
+                                                        <% if (report.formatted_date) { %>
+                                                            <%= report.formatted_date %>
+                                                        <% } else { %>
+                                                            N/A
+                                                        <% } %>
                                                     </small>
                                                 </td>
                                                 <td>
