@@ -1,13 +1,14 @@
-<!DOCT    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">PE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %> - Inventory Management</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/style.css">
+    
+    <link rel="stylesheet" href="/style.css"> 
 </head>
 <body>
     <%- include('partials/navbar') %>
@@ -97,6 +98,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Form validation
+        // Note: The 'required' attribute on your form fields already provides basic browser-level validation.
+        // This script adds an extra layer of user-friendly alerts.
         document.querySelector('form').addEventListener('submit', function(e) {
             const phoneId = document.getElementById('phone_id').value;
             const supplierId = document.getElementById('supplier_id').value;
@@ -104,21 +107,21 @@
             
             if (!phoneId) {
                 e.preventDefault();
-                alert('Please select a phone model');
+                alert('Please select a phone model.');
                 document.getElementById('phone_id').focus();
                 return;
             }
             
             if (!supplierId) {
                 e.preventDefault();
-                alert('Please select a supplier');
+                alert('Please select a supplier.');
                 document.getElementById('supplier_id').focus();
                 return;
             }
             
             if (!quantity || quantity < 1) {
                 e.preventDefault();
-                alert('Please enter a valid quantity');
+                alert('Please enter a valid quantity.');
                 document.getElementById('quantity').focus();
                 return;
             }

@@ -525,6 +525,115 @@ app.post('/inventory/sell', async (req, res) => {
     }
 });
 
+// Reports page -  display inventory log
+app.get('/reports', async (req, res) => {
+    try {
+        const conn = await pool.getConnection();
+        const suppliersConn = await suppliersPool.getConnection();
+        
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const offset = (page - 1) * limit;
+        const transactionType = req.query.transaction_type || '';
+        const phoneId = req.query.phone_id || '';
+        const startDate = req.query.start_date || '';
+        const endDate = req.query.end_date || '';
+
+        let query = `
+            SELECT il.*, ps.sm_name, ps.sm_maker
+            FROM inventory_log il 
+            LEFT JOIN phone_specs ps ON il.phone_id = ps.id
+            WHERE 1=1
+        `;
+        let countQuery = `
+            SELECT COUNT(*) as total 
+            FROM inventory_log il 
+            LEFT JOIN phone_specs ps ON il.phone_id = ps.id
+            WHERE 1=1
+        `;
+        let params = [];
+
+        // Apply filters
+        if (transactionType) {
+            query += ' AND il.transaction_type = ?';
+            countQuery += ' AND il.transaction_type = ?';
+            params.push(transactionType);
+        }
+
+        if (phoneId) {
+            query += ' AND il.phone_id = ?';
+            countQuery += ' AND il.phone_id = ?';
+            params.push(phoneId);
+        }
+
+        if (startDate) {
+            query += ' AND DATE(il.transaction_date) >= ?';
+            countQuery += ' AND DATE(il.transaction_date) >= ?';
+            params.push(startDate);
+        }
+
+        if (endDate) {
+            query += ' AND DATE(il.transaction_date) <= ?';
+            countQuery += ' AND DATE(il.transaction_date) <= ?';
+            params.push(endDate);
+        }
+
+        // Get total count
+        const countResult = await conn.query(countQuery, params);
+        const total = convertBigIntToNumber(countResult[0].total);
+
+        // Get paginated results
+        query += ' ORDER BY il.transaction_date DESC LIMIT ? OFFSET ?';
+        params.push(limit, offset);
+
+        const reportsResult = await conn.query(query, params);
+        let reports = convertBigIntToNumber(reportsResult);
+
+        // Get supplier names separately to avoid cross-database join issues
+        const suppliersResult = await suppliersConn.query('SELECT supplier_id, name FROM suppliers');
+        const suppliers = convertBigIntToNumber(suppliersResult);
+        const supplierMap = {};
+        suppliers.forEach(supplier => {
+            supplierMap[supplier.supplier_id] = supplier.name;
+        });
+
+        // Add supplier names to reports
+        reports = reports.map(report => ({
+            ...report,
+            supplier_name: report.supplier_id ? supplierMap[report.supplier_id] : null
+        }));
+
+        // Get unique phones for filter dropdown
+        const phonesResult = await conn.query('SELECT id, sm_name, sm_maker FROM phone_specs ORDER BY sm_name');
+        const phones = convertBigIntToNumber(phonesResult);
+
+        conn.end();
+        suppliersConn.end();
+
+        const totalPages = Math.ceil(total / limit);
+
+        res.render('reports', {
+            reports,
+            phones,
+            currentPage: page,
+            totalPages,
+            limit,
+            total,
+            filters: {
+                transaction_type: transactionType,
+                phone_id: phoneId,
+                start_date: startDate,
+                end_date: endDate
+            }
+        });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).render('error', {
+            error: 'Database connection failed: ' + err.message
+        });
+    }
+});
+
 // ===============================================
 // API ROUTES
 // ===============================================
