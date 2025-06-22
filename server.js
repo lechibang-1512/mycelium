@@ -101,6 +101,10 @@ app.set('views', path.join(__dirname, 'views'));
 const authRoutes = require('./routes/auth')(authPool, convertBigIntToNumber);
 app.use('/', authRoutes);
 
+// Import analytics routes
+const analyticsRoutes = require('./routes/analytics')(pool, suppliersPool, convertBigIntToNumber);
+app.use('/', analyticsRoutes);
+
 // Import auth middleware for protecting routes
 const { isAuthenticated, isAdmin, isStaffOrAdmin } = require('./middleware/auth');
 
@@ -181,12 +185,9 @@ app.get('/phone/:id', isAuthenticated, async (req, res) => {
         // Get inventory history for this phone
         const inventoryHistoryQuery = `
             SELECT 
-                il.transaction_type, il.quantity_changed, il.new_inventory_level, il.notes,
-                DATE_FORMAT(il.transaction_date, '%Y-%m-%d %H:%i:%s') as formatted_date,
-                s.name as supplier_name
+                il.transaction_type, il.quantity_changed, il.new_inventory_level, il.notes, il.supplier_id,
+                DATE_FORMAT(il.transaction_date, '%Y-%m-%d %H:%i:%s') as formatted_date
             FROM inventory_log il
-            LEFT JOIN phone_specs ps ON il.phone_id = ps.id
-            LEFT JOIN suppliers s ON il.supplier_id = s.supplier_id  
             WHERE il.phone_id = ?
             ORDER BY il.transaction_date DESC
             LIMIT 10
@@ -197,7 +198,7 @@ app.get('/phone/:id', isAuthenticated, async (req, res) => {
         // Get supplier names for history items that don't have supplier names
         if (inventoryHistory.length > 0) {
             const supplierIds = inventoryHistory
-                .filter(item => item.supplier_id && !item.supplier_name)
+                .filter(item => item.supplier_id)
                 .map(item => item.supplier_id);
                 
             if (supplierIds.length > 0) {
@@ -213,7 +214,7 @@ app.get('/phone/:id', isAuthenticated, async (req, res) => {
                 
                 inventoryHistory = inventoryHistory.map(item => ({
                     ...item,
-                    supplier_name: item.supplier_name || supplierMap[item.supplier_id] || null
+                    supplier_name: supplierMap[item.supplier_id] || null
                 }));
             }
         }
@@ -1113,194 +1114,8 @@ app.post('/phones/:id/delete', isStaffOrAdmin, async (req, res) => {
 });
 
 // ===============================================
-// ANALYTICS DASHBOARD ROUTE
+// ANALYTICS ROUTES (now handled by separate module)
 // ===============================================
-
-// Analytics dashboard with comprehensive reporting
-app.get('/analytics', isAuthenticated, async (req, res) => {
-    try {
-        const conn = await pool.getConnection();
-        const suppliersConn = await suppliersPool.getConnection();
-        
-        const period = parseInt(req.query.period) || 30; // Default to 30 days
-        
-        // Calculate date range
-        const endDate = new Date();
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - period);
-        
-        // 1. Get total revenue for the period
-        const revenueQuery = `
-            SELECT COALESCE(SUM(ps.sm_price * ABS(il.quantity_changed)), 0) as total_revenue
-            FROM inventory_log il
-            JOIN phone_specs ps ON il.phone_id = ps.id
-            WHERE il.transaction_type = 'outgoing' 
-            AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-        `;
-        const revenueResult = await conn.query(revenueQuery, [period]);
-        const totalRevenue = convertBigIntToNumber(revenueResult[0].total_revenue) || 0;
-        
-        // 2. Get total units sold
-        const unitsSoldQuery = `
-            SELECT COALESCE(SUM(ABS(quantity_changed)), 0) as units_sold
-            FROM inventory_log 
-            WHERE transaction_type = 'outgoing' 
-            AND transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-        `;
-        const unitsSoldResult = await conn.query(unitsSoldQuery, [period]);
-        const totalUnitsSold = convertBigIntToNumber(unitsSoldResult[0].units_sold) || 0;
-        
-        // 3. Get total active products
-        const productsQuery = `SELECT COUNT(*) as total FROM phone_specs`;
-        const productsResult = await conn.query(productsQuery);
-        const totalProducts = convertBigIntToNumber(productsResult[0].total);
-        
-        // 4. Get low stock products (stock <= 5)
-        const lowStockQuery = `
-            SELECT id, sm_name, sm_maker, sm_inventory, sm_price 
-            FROM phone_specs 
-            WHERE sm_inventory <= 5 
-            ORDER BY sm_inventory ASC
-        `;
-        const lowStockResult = await conn.query(lowStockQuery);
-        const lowStockProducts = convertBigIntToNumber(lowStockResult);
-        const lowStockCount = lowStockProducts.length;
-        
-        // 5. Get sales trend data for chart
-        const salesTrendQuery = `
-            SELECT 
-                DATE(il.transaction_date) as sale_date,
-                COALESCE(SUM(ps.sm_price * ABS(il.quantity_changed)), 0) as daily_revenue
-            FROM inventory_log il
-            JOIN phone_specs ps ON il.phone_id = ps.id
-            WHERE il.transaction_type = 'outgoing' 
-            AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-            GROUP BY DATE(il.transaction_date)
-            ORDER BY sale_date ASC
-        `;
-        const salesTrendResult = await conn.query(salesTrendQuery, [period]);
-        const salesTrendRaw = convertBigIntToNumber(salesTrendResult);
-        
-        // Format sales trend data for Chart.js
-        const salesTrendData = {
-            labels: salesTrendRaw.map(item => {
-                const date = new Date(item.sale_date);
-                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-            }),
-            values: salesTrendRaw.map(item => item.daily_revenue)
-        };
-        
-        // 6. Get top selling products
-        const topProductsQuery = `
-            SELECT 
-                ps.id, ps.sm_name, ps.sm_maker, ps.sm_price,
-                COALESCE(SUM(ABS(il.quantity_changed)), 0) as total_sold,
-                COALESCE(SUM(ps.sm_price * ABS(il.quantity_changed)), 0) as revenue
-            FROM phone_specs ps
-            LEFT JOIN inventory_log il ON ps.id = il.phone_id AND il.transaction_type = 'outgoing'
-            AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-            GROUP BY ps.id, ps.sm_name, ps.sm_maker, ps.sm_price
-            ORDER BY total_sold DESC
-            LIMIT 5
-        `;
-        const topProductsResult = await conn.query(topProductsQuery, [period]);
-        const topSellingProducts = convertBigIntToNumber(topProductsResult);
-        
-        // Format product performance data for Chart.js
-        const productPerformanceData = {
-            labels: topSellingProducts.slice(0, 5).map(p => `${p.sm_maker} ${p.sm_name}`),
-            values: topSellingProducts.slice(0, 5).map(p => p.total_sold)
-        };
-        
-        // 7. Get inventory status distribution
-        const inventoryStatusQuery = `
-            SELECT 
-                SUM(CASE WHEN sm_inventory > 5 THEN 1 ELSE 0 END) as in_stock,
-                SUM(CASE WHEN sm_inventory > 0 AND sm_inventory <= 5 THEN 1 ELSE 0 END) as low_stock,
-                SUM(CASE WHEN sm_inventory = 0 THEN 1 ELSE 0 END) as out_of_stock
-            FROM phone_specs
-        `;
-        const inventoryStatusResult = await conn.query(inventoryStatusQuery);
-        const inventoryStatus = convertBigIntToNumber(inventoryStatusResult[0]);
-        const inventoryStatusData = {
-            inStock: inventoryStatus.in_stock || 0,
-            lowStock: inventoryStatus.low_stock || 0,
-            outOfStock: inventoryStatus.out_of_stock || 0
-        };
-        
-        // 8. Calculate average sale value
-        const averageSaleValue = totalUnitsSold > 0 ? totalRevenue / totalUnitsSold : 0;
-        
-        // 9. Find best selling day
-        const bestDayQuery = `
-            SELECT 
-                DAYNAME(il.transaction_date) as day_name,
-                COUNT(*) as transaction_count
-            FROM inventory_log il
-            WHERE il.transaction_type = 'outgoing' 
-            AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-            GROUP BY DAYNAME(il.transaction_date), DAYOFWEEK(il.transaction_date)
-            ORDER BY transaction_count DESC
-            LIMIT 1
-        `;
-        const bestDayResult = await conn.query(bestDayQuery, [period]);
-        const bestSellingDay = bestDayResult.length > 0 ? bestDayResult[0].day_name : 'N/A';
-        
-        // 10. Calculate monthly growth (comparing last 30 days to previous 30 days)
-        const currentPeriodRevenue = totalRevenue;
-        const previousPeriodQuery = `
-            SELECT COALESCE(SUM(ps.sm_price * ABS(il.quantity_changed)), 0) as previous_revenue
-            FROM inventory_log il
-            JOIN phone_specs ps ON il.phone_id = ps.id
-            WHERE il.transaction_type = 'outgoing' 
-            AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-            AND il.transaction_date < DATE_SUB(NOW(), INTERVAL ? DAY)
-        `;
-        const previousPeriodResult = await conn.query(previousPeriodQuery, [period * 2, period]);
-        const previousRevenue = convertBigIntToNumber(previousPeriodResult[0].previous_revenue) || 0;
-        const monthlyGrowth = previousRevenue > 0 ? ((currentPeriodRevenue - previousRevenue) / previousRevenue) * 100 : 0;
-        
-        // 11. Get recent transactions
-        const recentTransactionsQuery = `
-            SELECT 
-                il.transaction_type, il.quantity_changed, il.notes,
-                DATE_FORMAT(il.transaction_date, '%M %d, %Y at %h:%i %p') as formatted_date,
-                ps.sm_name, ps.sm_maker
-            FROM inventory_log il
-            JOIN phone_specs ps ON il.phone_id = ps.id
-            ORDER BY il.transaction_date DESC
-            LIMIT 10
-        `;
-        const recentTransactionsResult = await conn.query(recentTransactionsQuery);
-        const recentTransactions = convertBigIntToNumber(recentTransactionsResult);
-        
-        conn.end();
-        suppliersConn.end();
-        
-        res.render('analytics', {
-            totalRevenue,
-            totalUnitsSold,
-            totalProducts,
-            lowStockCount,
-            lowStockProducts,
-            salesTrendData,
-            productPerformanceData,
-            inventoryStatusData,
-            topSellingProducts,
-            averageSaleValue,
-            bestSellingDay,
-            monthlyGrowth,
-            recentTransactions,
-            title: 'Analytics Dashboard'
-        });
-        
-    } catch (err) {
-        console.error('Analytics error:', err);
-        res.status(500).render('error', {
-            error: 'Failed to load analytics: ' + err.message
-        });
-    }
-});
 
 // Stock Alerts and Recommendations page
 app.get('/stock-alerts', isAuthenticated, async (req, res) => {

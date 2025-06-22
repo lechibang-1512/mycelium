@@ -40,6 +40,7 @@ const isStaffOrAdmin = (req, res, next) => {
 const setUserLocals = (req, res, next) => {
     res.locals.user = req.session.user || null;
     res.locals.isAdmin = req.session.user && req.session.user.role === 'admin';
+    res.locals.isStaffOrAdmin = req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'staff');
     res.locals.isAuthenticated = !!req.session.user;
     next();
 };
