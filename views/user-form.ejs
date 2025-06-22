@@ -1,0 +1,60 @@
+<%- include('./partials/head') %>
+<%- include('./partials/navbar') %>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0"><%= title %></h3>
+                </div>
+                <div class="card-body">
+                    <% if (messages && messages.error) { %>
+                        <div class="alert alert-danger" role="alert">
+                            <%= messages.error %>
+                        </div>
+                    <% } %>
+                    
+                    <form action="/users/<%= user ? user.id : '' %>" method="POST">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" value="<%= user ? user.username : '' %>" <%= user ? 'readonly' : 'required' %>>
+                            <% if (user) { %>
+                                <small class="text-muted">Username cannot be changed</small>
+                            <% } %>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" <%= user ? '' : 'required' %>>
+                            <% if (user) { %>
+                                <small class="text-muted">Leave blank to keep current password</small>
+                            <% } %>
+                        </div>
+                        <div class="mb-3">
+                            <label for="fullName" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="fullName" name="fullName" value="<%= user ? user.fullName : '' %>" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" value="<%= user ? user.email : '' %>" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="role" class="form-label">Role</label>
+                            <select class="form-select" id="role" name="role" required>
+                                <option value="staff" <%= user && user.role === 'staff' ? 'selected' : '' %>>Staff</option>
+                                <option value="admin" <%= user && user.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="/users" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-success">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('./partials/footer') %>

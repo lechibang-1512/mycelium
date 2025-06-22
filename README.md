@@ -6,6 +6,10 @@ A modern web application for viewing and managing phone specifications and suppl
 
 - **Modern Web Interface**: Clean, responsive design with Bootstrap 5
 - **Dual Database Support**: Connects to both phone specs and suppliers databases
+- **Authentication & Authorization**: Complete user authentication system with role-based permissions
+  - Three role levels: Admin, Staff, and User
+  - Protected routes based on user permissions
+  - Profile management functionality
 - **Phone Specifications Viewer**: Complete phone database with detailed specs
 - **Suppliers Management**: Complete CRUD system for supplier management
   - Add new suppliers with comprehensive information
@@ -106,6 +110,12 @@ A modern web application for viewing and managing phone specifications and suppl
    - View complete supplier information
    - Organized into categories: Basic Info, Address & Location, Business Info, Status & Notes
 
+5. **User Authentication**:
+   - Register, login, and manage user profiles
+   - Admins can manage all users and suppliers
+   - Staff have limited access to phone and supplier data
+   - Users can view phones and suppliers, and manage their own profiles
+
 ### API Endpoints
 
 **Phone Specifications:**
@@ -115,6 +125,12 @@ A modern web application for viewing and managing phone specifications and suppl
 **Suppliers:**
 - **GET `/api/suppliers`**: Returns all suppliers in JSON format  
 - **GET `/api/suppliers/:id`**: Returns specific supplier details in JSON format
+
+**Authentication:**
+- **POST `/api/register`**: Registers a new user
+- **POST `/api/login`**: Authenticates a user and returns a token
+- **GET `/api/profile`**: Returns the authenticated user's profile
+- **PUT `/api/profile`**: Updates the authenticated user's profile
 
 Example API usage:
 ```bash
@@ -129,6 +145,15 @@ curl http://localhost:3000/api/suppliers
 
 # Get specific supplier
 curl http://localhost:3000/api/suppliers/1
+
+# Register a new user
+curl -X POST http://localhost:3000/api/register -d "username=test&password=test123"
+
+# Login
+curl -X POST http://localhost:3000/api/login -d "username=test&password=test123"
+
+# Get user profile
+curl -H "Authorization: Bearer <token>" http://localhost:3000/api/profile
 ```
 
 ## Database Schemas

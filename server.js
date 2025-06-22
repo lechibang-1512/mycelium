@@ -2,6 +2,9 @@ const express = require('express');
 const mariadb = require('mariadb');
 const path = require('path');
 const { format, isValid, parseISO } = require('date-fns');
+const bcrypt = require('bcrypt');
+const session = require('express-session');
+const flash = require('connect-flash');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,9 +29,20 @@ const suppliersDbConfig = {
     bigIntAsNumber: true
 };
 
+// Authentication database configuration
+const authDbConfig = {
+    host: '127.0.0.1',
+    user: 'lechibang',
+    password: '1212',
+    database: 'users_db',
+    connectionLimit: 5,
+    bigIntAsNumber: true
+};
+
 // Create connection pools
 const pool = mariadb.createPool(dbConfig);
 const suppliersPool = mariadb.createPool(suppliersDbConfig);
+const authPool = mariadb.createPool(authDbConfig);
 
 // Helper function to convert BigInt values to numbers
 function convertBigIntToNumber(obj) {
@@ -60,16 +74,42 @@ app.use(express.urlencoded({
     extended: true
 })); // For form data
 
+// Session configuration
+app.use(session({
+    secret: 'inventoryapp-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+}));
+
+// Flash messages middleware
+app.use(flash());
+
+// Import and use auth middleware
+const { setUserLocals } = require('./middleware/auth');
+app.use(setUserLocals);
+
 // Set view engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+// ===============================================
+// IMPORT ROUTES
+// ===============================================
+const authRoutes = require('./routes/auth')(authPool, convertBigIntToNumber);
+app.use('/', authRoutes);
+
+// Import auth middleware for protecting routes
+const { isAuthenticated, isAdmin, isStaffOrAdmin } = require('./middleware/auth');
 
 // ===============================================
 // ROUTES
 // ===============================================
 
 // Home page - display all phone specs
-app.get('/', async (req, res) => {
+app.get('/', isAuthenticated, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         const page = parseInt(req.query.page) || 1;
@@ -119,7 +159,7 @@ app.get('/', async (req, res) => {
 });
 
 // Phone details page
-app.get('/phone/:id', async (req, res) => {
+app.get('/phone/:id', isAuthenticated, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         const phonesResult = await conn.query('SELECT * FROM phone_specs WHERE id = ?', [req.params.id]);
@@ -149,7 +189,7 @@ app.get('/phone/:id', async (req, res) => {
 // ===============================================
 
 // Suppliers page - display all suppliers
-app.get('/suppliers', async (req, res) => {
+app.get('/suppliers', isAuthenticated, async (req, res) => {
     try {
         const conn = await suppliersPool.getConnection();
         const page = parseInt(req.query.page) || 1;
@@ -197,7 +237,7 @@ app.get('/suppliers', async (req, res) => {
 });
 
 // Supplier details page
-app.get('/supplier/:id', async (req, res) => {
+app.get('/supplier/:id', isAuthenticated, async (req, res) => {
     try {
         const conn = await suppliersPool.getConnection();
         const suppliersResult = await conn.query('SELECT * FROM suppliers WHERE id = ?', [req.params.id]);
@@ -228,7 +268,7 @@ app.get('/supplier/:id', async (req, res) => {
 // ===============================================
 
 // Add supplier form page
-app.get('/suppliers/add', (req, res) => {
+app.get('/suppliers/add', isStaffOrAdmin, (req, res) => {
     res.render('supplier-form', {
         supplier: null,
         action: 'add',
@@ -237,7 +277,7 @@ app.get('/suppliers/add', (req, res) => {
 });
 
 // Edit supplier form page
-app.get('/suppliers/edit/:id', async (req, res) => {
+app.get('/suppliers/edit/:id', isStaffOrAdmin, async (req, res) => {
     try {
         const conn = await suppliersPool.getConnection();
         const suppliersResult = await conn.query('SELECT * FROM suppliers WHERE id = ?', [req.params.id]);
@@ -264,7 +304,7 @@ app.get('/suppliers/edit/:id', async (req, res) => {
 });
 
 // Create new supplier (POST)
-app.post('/suppliers', async (req, res) => {
+app.post('/suppliers', isStaffOrAdmin, async (req, res) => {
     try {
         const {
             name,
@@ -397,7 +437,7 @@ app.post('/suppliers/:id/toggle-status', async (req, res) => {
 // ===============================================
 
 // Display form to receive new stock
-app.get('/inventory/receive', async (req, res) => {
+app.get('/inventory/receive', isStaffOrAdmin, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         const suppliersConn = await suppliersPool.getConnection();
@@ -425,7 +465,7 @@ app.get('/inventory/receive', async (req, res) => {
 });
 
 // Handle the form submission for receiving stock
-app.post('/inventory/receive', async (req, res) => {
+app.post('/inventory/receive', isStaffOrAdmin, async (req, res) => {
     const {
         phone_id,
         supplier_id,
@@ -464,7 +504,7 @@ app.post('/inventory/receive', async (req, res) => {
 });
 
 // Display form to sell stock
-app.get('/inventory/sell', async (req, res) => {
+app.get('/inventory/sell', isStaffOrAdmin, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         const phonesResult = await conn.query('SELECT id, sm_name, sm_inventory FROM phone_specs WHERE sm_inventory > 0 ORDER BY sm_name');
@@ -484,7 +524,7 @@ app.get('/inventory/sell', async (req, res) => {
 });
 
 // Handle the form submission for selling stock
-app.post('/inventory/sell', async (req, res) => {
+app.post('/inventory/sell', isStaffOrAdmin, async (req, res) => {
     const {
         phone_id,
         quantity,
@@ -527,7 +567,7 @@ app.post('/inventory/sell', async (req, res) => {
 });
 
 // Reports page -  display inventory log
-app.get('/reports', async (req, res) => {
+app.get('/reports', isAuthenticated, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         const suppliersConn = await suppliersPool.getConnection();
@@ -713,7 +753,7 @@ app.get('/api/suppliers/:id', async (req, res) => {
 // ===============================================
 
 // Add phone form page
-app.get('/phones/add', (req, res) => {
+app.get('/phones/add', isStaffOrAdmin, (req, res) => {
     res.render('phone-form', {
         phone: null,
         action: 'add',
@@ -722,7 +762,7 @@ app.get('/phones/add', (req, res) => {
 });
 
 // Edit phone form page
-app.get('/phones/edit/:id', async (req, res) => {
+app.get('/phones/edit/:id', isStaffOrAdmin, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         const phonesResult = await conn.query('SELECT * FROM phone_specs WHERE id = ?', [req.params.id]);
@@ -749,7 +789,7 @@ app.get('/phones/edit/:id', async (req, res) => {
 });
 
 // Create new phone (POST)
-app.post('/phones', async (req, res) => {
+app.post('/phones', isStaffOrAdmin, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         
@@ -849,7 +889,7 @@ app.post('/phones', async (req, res) => {
 });
 
 // Update phone (POST)
-app.post('/phones/:id', async (req, res) => {
+app.post('/phones/:id', isStaffOrAdmin, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         
@@ -951,7 +991,7 @@ app.post('/phones/:id', async (req, res) => {
 });
 
 // Delete phone (POST)
-app.post('/phones/:id/delete', async (req, res) => {
+app.post('/phones/:id/delete', isStaffOrAdmin, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         await conn.query('DELETE FROM phone_specs WHERE id = ?', [req.params.id]);
@@ -966,44 +1006,6 @@ app.post('/phones/:id/delete', async (req, res) => {
     }
 });
 
-
-// ===============================================
-// AUTHENTICATION ROUTES
-// ===============================================
-
-// Logout route
-app.get('/logout', (req, res) => {
-    // For now, just redirect to home with a logout message
-    // In a real app, you would destroy the session here
-    res.redirect('/?logout=true');
-});
-
-
-// ===============================================
-// ERROR HANDLING
-// ===============================================
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).render('error', {
-        error: 'Something went wrong!'
-    });
-});
-
-// 404 handler
-app.use((req, res) => {
-    res.status(404).render('error', {
-        error: 'Page not found'
-    });
-});
-
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
-
-// Graceful shutdown
-process.on('SIGINT', async () => {
-    console.log('Shutting down gracefully...');
-    await pool.end();
-    await suppliersPool.end();
-    process.exit(0);
+    console.log(`Server is running on http://localhost:${PORT}`);
 });

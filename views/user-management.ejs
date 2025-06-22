@@ -1,0 +1,105 @@
+<%- include('./partials/head') %>
+<%- include('./partials/navbar') %>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">User Management</h3>
+                </div>
+                <div class="card-body">
+                    <% if (messages && messages.error) { %>
+                        <div class="alert alert-danger" role="alert">
+                            <%= messages.error %>
+                        </div>
+                    <% } %>
+                    <% if (messages && messages.success) { %>
+                        <div class="alert alert-success" role="alert">
+                            <%= messages.success %>
+                        </div>
+                    <% } %>
+                    
+                    <div class="mb-4">
+                        <h4>Create New User</h4>
+                        <form action="/users" method="POST">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="username" name="username" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="password" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="password" name="password" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="role" class="form-label">Role</label>
+                                    <select class="form-select" id="role" name="role" required>
+                                        <option value="staff">Staff</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="fullName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="fullName" name="fullName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-success">Create User</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h4>Current Users</h4>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Full Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% users.forEach(user => { %>
+                                <tr>
+                                    <td><%= user.username %></td>
+                                    <td><%= user.fullName %></td>
+                                    <td><%= user.email %></td>
+                                    <td>
+                                        <span class="badge <%= user.role === 'admin' ? 'bg-danger' : 'bg-primary' %>">
+                                            <%= user.role %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="/users/edit/<%= user.id %>" class="btn btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form action="/users/<%= user.id %>/delete" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                                <button type="submit" class="btn btn-outline-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('./partials/footer') %>

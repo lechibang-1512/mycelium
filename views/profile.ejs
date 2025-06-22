@@ -1,0 +1,87 @@
+<%- include('./partials/head') %>
+<%- include('./partials/navbar') %>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">User Profile</h3>
+                </div>
+                <div class="card-body">
+                    <% if (messages && messages.success) { %>
+                        <div class="alert alert-success" role="alert">
+                            <%= messages.success %>
+                        </div>
+                    <% } %>
+                    
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-4 mb-md-0">
+                            <div class="p-3">
+                                <div class="avatar-circle bg-success mb-3">
+                                    <span class="avatar-text"><%= user.fullName.charAt(0).toUpperCase() %></span>
+                                </div>
+                                <h5 class="mb-1"><%= user.fullName %></h5>
+                                <span class="badge <%= user.role === 'admin' ? 'bg-danger' : 'bg-primary' %> mb-3">
+                                    <%= user.role %>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <form action="/profile/update" method="POST">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="username" value="<%= user.username %>" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="fullName" class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" id="fullName" name="fullName" value="<%= user.fullName %>" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" value="<%= user.email %>" required>
+                                </div>
+                                <hr>
+                                <h5>Change Password</h5>
+                                <div class="mb-3">
+                                    <label for="currentPassword" class="form-label">Current Password</label>
+                                    <input type="password" class="form-control" id="currentPassword" name="currentPassword">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="newPassword" class="form-label">New Password</label>
+                                    <input type="password" class="form-control" id="newPassword" name="newPassword">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword">
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-success">Update Profile</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+.avatar-text {
+    color: white;
+    font-size: 48px;
+    font-weight: bold;
+}
+</style>
+
+<%- include('./partials/footer') %>
