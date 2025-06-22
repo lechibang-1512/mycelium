@@ -9,8 +9,16 @@
         <div class="row">
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h1>Inventory Reports</h1>
-                    <span class="badge bg-info fs-6">Total Records: <%= total %></span>
+                    <h1><i class="fas fa-clipboard-list me-2"></i>Inventory Reports</h1>
+                    <div>
+                        <span class="badge bg-info fs-6 me-3">Total Records: <%= total %></span>
+                        <button class="btn btn-outline-success" onclick="exportToExcel()">
+                            <i class="fas fa-file-excel me-1"></i>Export Excel
+                        </button>
+                        <a href="/analytics" class="btn btn-primary ms-2">
+                            <i class="fas fa-chart-bar me-1"></i>View Analytics
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Filters -->
@@ -240,5 +248,90 @@
     </div>
 
     <%- include('partials/footer') %>
+
+    <script>
+        // Export to Excel functionality
+        function exportToExcel() {
+            // Create CSV content
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Log ID,Date & Time,Phone Manufacturer,Phone Model,Transaction Type,Quantity Changed,New Inventory Level,Supplier,Notes\n";
+            
+            <% reports.forEach(report => { %>
+                csvContent += "<%= report.log_id %>,";
+                csvContent += "<%= report.formatted_date ? report.formatted_date.replace(/,/g, ';') : 'N/A' %>,";
+                csvContent += "<%= (report.sm_maker || '').replace(/,/g, ';') %>,";
+                csvContent += "<%= (report.sm_name || '').replace(/,/g, ';') %>,";
+                csvContent += "<%= report.transaction_type %>,";
+                csvContent += "<%= report.quantity_changed %>,";
+                csvContent += "<%= report.new_inventory_level %>,";
+                csvContent += "<%= (report.supplier_name || report.supplier_id || 'N/A').toString().replace(/,/g, ';') %>,";
+                csvContent += "<%= (report.notes || '').replace(/,/g, ';').replace(/\n/g, ' ') %>\n";
+            <% }); %>
+            
+            // Create download link
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "inventory_reports_" + new Date().toISOString().split('T')[0] + ".csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Auto-refresh functionality
+        function toggleAutoRefresh() {
+            const button = document.getElementById('autoRefreshBtn');
+            if (button.classList.contains('btn-outline-secondary')) {
+                // Start auto-refresh
+                button.classList.remove('btn-outline-secondary');
+                button.classList.add('btn-success');
+                button.innerHTML = '<i class="fas fa-pause me-1"></i>Stop Auto-refresh';
+                
+                window.autoRefreshInterval = setInterval(() => {
+                    window.location.reload();
+                }, 30000); // Refresh every 30 seconds
+            } else {
+                // Stop auto-refresh
+                button.classList.remove('btn-success');
+                button.classList.add('btn-outline-secondary');
+                button.innerHTML = '<i class="fas fa-sync me-1"></i>Auto-refresh';
+                
+                if (window.autoRefreshInterval) {
+                    clearInterval(window.autoRefreshInterval);
+                }
+            }
+        }
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+E for export
+            if (e.ctrlKey && e.key === 'e') {
+                e.preventDefault();
+                exportToExcel();
+            }
+            
+            // Ctrl+R for refresh (prevent default and use our refresh)
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                window.location.reload();
+            }
+        });
+        
+        // Show keyboard shortcuts on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add tooltip to export button
+            const exportBtn = document.querySelector('[onclick="exportToExcel()"]');
+            if (exportBtn) {
+                exportBtn.setAttribute('title', 'Export to Excel (Ctrl+E)');
+                exportBtn.setAttribute('data-bs-toggle', 'tooltip');
+            }
+            
+            // Initialize Bootstrap tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
 </body>
 </html>

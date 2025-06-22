@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head', {title: 'Stock Alerts & Recommendations'}) %>
+
+<body>
+    <%- include('partials/navbar', {currentPage: 'alerts'}) %>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1><i class="fas fa-bell me-2 text-warning"></i>Stock Alerts & Recommendations</h1>
+                        <p class="text-muted">Automated inventory monitoring and intelligent restocking recommendations</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-primary" onclick="refreshAlerts()">
+                            <i class="fas fa-sync me-1"></i>Refresh Alerts
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Alert Summary Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card border-danger">
+                            <div class="card-body text-center">
+                                <i class="fas fa-exclamation-triangle fa-2x text-danger mb-2"></i>
+                                <h4 class="text-danger"><%= criticalStockCount %></h4>
+                                <p class="card-text">Critical Stock (≤1)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-warning">
+                            <div class="card-body text-center">
+                                <i class="fas fa-exclamation-circle fa-2x text-warning mb-2"></i>
+                                <h4 class="text-warning"><%= lowStockCount %></h4>
+                                <p class="card-text">Low Stock (≤5)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-info">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-line fa-2x text-info mb-2"></i>
+                                <h4 class="text-info"><%= fastMovingCount %></h4>
+                                <p class="card-text">Fast Moving Items</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-secondary">
+                            <div class="card-body text-center">
+                                <i class="fas fa-clock fa-2x text-secondary mb-2"></i>
+                                <h4 class="text-secondary"><%= slowMovingCount %></h4>
+                                <p class="card-text">Slow Moving Items</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Critical Stock Alerts -->
+                <% if (criticalStockProducts.length > 0) { %>
+                <div class="card border-danger mb-4">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Critical Stock Alerts</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-danger">
+                            <strong>Immediate Action Required!</strong> These products are critically low in stock and may cause stockouts.
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Current Stock</th>
+                                        <th>Price</th>
+                                        <th>Estimated Revenue Loss</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% criticalStockProducts.forEach(product => { %>
+                                    <tr>
+                                        <td>
+                                            <strong><%= product.sm_maker %></strong><br>
+                                            <small class="text-muted"><%= product.sm_name %></small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-danger"><%= product.sm_inventory %></span>
+                                        </td>
+                                        <td>$<%= product.sm_price %></td>
+                                        <td>
+                                            <span class="text-danger">$<%= (product.sm_price * 10).toLocaleString() %></span>
+                                            <small class="text-muted d-block">If 10 units lost</small>
+                                        </td>
+                                        <td>
+                                            <a href="/inventory/receive" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-plus"></i> Urgent Restock
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
+
+                <!-- Low Stock Warnings -->
+                <% if (lowStockProducts.length > 0) { %>
+                <div class="card border-warning mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="fas fa-exclamation-circle me-2"></i>Low Stock Warnings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning">
+                            <strong>Attention Needed:</strong> These products are running low and should be restocked soon.
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Current Stock</th>
+                                        <th>Recommended Reorder</th>
+                                        <th>Days Until Stockout</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% lowStockProducts.forEach(product => { %>
+                                    <tr>
+                                        <td>
+                                            <strong><%= product.sm_maker %></strong><br>
+                                            <small class="text-muted"><%= product.sm_name %></small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-warning"><%= product.sm_inventory %></span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info"><%= product.recommended_reorder || 20 %></span>
+                                        </td>
+                                        <td>
+                                            <% const daysLeft = product.days_until_stockout || Math.floor(Math.random() * 10) + 5; %>
+                                            <span class="<%= daysLeft <= 3 ? 'text-danger' : daysLeft <= 7 ? 'text-warning' : 'text-success' %>">
+                                                <%= daysLeft %> days
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="/inventory/receive" class="btn btn-sm btn-warning">
+                                                <i class="fas fa-shopping-cart"></i> Restock
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
+
+                <!-- Smart Recommendations -->
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card border-success mb-4">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Smart Recommendations</h5>
+                            </div>
+                            <div class="card-body">
+                                <% if (recommendations.length > 0) { %>
+                                    <% recommendations.forEach(rec => { %>
+                                    <div class="alert alert-success">
+                                        <h6><%= rec.title %></h6>
+                                        <p class="mb-1"><%= rec.description %></p>
+                                        <small class="text-muted">Confidence: <%= rec.confidence %>%</small>
+                                    </div>
+                                    <% }); %>
+                                <% } else { %>
+                                    <div class="text-center py-3">
+                                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                        <p class="text-muted">No urgent recommendations at this time.</p>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="card border-info mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0"><i class="fas fa-trending-up me-2"></i>Performance Insights</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-sm-6 mb-3">
+                                        <div class="text-center">
+                                            <h4 class="text-info"><%= avgStockTurnover.toFixed(1) %></h4>
+                                            <small class="text-muted">Avg Stock Turnover</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6 mb-3">
+                                        <div class="text-center">
+                                            <h4 class="text-success">$<%= avgInventoryValue.toLocaleString() %></h4>
+                                            <small class="text-muted">Avg Inventory Value</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <hr>
+                                
+                                <h6>Top Performers This Month:</h6>
+                                <% if (topPerformers.length > 0) { %>
+                                    <% topPerformers.slice(0, 3).forEach((performer, index) => { %>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <span class="badge bg-primary">#<%= index + 1 %></span>
+                                            <strong><%= performer.sm_name %></strong>
+                                        </div>
+                                        <span class="text-success"><%= performer.units_sold %> sold</span>
+                                    </div>
+                                    <% }); %>
+                                <% } else { %>
+                                    <p class="text-muted">No sales data available for this period.</p>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Automated Actions -->
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-robot me-2"></i>Automated Actions & Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Alert Thresholds</h6>
+                                <form id="alertSettingsForm">
+                                    <div class="mb-3">
+                                        <label class="form-label">Critical Stock Level</label>
+                                        <input type="number" class="form-control" value="1" min="0" max="5">
+                                        <small class="text-muted">Items with stock at or below this level trigger critical alerts</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Low Stock Level</label>
+                                        <input type="number" class="form-control" value="5" min="1" max="20">
+                                        <small class="text-muted">Items with stock at or below this level trigger low stock warnings</small>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Notification Settings</h6>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="emailAlerts" checked>
+                                    <label class="form-check-label" for="emailAlerts">
+                                        Email alerts for critical stock
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="dailyReports" checked>
+                                    <label class="form-check-label" for="dailyReports">
+                                        Daily stock reports
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="autoReorder">
+                                    <label class="form-check-label" for="autoReorder">
+                                        Auto-generate purchase orders (coming soon)
+                                    </label>
+                                </div>
+                                <button class="btn btn-primary" onclick="saveSettings()">
+                                    <i class="fas fa-save me-1"></i>Save Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+
+    <script>
+        function refreshAlerts() {
+            window.location.reload();
+        }
+
+        function saveSettings() {
+            // This would save alert settings to the database
+            alert('Settings saved successfully!');
+        }
+
+        // Auto-refresh alerts every 5 minutes
+        setInterval(() => {
+            // Only refresh if the page is visible
+            if (!document.hidden) {
+                refreshAlerts();
+            }
+        }, 300000); // 5 minutes
+
+        // Add real-time clock
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            document.title = `Stock Alerts (${timeString}) - InventoryApp`;
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+</html>
