@@ -289,12 +289,13 @@
 
     <script>
         function refreshAlerts() {
-            window.location.reload();
+            showInfo('Refreshing alerts...');
+            setTimeout(() => window.location.reload(), 1000);
         }
 
         function saveSettings() {
             // This would save alert settings to the database
-            alert('Settings saved successfully!');
+            showSuccess('Settings saved successfully!');
         }
 
         // Auto-refresh alerts every 5 minutes

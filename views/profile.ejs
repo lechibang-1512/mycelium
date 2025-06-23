@@ -29,6 +29,7 @@
                         </div>
                         <div class="col-md-8">
                             <form action="/profile/update" method="POST">
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                 <div class="mb-3">
                                     <label for="username" class="form-label">Username</label>
                                     <input type="text" class="form-control" id="username" value="<%= user.username %>" readonly>

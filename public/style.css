@@ -14,6 +14,54 @@ body {
     background-color: #f8f9fa;
 }
 
+/* Login Form Styles */
+.login-container {
+    margin-top: 5%;
+}
+
+.login-form .card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+}
+
+.login-form .card-header {
+    border: none;
+    padding: 1.25rem;
+}
+
+.login-form .input-group-text {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+}
+
+.login-form .form-control:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
+}
+
+.login-form .btn-success {
+    background: var(--success-gradient);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.login-form .btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+}
+
+.login-form .form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.login-form .invalid-feedback {
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+
 .phone-card, .supplier-card {
     border: none;
     border-radius: var(--border-radius);

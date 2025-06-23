@@ -34,6 +34,7 @@
         </a>
 
         <form method="POST" action="<%= action === 'add' ? '/suppliers' : '/suppliers/' + supplier.id %>">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <div class="row">
                 <!-- Basic Information -->
                 <div class="col-md-6">
@@ -184,7 +185,6 @@
 
     <%- include('partials/footer') %>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Form validation
         document.querySelector('form').addEventListener('submit', function(e) {
@@ -193,14 +193,14 @@
             
             if (!name) {
                 e.preventDefault();
-                alert('Company name is required');
+                showWarning('Company name is required');
                 document.getElementById('name').focus();
                 return;
             }
             
             if (!supplierId) {
                 e.preventDefault();
-                alert('Supplier ID is required');
+                showWarning('Supplier ID is required');
                 document.getElementById('supplier_id').focus();
                 return;
             }

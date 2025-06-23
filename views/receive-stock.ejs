@@ -44,6 +44,7 @@
                     </h3>
                     
                     <form action="/inventory/receive" method="POST">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <div class="mb-3">
                             <label for="phone_id" class="form-label">Phone Model *</label>
                             <select class="form-select" id="phone_id" name="phone_id" required>
@@ -95,11 +96,8 @@
 
     <%- include('partials/footer') %>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Form validation
-        // Note: The 'required' attribute on your form fields already provides basic browser-level validation.
-        // This script adds an extra layer of user-friendly alerts.
+        // Form validation with modern notifications
         document.querySelector('form').addEventListener('submit', function(e) {
             const phoneId = document.getElementById('phone_id').value;
             const supplierId = document.getElementById('supplier_id').value;
@@ -107,24 +105,27 @@
             
             if (!phoneId) {
                 e.preventDefault();
-                alert('Please select a phone model.');
+                showWarning('Please select a phone model.');
                 document.getElementById('phone_id').focus();
                 return;
             }
             
             if (!supplierId) {
                 e.preventDefault();
-                alert('Please select a supplier.');
+                showWarning('Please select a supplier.');
                 document.getElementById('supplier_id').focus();
                 return;
             }
             
             if (!quantity || quantity < 1) {
                 e.preventDefault();
-                alert('Please enter a valid quantity.');
+                showWarning('Please enter a valid quantity.');
                 document.getElementById('quantity').focus();
                 return;
             }
+
+            // Show success message on successful submission
+            showInfo('Processing stock receipt...');
         });
     </script>
 </body>

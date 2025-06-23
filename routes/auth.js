@@ -26,7 +26,7 @@ module.exports = (authPool, convertBigIntToNumber) => {
     // Login process
     router.post('/login', async (req, res) => {
         try {
-            const { username, password } = req.body;
+            const { username, password, rememberMe } = req.body;
             const conn = await authPool.getConnection();
             
             // Find user by username
@@ -52,6 +52,15 @@ module.exports = (authPool, convertBigIntToNumber) => {
             delete user.password;
             req.session.user = user;
             
+            // Set session expiration based on "Remember me" option
+            if (rememberMe) {
+                // If "Remember me" is checked, set session to expire in 30 days
+                req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
+            } else {
+                // Otherwise, use the default session expiration (usually browser close)
+                req.session.cookie.expires = false;
+            }
+            
             // Redirect to returnTo URL if it exists, otherwise to home
             const returnTo = req.session.returnTo || '/';
             delete req.session.returnTo;
@@ -68,6 +77,45 @@ module.exports = (authPool, convertBigIntToNumber) => {
     router.get('/logout', (req, res) => {
         req.session.destroy();
         res.redirect('/login?logout=true');
+    });
+
+    // Forgot password route
+    router.get('/forgot-password', (req, res) => {
+        res.render('forgot-password', {
+            messages: {
+                error: req.flash('error'),
+                success: req.flash('success')
+            }
+        });
+    });
+
+    // Process forgot password request
+    router.post('/forgot-password', async (req, res) => {
+        const { email } = req.body;
+        
+        try {
+            const conn = await authPool.getConnection();
+            const result = await conn.query('SELECT * FROM users WHERE email = ?', [email]);
+            conn.end();
+            
+            if (result.length === 0) {
+                req.flash('error', 'No user found with that email address');
+                return res.redirect('/forgot-password');
+            }
+            
+            // In a real application, you would:
+            // 1. Generate a reset token
+            // 2. Save it to the database with an expiration date
+            // 3. Send an email to the user with a reset link
+            
+            // For now, just show a success message
+            req.flash('success', 'If your email is registered in our system, you will receive password reset instructions shortly.');
+            res.redirect('/login');
+        } catch (err) {
+            console.error('Forgot password error:', err);
+            req.flash('error', 'An error occurred while processing your request');
+            res.redirect('/forgot-password');
+        }
     });
 
     // User profile page

@@ -1,43 +1,148 @@
 <%- include('./partials/head') %>
 
-<div class="container mt-5">
+<div class="container mt-5 login-container">
     <div class="row justify-content-center">
-        <div class="col-md-6">
+        <div class="col-md-6 login-form">
             <div class="card shadow">
                 <div class="card-header bg-success text-white">
                     <h3 class="mb-0">Login</h3>
                 </div>
                 <div class="card-body">
                     <% if (messages && messages.error) { %>
-                        <div class="alert alert-danger" role="alert">
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             <%= messages.error %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     <% } %>
                     <% if (messages && messages.success) { %>
-                        <div class="alert alert-success" role="alert">
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <%= messages.success %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     <% } %>
-                    <form action="/login" method="POST">
+                    <form id="loginForm" action="/login" method="POST" novalidate>
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="username" name="username" required>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                                <div class="invalid-feedback">Please enter your username.</div>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye" id="toggleIcon"></i>
+                                </button>
+                                <div class="invalid-feedback">Please enter your password.</div>
+                            </div>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe">
+                            <label class="form-check-label" for="rememberMe">Remember me</label>
                         </div>
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success">Login</button>
+                            <button type="submit" class="btn btn-success" id="loginBtn">
+                                <span id="loginBtnText">Login</span>
+                                <span id="loginBtnSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            </button>
                         </div>
                     </form>
                 </div>
                 <div class="card-footer text-center">
                     <p class="mb-0">Don't have an account? Contact an administrator.</p>
+                    <p class="mt-2"><a href="/forgot-password" class="text-decoration-none">Forgot your password?</a></p>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginBtnText = document.getElementById('loginBtnText');
+    const loginBtnSpinner = document.getElementById('loginBtnSpinner');
+    const togglePassword = document.getElementById('togglePassword');
+    const toggleIcon = document.getElementById('toggleIcon');
+
+    // Form validation
+    loginForm.addEventListener('submit', function(event) {
+        let isValid = true;
+        
+        // Validate username
+        if (!usernameInput.value.trim()) {
+            usernameInput.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            usernameInput.classList.remove('is-invalid');
+            usernameInput.classList.add('is-valid');
+        }
+        
+        // Validate password
+        if (!passwordInput.value) {
+            passwordInput.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            passwordInput.classList.remove('is-invalid');
+            passwordInput.classList.add('is-valid');
+        }
+        
+        if (!isValid) {
+            event.preventDefault();
+            return false;
+        }
+        
+        // Show loading state
+        loginBtnText.textContent = 'Logging in...';
+        loginBtnSpinner.classList.remove('d-none');
+        loginBtn.disabled = true;
+        
+        // Return true to allow form submission
+        return true;
+    });
+    
+    // Password visibility toggle
+    togglePassword.addEventListener('click', function() {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        toggleIcon.classList.toggle('fa-eye');
+        toggleIcon.classList.toggle('fa-eye-slash');
+    });
+    
+    // Add input validation on blur
+    usernameInput.addEventListener('blur', function() {
+        if (!this.value.trim()) {
+            this.classList.add('is-invalid');
+        } else {
+            this.classList.remove('is-invalid');
+        }
+    });
+    
+    passwordInput.addEventListener('blur', function() {
+        if (!this.value) {
+            this.classList.add('is-invalid');
+        } else {
+            this.classList.remove('is-invalid');
+        }
+    });
+    
+    // Clear validation classes on focus
+    usernameInput.addEventListener('focus', function() {
+        this.classList.remove('is-invalid');
+    });
+    
+    passwordInput.addEventListener('focus', function() {
+        this.classList.remove('is-invalid');
+    });
+});
+</script>
 
 <%- include('./partials/footer') %>

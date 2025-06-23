@@ -300,40 +300,49 @@
 
     <%- include('partials/footer') %>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function toggleStatus(supplierId) {
-            if (confirm('Are you sure you want to change the supplier status?')) {
-                fetch(`/suppliers/${supplierId}/toggle-status`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Error updating status: ' + (data.error || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error updating status. Please try again.');
-                });
-            }
+            confirmDialog(
+                'Change Supplier Status',
+                'Are you sure you want to change the supplier status?',
+                function() {
+                    fetch(`/suppliers/${supplierId}/toggle-status`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-Token': '<%= csrfToken %>'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showSuccess('Supplier status updated successfully!');
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            showError('Error updating status: ' + (data.error || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showError('Error updating status. Please try again.');
+                    });
+                }
+            );
         }
 
         function deleteSupplier(supplierId) {
-            if (confirm('Are you sure you want to delete this supplier? This action cannot be undone.')) {
-                // Create a form and submit it
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `/suppliers/${supplierId}/delete`;
-                document.body.appendChild(form);
-                form.submit();
-            }
+            confirmDialog(
+                'Delete Supplier',
+                'Are you sure you want to delete this supplier? This action cannot be undone.',
+                function() {
+                    // Create a form and submit it
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `/suppliers/${supplierId}/delete`;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            );
         }
     </script>
 </body>

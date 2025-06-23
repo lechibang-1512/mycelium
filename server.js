@@ -5,6 +5,8 @@ const { format, isValid, parseISO } = require('date-fns');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const flash = require('connect-flash');
+const csrf = require('csurf');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -88,6 +90,17 @@ app.use(session({
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));
+
+// Cookie parser middleware (required for CSRF)
+app.use(cookieParser());
+
+// CSRF protection middleware
+const csrfProtection = csrf({ cookie: true });
+app.use(csrfProtection);
+app.use((req, res, next) => {
+    res.locals.csrfToken = req.csrfToken();
+    next();
+});
 
 // Flash messages middleware
 app.use(flash());
