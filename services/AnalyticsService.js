@@ -81,9 +81,11 @@ class AnalyticsService {
             const totalRevenue = revenueData.total_revenue || 0;
             const totalUnitsSold = unitsSoldData.units_sold || 0;
             const previousRevenue = previousPeriodData.previous_revenue || 0;
+            const previousUnitsSold = previousPeriodData.previous_units || 0;
 
             // Calculate derived metrics
-            const averageSaleValue = totalUnitsSold > 0 ? totalRevenue / totalUnitsSold : 0;
+            const averageOrderValue = totalUnitsSold > 0 ? totalRevenue / totalUnitsSold : 0;
+            const previousAverageOrderValue = previousUnitsSold > 0 ? previousRevenue / previousUnitsSold : 0;
             const growthRate = previousRevenue > 0 ? ((totalRevenue - previousRevenue) / previousRevenue) * 100 : 0;
             const inventoryTurnover = stockTurnoverData.average_turnover || 0;
             const profitMargin = profitabilityData.profit_margin || 0;
@@ -96,6 +98,10 @@ class AnalyticsService {
                 lowStockCount: lowStockData.length,
                 lowStockProducts: lowStockData,
                 
+                // Previous period metrics
+                previousRevenue: parseFloat(previousRevenue).toFixed(2),
+                previousUnitsSold: previousUnitsSold,
+                
                 // Chart data
                 salesTrendData: this.formatSalesTrendData(salesTrendData),
                 productPerformanceData: this.formatProductPerformanceData(topProductsData),
@@ -104,9 +110,13 @@ class AnalyticsService {
                 
                 // Product data
                 topSellingProducts: topProductsData,
+                topPerformingProducts: topProductsData, // Alias for compatibility
+                brandPerformance: marketTrendsData, // Use market trends data for brand performance
                 
                 // Calculated metrics
-                averageSaleValue: parseFloat(averageSaleValue).toFixed(2),
+                averageOrderValue: parseFloat(averageOrderValue).toFixed(2),
+                previousAverageOrderValue: parseFloat(previousAverageOrderValue).toFixed(2),
+                averageSaleValue: parseFloat(averageOrderValue).toFixed(2), // Alias for compatibility
                 bestSellingDay: bestDayData.length > 0 ? bestDayData[0].day_name : 'N/A',
                 growthRate: parseFloat(growthRate).toFixed(2),
                 inventoryTurnover: parseFloat(inventoryTurnover).toFixed(2),
@@ -283,7 +293,9 @@ class AnalyticsService {
      */
     async getPreviousPeriodData(conn, period) {
         const query = `
-            SELECT COALESCE(SUM(ps.sm_price * ABS(il.quantity_changed)), 0) as previous_revenue
+            SELECT 
+                COALESCE(SUM(ps.sm_price * ABS(il.quantity_changed)), 0) as previous_revenue,
+                COALESCE(SUM(ABS(il.quantity_changed)), 0) as previous_units
             FROM inventory_log il
             JOIN phone_specs ps ON il.phone_id = ps.id
             WHERE il.transaction_type = 'outgoing' 
@@ -633,16 +645,66 @@ class AnalyticsService {
     }
 
     /**
-     * Format sales trend data for Chart.js
+     * Format sales trend data for tables (not charts)
      */
     formatSalesTrendData(salesTrendRaw) {
+        if (!salesTrendRaw || !Array.isArray(salesTrendRaw) || salesTrendRaw.length === 0) {
+            return {
+                labels: [],
+                revenue: [],
+                units: []
+            };
+        }
+
         return {
             labels: salesTrendRaw.map(item => {
-                const date = new Date(item.sale_date);
-                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                try {
+                    // Handle both string and Date objects, with better error handling
+                    let date;
+                    
+                    if (!item.sale_date) {
+                        console.warn('Missing sale_date in item:', item);
+                        return 'Unknown Date';
+                    }
+                    
+                    if (typeof item.sale_date === 'string') {
+                        // Try to parse the string date
+                        date = new Date(item.sale_date);
+                    } else if (item.sale_date instanceof Date) {
+                        date = item.sale_date;
+                    } else if (typeof item.sale_date === 'object' && item.sale_date !== null) {
+                        // Handle case where item.sale_date might be an empty object {}
+                        console.warn('Invalid date object format:', item.sale_date);
+                        return 'Invalid Date';
+                    } else {
+                        console.warn('Invalid date format:', typeof item.sale_date, item.sale_date);
+                        return 'Unknown Date';
+                    }
+                    
+                    // Check if the date is valid
+                    if (!date || isNaN(date.getTime())) {
+                        console.warn('Invalid date value after parsing:', item.sale_date, '-> parsed as:', date);
+                        return 'Invalid Date';
+                    }
+                    
+                    return date.toLocaleDateString('en-US', { 
+                        year: 'numeric',
+                        month: 'short', 
+                        day: 'numeric' 
+                    });
+                } catch (error) {
+                    console.error('Date formatting error:', error, 'for item:', item);
+                    return 'Invalid Date';
+                }
             }),
-            revenue: salesTrendRaw.map(item => item.daily_revenue),
-            units: salesTrendRaw.map(item => item.daily_units)
+            revenue: salesTrendRaw.map(item => {
+                const revenue = parseFloat(item.daily_revenue);
+                return isNaN(revenue) ? 0 : revenue;
+            }),
+            units: salesTrendRaw.map(item => {
+                const units = parseInt(item.daily_units);
+                return isNaN(units) ? 0 : units;
+            })
         };
     }
 
@@ -660,14 +722,30 @@ class AnalyticsService {
      * Format inventory status data for Chart.js
      */
     formatInventoryStatusData(inventoryStatus) {
+        if (!inventoryStatus) {
+            return {
+                labels: ['In Stock', 'Low Stock', 'Out of Stock'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            };
+        }
+
         return {
             labels: ['In Stock', 'Low Stock', 'Out of Stock'],
-            values: [
-                inventoryStatus.in_stock || 0,
-                inventoryStatus.low_stock || 0,
-                inventoryStatus.out_of_stock || 0
-            ],
-            colors: ['#28a745', '#ffc107', '#dc3545']
+            datasets: [{
+                data: [
+                    parseInt(inventoryStatus.in_stock) || 0,
+                    parseInt(inventoryStatus.low_stock) || 0,
+                    parseInt(inventoryStatus.out_of_stock) || 0
+                ],
+                backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
         };
     }
 
@@ -1373,26 +1451,26 @@ class AnalyticsService {
 
         return {
             processors: {
-                labels: technologyData.processors.map(item => item.processor),
+                labels: (technologyData.processors || []).map(item => item.processor || 'Unknown'),
                 datasets: [{
                     label: 'Product Count',
-                    data: technologyData.processors.map(item => item.product_count),
+                    data: (technologyData.processors || []).map(item => parseInt(item.product_count) || 0),
                     backgroundColor: colors
                 }]
             },
             operating_systems: {
-                labels: technologyData.operating_systems.map(item => item.operating_system),
+                labels: (technologyData.operating_systems || []).map(item => item.operating_system || 'Unknown'),
                 datasets: [{
                     label: 'Product Count',
-                    data: technologyData.operating_systems.map(item => item.product_count),
+                    data: (technologyData.operating_systems || []).map(item => parseInt(item.product_count) || 0),
                     backgroundColor: colors
                 }]
             },
             ram_distribution: {
-                labels: technologyData.ram_distribution.map(item => item.ram),
+                labels: (technologyData.ram_distribution || []).map(item => item.ram || 'Unknown'),
                 datasets: [{
                     label: 'Product Count',
-                    data: technologyData.ram_distribution.map(item => item.product_count),
+                    data: (technologyData.ram_distribution || []).map(item => parseInt(item.product_count) || 0),
                     backgroundColor: colors
                 }]
             }

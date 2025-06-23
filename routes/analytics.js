@@ -7,7 +7,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
     
     const analyticsService = new AnalyticsService(pool, suppliersPool, convertBigIntToNumber);
     
-    // Analytics dashboard with comprehensive reporting
+    // Analytics dashboard with comprehensive table-based reporting
     router.get('/analytics', isAuthenticated, async (req, res) => {
         try {
             const period = parseInt(req.query.period) || 30; // Default to 30 days
@@ -27,15 +27,9 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 ...analyticsData,
                 insights,
                 
-                // Convert chart data to JSON strings for the view
-                salesTrendData: JSON.stringify(analyticsData.salesTrendData),
-                inventoryStatusData: JSON.stringify(analyticsData.inventoryStatusData),
-                marketTrendsChartData: JSON.stringify(analyticsData.marketTrendsChartData || {}),
-                seasonalChartData: JSON.stringify(analyticsData.seasonalChartData || {}),
-                lifecycleChartData: JSON.stringify(analyticsData.lifecycleChartData || {}),
-                technologyTrendsChartData: JSON.stringify(analyticsData.technologyTrendsChartData || {}),
-                pricingAnalyticsChartData: JSON.stringify(analyticsData.pricingAnalyticsChartData || {}),
-                transactionPatternsChartData: JSON.stringify(analyticsData.transactionPatternsChartData || {}),
+                // Pass data directly for table rendering (no JSON.stringify needed)
+                salesTrendData: analyticsData.salesTrendData || { labels: [], revenue: [], units: [] },
+                inventoryStatusData: analyticsData.inventoryStatusData || { datasets: [{ data: [0, 0, 0] }] },
                 
                 title: 'Analytics Dashboard',
                 currentPage: 'analytics',
