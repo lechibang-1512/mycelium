@@ -56,6 +56,11 @@ function convertBigIntToNumber(obj) {
         return obj.map(convertBigIntToNumber);
     }
 
+    // Handle Date objects specifically to preserve them
+    if (obj instanceof Date) {
+        return obj;
+    }
+
     if (typeof obj === 'object') {
         const converted = {};
         for (const [key, value] of Object.entries(obj)) {

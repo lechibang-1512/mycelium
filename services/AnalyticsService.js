@@ -673,9 +673,18 @@ class AnalyticsService {
                     } else if (item.sale_date instanceof Date) {
                         date = item.sale_date;
                     } else if (typeof item.sale_date === 'object' && item.sale_date !== null) {
-                        // Handle case where item.sale_date might be an empty object {}
-                        console.warn('Invalid date object format:', item.sale_date);
-                        return 'Invalid Date';
+                        // Handle case where item.sale_date might be an empty object {} or have date properties
+                        if (Object.keys(item.sale_date).length === 0) {
+                            console.warn('Empty date object format:', item.sale_date);
+                            return 'Invalid Date';
+                        }
+                        // Try to convert object to string and parse as date
+                        const dateStr = item.sale_date.toString();
+                        date = new Date(dateStr);
+                        if (isNaN(date.getTime())) {
+                            console.warn('Invalid date object format:', item.sale_date);
+                            return 'Invalid Date';
+                        }
                     } else {
                         console.warn('Invalid date format:', typeof item.sale_date, item.sale_date);
                         return 'Unknown Date';
