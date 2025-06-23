@@ -10,31 +10,26 @@
         <div class="row mb-4">
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center">
-                    <h1><i class="fas fa-chart-bar me-2"></i>Analytics Dashboard</h1>
+                    <div>
+                        <h1 class="h3 mb-2 text-gray-800">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Analytics Dashboard
+                        </h1>
+                        <p class="text-muted">Comprehensive business intelligence and performance metrics</p>
+                    </div>
                     <div class="d-flex gap-2">
-                        <select class="form-select" id="periodSelector" onchange="changePeriod()" style="width: auto;">
-                            <option value="7" <%= selectedPeriod === 7 ? 'selected' : '' %>>Last 7 days</option>
-                            <option value="30" <%= selectedPeriod === 30 ? 'selected' : '' %>>Last 30 days</option>
-                            <option value="90" <%= selectedPeriod === 90 ? 'selected' : '' %>>Last 90 days</option>
-                            <option value="365" <%= selectedPeriod === 365 ? 'selected' : '' %>>Last year</option>
-                        </select>
                         <button class="btn btn-outline-primary" onclick="refreshData()">
-                            <i class="fas fa-sync-alt"></i> Refresh
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Refresh
                         </button>
-                        <% if (isStaffOrAdmin) { %>
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-download"></i> Export
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#" onclick="exportData('json')"><i class="fas fa-file-code me-2"></i>JSON</a></li>
-                                <li><a class="dropdown-item" href="#" onclick="exportData('csv')"><i class="fas fa-file-csv me-2"></i>CSV</a></li>
-                            </ul>
-                        </div>
-                        <button class="btn btn-outline-info" onclick="showForecast()">
-                            <i class="fas fa-crystal-ball"></i> Forecast
+                        <button class="btn btn-success" onclick="exportData('csv')">
+                            <i class="fas fa-download me-1"></i>
+                            Export CSV
                         </button>
-                        <% } %>
+                        <button class="btn btn-info" onclick="exportData('json')">
+                            <i class="fas fa-file-export me-1"></i>
+                            Export JSON
+                        </button>
                     </div>
                 </div>
             </div>
@@ -43,29 +38,28 @@
         <!-- Advanced Filters -->
         <div class="row mb-4">
             <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Advanced Filters</h6>
-                    </div>
+                <div class="card shadow-sm">
                     <div class="card-body">
-                        <div class="row g-3">
+                        <div class="row align-items-center">
                             <div class="col-md-3">
-                                <label for="categoryFilter" class="form-label">Category</label>
-                                <select class="form-select" id="categoryFilter" onchange="applyFilters()">
-                                    <option value="all">All Categories</option>
-                                    <% if (typeof categoryPerformance !== 'undefined' && categoryPerformance.length > 0) { %>
-                                        <% categoryPerformance.forEach(category => { %>
-                                        <option value="<%= category.category %>"><%= category.category %></option>
-                                        <% }); %>
-                                    <% } %>
+                                <label for="periodSelector" class="form-label">Time Period</label>
+                                <select class="form-select" id="periodSelector" onchange="changePeriod()">
+                                    <option value="7" <%= filters.period === 7 ? 'selected' : '' %>>Last 7 Days</option>
+                                    <option value="30" <%= filters.period === 30 ? 'selected' : '' %>>Last 30 Days</option>
+                                    <option value="90" <%= filters.period === 90 ? 'selected' : '' %>>Last 90 Days</option>
+                                    <option value="365" <%= filters.period === 365 ? 'selected' : '' %>>Last Year</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label for="comparisonToggle" class="form-label">Comparison</label>
-                                <div class="form-check form-switch mt-2">
-                                    <input class="form-check-input" type="checkbox" id="comparisonToggle" onchange="toggleComparison()">
-                                    <label class="form-check-label" for="comparisonToggle">Period Comparison</label>
-                                </div>
+                                <label for="categoryFilter" class="form-label">Category</label>
+                                <select class="form-select" id="categoryFilter" onchange="applyFilters()">
+                                    <option value="all" <%= filters.category === 'all' ? 'selected' : '' %>>All Categories</option>
+                                    <% if (typeof categoryPerformance !== 'undefined' && categoryPerformance.length > 0) { %>
+                                        <% categoryPerformance.forEach(cat => { %>
+                                            <option value="<%= cat.category %>" <%= filters.category === cat.category ? 'selected' : '' %>><%= cat.category %></option>
+                                        <% }); %>
+                                    <% } %>
+                                </select>
                             </div>
                             <div class="col-md-3">
                                 <label for="metricSelector" class="form-label">Primary Metric</label>
@@ -73,16 +67,16 @@
                                     <option value="revenue">Revenue</option>
                                     <option value="units">Units Sold</option>
                                     <option value="profit">Profit Margin</option>
-                                    <option value="turnover">Stock Turnover</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label for="chartTypeSelector" class="form-label">Chart Type</label>
-                                <select class="form-select" id="chartTypeSelector" onchange="changeChartType()">
-                                    <option value="line">Line Chart</option>
-                                    <option value="bar">Bar Chart</option>
-                                    <option value="area">Area Chart</option>
-                                </select>
+                                <div class="form-check form-switch mt-4">
+                                    <input class="form-check-input" type="checkbox" id="comparisonToggle" 
+                                           <%= filters.comparison ? 'checked' : '' %> onchange="toggleComparison()">
+                                    <label class="form-check-label" for="comparisonToggle">
+                                        Compare with Previous Period
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -94,41 +88,51 @@
         <% if (typeof insights !== 'undefined' && insights.length > 0) { %>
         <div class="row mb-4">
             <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Key Insights</h6>
+                <div class="card border-left-info shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            Key Insights & Recommendations
+                        </h5>
                     </div>
                     <div class="card-body">
-                        <% insights.forEach(insight => { %>
-                        <div class="alert alert-<%= insight.type === 'success' ? 'success' : (insight.type === 'warning' ? 'warning' : 'info') %> mb-2" role="alert">
-                            <strong><%= insight.title %>:</strong> <%= insight.message %>
+                        <div class="row">
+                            <% insights.forEach((insight, index) => { %>
+                                <div class="col-md-6 mb-3">
+                                    <div class="insight-item">
+                                        <h6 class="text-primary"><%= insight.title %></h6>
+                                        <p class="mb-1"><%= insight.description %></p>
+                                        <small class="text-muted">
+                                            Confidence: <%= insight.confidence %>%
+                                        </small>
+                                    </div>
+                                </div>
+                            <% }); %>
                         </div>
-                        <% }); %>
                     </div>
                 </div>
             </div>
         </div>
         <% } %>
 
-        <!-- Key Metrics Cards -->
+        <!-- Real-Time Performance Cards -->
         <div class="row mb-4">
             <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card border-left-primary shadow-sm">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
                                 <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                    Total Revenue (<%= selectedPeriod %> days)
+                                    Total Revenue (<%= filters.period %> days)
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
                                     $<%= totalRevenue %>
+                                    <% if (typeof growthRate !== 'undefined' && parseFloat(growthRate) !== 0) { %>
+                                        <small class="<%= parseFloat(growthRate) > 0 ? 'text-success' : 'text-danger' %>">
+                                            (<%= parseFloat(growthRate) > 0 ? '+' : '' %><%= growthRate %>%)
+                                        </small>
+                                    <% } %>
                                 </div>
-                                <% if (parseFloat(growthRate) !== 0) { %>
-                                <small class="<%= parseFloat(growthRate) >= 0 ? 'text-success' : 'text-danger' %>">
-                                    <i class="fas fa-arrow-<%= parseFloat(growthRate) >= 0 ? 'up' : 'down' %>"></i>
-                                    <%= Math.abs(parseFloat(growthRate)).toFixed(1) %>% vs previous period
-                                </small>
-                                <% } %>
                             </div>
                             <div class="col-auto">
                                 <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
@@ -139,7 +143,7 @@
             </div>
 
             <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-success shadow h-100 py-2">
+                <div class="card border-left-success shadow-sm">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
@@ -148,10 +152,12 @@
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
                                     <%= totalUnitsSold %>
+                                    <% if (typeof realTimePerformance !== 'undefined' && realTimePerformance.today) { %>
+                                        <small class="text-info">
+                                            (<%= realTimePerformance.today.today_units_sold %> today)
+                                        </small>
+                                    <% } %>
                                 </div>
-                                <small class="text-muted">
-                                    Avg: $<%= averageSaleValue %> per unit
-                                </small>
                             </div>
                             <div class="col-auto">
                                 <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
@@ -162,7 +168,7 @@
             </div>
 
             <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-info shadow h-100 py-2">
+                <div class="card border-left-info shadow-sm">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
@@ -171,13 +177,15 @@
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
                                     <%= totalProducts %>
+                                    <% if (typeof advancedInventoryMetrics !== 'undefined') { %>
+                                        <small class="text-muted">
+                                            (Avg: $<%= parseFloat(advancedInventoryMetrics.avg_product_price || 0).toFixed(2) %>)
+                                        </small>
+                                    <% } %>
                                 </div>
-                                <small class="text-muted">
-                                    Inventory value: $<%= inventoryValue.total_inventory_value ? parseFloat(inventoryValue.total_inventory_value).toFixed(2) : '0.00' %>
-                                </small>
                             </div>
                             <div class="col-auto">
-                                <i class="fas fa-mobile-alt fa-2x text-gray-300"></i>
+                                <i class="fas fa-boxes fa-2x text-gray-300"></i>
                             </div>
                         </div>
                     </div>
@@ -185,7 +193,7 @@
             </div>
 
             <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card border-left-warning shadow-sm">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
@@ -194,10 +202,12 @@
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
                                     <%= lowStockCount %>
+                                    <% if (typeof advancedInventoryMetrics !== 'undefined') { %>
+                                        <small class="text-danger">
+                                            (<%= advancedInventoryMetrics.out_of_stock_count %> out of stock)
+                                        </small>
+                                    <% } %>
                                 </div>
-                                <small class="text-muted">
-                                    Best selling day: <%= bestSellingDay %>
-                                </small>
                             </div>
                             <div class="col-auto">
                                 <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
@@ -209,31 +219,21 @@
         </div>
 
         <!-- Enhanced Metrics Row -->
-        <% if (typeof profitMargin !== 'undefined' && typeof inventoryTurnover !== 'undefined') { %>
         <div class="row mb-4">
             <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-success shadow h-100 py-2">
+                <div class="card border-left-secondary shadow-sm">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                    Profit Margin
+                                <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+                                    Average Sale Value
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    <%= profitMargin %>%
+                                    $<%= averageSaleValue %>
                                 </div>
-                                <small class="text-muted">
-                                    <% if (parseFloat(profitMargin) >= 30) { %>
-                                        <i class="fas fa-thumbs-up text-success"></i> Excellent
-                                    <% } else if (parseFloat(profitMargin) >= 20) { %>
-                                        <i class="fas fa-check text-warning"></i> Good
-                                    <% } else { %>
-                                        <i class="fas fa-exclamation text-danger"></i> Needs Improvement
-                                    <% } %>
-                                </small>
                             </div>
                             <div class="col-auto">
-                                <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                                <i class="fas fa-calculator fa-2x text-gray-300"></i>
                             </div>
                         </div>
                     </div>
@@ -241,25 +241,36 @@
             </div>
 
             <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-info shadow h-100 py-2">
+                <div class="card border-left-dark shadow-sm">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">
+                                    Profit Margin
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    <%= profitMargin %>%
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-success shadow-sm">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                     Inventory Turnover
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
                                     <%= inventoryTurnover %>x
                                 </div>
-                                <small class="text-muted">
-                                    <% if (parseFloat(inventoryTurnover) >= 2) { %>
-                                        <i class="fas fa-arrow-up text-success"></i> High Turnover
-                                    <% } else if (parseFloat(inventoryTurnover) >= 1) { %>
-                                        <i class="fas fa-minus text-warning"></i> Average
-                                    <% } else { %>
-                                        <i class="fas fa-arrow-down text-danger"></i> Low Turnover
-                                    <% } %>
-                                </small>
                             </div>
                             <div class="col-auto">
                                 <i class="fas fa-sync-alt fa-2x text-gray-300"></i>
@@ -270,66 +281,42 @@
             </div>
 
             <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-secondary shadow h-100 py-2">
+                <div class="card border-left-info shadow-sm">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
-                                    Sales Velocity
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                    Inventory Value
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    <%= (totalUnitsSold / selectedPeriod).toFixed(1) %>
+                                    <% if (typeof inventoryValue !== 'undefined') { %>
+                                        $<%= parseFloat(inventoryValue.total_inventory_value || 0).toFixed(2) %>
+                                    <% } else { %>
+                                        $0.00
+                                    <% } %>
                                 </div>
-                                <small class="text-muted">units per day</small>
                             </div>
                             <div class="col-auto">
-                                <i class="fas fa-tachometer-alt fa-2x text-gray-300"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-dark shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">
-                                    Avg Order Value
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    $<%= averageSaleValue %>
-                                </div>
-                                <small class="text-muted">per transaction</small>
-                            </div>
-                            <div class="col-auto">
-                                <i class="fas fa-receipt fa-2x text-gray-300"></i>
+                                <i class="fas fa-warehouse fa-2x text-gray-300"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <% } %>
 
-        <!-- Charts Row -->
+        <!-- Charts Row 1 -->
         <div class="row mb-4">
             <!-- Sales Trend Chart -->
             <div class="col-xl-8 col-lg-7">
-                <div class="card shadow mb-4">
+                <div class="card shadow-sm">
                     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-primary">Sales Trend</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">Sales Trend Analysis</h6>
                         <div class="dropdown no-arrow">
-                            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
-                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                                aria-labelledby="dropdownMenuLink">
-                                <div class="dropdown-header">Chart Options:</div>
-                                <a class="dropdown-item" href="#" onclick="toggleChartType()">Toggle Revenue/Units</a>
-                            </div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="toggleChartType()">
+                                <i class="fas fa-chart-line me-1"></i>
+                                Toggle Revenue/Units
+                            </button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -342,40 +329,221 @@
 
             <!-- Inventory Status Pie Chart -->
             <div class="col-xl-4 col-lg-5">
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <div class="card shadow-sm">
+                    <div class="card-header py-3">
                         <h6 class="m-0 font-weight-bold text-primary">Inventory Status</h6>
                     </div>
                     <div class="card-body">
                         <div class="chart-pie pt-4 pb-2">
                             <canvas id="inventoryStatusChart"></canvas>
                         </div>
-                        <div class="mt-4 text-center small">
-                            <span class="mr-2">
-                                <i class="fas fa-circle text-success"></i> In Stock
-                            </span>
-                            <span class="mr-2">
-                                <i class="fas fa-circle text-warning"></i> Low Stock
-                            </span>
-                            <span class="mr-2">
-                                <i class="fas fa-circle text-danger"></i> Out of Stock
-                            </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="row mb-4">
+            <!-- Market Trends Chart -->
+            <div class="col-xl-6 col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Brand Performance</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-bar">
+                            <canvas id="marketTrendsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Lifecycle Chart -->
+            <div class="col-xl-6 col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Product Lifecycle Distribution</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-pie pt-4 pb-2">
+                            <canvas id="productLifecycleChart"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Product Performance Chart -->
+        <!-- Seasonal Analysis Chart -->
         <div class="row mb-4">
             <div class="col-12">
-                <div class="card shadow mb-4">
+                <div class="card shadow-sm">
                     <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Top Selling Products</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">Seasonal Performance Analysis</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-area">
+                            <canvas id="seasonalChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Analytics Sections -->
+        <!-- Technology Trends Row -->
+        <div class="row mb-4">
+            <!-- Processor Distribution -->
+            <div class="col-xl-4 col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Processor Distribution</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-pie pt-4 pb-2">
+                            <canvas id="processorChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RAM Distribution -->
+            <div class="col-xl-4 col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">RAM Distribution</h6>
                     </div>
                     <div class="card-body">
                         <div class="chart-bar">
-                            <canvas id="productPerformanceChart"></canvas>
+                            <canvas id="ramChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operating System Distribution -->
+            <div class="col-xl-4 col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Operating Systems</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-pie pt-4 pb-2">
+                            <canvas id="osChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing Analytics Row -->
+        <div class="row mb-4">
+            <!-- Price Range Performance -->
+            <div class="col-xl-6 col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Price Range Performance</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-bar">
+                            <canvas id="priceRangeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Brand Profitability -->
+            <div class="col-xl-6 col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Brand Revenue Analysis</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-bar">
+                            <canvas id="brandProfitabilityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction Patterns Row -->
+        <div class="row mb-4">
+            <!-- Hourly Transaction Patterns -->
+            <div class="col-xl-6 col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Hourly Transaction Patterns</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-area">
+                            <canvas id="hourlyPatternsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily Transaction Patterns -->
+            <div class="col-xl-6 col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Daily Transaction Patterns</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-bar">
+                            <canvas id="dailyPatternsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Efficiency Analysis -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Inventory Efficiency Analysis</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Brand</th>
+                                        <th>Product</th>
+                                        <th>Current Stock</th>
+                                        <th>Units Sold</th>
+                                        <th>Turnover Ratio</th>
+                                        <th>Days to Sell</th>
+                                        <th>Inventory Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (typeof inventoryEfficiency !== 'undefined' && inventoryEfficiency.length > 0) { %>
+                                        <% inventoryEfficiency.slice(0, 15).forEach(item => { %>
+                                            <tr>
+                                                <td><%= item.brand %></td>
+                                                <td><%= item.product_name %></td>
+                                                <td><%= item.current_stock %></td>
+                                                <td><%= item.units_sold %></td>
+                                                <td>
+                                                    <span class="badge <%= item.turnover_ratio > 1 ? 'bg-success' : item.turnover_ratio > 0.5 ? 'bg-warning' : 'bg-danger' %>">
+                                                        <%= item.turnover_ratio %>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <%= item.days_to_sell_current_stock ? item.days_to_sell_current_stock + ' days' : 'N/A' %>
+                                                </td>
+                                                <td>$<%= parseFloat(item.inventory_value || 0).toFixed(2) %></td>
+                                            </tr>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted">No efficiency data available</td>
+                                        </tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -386,39 +554,48 @@
         <div class="row">
             <!-- Top Selling Products Table -->
             <div class="col-xl-8 col-lg-7">
-                <div class="card shadow mb-4">
+                <div class="card shadow-sm">
                     <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Top Selling Products Details</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">Top Performing Products</h6>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-bordered">
+                            <table class="table table-bordered" width="100%" cellspacing="0">
                                 <thead>
                                     <tr>
                                         <th>Product</th>
+                                        <th>Brand</th>
                                         <th>Units Sold</th>
                                         <th>Revenue</th>
                                         <th>Current Stock</th>
-                                        <th>Price</th>
+                                        <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <% topSellingProducts.slice(0, 10).forEach(product => { %>
-                                    <tr>
-                                        <td>
-                                            <strong><%= product.sm_maker %></strong><br>
-                                            <small class="text-muted"><%= product.sm_name %></small>
-                                        </td>
-                                        <td><%= product.total_sold %></td>
-                                        <td>$<%= parseFloat(product.revenue).toFixed(2) %></td>
-                                        <td>
-                                            <span class="badge bg-<%= product.sm_inventory > 5 ? 'success' : (product.sm_inventory > 0 ? 'warning' : 'danger') %>">
-                                                <%= product.sm_inventory %>
-                                            </span>
-                                        </td>
-                                        <td>$<%= parseFloat(product.sm_price).toFixed(2) %></td>
-                                    </tr>
-                                    <% }); %>
+                                    <% if (typeof topSellingProducts !== 'undefined' && topSellingProducts.length > 0) { %>
+                                        <% topSellingProducts.forEach(product => { %>
+                                            <tr>
+                                                <td><a href="/phone/<%= product.id %>" class="text-decoration-none"><%= product.sm_name %></a></td>
+                                                <td><%= product.sm_maker %></td>
+                                                <td><%= product.total_sold %></td>
+                                                <td>$<%= parseFloat(product.revenue || 0).toFixed(2) %></td>
+                                                <td><%= product.sm_inventory %></td>
+                                                <td>
+                                                    <% if (product.sm_inventory <= 1) { %>
+                                                        <span class="badge bg-danger">Critical</span>
+                                                    <% } else if (product.sm_inventory <= 5) { %>
+                                                        <span class="badge bg-warning">Low Stock</span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-success">In Stock</span>
+                                                    <% } %>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">No product data available</td>
+                                        </tr>
+                                    <% } %>
                                 </tbody>
                             </table>
                         </div>
@@ -426,90 +603,76 @@
                 </div>
             </div>
 
-            <!-- Recent Activity & Alerts -->
+            <!-- Supplier Performance & Recent Activity -->
             <div class="col-xl-4 col-lg-5">
-                <!-- Low Stock Alerts -->
-                <% if (lowStockProducts.length > 0) { %>
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-warning">Low Stock Alerts</h6>
-                    </div>
-                    <div class="card-body">
-                        <% lowStockProducts.slice(0, 5).forEach(product => { %>
-                        <div class="d-flex align-items-center justify-content-between border-bottom py-2">
-                            <div>
-                                <div class="small font-weight-bold"><%= product.sm_maker %> <%= product.sm_name %></div>
-                                <div class="small text-muted">$<%= parseFloat(product.sm_price).toFixed(2) %></div>
-                            </div>
-                            <div class="text-right">
-                                <span class="badge bg-<%= product.sm_inventory === 0 ? 'danger' : 'warning' %>">
-                                    <%= product.sm_inventory %> left
-                                </span>
-                            </div>
-                        </div>
-                        <% }); %>
-                        <% if (lowStockProducts.length > 5) { %>
-                        <div class="text-center mt-3">
-                            <a href="/stock-alerts" class="btn btn-sm btn-warning">View All Alerts</a>
-                        </div>
-                        <% } %>
-                    </div>
-                </div>
-                <% } %>
-
-                <!-- Recent Transactions -->
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Recent Transactions</h6>
-                    </div>
-                    <div class="card-body">
-                        <% recentTransactions.slice(0, 5).forEach(transaction => { %>
-                        <div class="d-flex align-items-center justify-content-between border-bottom py-2">
-                            <div>
-                                <div class="small font-weight-bold">
-                                    <%= transaction.sm_maker %> <%= transaction.sm_name %>
-                                </div>
-                                <div class="small text-muted"><%= transaction.formatted_date %></div>
-                            </div>
-                            <div class="text-right">
-                                <span class="badge bg-<%= transaction.transaction_type === 'incoming' ? 'success' : (transaction.transaction_type === 'outgoing' ? 'danger' : 'warning') %>">
-                                    <%= transaction.transaction_type === 'incoming' ? '+' : (transaction.transaction_type === 'outgoing' ? '-' : '') %><%= Math.abs(transaction.quantity_changed) %>
-                                </span>
-                            </div>
-                        </div>
-                        <% }); %>
-                        <div class="text-center mt-3">
-                            <a href="/reports" class="btn btn-sm btn-primary">View All Transactions</a>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Supplier Performance -->
-                <% if (supplierPerformance.length > 0) { %>
-                <div class="card shadow mb-4">
+                <div class="card shadow-sm mb-4">
                     <div class="card-header py-3">
                         <h6 class="m-0 font-weight-bold text-primary">Top Suppliers</h6>
                     </div>
                     <div class="card-body">
-                        <% supplierPerformance.forEach(supplier => { %>
-                        <div class="d-flex align-items-center justify-content-between border-bottom py-2">
-                            <div>
-                                <div class="small font-weight-bold"><%= supplier.supplier_name %></div>
-                                <div class="small text-muted"><%= supplier.products_supplied %> products</div>
-                            </div>
-                            <div class="text-right">
-                                <span class="badge bg-info">
-                                    +<%= supplier.total_stock_received %> units
-                                </span>
-                            </div>
-                        </div>
-                        <% }); %>
-                        <div class="text-center mt-3">
-                            <a href="/suppliers" class="btn btn-sm btn-info">View All Suppliers</a>
-                        </div>
+                        <% if (typeof supplierPerformance !== 'undefined' && supplierPerformance.length > 0) { %>
+                            <% supplierPerformance.slice(0, 5).forEach(supplier => { %>
+                                <div class="supplier-item mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="font-weight-bold"><%= supplier.supplier_name %></span>
+                                        <span class="text-success">
+                                            <%= supplier.total_stock_received %> units
+                                        </span>
+                                    </div>
+                                    <div class="small text-muted">
+                                        Category: <%= supplier.category || 'N/A' %> | 
+                                        Transactions: <%= supplier.transaction_count %>
+                                        <% if (supplier.last_delivery_date) { %>
+                                            <br>Last delivery: <%= new Date(supplier.last_delivery_date).toLocaleDateString() %>
+                                        <% } %>
+                                    </div>
+                                </div>
+                                <hr>
+                            <% }); %>
+                        <% } else { %>
+                            <p class="text-muted">No supplier data available</p>
+                        <% } %>
                     </div>
                 </div>
-                <% } %>
+
+                <!-- Recent Activity -->
+                <div class="card shadow-sm">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Recent Transactions</h6>
+                    </div>
+                    <div class="card-body">
+                        <% if (typeof recentTransactions !== 'undefined' && recentTransactions.length > 0) { %>
+                            <% recentTransactions.slice(0, 8).forEach(transaction => { %>
+                                <div class="transaction-item mb-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="small">
+                                            <% if (transaction.transaction_type === 'outgoing') { %>
+                                                <i class="fas fa-arrow-down text-danger me-1"></i>
+                                                Sale: <%= transaction.sm_name %>
+                                            <% } else { %>
+                                                <i class="fas fa-arrow-up text-success me-1"></i>
+                                                Restock: <%= transaction.sm_name %>
+                                            <% } %>
+                                        </span>
+                                        <span class="small text-muted">
+                                            <%= Math.abs(transaction.quantity_changed) %> units
+                                        </span>
+                                    </div>
+                                    <div class="small text-muted">
+                                        <%= transaction.formatted_date %>
+                                        <% if (transaction.notes) { %>
+                                            - <%= transaction.notes.substring(0, 30) %><%= transaction.notes.length > 30 ? '...' : '' %>
+                                        <% } %>
+                                    </div>
+                                </div>
+                                <hr>
+                            <% }); %>
+                        <% } else { %>
+                            <p class="text-muted">No recent transactions</p>
+                        <% } %>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -517,13 +680,18 @@
     <%- include('partials/footer') %>
 
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.min.js"></script>
     
     <script>
         // Chart data from server
         const salesTrendData = <%- JSON.stringify(salesTrendData) %>;
-        const productPerformanceData = <%- JSON.stringify(productPerformanceData) %>;
         const inventoryStatusData = <%- JSON.stringify(inventoryStatusData) %>;
+        const marketTrendsChartData = <%- JSON.stringify(marketTrendsChartData || {}) %>;
+        const seasonalChartData = <%- JSON.stringify(seasonalChartData || {}) %>;
+        const lifecycleChartData = <%- JSON.stringify(lifecycleChartData || {}) %>;
+        const technologyTrendsChartData = <%- JSON.stringify(technologyTrendsChartData || {}) %>;
+        const pricingAnalyticsChartData = <%- JSON.stringify(pricingAnalyticsChartData || {}) %>;
+        const transactionPatternsChartData = <%- JSON.stringify(transactionPatternsChartData || {}) %>;
 
         let salesChart;
         let showRevenue = true;
@@ -534,22 +702,28 @@
             salesChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: salesTrendData.labels,
+                    labels: salesTrendData.labels || [],
                     datasets: [{
                         label: 'Revenue ($)',
-                        data: salesTrendData.revenue,
-                        borderColor: 'rgb(78, 115, 223)',
+                        data: salesTrendData.revenue || [],
+                        borderColor: 'rgba(78, 115, 223, 1)',
                         backgroundColor: 'rgba(78, 115, 223, 0.1)',
-                        borderWidth: 2,
+                        borderWidth: 3,
                         fill: true,
                         tension: 0.3
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            display: true
+                            display: true,
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Sales Performance Over Time'
                         }
                     },
                     scales: {
@@ -561,38 +735,62 @@
                                 }
                             }
                         }
+                    },
+                    elements: {
+                        point: {
+                            radius: 5,
+                            hoverRadius: 7
+                        }
                     }
-                });
+                }
+            });
         }
 
-        // Product Performance Chart
-        function initProductChart() {
-            const ctx = document.getElementById('productPerformanceChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: productPerformanceData.labels,
-                    datasets: [{
-                        label: 'Units Sold',
-                        data: productPerformanceData.values,
-                        backgroundColor: 'rgba(28, 200, 138, 0.8)',
-                        borderColor: 'rgba(28, 200, 138, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
+        // Market Trends Chart
+        function initMarketTrendsChart() {
+            if (marketTrendsChartData && marketTrendsChartData.labels) {
+                const ctx = document.getElementById('marketTrendsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: marketTrendsChartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Brand Performance Comparison'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value.toFixed(0);
+                                    }
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                beginAtZero: true,
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                            }
                         }
                     }
                 });
+            }
         }
 
         // Inventory Status Chart
@@ -600,29 +798,307 @@
             const ctx = document.getElementById('inventoryStatusChart').getContext('2d');
             new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    labels: inventoryStatusData.labels,
-                    datasets: [{
-                        data: inventoryStatusData.values,
-                        backgroundColor: inventoryStatusData.colors,
-                        borderWidth: 0
-                    }]
-                },
+                data: inventoryStatusData,
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            display: false
+                            position: 'bottom'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Stock Level Distribution'
                         }
                     }
                 }
             });
         }
 
+        // Seasonal Analysis Chart
+        function initSeasonalChart() {
+            if (seasonalChartData && seasonalChartData.labels) {
+                const ctx = document.getElementById('seasonalChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: seasonalChartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Monthly Performance Trends'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        },
+                        elements: {
+                            point: {
+                                radius: 4,
+                                hoverRadius: 6
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Product Lifecycle Chart
+        function initLifecycleChart() {
+            if (lifecycleChartData && lifecycleChartData.labels) {
+                const ctx = document.getElementById('productLifecycleChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: lifecycleChartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Product Lifecycle Stages'
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Technology Trends Charts
+        function initProcessorChart() {
+            if (technologyTrendsChartData && technologyTrendsChartData.processors && technologyTrendsChartData.processors.labels) {
+                const ctx = document.getElementById('processorChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: technologyTrendsChartData.processors,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Products by Processor Type'
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function initRamChart() {
+            if (technologyTrendsChartData && technologyTrendsChartData.ram_distribution && technologyTrendsChartData.ram_distribution.labels) {
+                const ctx = document.getElementById('ramChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: technologyTrendsChartData.ram_distribution,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Products by RAM Capacity'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function initOsChart() {
+            if (technologyTrendsChartData && technologyTrendsChartData.operating_systems && technologyTrendsChartData.operating_systems.labels) {
+                const ctx = document.getElementById('osChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: technologyTrendsChartData.operating_systems,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Products by Operating System'
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Pricing Analytics Charts
+        function initPriceRangeChart() {
+            if (pricingAnalyticsChartData && pricingAnalyticsChartData.price_ranges && pricingAnalyticsChartData.price_ranges.labels) {
+                const ctx = document.getElementById('priceRangeChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: pricingAnalyticsChartData.price_ranges,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Performance by Price Range'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                beginAtZero: true
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                beginAtZero: true,
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value.toFixed(0);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function initBrandProfitabilityChart() {
+            if (pricingAnalyticsChartData && pricingAnalyticsChartData.brand_profitability && pricingAnalyticsChartData.brand_profitability.labels) {
+                const ctx = document.getElementById('brandProfitabilityChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: pricingAnalyticsChartData.brand_profitability,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Revenue by Brand'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value.toFixed(0);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Transaction Patterns Charts
+        function initHourlyPatternsChart() {
+            if (transactionPatternsChartData && transactionPatternsChartData.hourly && transactionPatternsChartData.hourly.labels) {
+                const ctx = document.getElementById('hourlyPatternsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: transactionPatternsChartData.hourly,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Transaction Patterns by Hour'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        },
+                        elements: {
+                            point: {
+                                radius: 3,
+                                hoverRadius: 5
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function initDailyPatternsChart() {
+            if (transactionPatternsChartData && transactionPatternsChartData.daily && transactionPatternsChartData.daily.labels) {
+                const ctx = document.getElementById('dailyPatternsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: transactionPatternsChartData.daily,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Transaction Patterns by Day'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
         // Toggle chart data between revenue and units
         function toggleChartType() {
             showRevenue = !showRevenue;
-            const newData = showRevenue ? salesTrendData.revenue : salesTrendData.units;
+            const newData = showRevenue ? (salesTrendData.revenue || []) : (salesTrendData.units || []);
             const newLabel = showRevenue ? 'Revenue ($)' : 'Units Sold';
             
             salesChart.data.datasets[0].data = newData;
@@ -641,96 +1117,32 @@
             window.location.reload();
         }
 
-        // New enhanced functions
+        // Export functions
         function exportData(format) {
             const period = document.getElementById('periodSelector').value;
             const url = `/api/analytics/export?period=${period}&format=${format}`;
             
             if (format === 'csv') {
-                // Download CSV file
                 const link = document.createElement('a');
                 link.href = url;
-                link.download = `analytics-${period}days.csv`;
+                link.download = `analytics-${new Date().toISOString().split('T')[0]}.csv`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
             } else {
-                // Open JSON in new window
-                window.open(url, '_blank');
-            }
-        }
-
-        function showForecast() {
-            fetch(`/api/analytics/forecast?days=30`)
-                .then(response => response.json())
-                .then(data => {
-                    // Create forecast modal
-                    const modal = document.createElement('div');
-                    modal.className = 'modal fade';
-                    modal.innerHTML = `
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">30-Day Sales Forecast</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="alert alert-info">
-                                        <i class="fas fa-info-circle me-2"></i>
-                                        Forecast confidence: ${data.confidence}
-                                    </div>
-                                    <canvas id="forecastChart" width="400" height="200"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    document.body.appendChild(modal);
-                    
-                    // Show modal
-                    const bsModal = new bootstrap.Modal(modal);
-                    bsModal.show();
-                    
-                    // Create forecast chart
-                    setTimeout(() => {
-                        const ctx = document.getElementById('forecastChart').getContext('2d');
-                        new Chart(ctx, {
-                            type: 'line',
-                            data: {
-                                labels: data.forecast.map(item => item.date),
-                                datasets: [{
-                                    label: 'Predicted Revenue',
-                                    data: data.forecast.map(item => item.predicted_revenue),
-                                    borderColor: 'rgba(78, 115, 223, 1)',
-                                    backgroundColor: 'rgba(78, 115, 223, 0.1)',
-                                    fill: true,
-                                    tension: 0.3
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                scales: {
-                                    y: {
-                                        beginAtZero: true,
-                                        ticks: {
-                                            callback: function(value) {
-                                                return '$' + value.toFixed(2);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    }, 100);
-                    
-                    // Clean up when modal is closed
-                    modal.addEventListener('hidden.bs.modal', function() {
-                        document.body.removeChild(modal);
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        const dataStr = JSON.stringify(data, null, 2);
+                        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                        const exportFileDefaultName = `analytics-${new Date().toISOString().split('T')[0]}.json`;
+                        
+                        const linkElement = document.createElement('a');
+                        linkElement.setAttribute('href', dataUri);
+                        linkElement.setAttribute('download', exportFileDefaultName);
+                        linkElement.click();
                     });
-                })
-                .catch(error => {
-                    console.error('Forecast error:', error);
-                    alert('Failed to generate forecast. Please try again.');
-                });
+            }
         }
 
         function applyFilters() {
@@ -762,51 +1174,25 @@
             updateChartsForMetric(metric);
         }
 
-        function changeChartType() {
-            const chartType = document.getElementById('chartTypeSelector').value;
-            updateSalesChartType(chartType);
-        }
-
         function updateChartsForMetric(metric) {
             console.log('Updating charts for metric:', metric);
+            // Implementation for switching between different metrics
         }
-
-        function updateSalesChartType(type) {
-            if (salesChart) {
-                salesChart.config.type = type;
-                salesChart.update();
-            }
-        }
-
-        // Enhanced CSS classes
-        const additionalStyles = `
-            .border-left-secondary {
-                border-left: 0.25rem solid #858796 !important;
-            }
-            .border-left-dark {
-                border-left: 0.25rem solid #5a5c69 !important;
-            }
-            .font-weight-bold {
-                font-weight: 700 !important;
-            }
-            .text-gray-800 {
-                color: #5a5c69 !important;
-            }
-            .text-gray-300 {
-                color: #dddfeb !important;
-            }
-        `;
-        
-        // Add styles to document
-        const styleSheet = document.createElement('style');
-        styleSheet.textContent = additionalStyles;
-        document.head.appendChild(styleSheet);
 
         // Initialize charts when page loads
         document.addEventListener('DOMContentLoaded', function() {
             initSalesTrendChart();
-            initProductChart();
             initInventoryChart();
+            initMarketTrendsChart();
+            initSeasonalChart();
+            initLifecycleChart();
+            initProcessorChart();
+            initRamChart();
+            initOsChart();
+            initPriceRangeChart();
+            initBrandProfitabilityChart();
+            initHourlyPatternsChart();
+            initDailyPatternsChart();
 
             // Auto-refresh every 5 minutes
             setInterval(function() {
@@ -818,7 +1204,7 @@
         document.addEventListener('keydown', function(e) {
             // R key for refresh
             if (e.key === 'r' || e.key === 'R') {
-                if (!e.ctrlKey && !e.metaKey) { // Only if not Ctrl+R
+                if (!e.ctrlKey && !e.metaKey) {
                     e.preventDefault();
                     refreshData();
                 }
@@ -826,8 +1212,10 @@
             
             // T key to toggle chart
             if (e.key === 't' || e.key === 'T') {
-                e.preventDefault();
-                toggleChartType();
+                if (!e.ctrlKey && !e.metaKey) {
+                    e.preventDefault();
+                    toggleChartType();
+                }
             }
         });
     </script>
@@ -845,20 +1233,45 @@
         .border-left-warning {
             border-left: 0.25rem solid #f6c23e !important;
         }
+        .border-left-secondary {
+            border-left: 0.25rem solid #858796 !important;
+        }
+        .border-left-dark {
+            border-left: 0.25rem solid #5a5c69 !important;
+        }
         .text-xs {
             font-size: 0.7rem;
         }
         .chart-area {
             position: relative;
-            height: 320px;
+            height: 20rem;
+            width: 100%;
         }
         .chart-pie {
             position: relative;
-            height: 245px;
+            height: 15rem;
+            width: 100%;
         }
         .chart-bar {
             position: relative;
-            height: 320px;
+            height: 20rem;
+            width: 100%;
+        }
+        .insight-item {
+            padding: 0.75rem;
+            background-color: #f8f9fc;
+            border-radius: 0.35rem;
+            border-left: 3px solid #4e73df;
+        }
+        .supplier-item, .transaction-item {
+            padding: 0.5rem 0;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .chart-area, .chart-pie, .chart-bar {
+                height: 15rem;
+            }
         }
     </style>
 </body>

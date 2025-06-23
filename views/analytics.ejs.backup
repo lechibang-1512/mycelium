@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head', {title: 'Analytics Dashboard'}) %>
+
+<body>
+    <%- include('partials/navbar', {currentPage: 'analytics'}) %>
+
+    <div class="container-fluid mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1><i class="fas fa-chart-bar me-2"></i>Analytics Dashboard</h1>
+                    <div class="d-flex gap-2">
+                        <select class="form-select" id="periodSelector" onchange="changePeriod()" style="width: auto;">
+                            <option value="7" <%= selectedPeriod === 7 ? 'selected' : '' %>>Last 7 days</option>
+                            <option value="30" <%= selectedPeriod === 30 ? 'selected' : '' %>>Last 30 days</option>
+                            <option value="90" <%= selectedPeriod === 90 ? 'selected' : '' %>>Last 90 days</option>
+                            <option value="365" <%= selectedPeriod === 365 ? 'selected' : '' %>>Last year</option>
+                        </select>
+                        <button class="btn btn-outline-primary" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <% if (isStaffOrAdmin) { %>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="exportData('json')"><i class="fas fa-file-code me-2"></i>JSON</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="exportData('csv')"><i class="fas fa-file-csv me-2"></i>CSV</a></li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-outline-info" onclick="showForecast()">
+                            <i class="fas fa-crystal-ball"></i> Forecast
+                        </button>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Filters -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Advanced Filters</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label for="categoryFilter" class="form-label">Category</label>
+                                <select class="form-select" id="categoryFilter" onchange="applyFilters()">
+                                    <option value="all">All Categories</option>
+                                    <% if (typeof categoryPerformance !== 'undefined' && categoryPerformance.length > 0) { %>
+                                        <% categoryPerformance.forEach(category => { %>
+                                        <option value="<%= category.category %>"><%= category.category %></option>
+                                        <% }); %>
+                                    <% } %>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="comparisonToggle" class="form-label">Comparison</label>
+                                <div class="form-check form-switch mt-2">
+                                    <input class="form-check-input" type="checkbox" id="comparisonToggle" onchange="toggleComparison()">
+                                    <label class="form-check-label" for="comparisonToggle">Period Comparison</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="metricSelector" class="form-label">Primary Metric</label>
+                                <select class="form-select" id="metricSelector" onchange="changeMetric()">
+                                    <option value="revenue">Revenue</option>
+                                    <option value="units">Units Sold</option>
+                                    <option value="profit">Profit Margin</option>
+                                    <option value="turnover">Stock Turnover</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="chartTypeSelector" class="form-label">Chart Type</label>
+                                <select class="form-select" id="chartTypeSelector" onchange="changeChartType()">
+                                    <option value="line">Line Chart</option>
+                                    <option value="bar">Bar Chart</option>
+                                    <option value="area">Area Chart</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insights Section -->
+        <% if (typeof insights !== 'undefined' && insights.length > 0) { %>
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Key Insights</h6>
+                    </div>
+                    <div class="card-body">
+                        <% insights.forEach(insight => { %>
+                        <div class="alert alert-<%= insight.type === 'success' ? 'success' : (insight.type === 'warning' ? 'warning' : 'info') %> mb-2" role="alert">
+                            <strong><%= insight.title %>:</strong> <%= insight.message %>
+                        </div>
+                        <% }); %>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+        <!-- Key Metrics Cards -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Total Revenue (<%= selectedPeriod %> days)
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    $<%= totalRevenue %>
+                                </div>
+                                <% if (parseFloat(growthRate) !== 0) { %>
+                                <small class="<%= parseFloat(growthRate) >= 0 ? 'text-success' : 'text-danger' %>">
+                                    <i class="fas fa-arrow-<%= parseFloat(growthRate) >= 0 ? 'up' : 'down' %>"></i>
+                                    <%= Math.abs(parseFloat(growthRate)).toFixed(1) %>% vs previous period
+                                </small>
+                                <% } %>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                    Units Sold
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    <%= totalUnitsSold %>
+                                </div>
+                                <small class="text-muted">
+                                    Avg: $<%= averageSaleValue %> per unit
+                                </small>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                    Total Products
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    <%= totalProducts %>
+                                </div>
+                                <small class="text-muted">
+                                    Inventory value: $<%= inventoryValue.total_inventory_value ? parseFloat(inventoryValue.total_inventory_value).toFixed(2) : '0.00' %>
+                                </small>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-mobile-alt fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                    Low Stock Alerts
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    <%= lowStockCount %>
+                                </div>
+                                <small class="text-muted">
+                                    Best selling day: <%= bestSellingDay %>
+                                </small>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Metrics Row -->
+        <% if (typeof profitMargin !== 'undefined' && typeof inventoryTurnover !== 'undefined') { %>
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                    Profit Margin
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    <%= profitMargin %>%
+                                </div>
+                                <small class="text-muted">
+                                    <% if (parseFloat(profitMargin) >= 30) { %>
+                                        <i class="fas fa-thumbs-up text-success"></i> Excellent
+                                    <% } else if (parseFloat(profitMargin) >= 20) { %>
+                                        <i class="fas fa-check text-warning"></i> Good
+                                    <% } else { %>
+                                        <i class="fas fa-exclamation text-danger"></i> Needs Improvement
+                                    <% } %>
+                                </small>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                    Inventory Turnover
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    <%= inventoryTurnover %>x
+                                </div>
+                                <small class="text-muted">
+                                    <% if (parseFloat(inventoryTurnover) >= 2) { %>
+                                        <i class="fas fa-arrow-up text-success"></i> High Turnover
+                                    <% } else if (parseFloat(inventoryTurnover) >= 1) { %>
+                                        <i class="fas fa-minus text-warning"></i> Average
+                                    <% } else { %>
+                                        <i class="fas fa-arrow-down text-danger"></i> Low Turnover
+                                    <% } %>
+                                </small>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-sync-alt fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-secondary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+                                    Sales Velocity
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    <%= (totalUnitsSold / selectedPeriod).toFixed(1) %>
+                                </div>
+                                <small class="text-muted">units per day</small>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-tachometer-alt fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-dark shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">
+                                    Avg Order Value
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    $<%= averageSaleValue %>
+                                </div>
+                                <small class="text-muted">per transaction</small>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-receipt fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+        <!-- Charts Row -->
+        <div class="row mb-4">
+            <!-- Sales Trend Chart -->
+            <div class="col-xl-8 col-lg-7">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">Sales Trend</h6>
+                        <div class="dropdown no-arrow">
+                            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                                aria-labelledby="dropdownMenuLink">
+                                <div class="dropdown-header">Chart Options:</div>
+                                <a class="dropdown-item" href="#" onclick="toggleChartType()">Toggle Revenue/Units</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-area">
+                            <canvas id="salesTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Status Pie Chart -->
+            <div class="col-xl-4 col-lg-5">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">Inventory Status</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-pie pt-4 pb-2">
+                            <canvas id="inventoryStatusChart"></canvas>
+                        </div>
+                        <div class="mt-4 text-center small">
+                            <span class="mr-2">
+                                <i class="fas fa-circle text-success"></i> In Stock
+                            </span>
+                            <span class="mr-2">
+                                <i class="fas fa-circle text-warning"></i> Low Stock
+                            </span>
+                            <span class="mr-2">
+                                <i class="fas fa-circle text-danger"></i> Out of Stock
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Performance Chart -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Top Selling Products</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-bar">
+                            <canvas id="productPerformanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Tables Row -->
+        <div class="row">
+            <!-- Top Selling Products Table -->
+            <div class="col-xl-8 col-lg-7">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Top Selling Products Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Units Sold</th>
+                                        <th>Revenue</th>
+                                        <th>Current Stock</th>
+                                        <th>Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% topSellingProducts.slice(0, 10).forEach(product => { %>
+                                    <tr>
+                                        <td>
+                                            <strong><%= product.sm_maker %></strong><br>
+                                            <small class="text-muted"><%= product.sm_name %></small>
+                                        </td>
+                                        <td><%= product.total_sold %></td>
+                                        <td>$<%= parseFloat(product.revenue).toFixed(2) %></td>
+                                        <td>
+                                            <span class="badge bg-<%= product.sm_inventory > 5 ? 'success' : (product.sm_inventory > 0 ? 'warning' : 'danger') %>">
+                                                <%= product.sm_inventory %>
+                                            </span>
+                                        </td>
+                                        <td>$<%= parseFloat(product.sm_price).toFixed(2) %></td>
+                                    </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity & Alerts -->
+            <div class="col-xl-4 col-lg-5">
+                <!-- Low Stock Alerts -->
+                <% if (lowStockProducts.length > 0) { %>
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-warning">Low Stock Alerts</h6>
+                    </div>
+                    <div class="card-body">
+                        <% lowStockProducts.slice(0, 5).forEach(product => { %>
+                        <div class="d-flex align-items-center justify-content-between border-bottom py-2">
+                            <div>
+                                <div class="small font-weight-bold"><%= product.sm_maker %> <%= product.sm_name %></div>
+                                <div class="small text-muted">$<%= parseFloat(product.sm_price).toFixed(2) %></div>
+                            </div>
+                            <div class="text-right">
+                                <span class="badge bg-<%= product.sm_inventory === 0 ? 'danger' : 'warning' %>">
+                                    <%= product.sm_inventory %> left
+                                </span>
+                            </div>
+                        </div>
+                        <% }); %>
+                        <% if (lowStockProducts.length > 5) { %>
+                        <div class="text-center mt-3">
+                            <a href="/stock-alerts" class="btn btn-sm btn-warning">View All Alerts</a>
+                        </div>
+                        <% } %>
+                    </div>
+                </div>
+                <% } %>
+
+                <!-- Recent Transactions -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Recent Transactions</h6>
+                    </div>
+                    <div class="card-body">
+                        <% recentTransactions.slice(0, 5).forEach(transaction => { %>
+                        <div class="d-flex align-items-center justify-content-between border-bottom py-2">
+                            <div>
+                                <div class="small font-weight-bold">
+                                    <%= transaction.sm_maker %> <%= transaction.sm_name %>
+                                </div>
+                                <div class="small text-muted"><%= transaction.formatted_date %></div>
+                            </div>
+                            <div class="text-right">
+                                <span class="badge bg-<%= transaction.transaction_type === 'incoming' ? 'success' : (transaction.transaction_type === 'outgoing' ? 'danger' : 'warning') %>">
+                                    <%= transaction.transaction_type === 'incoming' ? '+' : (transaction.transaction_type === 'outgoing' ? '-' : '') %><%= Math.abs(transaction.quantity_changed) %>
+                                </span>
+                            </div>
+                        </div>
+                        <% }); %>
+                        <div class="text-center mt-3">
+                            <a href="/reports" class="btn btn-sm btn-primary">View All Transactions</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Supplier Performance -->
+                <% if (supplierPerformance.length > 0) { %>
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Top Suppliers</h6>
+                    </div>
+                    <div class="card-body">
+                        <% supplierPerformance.forEach(supplier => { %>
+                        <div class="d-flex align-items-center justify-content-between border-bottom py-2">
+                            <div>
+                                <div class="small font-weight-bold"><%= supplier.supplier_name %></div>
+                                <div class="small text-muted"><%= supplier.products_supplied %> products</div>
+                            </div>
+                            <div class="text-right">
+                                <span class="badge bg-info">
+                                    +<%= supplier.total_stock_received %> units
+                                </span>
+                            </div>
+                        </div>
+                        <% }); %>
+                        <div class="text-center mt-3">
+                            <a href="/suppliers" class="btn btn-sm btn-info">View All Suppliers</a>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        // Chart data from server
+        const salesTrendData = <%- JSON.stringify(salesTrendData) %>;
+        const productPerformanceData = <%- JSON.stringify(productPerformanceData) %>;
+        const inventoryStatusData = <%- JSON.stringify(inventoryStatusData) %>;
+
+        let salesChart;
+        let showRevenue = true;
+
+        // Sales Trend Chart
+        function initSalesTrendChart() {
+            const ctx = document.getElementById('salesTrendChart').getContext('2d');
+            salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: salesTrendData.labels,
+                    datasets: [{
+                        label: 'Revenue ($)',
+                        data: salesTrendData.revenue,
+                        borderColor: 'rgb(78, 115, 223)',
+                        backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return showRevenue ? '$' + value.toFixed(2) : value;
+                                }
+                            }
+                        }
+                    }
+                });
+        }
+
+        // Product Performance Chart
+        function initProductChart() {
+            const ctx = document.getElementById('productPerformanceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: productPerformanceData.labels,
+                    datasets: [{
+                        label: 'Units Sold',
+                        data: productPerformanceData.values,
+                        backgroundColor: 'rgba(28, 200, 138, 0.8)',
+                        borderColor: 'rgba(28, 200, 138, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                });
+        }
+
+        // Inventory Status Chart
+        function initInventoryChart() {
+            const ctx = document.getElementById('inventoryStatusChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: inventoryStatusData.labels,
+                    datasets: [{
+                        data: inventoryStatusData.values,
+                        backgroundColor: inventoryStatusData.colors,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Toggle chart data between revenue and units
+        function toggleChartType() {
+            showRevenue = !showRevenue;
+            const newData = showRevenue ? salesTrendData.revenue : salesTrendData.units;
+            const newLabel = showRevenue ? 'Revenue ($)' : 'Units Sold';
+            
+            salesChart.data.datasets[0].data = newData;
+            salesChart.data.datasets[0].label = newLabel;
+            salesChart.update();
+        }
+
+        // Change time period
+        function changePeriod() {
+            const period = document.getElementById('periodSelector').value;
+            window.location.href = '/analytics?period=' + period;
+        }
+
+        // Refresh data
+        function refreshData() {
+            window.location.reload();
+        }
+
+        // New enhanced functions
+        function exportData(format) {
+            const period = document.getElementById('periodSelector').value;
+            const url = `/api/analytics/export?period=${period}&format=${format}`;
+            
+            if (format === 'csv') {
+                // Download CSV file
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `analytics-${period}days.csv`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                // Open JSON in new window
+                window.open(url, '_blank');
+            }
+        }
+
+        function showForecast() {
+            fetch(`/api/analytics/forecast?days=30`)
+                .then(response => response.json())
+                .then(data => {
+                    // Create forecast modal
+                    const modal = document.createElement('div');
+                    modal.className = 'modal fade';
+                    modal.innerHTML = `
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">30-Day Sales Forecast</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Forecast confidence: ${data.confidence}
+                                    </div>
+                                    <canvas id="forecastChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                    
+                    // Show modal
+                    const bsModal = new bootstrap.Modal(modal);
+                    bsModal.show();
+                    
+                    // Create forecast chart
+                    setTimeout(() => {
+                        const ctx = document.getElementById('forecastChart').getContext('2d');
+                        new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: data.forecast.map(item => item.date),
+                                datasets: [{
+                                    label: 'Predicted Revenue',
+                                    data: data.forecast.map(item => item.predicted_revenue),
+                                    borderColor: 'rgba(78, 115, 223, 1)',
+                                    backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                                    fill: true,
+                                    tension: 0.3
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: {
+                                            callback: function(value) {
+                                                return '$' + value.toFixed(2);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }, 100);
+                    
+                    // Clean up when modal is closed
+                    modal.addEventListener('hidden.bs.modal', function() {
+                        document.body.removeChild(modal);
+                    });
+                })
+                .catch(error => {
+                    console.error('Forecast error:', error);
+                    alert('Failed to generate forecast. Please try again.');
+                });
+        }
+
+        function applyFilters() {
+            const category = document.getElementById('categoryFilter').value;
+            const period = document.getElementById('periodSelector').value;
+            
+            if (category !== 'all') {
+                window.location.href = `/analytics?period=${period}&category=${category}`;
+            } else {
+                window.location.href = `/analytics?period=${period}`;
+            }
+        }
+
+        function toggleComparison() {
+            const comparison = document.getElementById('comparisonToggle').checked;
+            const period = document.getElementById('periodSelector').value;
+            const category = document.getElementById('categoryFilter').value;
+            
+            let url = `/analytics?period=${period}&comparison=${comparison}`;
+            if (category !== 'all') {
+                url += `&category=${category}`;
+            }
+            
+            window.location.href = url;
+        }
+
+        function changeMetric() {
+            const metric = document.getElementById('metricSelector').value;
+            updateChartsForMetric(metric);
+        }
+
+        function changeChartType() {
+            const chartType = document.getElementById('chartTypeSelector').value;
+            updateSalesChartType(chartType);
+        }
+
+        function updateChartsForMetric(metric) {
+            console.log('Updating charts for metric:', metric);
+        }
+
+        function updateSalesChartType(type) {
+            if (salesChart) {
+                salesChart.config.type = type;
+                salesChart.update();
+            }
+        }
+
+        // Enhanced CSS classes
+        const additionalStyles = `
+            .border-left-secondary {
+                border-left: 0.25rem solid #858796 !important;
+            }
+            .border-left-dark {
+                border-left: 0.25rem solid #5a5c69 !important;
+            }
+            .font-weight-bold {
+                font-weight: 700 !important;
+            }
+            .text-gray-800 {
+                color: #5a5c69 !important;
+            }
+            .text-gray-300 {
+                color: #dddfeb !important;
+            }
+        `;
+        
+        // Add styles to document
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = additionalStyles;
+        document.head.appendChild(styleSheet);
+
+        // Initialize charts when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initSalesTrendChart();
+            initProductChart();
+            initInventoryChart();
+
+            // Auto-refresh every 5 minutes
+            setInterval(function() {
+                refreshData();
+            }, 300000);
+        });
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // R key for refresh
+            if (e.key === 'r' || e.key === 'R') {
+                if (!e.ctrlKey && !e.metaKey) { // Only if not Ctrl+R
+                    e.preventDefault();
+                    refreshData();
+                }
+            }
+            
+            // T key to toggle chart
+            if (e.key === 't' || e.key === 'T') {
+                e.preventDefault();
+                toggleChartType();
+            }
+        });
+    </script>
+
+    <style>
+        .border-left-primary {
+            border-left: 0.25rem solid #4e73df !important;
+        }
+        .border-left-success {
+            border-left: 0.25rem solid #1cc88a !important;
+        }
+        .border-left-info {
+            border-left: 0.25rem solid #36b9cc !important;
+        }
+        .border-left-warning {
+            border-left: 0.25rem solid #f6c23e !important;
+        }
+        .text-xs {
+            font-size: 0.7rem;
+        }
+        .chart-area {
+            position: relative;
+            height: 320px;
+        }
+        .chart-pie {
+            position: relative;
+            height: 245px;
+        }
+        .chart-bar {
+            position: relative;
+            height: 320px;
+        }
+    </style>
+</body>
+</html>

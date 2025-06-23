@@ -39,7 +39,17 @@ class AnalyticsService {
                 inventoryValueData,
                 categoryPerformanceData,
                 profitabilityData,
-                stockTurnoverData
+                stockTurnoverData,
+                marketTrendsData,
+                seasonalAnalysisData,
+                productLifecycleData,
+                advancedInventoryMetrics,
+                realTimePerformanceData,
+                productSpecAnalytics,
+                technologyTrendsData,
+                inventoryEfficiencyData,
+                pricingAnalyticsData,
+                transactionPatternsData
             ] = await Promise.all([
                 this.getRevenueData(conn, period),
                 this.getUnitsSoldData(conn, period),
@@ -55,7 +65,17 @@ class AnalyticsService {
                 this.getInventoryValueData(conn),
                 this.getCategoryPerformanceData(conn, period),
                 this.getProfitabilityData(conn, period),
-                this.getStockTurnoverData(conn, period)
+                this.getStockTurnoverData(conn, period),
+                this.getMarketTrendsData(conn, period),
+                this.getSeasonalAnalysisData(conn),
+                this.getProductLifecycleData(conn, period),
+                this.getAdvancedInventoryMetrics(conn, period),
+                this.getRealTimePerformanceData(conn),
+                this.getProductSpecAnalytics(conn),
+                this.getTechnologyTrendsData(conn),
+                this.getInventoryEfficiencyData(conn, period),
+                this.getPricingAnalyticsData(conn, period),
+                this.getTransactionPatternsData(conn, period)
             ]);
 
             const totalRevenue = revenueData.total_revenue || 0;
@@ -99,6 +119,26 @@ class AnalyticsService {
                 categoryPerformance: categoryPerformanceData,
                 profitabilityAnalysis: profitabilityData,
                 stockTurnoverAnalysis: stockTurnoverData,
+                
+                // New comprehensive analytics
+                marketTrends: marketTrendsData,
+                seasonalAnalysis: seasonalAnalysisData,
+                productLifecycle: productLifecycleData,
+                advancedInventoryMetrics: advancedInventoryMetrics,
+                realTimePerformance: realTimePerformanceData,
+                productSpecAnalytics: productSpecAnalytics,
+                technologyTrends: technologyTrendsData,
+                inventoryEfficiency: inventoryEfficiencyData,
+                pricingAnalytics: pricingAnalyticsData,
+                transactionPatterns: transactionPatternsData,
+                
+                // Additional chart data
+                marketTrendsChartData: this.formatMarketTrendsData(marketTrendsData),
+                seasonalChartData: this.formatSeasonalData(seasonalAnalysisData),
+                lifecycleChartData: this.formatLifecycleData(productLifecycleData),
+                technologyTrendsChartData: this.formatTechnologyTrendsData(technologyTrendsData),
+                pricingAnalyticsChartData: this.formatPricingAnalyticsData(pricingAnalyticsData),
+                transactionPatternsChartData: this.formatTransactionPatternsData(transactionPatternsData),
                 
                 // Filters
                 selectedPeriod: period,
@@ -273,24 +313,73 @@ class AnalyticsService {
     }
 
     /**
-     * Get supplier performance data (simplified for now)
+     * Get comprehensive supplier performance data
      */
     async getSupplierPerformanceData(suppliersConn, period) {
         try {
-            const query = `
+            // Get inventory data from master_specs_db
+            const conn = await this.pool.getConnection();
+            
+            // First get supplier transaction data from master_specs_db
+            const inventoryQuery = `
                 SELECT 
+                    il.supplier_id,
+                    SUM(il.quantity_changed) as total_received,
+                    COUNT(*) as transaction_count,
+                    AVG(ps.sm_price * il.quantity_changed) as avg_delivery_value,
+                    MAX(il.transaction_date) as last_delivery_date
+                FROM inventory_log il
+                JOIN phone_specs ps ON il.phone_id = ps.id
+                WHERE il.transaction_type = 'incoming'
+                AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                AND il.supplier_id IS NOT NULL
+                GROUP BY il.supplier_id
+            `;
+            
+            const inventoryResult = await conn.query(inventoryQuery, [period]);
+            const inventoryData = this.convertBigIntToNumber(inventoryResult);
+            conn.end();
+            
+            // Then get supplier details from suppliers_db
+            const suppliersQuery = `
+                SELECT 
+                    supplier_id,
                     name as supplier_name,
                     category,
                     is_active,
-                    1 as products_supplied,
-                    0 as total_stock_received
+                    contact_person,
+                    phone,
+                    email
                 FROM suppliers
                 WHERE is_active = 1
-                ORDER BY name ASC
-                LIMIT 5
             `;
-            const result = await suppliersConn.query(query);
-            return this.convertBigIntToNumber(result);
+            
+            const suppliersResult = await suppliersConn.query(suppliersQuery);
+            const suppliersData = this.convertBigIntToNumber(suppliersResult);
+            
+            // Combine the data
+            const combinedData = suppliersData.map(supplier => {
+                const inventoryInfo = inventoryData.find(inv => inv.supplier_id === supplier.supplier_id) || {
+                    total_received: 0,
+                    transaction_count: 0,
+                    avg_delivery_value: 0,
+                    last_delivery_date: null
+                };
+                
+                return {
+                    ...supplier,
+                    total_stock_received: inventoryInfo.total_received,
+                    transaction_count: inventoryInfo.transaction_count,
+                    avg_delivery_value: inventoryInfo.avg_delivery_value,
+                    last_delivery_date: inventoryInfo.last_delivery_date
+                };
+            });
+            
+            // Sort by total stock received and limit results
+            return combinedData
+                .sort((a, b) => b.total_stock_received - a.total_stock_received)
+                .slice(0, 10);
+                
         } catch (error) {
             console.warn('Supplier performance query failed, returning empty array:', error.message);
             return [];
@@ -400,6 +489,150 @@ class AnalyticsService {
     }
 
     /**
+     * Get market trends analysis
+     */
+    async getMarketTrendsData(conn, period) {
+        const query = `
+            SELECT 
+                ps.sm_maker as brand,
+                COUNT(DISTINCT ps.id) as product_count,
+                COALESCE(SUM(ps.sm_inventory), 0) as total_inventory,
+                COALESCE(SUM(ps.sm_inventory * ps.sm_price), 0) as inventory_value,
+                COALESCE(AVG(ps.sm_price), 0) as avg_price,
+                COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END), 0) as units_sold,
+                COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ps.sm_price * ABS(il.quantity_changed) ELSE 0 END), 0) as revenue
+            FROM phone_specs ps
+            LEFT JOIN inventory_log il ON ps.id = il.phone_id 
+                AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
+            GROUP BY ps.sm_maker
+            HAVING product_count > 0
+            ORDER BY revenue DESC, units_sold DESC
+        `;
+        const result = await conn.query(query, [period]);
+        return this.convertBigIntToNumber(result);
+    }
+
+    /**
+     * Get seasonal analysis data
+     */
+    async getSeasonalAnalysisData(conn) {
+        const query = `
+            SELECT 
+                MONTH(il.transaction_date) as month_num,
+                MONTHNAME(il.transaction_date) as month_name,
+                YEAR(il.transaction_date) as year_num,
+                COUNT(*) as transaction_count,
+                SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END) as units_sold,
+                SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ps.sm_price * ABS(il.quantity_changed) ELSE 0 END) as revenue
+            FROM inventory_log il
+            JOIN phone_specs ps ON il.phone_id = ps.id
+            WHERE il.transaction_date >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+            GROUP BY YEAR(il.transaction_date), MONTH(il.transaction_date)
+            ORDER BY year_num DESC, month_num DESC
+        `;
+        const result = await conn.query(query);
+        return this.convertBigIntToNumber(result);
+    }
+
+    /**
+     * Get product lifecycle analysis
+     */
+    async getProductLifecycleData(conn, period) {
+        const query = `
+            SELECT 
+                ps.id,
+                ps.sm_name,
+                ps.sm_maker,
+                ps.sm_price,
+                ps.sm_inventory,
+                lifecycle_data.days_since_first_sale,
+                lifecycle_data.total_sold,
+                lifecycle_data.sales_velocity,
+                lifecycle_data.lifecycle_stage
+            FROM phone_specs ps
+            LEFT JOIN (
+                SELECT 
+                    il.phone_id,
+                    DATEDIFF(NOW(), MIN(il.transaction_date)) as days_since_first_sale,
+                    SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END) as total_sold,
+                    SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END) / 
+                        GREATEST(DATEDIFF(NOW(), MIN(il.transaction_date)), 1) as sales_velocity,
+                    CASE 
+                        WHEN DATEDIFF(NOW(), MIN(il.transaction_date)) <= 30 THEN 'Introduction'
+                        WHEN DATEDIFF(NOW(), MAX(il.transaction_date)) <= 7 AND 
+                             SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END) > 10 THEN 'Growth'
+                        WHEN DATEDIFF(NOW(), MAX(il.transaction_date)) <= 30 THEN 'Maturity'
+                        ELSE 'Decline'
+                    END as lifecycle_stage
+                FROM inventory_log il
+                WHERE il.transaction_type = 'outgoing'
+                GROUP BY il.phone_id
+            ) lifecycle_data ON ps.id = lifecycle_data.phone_id
+            ORDER BY lifecycle_data.sales_velocity DESC
+        `;
+        const result = await conn.query(query);
+        return this.convertBigIntToNumber(result);
+    }
+
+    /**
+     * Get advanced inventory metrics
+     */
+    async getAdvancedInventoryMetrics(conn, period) {
+        const query = `
+            SELECT 
+                COUNT(*) as total_products,
+                SUM(CASE WHEN sm_inventory = 0 THEN 1 ELSE 0 END) as out_of_stock_count,
+                SUM(CASE WHEN sm_inventory > 0 AND sm_inventory <= 5 THEN 1 ELSE 0 END) as low_stock_count,
+                SUM(CASE WHEN sm_inventory > 50 THEN 1 ELSE 0 END) as overstock_count,
+                AVG(sm_inventory) as avg_inventory_level,
+                SUM(sm_inventory * sm_price) as total_inventory_value,
+                AVG(sm_price) as avg_product_price,
+                MAX(sm_price) as highest_price,
+                MIN(sm_price) as lowest_price,
+                STDDEV(sm_price) as price_standard_deviation
+            FROM phone_specs
+        `;
+        const result = await conn.query(query);
+        return this.convertBigIntToNumber(result[0]);
+    }
+
+    /**
+     * Get real-time performance indicators
+     */
+    async getRealTimePerformanceData(conn) {
+        const todayQuery = `
+            SELECT 
+                COUNT(CASE WHEN il.transaction_type = 'outgoing' THEN 1 END) as today_sales_count,
+                COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END), 0) as today_units_sold,
+                COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ps.sm_price * ABS(il.quantity_changed) ELSE 0 END), 0) as today_revenue,
+                COUNT(CASE WHEN il.transaction_type = 'incoming' THEN 1 END) as today_receiving_count,
+                COALESCE(SUM(CASE WHEN il.transaction_type = 'incoming' THEN il.quantity_changed ELSE 0 END), 0) as today_units_received
+            FROM inventory_log il
+            JOIN phone_specs ps ON il.phone_id = ps.id
+            WHERE DATE(il.transaction_date) = CURDATE()
+        `;
+        
+        const weeklyQuery = `
+            SELECT 
+                COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END), 0) as week_units_sold,
+                COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ps.sm_price * ABS(il.quantity_changed) ELSE 0 END), 0) as week_revenue
+            FROM inventory_log il
+            JOIN phone_specs ps ON il.phone_id = ps.id
+            WHERE il.transaction_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        `;
+
+        const [todayResult, weeklyResult] = await Promise.all([
+            conn.query(todayQuery),
+            conn.query(weeklyQuery)
+        ]);
+
+        return {
+            today: this.convertBigIntToNumber(todayResult[0]),
+            week: this.convertBigIntToNumber(weeklyResult[0])
+        };
+    }
+
+    /**
      * Format sales trend data for Chart.js
      */
     formatSalesTrendData(salesTrendRaw) {
@@ -455,6 +688,102 @@ class AnalyticsService {
             labels: categoryData.map(item => item.category),
             values: categoryData.map(item => parseFloat(item.revenue)),
             colors: categoryData.map((_, index) => colors[index % colors.length])
+        };
+    }
+
+    /**
+     * Format market trends data for Chart.js
+     */
+    formatMarketTrendsData(marketData) {
+        const labels = marketData.map(item => item.brand);
+        const revenueData = marketData.map(item => parseFloat(item.revenue));
+        const unitsData = marketData.map(item => parseInt(item.units_sold));
+        const inventoryData = marketData.map(item => parseInt(item.total_inventory));
+
+        return {
+            labels,
+            datasets: [
+                {
+                    label: 'Revenue ($)',
+                    data: revenueData,
+                    backgroundColor: 'rgba(78, 115, 223, 0.8)',
+                    borderColor: 'rgba(78, 115, 223, 1)',
+                    borderWidth: 2,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Units Sold',
+                    data: unitsData,
+                    backgroundColor: 'rgba(28, 200, 138, 0.8)',
+                    borderColor: 'rgba(28, 200, 138, 1)',
+                    borderWidth: 2,
+                    yAxisID: 'y1'
+                }
+            ]
+        };
+    }
+
+    /**
+     * Format seasonal data for Chart.js
+     */
+    formatSeasonalData(seasonalData) {
+        const labels = seasonalData.map(item => `${item.month_name} ${item.year_num}`);
+        const revenueData = seasonalData.map(item => parseFloat(item.revenue));
+        const unitsData = seasonalData.map(item => parseInt(item.units_sold));
+
+        return {
+            labels: labels.slice(-12), // Last 12 months
+            datasets: [
+                {
+                    label: 'Monthly Revenue ($)',
+                    data: revenueData.slice(-12),
+                    backgroundColor: 'rgba(246, 194, 62, 0.2)',
+                    borderColor: 'rgba(246, 194, 62, 1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                },
+                {
+                    label: 'Monthly Units Sold',
+                    data: unitsData.slice(-12),
+                    backgroundColor: 'rgba(231, 74, 59, 0.2)',
+                    borderColor: 'rgba(231, 74, 59, 1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }
+            ]
+        };
+    }
+
+    /**
+     * Format product lifecycle data for Chart.js
+     */
+    formatLifecycleData(lifecycleData) {
+        const stages = ['Introduction', 'Growth', 'Maturity', 'Decline'];
+        const stageCounts = stages.map(stage => 
+            lifecycleData.filter(item => item.lifecycle_stage === stage).length
+        );
+
+        return {
+            labels: stages,
+            datasets: [{
+                label: 'Products by Lifecycle Stage',
+                data: stageCounts,
+                backgroundColor: [
+                    'rgba(54, 185, 204, 0.8)',  // Introduction
+                    'rgba(28, 200, 138, 0.8)',  // Growth  
+                    'rgba(246, 194, 62, 0.8)',  // Maturity
+                    'rgba(231, 74, 59, 0.8)'    // Decline
+                ],
+                borderColor: [
+                    'rgba(54, 185, 204, 1)',
+                    'rgba(28, 200, 138, 1)',
+                    'rgba(246, 194, 62, 1)',
+                    'rgba(231, 74, 59, 1)'
+                ],
+                borderWidth: 2
+            }]
         };
     }
 
@@ -778,6 +1107,384 @@ class AnalyticsService {
         }
 
         return forecast;
+    }
+
+    /**
+     * Get comprehensive product specifications analytics
+     */
+    async getProductSpecAnalytics(conn) {
+        const query = `
+            SELECT 
+                sm_maker as brand,
+                COUNT(*) as total_products,
+                AVG(sm_price) as avg_price,
+                MIN(sm_price) as min_price,
+                MAX(sm_price) as max_price,
+                AVG(CAST(REPLACE(ram, 'GB', '') AS DECIMAL(5,2))) as avg_ram,
+                AVG(CAST(REPLACE(REPLACE(rom, 'GB', ''), 'TB', '000') AS DECIMAL(6,2))) as avg_storage,
+                AVG(display_size) as avg_display_size,
+                AVG(CAST(REPLACE(battery_capacity, 'mAh', '') AS DECIMAL(6,0))) as avg_battery,
+                COUNT(CASE WHEN nfc = 'Yes' THEN 1 END) as nfc_enabled_count,
+                COUNT(CASE WHEN fast_charging IS NOT NULL AND fast_charging != '' THEN 1 END) as fast_charging_count
+            FROM phone_specs 
+            WHERE sm_maker IS NOT NULL
+            GROUP BY sm_maker
+            ORDER BY total_products DESC
+        `;
+        const result = await conn.query(query);
+        return this.convertBigIntToNumber(result);
+    }
+
+    /**
+     * Get technology trends analytics
+     */
+    async getTechnologyTrendsData(conn) {
+        const processorQuery = `
+            SELECT 
+                processor,
+                COUNT(*) as product_count,
+                AVG(sm_price) as avg_price,
+                SUM(sm_inventory) as total_inventory
+            FROM phone_specs 
+            WHERE processor IS NOT NULL AND processor != ''
+            GROUP BY processor
+            ORDER BY product_count DESC
+            LIMIT 10
+        `;
+
+        const osQuery = `
+            SELECT 
+                operating_system,
+                COUNT(*) as product_count,
+                AVG(sm_price) as avg_price,
+                SUM(sm_inventory) as total_inventory
+            FROM phone_specs 
+            WHERE operating_system IS NOT NULL AND operating_system != ''
+            GROUP BY operating_system
+            ORDER BY product_count DESC
+        `;
+
+        const ramQuery = `
+            SELECT 
+                ram,
+                COUNT(*) as product_count,
+                AVG(sm_price) as avg_price,
+                SUM(sm_inventory) as total_inventory
+            FROM phone_specs 
+            WHERE ram IS NOT NULL AND ram != ''
+            GROUP BY ram
+            ORDER BY CAST(REPLACE(ram, 'GB', '') AS DECIMAL(5,2)) DESC
+        `;
+
+        const [processorResult, osResult, ramResult] = await Promise.all([
+            conn.query(processorQuery),
+            conn.query(osQuery),
+            conn.query(ramQuery)
+        ]);
+
+        return {
+            processors: this.convertBigIntToNumber(processorResult),
+            operating_systems: this.convertBigIntToNumber(osResult),
+            ram_distribution: this.convertBigIntToNumber(ramResult)
+        };
+    }
+
+    /**
+     * Get inventory efficiency metrics
+     */
+    async getInventoryEfficiencyData(conn, period) {
+        const query = `
+            SELECT 
+                ps.sm_maker as brand,
+                ps.sm_name as product_name,
+                ps.sm_price,
+                ps.sm_inventory as current_stock,
+                COALESCE(sold_data.units_sold, 0) as units_sold,
+                COALESCE(received_data.units_received, 0) as units_received,
+                CASE 
+                    WHEN ps.sm_inventory > 0 AND sold_data.units_sold > 0 
+                    THEN ROUND(sold_data.units_sold / ps.sm_inventory, 2)
+                    ELSE 0 
+                END as turnover_ratio,
+                CASE 
+                    WHEN sold_data.units_sold > 0 
+                    THEN ROUND(? / sold_data.units_sold, 1)
+                    ELSE NULL 
+                END as days_to_sell_current_stock,
+                (ps.sm_inventory * ps.sm_price) as inventory_value
+            FROM phone_specs ps
+            LEFT JOIN (
+                SELECT 
+                    phone_id,
+                    SUM(ABS(quantity_changed)) as units_sold
+                FROM inventory_log 
+                WHERE transaction_type = 'outgoing' 
+                AND transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                GROUP BY phone_id
+            ) sold_data ON ps.id = sold_data.phone_id
+            LEFT JOIN (
+                SELECT 
+                    phone_id,
+                    SUM(quantity_changed) as units_received
+                FROM inventory_log 
+                WHERE transaction_type = 'incoming' 
+                AND transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                GROUP BY phone_id
+            ) received_data ON ps.id = received_data.phone_id
+            ORDER BY turnover_ratio DESC, inventory_value DESC
+        `;
+        const result = await conn.query(query, [period, period, period]);
+        return this.convertBigIntToNumber(result);
+    }
+
+    /**
+     * Get pricing analytics
+     */
+    async getPricingAnalyticsData(conn, period) {
+        const priceRangeQuery = `
+            SELECT 
+                CASE 
+                    WHEN sm_price < 200 THEN 'Budget (<$200)'
+                    WHEN sm_price BETWEEN 200 AND 500 THEN 'Mid-range ($200-$500)'
+                    WHEN sm_price BETWEEN 500 AND 1000 THEN 'Premium ($500-$1000)'
+                    ELSE 'Flagship (>$1000)'
+                END as price_category,
+                COUNT(*) as product_count,
+                SUM(sm_inventory) as total_inventory,
+                AVG(sm_price) as avg_price,
+                COALESCE(SUM(sales_data.units_sold), 0) as total_sold,
+                COALESCE(SUM(sales_data.revenue), 0) as total_revenue
+            FROM phone_specs ps
+            LEFT JOIN (
+                SELECT 
+                    il.phone_id,
+                    SUM(ABS(il.quantity_changed)) as units_sold,
+                    SUM(ps2.sm_price * ABS(il.quantity_changed)) as revenue
+                FROM inventory_log il
+                JOIN phone_specs ps2 ON il.phone_id = ps2.id
+                WHERE il.transaction_type = 'outgoing' 
+                AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                GROUP BY il.phone_id
+            ) sales_data ON ps.id = sales_data.phone_id
+            GROUP BY price_category
+            ORDER BY avg_price ASC
+        `;
+
+        const profitabilityQuery = `
+            SELECT 
+                ps.sm_maker as brand,
+                COUNT(*) as product_count,
+                AVG(ps.sm_price) as avg_price,
+                COALESCE(SUM(sales_data.revenue), 0) as total_revenue,
+                COALESCE(SUM(sales_data.units_sold), 0) as total_units_sold,
+                CASE 
+                    WHEN SUM(sales_data.units_sold) > 0 
+                    THEN ROUND(SUM(sales_data.revenue) / SUM(sales_data.units_sold), 2)
+                    ELSE 0 
+                END as avg_selling_price
+            FROM phone_specs ps
+            LEFT JOIN (
+                SELECT 
+                    il.phone_id,
+                    SUM(ABS(il.quantity_changed)) as units_sold,
+                    SUM(ps2.sm_price * ABS(il.quantity_changed)) as revenue
+                FROM inventory_log il
+                JOIN phone_specs ps2 ON il.phone_id = ps2.id
+                WHERE il.transaction_type = 'outgoing' 
+                AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                GROUP BY il.phone_id
+            ) sales_data ON ps.id = sales_data.phone_id
+            GROUP BY ps.sm_maker
+            HAVING total_revenue > 0
+            ORDER BY total_revenue DESC
+        `;
+
+        const [priceRangeResult, profitabilityResult] = await Promise.all([
+            conn.query(priceRangeQuery, [period]),
+            conn.query(profitabilityQuery, [period])
+        ]);
+
+        return {
+            price_ranges: this.convertBigIntToNumber(priceRangeResult),
+            brand_profitability: this.convertBigIntToNumber(profitabilityResult)
+        };
+    }
+
+    /**
+     * Get transaction patterns analytics
+     */
+    async getTransactionPatternsData(conn, period) {
+        const hourlyPatternQuery = `
+            SELECT 
+                HOUR(transaction_date) as hour_of_day,
+                COUNT(*) as transaction_count,
+                SUM(CASE WHEN transaction_type = 'outgoing' THEN ABS(quantity_changed) ELSE 0 END) as units_sold,
+                SUM(CASE WHEN transaction_type = 'incoming' THEN quantity_changed ELSE 0 END) as units_received
+            FROM inventory_log
+            WHERE transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
+            GROUP BY HOUR(transaction_date)
+            ORDER BY hour_of_day
+        `;
+
+        const dailyPatternQuery = `
+            SELECT 
+                DAYNAME(transaction_date) as day_name,
+                DAYOFWEEK(transaction_date) as day_number,
+                COUNT(*) as transaction_count,
+                SUM(CASE WHEN transaction_type = 'outgoing' THEN ABS(quantity_changed) ELSE 0 END) as units_sold,
+                SUM(CASE WHEN transaction_type = 'incoming' THEN quantity_changed ELSE 0 END) as units_received
+            FROM inventory_log
+            WHERE transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
+            GROUP BY DAYNAME(transaction_date), DAYOFWEEK(transaction_date)
+            ORDER BY day_number
+        `;
+
+        const transactionTypeQuery = `
+            SELECT 
+                transaction_type,
+                COUNT(*) as transaction_count,
+                SUM(ABS(quantity_changed)) as total_quantity,
+                AVG(ABS(quantity_changed)) as avg_quantity_per_transaction
+            FROM inventory_log
+            WHERE transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
+            GROUP BY transaction_type
+        `;
+
+        const [hourlyResult, dailyResult, typeResult] = await Promise.all([
+            conn.query(hourlyPatternQuery, [period]),
+            conn.query(dailyPatternQuery, [period]),
+            conn.query(transactionTypeQuery, [period])
+        ]);
+
+        return {
+            hourly_patterns: this.convertBigIntToNumber(hourlyResult),
+            daily_patterns: this.convertBigIntToNumber(dailyResult),
+            transaction_types: this.convertBigIntToNumber(typeResult)
+        };
+    }
+
+    /**
+     * Format technology trends data for charts
+     */
+    formatTechnologyTrendsData(technologyData) {
+        if (!technologyData) return { processors: {}, operating_systems: {}, ram_distribution: {} };
+
+        const colors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69'];
+
+        return {
+            processors: {
+                labels: technologyData.processors.map(item => item.processor),
+                datasets: [{
+                    label: 'Product Count',
+                    data: technologyData.processors.map(item => item.product_count),
+                    backgroundColor: colors
+                }]
+            },
+            operating_systems: {
+                labels: technologyData.operating_systems.map(item => item.operating_system),
+                datasets: [{
+                    label: 'Product Count',
+                    data: technologyData.operating_systems.map(item => item.product_count),
+                    backgroundColor: colors
+                }]
+            },
+            ram_distribution: {
+                labels: technologyData.ram_distribution.map(item => item.ram),
+                datasets: [{
+                    label: 'Product Count',
+                    data: technologyData.ram_distribution.map(item => item.product_count),
+                    backgroundColor: colors
+                }]
+            }
+        };
+    }
+
+    /**
+     * Format pricing analytics data for charts
+     */
+    formatPricingAnalyticsData(pricingData) {
+        if (!pricingData) return { price_ranges: {}, brand_profitability: {} };
+
+        const colors = ['#28a745', '#17a2b8', '#ffc107', '#dc3545'];
+
+        return {
+            price_ranges: {
+                labels: pricingData.price_ranges.map(item => item.price_category),
+                datasets: [{
+                    label: 'Units Sold',
+                    data: pricingData.price_ranges.map(item => item.total_sold),
+                    backgroundColor: colors,
+                    yAxisID: 'y'
+                }, {
+                    label: 'Revenue ($)',
+                    data: pricingData.price_ranges.map(item => parseFloat(item.total_revenue)),
+                    backgroundColor: colors.map(color => color + '80'),
+                    yAxisID: 'y1'
+                }]
+            },
+            brand_profitability: {
+                labels: pricingData.brand_profitability.map(item => item.brand),
+                datasets: [{
+                    label: 'Total Revenue ($)',
+                    data: pricingData.brand_profitability.map(item => parseFloat(item.total_revenue)),
+                    backgroundColor: '#4e73df'
+                }]
+            }
+        };
+    }
+
+    /**
+     * Format transaction patterns data for charts
+     */
+    formatTransactionPatternsData(patternsData) {
+        if (!patternsData) return { hourly: {}, daily: {}, types: {} };
+
+        const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        return {
+            hourly: {
+                labels: patternsData.hourly_patterns.map(item => `${item.hour_of_day}:00`),
+                datasets: [{
+                    label: 'Sales',
+                    data: patternsData.hourly_patterns.map(item => item.units_sold),
+                    borderColor: '#e74a3b',
+                    backgroundColor: 'rgba(231, 74, 59, 0.1)',
+                    fill: true
+                }, {
+                    label: 'Restocks',
+                    data: patternsData.hourly_patterns.map(item => item.units_received),
+                    borderColor: '#1cc88a',
+                    backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                    fill: true
+                }]
+            },
+            daily: {
+                labels: daysOfWeek,
+                datasets: [{
+                    label: 'Sales',
+                    data: daysOfWeek.map(day => {
+                        const dayData = patternsData.daily_patterns.find(item => item.day_name === day);
+                        return dayData ? dayData.units_sold : 0;
+                    }),
+                    backgroundColor: '#4e73df'
+                }, {
+                    label: 'Restocks',
+                    data: daysOfWeek.map(day => {
+                        const dayData = patternsData.daily_patterns.find(item => item.day_name === day);
+                        return dayData ? dayData.units_received : 0;
+                    }),
+                    backgroundColor: '#1cc88a'
+                }]
+            },
+            types: {
+                labels: patternsData.transaction_types.map(item => item.transaction_type.charAt(0).toUpperCase() + item.transaction_type.slice(1)),
+                datasets: [{
+                    label: 'Transaction Count',
+                    data: patternsData.transaction_types.map(item => item.transaction_count),
+                    backgroundColor: ['#28a745', '#dc3545', '#ffc107']
+                }]
+            }
+        };
     }
 }
 

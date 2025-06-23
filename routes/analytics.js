@@ -29,9 +29,13 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 
                 // Convert chart data to JSON strings for the view
                 salesTrendData: JSON.stringify(analyticsData.salesTrendData),
-                productPerformanceData: JSON.stringify(analyticsData.productPerformanceData),
                 inventoryStatusData: JSON.stringify(analyticsData.inventoryStatusData),
-                categoryPerformanceData: JSON.stringify(analyticsData.categoryPerformanceData || {}),
+                marketTrendsChartData: JSON.stringify(analyticsData.marketTrendsChartData || {}),
+                seasonalChartData: JSON.stringify(analyticsData.seasonalChartData || {}),
+                lifecycleChartData: JSON.stringify(analyticsData.lifecycleChartData || {}),
+                technologyTrendsChartData: JSON.stringify(analyticsData.technologyTrendsChartData || {}),
+                pricingAnalyticsChartData: JSON.stringify(analyticsData.pricingAnalyticsChartData || {}),
+                transactionPatternsChartData: JSON.stringify(analyticsData.transactionPatternsChartData || {}),
                 
                 title: 'Analytics Dashboard',
                 currentPage: 'analytics',
