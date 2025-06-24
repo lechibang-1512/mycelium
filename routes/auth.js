@@ -27,26 +27,42 @@ module.exports = (authPool, convertBigIntToNumber) => {
     router.post('/login', async (req, res) => {
         try {
             const { username, password, rememberMe } = req.body;
+            
+            // Add debug logging
+            console.log('=== LOGIN ATTEMPT ===');
+            console.log('Username:', username);
+            console.log('Password length:', password ? password.length : 'undefined');
+            console.log('Remember Me:', rememberMe);
+            
             const conn = await authPool.getConnection();
             
             // Find user by username
             const result = await conn.query('SELECT * FROM users WHERE username = ?', [username]);
+            console.log('User query result length:', result.length);
+            
             conn.end();
             
             if (result.length === 0) {
+                console.log('No user found with username:', username);
                 req.flash('error', 'Invalid username or password');
                 return res.redirect('/login');
             }
             
             const user = convertBigIntToNumber(result[0]);
+            console.log('Found user:', user.username, 'Role:', user.role);
             
             // Check password
+            console.log('Comparing password with hash...');
             const passwordMatch = await bcrypt.compare(password, user.password);
+            console.log('Password match result:', passwordMatch);
             
             if (!passwordMatch) {
+                console.log('Password does not match for user:', username);
                 req.flash('error', 'Invalid username or password');
                 return res.redirect('/login');
             }
+            
+            console.log('Login successful for user:', username);
             
             // Store user in session (without password)
             delete user.password;
@@ -65,6 +81,7 @@ module.exports = (authPool, convertBigIntToNumber) => {
             const returnTo = req.session.returnTo || '/';
             delete req.session.returnTo;
             
+            console.log('Redirecting to:', returnTo);
             res.redirect(returnTo);
         } catch (err) {
             console.error('Login error:', err);

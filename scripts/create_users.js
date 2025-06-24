@@ -21,43 +21,27 @@ async function createUsers() {
         // Hash password for all users
         const hashedPassword = await bcrypt.hash('123456', 10);
 
-        // Check if users already exist
-        const existingUsers = await conn.query('SELECT username FROM users WHERE username IN (?, ?, ?)', ['admin', 'staff', 'user']);
-        
-        if (existingUsers.length > 0) {
-            console.log('Some users already exist. Updating their passwords...');
-            
-            // Update existing users' passwords
-            for (const user of existingUsers) {
-                await conn.query('UPDATE users SET password = ? WHERE username = ?', [hashedPassword, user.username]);
-                console.log(`Updated password for user: ${user.username}`);
-            }
-            
-            // Check which users need to be created
-            const existingUsernames = existingUsers.map(u => u.username);
-            const usersToCreate = [
-                { username: 'admin', fullName: 'Administrator', email: 'admin@example.com', role: 'admin' },
-                { username: 'staff', fullName: 'Staff User', email: 'staff@example.com', role: 'staff' },
-                { username: 'user', fullName: 'Regular User', email: 'user@example.com', role: 'user' }
-            ].filter(u => !existingUsernames.includes(u.username));
-            
-            // Create missing users
-            for (const user of usersToCreate) {
-                await conn.query(
-                    'INSERT INTO users (username, password, fullName, email, role) VALUES (?, ?, ?, ?, ?)',
-                    [user.username, hashedPassword, user.fullName, user.email, user.role]
-                );
-                console.log(`Created user: ${user.username}`);
-            }
-        } else {
-            // Create all three users
-            const users = [
-                { username: 'admin', fullName: 'Administrator', email: 'admin@example.com', role: 'admin' },
-                { username: 'staff', fullName: 'Staff User', email: 'staff@example.com', role: 'staff' },
-                { username: 'user', fullName: 'Regular User', email: 'user@example.com', role: 'user' }
-            ];
+        // Define users to create/update
+        const users = [
+            { username: 'admin', fullName: 'Administrator', email: 'admin@example.com', role: 'admin' },
+            { username: 'staff', fullName: 'Staff User', email: 'staff@example.com', role: 'staff' },
+            { username: 'user', fullName: 'Regular User', email: 'user@example.com', role: 'user' }
+        ];
 
-            for (const user of users) {
+        // Process each user - update if exists, create if not
+        for (const user of users) {
+            // Check if user exists
+            const existingUser = await conn.query('SELECT username FROM users WHERE username = ?', [user.username]);
+            
+            if (existingUser.length > 0) {
+                // User exists - update password hash and other details
+                await conn.query(
+                    'UPDATE users SET password = ?, fullName = ?, email = ?, role = ? WHERE username = ?',
+                    [hashedPassword, user.fullName, user.email, user.role, user.username]
+                );
+                console.log(`Updated user: ${user.username} with new password hash`);
+            } else {
+                // User doesn't exist - create new user
                 await conn.query(
                     'INSERT INTO users (username, password, fullName, email, role) VALUES (?, ?, ?, ?, ?)',
                     [user.username, hashedPassword, user.fullName, user.email, user.role]
@@ -66,9 +50,9 @@ async function createUsers() {
             }
         }
 
-        console.log('\nAll users created/updated successfully!');
-        console.log('Password for all users: 123456');
-        console.log('\nUsers created:');
+        console.log('\nAll users processed successfully!');
+        console.log('Password hash updated for all users with password: 123456');
+        console.log('\nUsers processed:');
         console.log('- admin (Administrator role)');
         console.log('- staff (Staff role)');
         console.log('- user (User role)');
