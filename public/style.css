@@ -493,6 +493,83 @@ footer {
     transform: scale(1.1);
 }
 
+/* Phone Details Card Styles for Inventory Forms */
+#phone-details .card {
+    border: 1px solid #e3f2fd;
+    transition: all 0.3s ease;
+}
+
+#phone-details .card-body {
+    padding: 1rem;
+}
+
+#phone-details .detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+#phone-details .detail-item:last-child {
+    border-bottom: none;
+}
+
+#phone-details .detail-item strong {
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+#phone-details .detail-item span {
+    color: #212529;
+    font-weight: 500;
+}
+
+#phone-details .badge {
+    font-size: 0.8rem;
+}
+
+#total-value {
+    font-size: 1.1rem;
+    color: #28a745;
+}
+
+/* Enhanced form sections */
+.form-section h3 {
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Inventory form specific styles */
+.inventory-form .form-select:focus,
+.inventory-form .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.15);
+}
+
+.inventory-form .btn-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.inventory-form .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.inventory-form .btn-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.inventory-form .btn-danger:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
 /* Responsive improvements */
 @media (max-width: 768px) {
     .phone-header h1 {

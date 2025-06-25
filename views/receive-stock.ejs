@@ -37,7 +37,7 @@
 
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <div class="form-section">
+                <div class="form-section inventory-form">
                     <h3 class="mb-4">
                         <i class="fas fa-box me-2 text-primary"></i>
                         Stock Information
@@ -50,10 +50,60 @@
                             <select class="form-select" id="phone_id" name="phone_id" required>
                                 <option value="" disabled selected>Select a phone...</option>
                                 <% phones.forEach(phone => { %>
-                                    <option value="<%= phone.id %>"><%= phone.sm_name %></option>
+                                    <option value="<%= phone.id %>" 
+                                            data-price="<%= phone.sm_price || 'N/A' %>"
+                                            data-ram="<%= phone.ram || 'N/A' %>"
+                                            data-rom="<%= phone.rom || 'N/A' %>"
+                                            data-color="<%= phone.color || 'N/A' %>"
+                                            data-stock="<%= phone.sm_inventory || 0 %>"
+                                            data-maker="<%= phone.sm_maker || 'N/A' %>">
+                                        <%= phone.sm_name %>
+                                    </option>
                                 <% }); %>
                             </select>
                             <div class="form-text">Choose the phone model to restock</div>
+                        </div>
+
+                        <!-- Phone Details Display -->
+                        <div id="phone-details" class="mb-3" style="display: none;">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-3">
+                                        <i class="fas fa-info-circle me-2 text-primary"></i>
+                                        Selected Phone Details
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="detail-item mb-2">
+                                                <strong>Manufacturer:</strong> 
+                                                <span id="phone-maker">-</span>
+                                            </div>
+                                            <div class="detail-item mb-2">
+                                                <strong>Current Stock:</strong> 
+                                                <span id="phone-stock" class="badge bg-info">-</span>
+                                            </div>
+                                            <div class="detail-item mb-2">
+                                                <strong>Price:</strong> 
+                                                <span id="phone-price" class="badge bg-success">-</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="detail-item mb-2">
+                                                <strong>RAM:</strong> 
+                                                <span id="phone-ram">-</span>
+                                            </div>
+                                            <div class="detail-item mb-2">
+                                                <strong>Storage:</strong> 
+                                                <span id="phone-rom">-</span>
+                                            </div>
+                                            <div class="detail-item mb-2">
+                                                <strong>Color:</strong> 
+                                                <span id="phone-color">-</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -96,7 +146,40 @@
 
     <%- include('partials/footer') %>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/notifications.js"></script>
+
     <script>
+        // Phone selection handler to show details
+        document.getElementById('phone_id').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const detailsDiv = document.getElementById('phone-details');
+            
+            if (selectedOption.value) {
+                // Get data attributes
+                const price = selectedOption.getAttribute('data-price');
+                const ram = selectedOption.getAttribute('data-ram');
+                const rom = selectedOption.getAttribute('data-rom');
+                const color = selectedOption.getAttribute('data-color');
+                const stock = selectedOption.getAttribute('data-stock');
+                const maker = selectedOption.getAttribute('data-maker');
+                
+                // Update display elements
+                document.getElementById('phone-maker').textContent = maker;
+                document.getElementById('phone-stock').textContent = stock;
+                document.getElementById('phone-price').textContent = price !== 'N/A' ? `$${price}` : 'N/A';
+                document.getElementById('phone-ram').textContent = ram;
+                document.getElementById('phone-rom').textContent = rom;
+                document.getElementById('phone-color').textContent = color;
+                
+                // Show details card
+                detailsDiv.style.display = 'block';
+            } else {
+                // Hide details card
+                detailsDiv.style.display = 'none';
+            }
+        });
+
         // Form validation with modern notifications
         document.querySelector('form').addEventListener('submit', function(e) {
             const phoneId = document.getElementById('phone_id').value;

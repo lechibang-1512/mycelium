@@ -567,7 +567,9 @@ app.get('/inventory/receive', isStaffOrAdmin, async (req, res) => {
         const conn = await pool.getConnection();
         const suppliersConn = await suppliersPool.getConnection();
 
-        const phonesResult = await conn.query('SELECT id, sm_name FROM phone_specs ORDER BY sm_name');
+        const phonesResult = await conn.query(
+            'SELECT id, sm_name, sm_maker, sm_price, sm_inventory, ram, rom, color FROM phone_specs ORDER BY sm_name'
+        );
         const phones = convertBigIntToNumber(phonesResult);
 
         const suppliersResult = await suppliersConn.query("SELECT supplier_id, name FROM suppliers WHERE is_active = 1 ORDER BY name");
@@ -632,7 +634,9 @@ app.post('/inventory/receive', isStaffOrAdmin, async (req, res) => {
 app.get('/inventory/sell', isStaffOrAdmin, async (req, res) => {
     try {
         const conn = await pool.getConnection();
-        const phonesResult = await conn.query('SELECT id, sm_name, sm_inventory FROM phone_specs WHERE sm_inventory > 0 ORDER BY sm_name');
+        const phonesResult = await conn.query(
+            'SELECT id, sm_name, sm_maker, sm_price, sm_inventory, ram, rom, color FROM phone_specs WHERE sm_inventory > 0 ORDER BY sm_name'
+        );
         const phones = convertBigIntToNumber(phonesResult);
         conn.end();
 

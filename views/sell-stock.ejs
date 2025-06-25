@@ -35,7 +35,7 @@
 
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <div class="form-section">
+                <div class="form-section inventory-form">
                     <h3 class="mb-4">
                         <i class="fas fa-shopping-cart me-2 text-danger"></i>
                         Sale Information
@@ -48,12 +48,70 @@
                             <select class="form-select" id="phone_id" name="phone_id" required>
                                 <option value="" disabled selected>Select a phone to sell...</option>
                                 <% phones.forEach(phone => { %>
-                                    <option value="<%= phone.id %>">
+                                    <option value="<%= phone.id %>"
+                                            data-price="<%= phone.sm_price || 'N/A' %>"
+                                            data-ram="<%= phone.ram || 'N/A' %>"
+                                            data-rom="<%= phone.rom || 'N/A' %>"
+                                            data-color="<%= phone.color || 'N/A' %>"
+                                            data-stock="<%= phone.sm_inventory || 0 %>"
+                                            data-maker="<%= phone.sm_maker || 'N/A' %>">
                                         <%= phone.sm_name %> (Stock: <%= phone.sm_inventory %>)
                                     </option>
                                 <% }); %>
                             </select>
                             <div class="form-text">Only phones with available stock are shown</div>
+                        </div>
+
+                        <!-- Phone Details Display -->
+                        <div id="phone-details" class="mb-3" style="display: none;">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-3">
+                                        <i class="fas fa-info-circle me-2 text-primary"></i>
+                                        Selected Phone Details
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="detail-item mb-2">
+                                                <strong>Manufacturer:</strong> 
+                                                <span id="phone-maker">-</span>
+                                            </div>
+                                            <div class="detail-item mb-2">
+                                                <strong>Available Stock:</strong> 
+                                                <span id="phone-stock" class="badge bg-info">-</span>
+                                            </div>
+                                            <div class="detail-item mb-2">
+                                                <strong>Unit Price:</strong> 
+                                                <span id="phone-price" class="badge bg-success">-</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="detail-item mb-2">
+                                                <strong>RAM:</strong> 
+                                                <span id="phone-ram">-</span>
+                                            </div>
+                                            <div class="detail-item mb-2">
+                                                <strong>Storage:</strong> 
+                                                <span id="phone-rom">-</span>
+                                            </div>
+                                            <div class="detail-item mb-2">
+                                                <strong>Color:</strong> 
+                                                <span id="phone-color">-</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-12">
+                                            <div class="alert alert-info mb-0">
+                                                <i class="fas fa-calculator me-2"></i>
+                                                <strong>Total Sale Value:</strong> 
+                                                <span id="total-value" class="fw-bold">$0.00</span>
+                                                <small class="text-muted">(Price × Quantity)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -85,7 +143,68 @@
 
     <%- include('partials/footer') %>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/notifications.js"></script>
+
     <script>
+        let currentPhonePrice = 0;
+
+        // Phone selection handler to show details
+        document.getElementById('phone_id').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const detailsDiv = document.getElementById('phone-details');
+            
+            if (selectedOption.value) {
+                // Get data attributes
+                const price = selectedOption.getAttribute('data-price');
+                const ram = selectedOption.getAttribute('data-ram');
+                const rom = selectedOption.getAttribute('data-rom');
+                const color = selectedOption.getAttribute('data-color');
+                const stock = selectedOption.getAttribute('data-stock');
+                const maker = selectedOption.getAttribute('data-maker');
+                
+                // Store current phone price for calculations
+                currentPhonePrice = parseFloat(price) || 0;
+                
+                // Update display elements
+                document.getElementById('phone-maker').textContent = maker;
+                document.getElementById('phone-stock').textContent = stock;
+                document.getElementById('phone-price').textContent = price !== 'N/A' ? `$${price}` : 'N/A';
+                document.getElementById('phone-ram').textContent = ram;
+                document.getElementById('phone-rom').textContent = rom;
+                document.getElementById('phone-color').textContent = color;
+                
+                // Set max quantity based on stock
+                const maxStock = parseInt(stock);
+                document.getElementById('quantity').setAttribute('max', maxStock);
+                document.getElementById('quantity').placeholder = `Max available: ${maxStock}`;
+                
+                // Calculate total value if quantity is already entered
+                const quantity = parseInt(document.getElementById('quantity').value) || 0;
+                updateTotalValue(quantity);
+                
+                // Show details card
+                detailsDiv.style.display = 'block';
+            } else {
+                // Hide details card and reset
+                detailsDiv.style.display = 'none';
+                currentPhonePrice = 0;
+                updateTotalValue(0);
+            }
+        });
+
+        // Quantity input handler to update total value
+        document.getElementById('quantity').addEventListener('input', function() {
+            const quantity = parseInt(this.value) || 0;
+            updateTotalValue(quantity);
+        });
+
+        // Function to update total sale value
+        function updateTotalValue(quantity) {
+            const totalValue = currentPhonePrice * quantity;
+            document.getElementById('total-value').textContent = `$${totalValue.toFixed(2)}`;
+        }
+
         // Form validation with modern notifications
         document.querySelector('form').addEventListener('submit', function(e) {
             const phoneId = document.getElementById('phone_id').value;
@@ -105,22 +224,18 @@
                 return;
             }
 
+            // Validate against available stock
+            const selectedOption = document.getElementById('phone_id').options[document.getElementById('phone_id').selectedIndex];
+            const availableStock = parseInt(selectedOption.getAttribute('data-stock'));
+            if (parseInt(quantity) > availableStock) {
+                e.preventDefault();
+                showWarning(`Quantity cannot exceed available stock (${availableStock})`);
+                document.getElementById('quantity').focus();
+                return;
+            }
+
             // Show processing message
             showInfo('Processing sale...');
-        });
-
-        // Update max quantity based on selected phone's stock
-        document.getElementById('phone_id').addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            if (selectedOption.value) {
-                const stockText = selectedOption.text;
-                const stockMatch = stockText.match(/Stock: (\d+)/);
-                if (stockMatch) {
-                    const maxStock = parseInt(stockMatch[1]);
-                    document.getElementById('quantity').setAttribute('max', maxStock);
-                    document.getElementById('quantity').placeholder = `Max available: ${maxStock}`;
-                }
-            }
         });
     </script>
 </body>
