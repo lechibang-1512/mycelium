@@ -102,12 +102,6 @@ class AnalyticsService {
                 previousRevenue: parseFloat(previousRevenue).toFixed(2),
                 previousUnitsSold: previousUnitsSold,
                 
-                // Chart data
-                salesTrendData: this.formatSalesTrendData(salesTrendData),
-                productPerformanceData: this.formatProductPerformanceData(topProductsData),
-                inventoryStatusData: this.formatInventoryStatusData(inventoryStatusData),
-                categoryPerformanceData: this.formatCategoryPerformanceData(categoryPerformanceData),
-                
                 // Product data
                 topSellingProducts: topProductsData,
                 topPerformingProducts: topProductsData, // Alias for compatibility
@@ -141,14 +135,6 @@ class AnalyticsService {
                 inventoryEfficiency: inventoryEfficiencyData,
                 pricingAnalytics: pricingAnalyticsData,
                 transactionPatterns: transactionPatternsData,
-                
-                // Additional chart data
-                marketTrendsChartData: this.formatMarketTrendsData(marketTrendsData),
-                seasonalChartData: this.formatSeasonalData(seasonalAnalysisData),
-                lifecycleChartData: this.formatLifecycleData(productLifecycleData),
-                technologyTrendsChartData: this.formatTechnologyTrendsData(technologyTrendsData),
-                pricingAnalyticsChartData: this.formatPricingAnalyticsData(pricingAnalyticsData),
-                transactionPatternsChartData: this.formatTransactionPatternsData(transactionPatternsData),
                 
                 // Filters
                 selectedPeriod: period,
@@ -714,163 +700,6 @@ class AnalyticsService {
                 const units = parseInt(item.daily_units);
                 return isNaN(units) ? 0 : units;
             })
-        };
-    }
-
-    /**
-     * Format product performance data for Chart.js
-     */
-    formatProductPerformanceData(topProducts) {
-        return {
-            labels: topProducts.slice(0, 5).map(p => `${p.sm_maker} ${p.sm_name}`),
-            values: topProducts.slice(0, 5).map(p => p.total_sold)
-        };
-    }
-
-    /**
-     * Format inventory status data for Chart.js
-     */
-    formatInventoryStatusData(inventoryStatus) {
-        if (!inventoryStatus) {
-            return {
-                labels: ['In Stock', 'Low Stock', 'Out of Stock'],
-                datasets: [{
-                    data: [0, 0, 0],
-                    backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
-            };
-        }
-
-        return {
-            labels: ['In Stock', 'Low Stock', 'Out of Stock'],
-            datasets: [{
-                data: [
-                    parseInt(inventoryStatus.in_stock) || 0,
-                    parseInt(inventoryStatus.low_stock) || 0,
-                    parseInt(inventoryStatus.out_of_stock) || 0
-                ],
-                backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
-                borderWidth: 2,
-                borderColor: '#fff'
-            }]
-        };
-    }
-
-    /**
-     * Format category performance data for charts
-     */
-    formatCategoryPerformanceData(categoryData) {
-        if (!categoryData || categoryData.length === 0) {
-            return { labels: [], values: [], colors: [] };
-        }
-
-        const colors = [
-            '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
-            '#858796', '#5a5c69', '#6f42c1', '#e83e8c', '#fd7e14'
-        ];
-
-        return {
-            labels: categoryData.map(item => item.category),
-            values: categoryData.map(item => parseFloat(item.revenue)),
-            colors: categoryData.map((_, index) => colors[index % colors.length])
-        };
-    }
-
-    /**
-     * Format market trends data for Chart.js
-     */
-    formatMarketTrendsData(marketData) {
-        const labels = marketData.map(item => item.brand);
-        const revenueData = marketData.map(item => parseFloat(item.revenue));
-        const unitsData = marketData.map(item => parseInt(item.units_sold));
-        const inventoryData = marketData.map(item => parseInt(item.total_inventory));
-
-        return {
-            labels,
-            datasets: [
-                {
-                    label: 'Revenue ($)',
-                    data: revenueData,
-                    backgroundColor: 'rgba(78, 115, 223, 0.8)',
-                    borderColor: 'rgba(78, 115, 223, 1)',
-                    borderWidth: 2,
-                    yAxisID: 'y'
-                },
-                {
-                    label: 'Units Sold',
-                    data: unitsData,
-                    backgroundColor: 'rgba(28, 200, 138, 0.8)',
-                    borderColor: 'rgba(28, 200, 138, 1)',
-                    borderWidth: 2,
-                    yAxisID: 'y1'
-                }
-            ]
-        };
-    }
-
-    /**
-     * Format seasonal data for Chart.js
-     */
-    formatSeasonalData(seasonalData) {
-        const labels = seasonalData.map(item => `${item.month_name} ${item.year_num}`);
-        const revenueData = seasonalData.map(item => parseFloat(item.revenue));
-        const unitsData = seasonalData.map(item => parseInt(item.units_sold));
-
-        return {
-            labels: labels.slice(-12), // Last 12 months
-            datasets: [
-                {
-                    label: 'Monthly Revenue ($)',
-                    data: revenueData.slice(-12),
-                    backgroundColor: 'rgba(246, 194, 62, 0.2)',
-                    borderColor: 'rgba(246, 194, 62, 1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4
-                },
-                {
-                    label: 'Monthly Units Sold',
-                    data: unitsData.slice(-12),
-                    backgroundColor: 'rgba(231, 74, 59, 0.2)',
-                    borderColor: 'rgba(231, 74, 59, 1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4
-                }
-            ]
-        };
-    }
-
-    /**
-     * Format product lifecycle data for Chart.js
-     */
-    formatLifecycleData(lifecycleData) {
-        const stages = ['Introduction', 'Growth', 'Maturity', 'Decline'];
-        const stageCounts = stages.map(stage => 
-            lifecycleData.filter(item => item.lifecycle_stage === stage).length
-        );
-
-        return {
-            labels: stages,
-            datasets: [{
-                label: 'Products by Lifecycle Stage',
-                data: stageCounts,
-                backgroundColor: [
-                    'rgba(54, 185, 204, 0.8)',  // Introduction
-                    'rgba(28, 200, 138, 0.8)',  // Growth  
-                    'rgba(246, 194, 62, 0.8)',  // Maturity
-                    'rgba(231, 74, 59, 0.8)'    // Decline
-                ],
-                borderColor: [
-                    'rgba(54, 185, 204, 1)',
-                    'rgba(28, 200, 138, 1)',
-                    'rgba(246, 194, 62, 1)',
-                    'rgba(231, 74, 59, 1)'
-                ],
-                borderWidth: 2
-            }]
         };
     }
 
@@ -1450,129 +1279,11 @@ class AnalyticsService {
         };
     }
 
-    /**
-     * Format technology trends data for charts
-     */
-    formatTechnologyTrendsData(technologyData) {
-        if (!technologyData) return { processors: {}, operating_systems: {}, ram_distribution: {} };
 
-        const colors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69'];
 
-        return {
-            processors: {
-                labels: (technologyData.processors || []).map(item => item.processor || 'Unknown'),
-                datasets: [{
-                    label: 'Product Count',
-                    data: (technologyData.processors || []).map(item => parseInt(item.product_count) || 0),
-                    backgroundColor: colors
-                }]
-            },
-            operating_systems: {
-                labels: (technologyData.operating_systems || []).map(item => item.operating_system || 'Unknown'),
-                datasets: [{
-                    label: 'Product Count',
-                    data: (technologyData.operating_systems || []).map(item => parseInt(item.product_count) || 0),
-                    backgroundColor: colors
-                }]
-            },
-            ram_distribution: {
-                labels: (technologyData.ram_distribution || []).map(item => item.ram || 'Unknown'),
-                datasets: [{
-                    label: 'Product Count',
-                    data: (technologyData.ram_distribution || []).map(item => parseInt(item.product_count) || 0),
-                    backgroundColor: colors
-                }]
-            }
-        };
-    }
 
-    /**
-     * Format pricing analytics data for charts
-     */
-    formatPricingAnalyticsData(pricingData) {
-        if (!pricingData) return { price_ranges: {}, brand_profitability: {} };
 
-        const colors = ['#28a745', '#17a2b8', '#ffc107', '#dc3545'];
 
-        return {
-            price_ranges: {
-                labels: pricingData.price_ranges.map(item => item.price_category),
-                datasets: [{
-                    label: 'Units Sold',
-                    data: pricingData.price_ranges.map(item => item.total_sold),
-                    backgroundColor: colors,
-                    yAxisID: 'y'
-                }, {
-                    label: 'Revenue ($)',
-                    data: pricingData.price_ranges.map(item => parseFloat(item.total_revenue)),
-                    backgroundColor: colors.map(color => color + '80'),
-                    yAxisID: 'y1'
-                }]
-            },
-            brand_profitability: {
-                labels: pricingData.brand_profitability.map(item => item.brand),
-                datasets: [{
-                    label: 'Total Revenue ($)',
-                    data: pricingData.brand_profitability.map(item => parseFloat(item.total_revenue)),
-                    backgroundColor: '#4e73df'
-                }]
-            }
-        };
-    }
-
-    /**
-     * Format transaction patterns data for charts
-     */
-    formatTransactionPatternsData(patternsData) {
-        if (!patternsData) return { hourly: {}, daily: {}, types: {} };
-
-        const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-        return {
-            hourly: {
-                labels: patternsData.hourly_patterns.map(item => `${item.hour_of_day}:00`),
-                datasets: [{
-                    label: 'Sales',
-                    data: patternsData.hourly_patterns.map(item => item.units_sold),
-                    borderColor: '#e74a3b',
-                    backgroundColor: 'rgba(231, 74, 59, 0.1)',
-                    fill: true
-                }, {
-                    label: 'Restocks',
-                    data: patternsData.hourly_patterns.map(item => item.units_received),
-                    borderColor: '#1cc88a',
-                    backgroundColor: 'rgba(28, 200, 138, 0.1)',
-                    fill: true
-                }]
-            },
-            daily: {
-                labels: daysOfWeek,
-                datasets: [{
-                    label: 'Sales',
-                    data: daysOfWeek.map(day => {
-                        const dayData = patternsData.daily_patterns.find(item => item.day_name === day);
-                        return dayData ? dayData.units_sold : 0;
-                    }),
-                    backgroundColor: '#4e73df'
-                }, {
-                    label: 'Restocks',
-                    data: daysOfWeek.map(day => {
-                        const dayData = patternsData.daily_patterns.find(item => item.day_name === day);
-                        return dayData ? dayData.units_received : 0;
-                    }),
-                    backgroundColor: '#1cc88a'
-                }]
-            },
-            types: {
-                labels: patternsData.transaction_types.map(item => item.transaction_type.charAt(0).toUpperCase() + item.transaction_type.slice(1)),
-                datasets: [{
-                    label: 'Transaction Count',
-                    data: patternsData.transaction_types.map(item => item.transaction_count),
-                    backgroundColor: ['#28a745', '#dc3545', '#ffc107']
-                }]
-            }
-        };
-    }
 }
 
 module.exports = AnalyticsService;

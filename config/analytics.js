@@ -24,21 +24,6 @@ const AnalyticsConfig = {
         FORECAST_DAYS: 30
     },
 
-    // Chart configuration
-    CHARTS: {
-        COLORS: {
-            PRIMARY: '#4e73df',
-            SUCCESS: '#1cc88a',
-            WARNING: '#f6c23e',
-            DANGER: '#e74a3b',
-            INFO: '#36b9cc',
-            SECONDARY: '#858796'
-        },
-        REFRESH_INTERVAL: 300000, // 5 minutes in milliseconds
-        ANIMATION_DURATION: 1000,
-        RESPONSIVE: true
-    },
-
     // Insight thresholds
     INSIGHTS: {
         STRONG_GROWTH_THRESHOLD: 10, // percentage
