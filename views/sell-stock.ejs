@@ -103,16 +103,17 @@
                                 </div>
                             </div>
                         </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
                         <div class="mb-3">
                             <label for="quantity" class="form-label">Quantity Sold *</label>
                             <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
                             <div class="form-text">Enter the number of units sold</div>
+                            <div class="invalid-feedback" id="quantity-error">
+                                Quantity cannot exceed available stock
+                            </div>
+                            <div class="valid-feedback">
+                                Valid quantity selected
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -188,9 +189,26 @@
             }
         });
 
-        // Quantity input handler to update total value
+        // Quantity input handler to update total value and validation
         document.getElementById('quantity').addEventListener('input', function() {
             const quantity = parseInt(this.value) || 0;
+            const selectedOption = document.getElementById('phone_id').options[document.getElementById('phone_id').selectedIndex];
+            
+            if (selectedOption.value) {
+                const availableStock = parseInt(selectedOption.getAttribute('data-stock'));
+                
+                // Visual feedback for quantity validation
+                if (quantity > availableStock) {
+                    this.classList.add('is-invalid');
+                    this.classList.remove('is-valid');
+                } else if (quantity > 0) {
+                    this.classList.add('is-valid');
+                    this.classList.remove('is-invalid');
+                } else {
+                    this.classList.remove('is-valid', 'is-invalid');
+                }
+            }
+            
             updateTotalValue(quantity);
         });
 
