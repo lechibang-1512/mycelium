@@ -23,59 +23,25 @@ class AnalyticsService {
         const suppliersConn = await this.suppliersPool.getConnection();
         
         try {
-            // Get all analytics data in parallel for better performance
+            // Get core analytics data in parallel for better performance
             const [
                 revenueData,
                 unitsSoldData,
                 productsData,
                 lowStockData,
-                salesTrendData,
                 topProductsData,
-                inventoryStatusData,
-                bestDayData,
                 previousPeriodData,
                 recentTransactionsData,
-                supplierPerformanceData,
-                inventoryValueData,
-                categoryPerformanceData,
-                profitabilityData,
-                stockTurnoverData,
-                marketTrendsData,
-                seasonalAnalysisData,
-                productLifecycleData,
-                advancedInventoryMetrics,
-                realTimePerformanceData,
-                productSpecAnalytics,
-                technologyTrendsData,
-                inventoryEfficiencyData,
-                pricingAnalyticsData,
-                transactionPatternsData
+                inventoryValueData
             ] = await Promise.all([
                 this.getRevenueData(conn, period),
                 this.getUnitsSoldData(conn, period),
                 this.getProductsData(conn),
                 this.getLowStockData(conn),
-                this.getSalesTrendData(conn, period),
                 this.getTopProductsData(conn, period),
-                this.getInventoryStatusData(conn),
-                this.getBestSellingDayData(conn, period),
                 this.getPreviousPeriodData(conn, period),
                 this.getRecentTransactionsData(conn),
-                this.getSupplierPerformanceData(suppliersConn, period),
-                this.getInventoryValueData(conn),
-                this.getCategoryPerformanceData(conn, period),
-                this.getProfitabilityData(conn, period),
-                this.getStockTurnoverData(conn, period),
-                this.getMarketTrendsData(conn, period),
-                this.getSeasonalAnalysisData(conn),
-                this.getProductLifecycleData(conn, period),
-                this.getAdvancedInventoryMetrics(conn, period),
-                this.getRealTimePerformanceData(conn),
-                this.getProductSpecAnalytics(conn),
-                this.getTechnologyTrendsData(conn),
-                this.getInventoryEfficiencyData(conn, period),
-                this.getPricingAnalyticsData(conn, period),
-                this.getTransactionPatternsData(conn, period)
+                this.getInventoryValueData(conn)
             ]);
 
             const totalRevenue = revenueData.total_revenue || 0;
@@ -87,8 +53,6 @@ class AnalyticsService {
             const averageOrderValue = totalUnitsSold > 0 ? totalRevenue / totalUnitsSold : 0;
             const previousAverageOrderValue = previousUnitsSold > 0 ? previousRevenue / previousUnitsSold : 0;
             const growthRate = previousRevenue > 0 ? ((totalRevenue - previousRevenue) / previousRevenue) * 100 : 0;
-            const inventoryTurnover = stockTurnoverData.average_turnover || 0;
-            const profitMargin = profitabilityData.profit_margin || 0;
 
             return {
                 // Basic metrics
@@ -104,37 +68,15 @@ class AnalyticsService {
                 
                 // Product data
                 topSellingProducts: topProductsData,
-                topPerformingProducts: topProductsData, // Alias for compatibility
-                brandPerformance: marketTrendsData, // Use market trends data for brand performance
                 
                 // Calculated metrics
                 averageOrderValue: parseFloat(averageOrderValue).toFixed(2),
                 previousAverageOrderValue: parseFloat(previousAverageOrderValue).toFixed(2),
-                averageSaleValue: parseFloat(averageOrderValue).toFixed(2), // Alias for compatibility
-                bestSellingDay: bestDayData.length > 0 ? bestDayData[0].day_name : 'N/A',
                 growthRate: parseFloat(growthRate).toFixed(2),
-                inventoryTurnover: parseFloat(inventoryTurnover).toFixed(2),
-                profitMargin: parseFloat(profitMargin).toFixed(2),
                 
                 // Additional data
                 recentTransactions: recentTransactionsData,
-                supplierPerformance: supplierPerformanceData,
                 inventoryValue: inventoryValueData,
-                categoryPerformance: categoryPerformanceData,
-                profitabilityAnalysis: profitabilityData,
-                stockTurnoverAnalysis: stockTurnoverData,
-                
-                // New comprehensive analytics
-                marketTrends: marketTrendsData,
-                seasonalAnalysis: seasonalAnalysisData,
-                productLifecycle: productLifecycleData,
-                advancedInventoryMetrics: advancedInventoryMetrics,
-                realTimePerformance: realTimePerformanceData,
-                productSpecAnalytics: productSpecAnalytics,
-                technologyTrends: technologyTrendsData,
-                inventoryEfficiency: inventoryEfficiencyData,
-                pricingAnalytics: pricingAnalyticsData,
-                transactionPatterns: transactionPatternsData,
                 
                 // Filters
                 selectedPeriod: period,
@@ -205,7 +147,7 @@ class AnalyticsService {
     async getSalesTrendData(conn, period) {
         const query = `
             SELECT 
-                DATE(il.transaction_date) as sale_date,
+                DATE_FORMAT(il.transaction_date, '%Y-%m-%d') as sale_date,
                 COALESCE(SUM(ps.sm_price * ABS(il.quantity_changed)), 0) as daily_revenue,
                 COALESCE(SUM(ABS(il.quantity_changed)), 0) as daily_units
             FROM inventory_log il
@@ -213,7 +155,7 @@ class AnalyticsService {
             WHERE il.transaction_type = 'outgoing' 
             AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
             GROUP BY DATE(il.transaction_date)
-            ORDER BY sale_date ASC
+            ORDER BY DATE(il.transaction_date) ASC
         `;
         const result = await conn.query(query, [period]);
         return this.convertBigIntToNumber(result);
@@ -298,9 +240,14 @@ class AnalyticsService {
     async getRecentTransactionsData(conn) {
         const query = `
             SELECT 
-                il.transaction_type, il.quantity_changed, il.notes,
+                il.transaction_type, 
+                il.quantity_changed, 
+                il.notes,
+                il.transaction_date,
                 DATE_FORMAT(il.transaction_date, '%M %d, %Y at %h:%i %p') as formatted_date,
-                ps.sm_name, ps.sm_maker, ps.sm_price
+                ps.sm_name, 
+                ps.sm_maker, 
+                ps.sm_price
             FROM inventory_log il
             JOIN phone_specs ps ON il.phone_id = ps.id
             ORDER BY il.transaction_date DESC
@@ -645,59 +592,51 @@ class AnalyticsService {
         return {
             labels: salesTrendRaw.map(item => {
                 try {
-                    // Handle both string and Date objects, with better error handling
-                    let date;
-                    
+                    // Since we're now using DATE_FORMAT, sale_date should be a string
                     if (!item.sale_date) {
                         console.warn('Missing sale_date in item:', item);
                         return 'Unknown Date';
                     }
                     
+                    // Handle string dates (YYYY-MM-DD format from DATE_FORMAT)
                     if (typeof item.sale_date === 'string') {
-                        // Try to parse the string date
-                        date = new Date(item.sale_date);
-                    } else if (item.sale_date instanceof Date) {
-                        date = item.sale_date;
-                    } else if (typeof item.sale_date === 'object' && item.sale_date !== null) {
-                        // Handle case where item.sale_date might be an empty object {} or have date properties
-                        if (Object.keys(item.sale_date).length === 0) {
-                            console.warn('Empty date object format:', item.sale_date);
-                            return 'Invalid Date';
-                        }
-                        // Try to convert object to string and parse as date
-                        const dateStr = item.sale_date.toString();
-                        date = new Date(dateStr);
+                        const date = new Date(item.sale_date + 'T00:00:00Z');
                         if (isNaN(date.getTime())) {
-                            console.warn('Invalid date object format:', item.sale_date);
+                            console.warn('Invalid date string:', item.sale_date);
                             return 'Invalid Date';
                         }
-                    } else {
-                        console.warn('Invalid date format:', typeof item.sale_date, item.sale_date);
-                        return 'Unknown Date';
+                        return date.toLocaleDateString('en-US', { 
+                            year: 'numeric',
+                            month: 'short', 
+                            day: 'numeric',
+                            timeZone: 'UTC'
+                        });
                     }
                     
-                    // Check if the date is valid
-                    if (!date || isNaN(date.getTime())) {
-                        console.warn('Invalid date value after parsing:', item.sale_date, '-> parsed as:', date);
-                        return 'Invalid Date';
+                    // Handle Date objects (fallback)
+                    if (item.sale_date instanceof Date) {
+                        return item.sale_date.toLocaleDateString('en-US', { 
+                            year: 'numeric',
+                            month: 'short', 
+                            day: 'numeric'
+                        });
                     }
                     
-                    return date.toLocaleDateString('en-US', { 
-                        year: 'numeric',
-                        month: 'short', 
-                        day: 'numeric' 
-                    });
+                    // Handle unexpected formats
+                    console.warn('Unexpected date format:', typeof item.sale_date, item.sale_date);
+                    return 'Invalid Date';
+                    
                 } catch (error) {
                     console.error('Date formatting error:', error, 'for item:', item);
                     return 'Invalid Date';
                 }
             }),
             revenue: salesTrendRaw.map(item => {
-                const revenue = parseFloat(item.daily_revenue);
+                const revenue = parseFloat(item.daily_revenue || 0);
                 return isNaN(revenue) ? 0 : revenue;
             }),
             units: salesTrendRaw.map(item => {
-                const units = parseInt(item.daily_units);
+                const units = parseInt(item.daily_units || 0);
                 return isNaN(units) ? 0 : units;
             })
         };

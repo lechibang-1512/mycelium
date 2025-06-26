@@ -11,11 +11,11 @@
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h1 class="h3 mb-2 text-gray-800">
-                            <i class="fas fa-table me-2"></i>
+                        <h1 class="h3 mb-2">
+                            <i class="fas fa-chart-line me-2 text-primary"></i>
                             Analytics Dashboard
                         </h1>
-                        <p class="text-muted">Comprehensive business intelligence and performance metrics in table format</p>
+                        <p class="text-muted">Key business metrics and performance overview</p>
                     </div>
                     <div class="d-flex gap-2">
                         <button class="btn btn-outline-primary" onclick="refreshData()">
@@ -26,22 +26,18 @@
                             <i class="fas fa-download me-1"></i>
                             Export CSV
                         </button>
-                        <button class="btn btn-info" onclick="exportData('json')">
-                            <i class="fas fa-file-export me-1"></i>
-                            Export JSON
-                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Advanced Filters -->
+        <!-- Time Period Filter -->
         <div class="row mb-4">
             <div class="col-12">
-                <div class="card shadow-sm">
+                <div class="card">
                     <div class="card-body">
                         <div class="row align-items-center">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <label for="periodSelector" class="form-label">Time Period</label>
                                 <select class="form-select" id="periodSelector" onchange="changePeriod()">
                                     <option value="7" <%= filters.period === 7 ? 'selected' : '' %>>Last 7 Days</option>
@@ -50,28 +46,10 @@
                                     <option value="365" <%= filters.period === 365 ? 'selected' : '' %>>Last Year</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
-                                <label for="categoryFilter" class="form-label">Category</label>
-                                <select class="form-select" id="categoryFilter" onchange="applyFilters()">
-                                    <option value="all">All Categories</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="metricSelector" class="form-label">Primary Metric</label>
-                                <select class="form-select" id="metricSelector" onchange="changeMetric()">
-                                    <option value="revenue">Revenue</option>
-                                    <option value="units">Units Sold</option>
-                                    <option value="profit">Profit Margin</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="form-check form-switch mt-4">
-                                    <input class="form-check-input" type="checkbox" id="comparisonToggle" 
-                                           <%= filters.comparison ? 'checked' : '' %> onchange="toggleComparison()">
-                                    <label class="form-check-label" for="comparisonToggle">
-                                        Compare with Previous Period
-                                    </label>
-                                </div>
+                            <div class="col-md-8">
+                                <small class="text-muted">
+                                    Showing data for the selected time period. Growth rates compare with the previous equivalent period.
+                                </small>
                             </div>
                         </div>
                     </div>
@@ -79,373 +57,195 @@
             </div>
         </div>
 
-        <!-- Summary Cards -->
+        <!-- Key Metrics Cards -->
         <div class="row mb-4">
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-primary shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                    Total Revenue
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    $<%= (totalRevenue || 0).toLocaleString() %>
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                            </div>
-                        </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card border-primary">
+                    <div class="card-body text-center">
+                        <i class="fas fa-dollar-sign fa-2x text-primary mb-2"></i>
+                        <h3 class="text-primary">$<%= (totalRevenue || 0).toLocaleString() %></h3>
+                        <p class="text-muted mb-1">Total Revenue</p>
+                        <% if (growthRate !== undefined) { %>
+                            <small class="<%= parseFloat(growthRate) >= 0 ? 'text-success' : 'text-danger' %>">
+                                <i class="fas fa-<%= parseFloat(growthRate) >= 0 ? 'arrow-up' : 'arrow-down' %>"></i>
+                                <%= Math.abs(parseFloat(growthRate)).toFixed(1) %>% vs previous period
+                            </small>
+                        <% } %>
                     </div>
                 </div>
             </div>
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-success shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                    Units Sold
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    <%= (totalUnitsSold || 0).toLocaleString() %>
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
-                            </div>
-                        </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card border-success">
+                    <div class="card-body text-center">
+                        <i class="fas fa-shopping-cart fa-2x text-success mb-2"></i>
+                        <h3 class="text-success"><%= (totalUnitsSold || 0).toLocaleString() %></h3>
+                        <p class="text-muted mb-1">Units Sold</p>
+                        <small class="text-muted">Across all products</small>
                     </div>
                 </div>
             </div>
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-info shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                    Total Products
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    <%= totalProducts || 0 %>
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class="fas fa-box fa-2x text-gray-300"></i>
-                            </div>
-                        </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card border-info">
+                    <div class="card-body text-center">
+                        <i class="fas fa-box fa-2x text-info mb-2"></i>
+                        <h3 class="text-info"><%= totalProducts || 0 %></h3>
+                        <p class="text-muted mb-1">Total Products</p>
+                        <small class="text-muted">In inventory</small>
                     </div>
                 </div>
             </div>
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-warning shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                    Avg Order Value
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    $<%= averageOrderValue || '0.00' %>
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class="fas fa-calculator fa-2x text-gray-300"></i>
-                            </div>
-                        </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card border-warning">
+                    <div class="card-body text-center">
+                        <i class="fas fa-calculator fa-2x text-warning mb-2"></i>
+                        <h3 class="text-warning">$<%= averageOrderValue || '0.00' %></h3>
+                        <p class="text-muted mb-1">Avg Order Value</p>
+                        <small class="text-muted">Per transaction</small>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Sales Trend Table -->
+        <!-- Insights Section -->
+        <% if (insights && insights.length > 0) { %>
         <div class="row mb-4">
             <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Sales Trend Analysis</h6>
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-lightbulb me-2 text-warning"></i>
+                            Business Insights
+                        </h5>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover" id="salesTrendTable">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Revenue ($)</th>
-                                        <th>Units Sold</th>
-                                        <th>Avg Order Value ($)</th>
-                                        <th>Growth Rate (%)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% 
-                                    let salesData = [];
-                                    try {
-                                        salesData = typeof salesTrendData === 'string' ? JSON.parse(salesTrendData) : salesTrendData;
-                                        if (!salesData || !salesData.labels) salesData = { labels: [], revenue: [], units: [] };
-                                    } catch (e) {
-                                        console.error('Error parsing sales trend data:', e);
-                                        salesData = { labels: [], revenue: [], units: [] };
-                                    }
-                                    
-                                    for (let i = 0; i < (salesData.labels || []).length; i++) {
-                                        const revenue = salesData.revenue ? salesData.revenue[i] || 0 : 0;
-                                        const units = salesData.units ? salesData.units[i] || 0 : 0;
-                                        const avgOrderValue = units > 0 ? (revenue / units) : 0;
-                                        const prevRevenue = i > 0 && salesData.revenue ? salesData.revenue[i-1] || 0 : 0;
-                                        const growthRate = prevRevenue > 0 ? ((revenue - prevRevenue) / prevRevenue * 100) : 0;
-                                    %>
-                                        <tr>
-                                            <td><%= salesData.labels[i] || 'N/A' %></td>
-                                            <td>$<%= revenue.toLocaleString() %></td>
-                                            <td><%= units.toLocaleString() %></td>
-                                            <td>$<%= avgOrderValue.toFixed(2) %></td>
-                                            <td>
-                                                <span class="<%= growthRate >= 0 ? 'text-success' : 'text-danger' %>">
-                                                    <%= growthRate.toFixed(1) %>%
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    <% } %>
-                                    <% if ((salesData.labels || []).length === 0) { %>
-                                        <tr>
-                                            <td colspan="5" class="text-center text-muted">No sales data available</td>
-                                        </tr>
-                                    <% } %>
-                                </tbody>
-                            </table>
-                        </div>
+                        <% insights.forEach(insight => { %>
+                            <div class="alert alert-<%= insight.type === 'success' ? 'success' : insight.type === 'warning' ? 'warning' : 'info' %> mb-3">
+                                <h6 class="alert-heading">
+                                    <i class="fas fa-<%= insight.type === 'success' ? 'check-circle' : insight.type === 'warning' ? 'exclamation-triangle' : 'info-circle' %> me-2"></i>
+                                    <%= insight.title %>
+                                </h6>
+                                <p class="mb-0"><%= insight.message %></p>
+                            </div>
+                        <% }) %>
                     </div>
                 </div>
             </div>
         </div>
+        <% } %>
 
-        <!-- Inventory Status Table -->
+        <!-- Product Performance -->
         <div class="row mb-4">
             <div class="col-md-6">
-                <div class="card shadow-sm">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Inventory Status</h6>
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-trophy me-2 text-warning"></i>
+                            Top Selling Products
+                        </h5>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Status</th>
-                                        <th>Count</th>
-                                        <th>Percentage</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% 
-                                    let inventoryData = {};
-                                    try {
-                                        inventoryData = typeof inventoryStatusData === 'string' ? JSON.parse(inventoryStatusData) : inventoryStatusData;
-                                        if (!inventoryData || !inventoryData.datasets) inventoryData = { datasets: [{ data: [0, 0, 0] }] };
-                                    } catch (e) {
-                                        console.error('Error parsing inventory data:', e);
-                                        inventoryData = { datasets: [{ data: [0, 0, 0] }] };
-                                    }
-                                    
-                                    const inventoryCounts = inventoryData.datasets && inventoryData.datasets[0] ? inventoryData.datasets[0].data : [0, 0, 0];
-                                    const total = inventoryCounts.reduce((sum, count) => sum + count, 0);
-                                    const statuses = ['In Stock', 'Low Stock', 'Out of Stock'];
-                                    const colors = ['success', 'warning', 'danger'];
-                                    
-                                    for (let i = 0; i < 3; i++) {
-                                        const count = inventoryCounts[i] || 0;
-                                        const percentage = total > 0 ? (count / total * 100) : 0;
-                                    %>
-                                        <tr>
-                                            <td>
-                                                <span class="badge bg-<%= colors[i] %>"><%= statuses[i] %></span>
-                                            </td>
-                                            <td><%= count.toLocaleString() %></td>
-                                            <td><%= percentage.toFixed(1) %>%</td>
-                                        </tr>
-                                    <% } %>
-                                </tbody>
-                            </table>
-                        </div>
+                        <% if (topSellingProducts && topSellingProducts.length > 0) { %>
+                            <% topSellingProducts.slice(0, 5).forEach((product, index) => { %>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <span class="badge bg-primary me-2">#<%= index + 1 %></span>
+                                        <strong><%= product.sm_maker %> <%= product.sm_name %></strong>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="text-success fw-bold"><%= product.total_sold || 0 %> sold</div>
+                                        <small class="text-muted">$<%= (product.revenue || 0).toLocaleString() %></small>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <p class="text-muted text-center">No sales data available for this period</p>
+                        <% } %>
                     </div>
                 </div>
             </div>
 
-            <!-- Top Products Table -->
+            <!-- Low Stock Alerts -->
             <div class="col-md-6">
-                <div class="card shadow-sm">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Top Performing Products</h6>
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
+                            Low Stock Alerts
+                        </h5>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Rank</th>
-                                        <th>Product</th>
-                                        <th>Units Sold</th>
-                                        <th>Revenue</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% 
-                                    const topProducts = (topPerformingProducts || []).slice(0, 5);
-                                    topProducts.forEach((product, index) => {
-                                    %>
-                                        <tr>
-                                            <td><%= index + 1 %></td>
-                                            <td><%= product.sm_maker %> <%= product.sm_name %></td>
-                                            <td><%= (product.total_sold || 0).toLocaleString() %></td>
-                                            <td>$<%= (product.revenue || 0).toLocaleString() %></td>
-                                        </tr>
-                                    <% }); %>
-                                    <% if (topProducts.length === 0) { %>
-                                        <tr>
-                                            <td colspan="4" class="text-center text-muted">No product data available</td>
-                                        </tr>
-                                    <% } %>
-                                </tbody>
-                            </table>
-                        </div>
+                        <% if (lowStockProducts && lowStockProducts.length > 0) { %>
+                            <% lowStockProducts.slice(0, 5).forEach((product) => { %>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <strong><%= product.sm_maker %> <%= product.sm_name %></strong>
+                                        <br>
+                                        <small class="text-muted">$<%= (product.sm_price || 0).toLocaleString() %></small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-<%= product.sm_inventory === 0 ? 'danger' : 'warning' %>">
+                                            <%= product.sm_inventory %> left
+                                        </span>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <p class="text-muted text-center">All products are well stocked</p>
+                        <% } %>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Brand Performance Table -->
+        <!-- Recent Activity -->
         <div class="row mb-4">
             <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Brand Performance Analysis</h6>
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2 text-info"></i>
+                            Recent Transactions
+                        </h5>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover" id="brandTable">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Brand</th>
-                                        <th>Revenue ($)</th>
-                                        <th>Units Sold</th>
-                                        <th>Total Inventory</th>
-                                        <th>Market Share (%)</th>
-                                        <th>Avg Price ($)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% 
-                                    const brandData = brandPerformance || [];
-                                    const totalBrandRevenue = brandData.reduce((sum, brand) => sum + (parseFloat(brand.revenue) || 0), 0);
-                                    
-                                    brandData.forEach(brand => {
-                                        const revenue = parseFloat(brand.revenue) || 0;
-                                        const units = parseInt(brand.units_sold) || 0;
-                                        const inventory = parseInt(brand.total_inventory) || 0;
-                                        const marketShare = totalBrandRevenue > 0 ? (revenue / totalBrandRevenue * 100) : 0;
-                                        const avgPrice = units > 0 ? (revenue / units) : 0;
-                                    %>
+                        <% if (recentTransactions && recentTransactions.length > 0) { %>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
                                         <tr>
-                                            <td><strong><%= brand.brand || 'Unknown' %></strong></td>
-                                            <td>$<%= revenue.toLocaleString() %></td>
-                                            <td><%= units.toLocaleString() %></td>
-                                            <td><%= inventory.toLocaleString() %></td>
-                                            <td><%= marketShare.toFixed(1) %>%</td>
-                                            <td>$<%= avgPrice.toFixed(2) %></td>
+                                            <th>Date</th>
+                                            <th>Product</th>
+                                            <th>Type</th>
+                                            <th>Quantity</th>
                                         </tr>
-                                    <% }); %>
-                                    <% if (brandData.length === 0) { %>
-                                        <tr>
-                                            <td colspan="6" class="text-center text-muted">No brand data available</td>
-                                        </tr>
-                                    <% } %>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Financial Summary Table -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Financial Summary</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Metric</th>
-                                        <th>Current Period</th>
-                                        <th>Previous Period</th>
-                                        <th>Change</th>
-                                        <th>Trend</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><strong>Total Revenue</strong></td>
-                                        <td>$<%= (totalRevenue || 0).toLocaleString() %></td>
-                                        <td>$<%= (previousRevenue || 0).toLocaleString() %></td>
-                                        <td>
-                                            <% 
-                                            const revenueCurrent = parseFloat(totalRevenue) || 0;
-                                            const revenuePrev = parseFloat(previousRevenue) || 0;
-                                            const revenueChange = revenuePrev ? ((revenueCurrent - revenuePrev) / revenuePrev * 100) : 0;
-                                            %>
-                                            <span class="<%= revenueChange >= 0 ? 'text-success' : 'text-danger' %>">
-                                                <%= revenueChange >= 0 ? '+' : '' %><%= revenueChange.toFixed(1) %>%
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <i class="fas fa-arrow-<%= revenueChange >= 0 ? 'up text-success' : 'down text-danger' %>"></i>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Units Sold</strong></td>
-                                        <td><%= (totalUnitsSold || 0).toLocaleString() %></td>
-                                        <td><%= (previousUnitsSold || 0).toLocaleString() %></td>
-                                        <td>
-                                            <% 
-                                            const unitsCurrent = parseInt(totalUnitsSold) || 0;
-                                            const unitsPrev = parseInt(previousUnitsSold) || 0;
-                                            const unitsChange = unitsPrev ? ((unitsCurrent - unitsPrev) / unitsPrev * 100) : 0;
-                                            %>
-                                            <span class="<%= unitsChange >= 0 ? 'text-success' : 'text-danger' %>">
-                                                <%= unitsChange >= 0 ? '+' : '' %><%= unitsChange.toFixed(1) %>%
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <i class="fas fa-arrow-<%= unitsChange >= 0 ? 'up text-success' : 'down text-danger' %>"></i>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Average Order Value</strong></td>
-                                        <td>$<%= averageOrderValue || '0.00' %></td>
-                                        <td>$<%= previousAverageOrderValue || '0.00' %></td>
-                                        <td>
-                                            <% 
-                                            const aovCurrent = parseFloat(averageOrderValue) || 0;
-                                            const aovPrevious = parseFloat(previousAverageOrderValue) || 0;
-                                            const aovChange = aovPrevious ? ((aovCurrent - aovPrevious) / aovPrevious * 100) : 0;
-                                            %>
-                                            <span class="<%= aovChange >= 0 ? 'text-success' : 'text-danger' %>">
-                                                <%= aovChange >= 0 ? '+' : '' %><%= aovChange.toFixed(1) %>%
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <i class="fas fa-arrow-<%= aovChange >= 0 ? 'up text-success' : 'down text-danger' %>"></i>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                        <% recentTransactions.slice(0, 10).forEach(transaction => { %>
+                                            <tr>
+                                                <td>
+                                                    <% if (transaction.transaction_date) { %>
+                                                        <%= new Date(transaction.transaction_date).toLocaleDateString() %>
+                                                    <% } else if (transaction.formatted_date) { %>
+                                                        <%= transaction.formatted_date %>
+                                                    <% } else { %>
+                                                        N/A
+                                                    <% } %>
+                                                </td>
+                                                <td><%= transaction.sm_maker %> <%= transaction.sm_name %></td>
+                                                <td>
+                                                    <span class="badge bg-<%= transaction.transaction_type === 'incoming' ? 'success' : 'danger' %>">
+                                                        <%= transaction.transaction_type === 'incoming' ? 'Received' : 'Sold' %>
+                                                    </span>
+                                                </td>
+                                                <td><%= Math.abs(transaction.quantity_changed || 0) %></td>
+                                            </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <% } else { %>
+                            <p class="text-muted text-center">No recent transactions</p>
+                        <% } %>
                     </div>
                 </div>
             </div>
@@ -455,7 +255,6 @@
 
     <%- include('partials/footer') %>
 
-    <!-- JavaScript for functionality -->
     <script>
         function refreshData() {
             window.location.reload();
@@ -468,49 +267,18 @@
             window.location.href = url.toString();
         }
 
-        function applyFilters() {
-            const category = document.getElementById('categoryFilter').value;
-            const url = new URL(window.location);
-            url.searchParams.set('category', category);
-            window.location.href = url.toString();
-        }
-
-        function changeMetric() {
-            // This could be used to highlight different columns
-            const metric = document.getElementById('metricSelector').value;
-            console.log('Selected metric:', metric);
-        }
-
-        function toggleComparison() {
-            const comparison = document.getElementById('comparisonToggle').checked;
-            const url = new URL(window.location);
-            url.searchParams.set('comparison', comparison);
-            window.location.href = url.toString();
-        }
-
         function exportData(format) {
             const period = document.getElementById('periodSelector').value;
             const url = `/api/analytics/export?period=${period}&format=${format}`;
             
-            if (format === 'csv') {
-                // For CSV, download as file
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `analytics-${period}days.csv`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            } else {
-                // For JSON, open in new tab
-                window.open(url, '_blank');
-            }
+            // Download as file
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `analytics-${period}days.${format}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
-
-        // Initialize DataTables for better table functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            // You can add DataTables initialization here if the library is available
-            console.log('Analytics dashboard loaded with table format');
-        });
     </script>
 </body>
 </html>

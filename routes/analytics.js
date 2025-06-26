@@ -7,33 +7,23 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
     
     const analyticsService = new AnalyticsService(pool, suppliersPool, convertBigIntToNumber);
     
-    // Analytics dashboard with comprehensive table-based reporting
+    // Simple analytics dashboard
     router.get('/analytics', isAuthenticated, async (req, res) => {
         try {
             const period = parseInt(req.query.period) || 30; // Default to 30 days
-            const category = req.query.category || 'all'; // Category filter
-            const comparison = req.query.comparison === 'true'; // Period comparison
             
             // Get analytics data using the service
-            const analyticsData = await analyticsService.getAnalyticsData(period, {
-                category,
-                comparison
-            });
+            const analyticsData = await analyticsService.getAnalyticsData(period);
             
-            // Generate insights
+            // Generate simple insights
             const insights = analyticsService.generateInsights(analyticsData);
             
             res.render('analytics', {
                 ...analyticsData,
                 insights,
-                
-                // Pass data directly for table rendering (no JSON.stringify needed)
-                salesTrendData: analyticsData.salesTrendData || { labels: [], revenue: [], units: [] },
-                inventoryStatusData: analyticsData.inventoryStatusData || { datasets: [{ data: [0, 0, 0] }] },
-                
                 title: 'Analytics Dashboard',
                 currentPage: 'analytics',
-                filters: { period, category, comparison }
+                filters: { period }
             });
             
         } catch (err) {
