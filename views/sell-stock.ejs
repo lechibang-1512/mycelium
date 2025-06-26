@@ -64,50 +64,45 @@
 
                         <!-- Phone Details Display -->
                         <div id="phone-details" class="mb-3" style="display: none;">
-                            <div class="card bg-light">
-                                <div class="card-body">
-                                    <h6 class="card-title mb-3">
-                                        <i class="fas fa-info-circle me-2 text-primary"></i>
-                                        Selected Phone Details
-                                    </h6>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="detail-item mb-2">
-                                                <strong>Manufacturer:</strong> 
-                                                <span id="phone-maker">-</span>
-                                            </div>
-                                            <div class="detail-item mb-2">
-                                                <strong>Available Stock:</strong> 
-                                                <span id="phone-stock" class="badge bg-info">-</span>
-                                            </div>
-                                            <div class="detail-item mb-2">
-                                                <strong>Unit Price:</strong> 
-                                                <span id="phone-price" class="badge bg-success">-</span>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="detail-item mb-2">
-                                                <strong>RAM:</strong> 
-                                                <span id="phone-ram">-</span>
-                                            </div>
-                                            <div class="detail-item mb-2">
-                                                <strong>Storage:</strong> 
-                                                <span id="phone-rom">-</span>
-                                            </div>
-                                            <div class="detail-item mb-2">
-                                                <strong>Color:</strong> 
-                                                <span id="phone-color">-</span>
-                                            </div>
-                                        </div>
+                            <div class="phone-details-card">
+                                <h5>
+                                    <i class="fas fa-info-circle me-2 text-primary"></i>
+                                    Selected Phone Details
+                                </h5>
+                                <div class="phone-detail-item">
+                                    <span class="phone-detail-label">Manufacturer:</span>
+                                    <span class="phone-detail-value" id="phone-maker">-</span>
+                                </div>
+                                <div class="phone-detail-item">
+                                    <span class="phone-detail-label">Available Stock:</span>
+                                    <span class="phone-detail-value inventory" id="phone-stock">-</span>
+                                </div>
+                                <div class="phone-detail-item">
+                                    <span class="phone-detail-label">Unit Price:</span>
+                                    <span class="phone-detail-value price" id="phone-price">-</span>
+                                </div>
+                                <div class="phone-detail-item">
+                                    <span class="phone-detail-label">RAM:</span>
+                                    <span class="phone-detail-value specs" id="phone-ram">-</span>
+                                </div>
+                                <div class="phone-detail-item">
+                                    <span class="phone-detail-label">Storage:</span>
+                                    <span class="phone-detail-value specs" id="phone-rom">-</span>
+                                </div>
+                                <div class="phone-detail-item">
+                                    <span class="phone-detail-label">Color:</span>
+                                    <span class="phone-detail-value specs" id="phone-color">-</span>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="alert alert-info mb-0">
+                                        <i class="fas fa-calculator me-2"></i>
+                                        <strong>Total Sale Value:</strong> 
+                                        <span id="total-value" class="fw-bold">$0.00</span>
+                                        <small class="text-muted">(Price × Quantity)</small>
                                     </div>
-                                    <div class="row mt-2">
-                                        <div class="col-12">
-                                            <div class="alert alert-info mb-0">
-                                                <i class="fas fa-calculator me-2"></i>
-                                                <strong>Total Sale Value:</strong> 
-                                                <span id="total-value" class="fw-bold">$0.00</span>
-                                                <small class="text-muted">(Price × Quantity)</small>
-                                            </div>
+                                </div>
+                            </div>
+                        </div>
                                         </div>
                                     </div>
                                 </div>

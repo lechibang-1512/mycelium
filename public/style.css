@@ -602,6 +602,63 @@ html {
     scroll-behavior: smooth;
 }
 
+/* Phone details card styling for inventory forms */
+.phone-details-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.phone-details-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.phone-details-card h5 {
+    color: #495057;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.phone-detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.phone-detail-item:last-child {
+    border-bottom: none;
+}
+
+.phone-detail-label {
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.phone-detail-value {
+    font-weight: 600;
+    color: #495057;
+}
+
+.phone-detail-value.price {
+    color: #28a745;
+    font-size: 1.1em;
+}
+
+.phone-detail-value.inventory {
+    color: #17a2b8;
+}
+
+.phone-detail-value.specs {
+    color: #6f42c1;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
