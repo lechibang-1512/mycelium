@@ -123,10 +123,26 @@
                                                         } else if (report.transaction_type === 'outgoing') {
                                                             quantityClass = 'text-danger fw-bold';
                                                             sign = '-';
+                                                        } else if (report.transaction_type === 'adjustment') {
+                                                            const qty = parseInt(report.quantity_changed);
+                                                            if (qty > 0) {
+                                                                quantityClass = 'text-success fw-bold';
+                                                                sign = '+';
+                                                            } else if (qty < 0) {
+                                                                quantityClass = 'text-danger fw-bold';
+                                                                sign = '';
+                                                            } else {
+                                                                quantityClass = 'text-muted';
+                                                                sign = '';
+                                                            }
                                                         }
                                                     %>
                                                     <span class="<%= quantityClass %>">
-                                                        <%= sign %><%= Math.abs(report.quantity_changed) %>
+                                                        <% if (report.transaction_type === 'adjustment') { %>
+                                                            <%= sign %><%= report.quantity_changed %>
+                                                        <% } else { %>
+                                                            <%= sign %><%= Math.abs(report.quantity_changed) %>
+                                                        <% } %>
                                                     </span>
                                                 </td>
                                                 <td>

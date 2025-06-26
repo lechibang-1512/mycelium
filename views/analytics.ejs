@@ -233,11 +233,26 @@
                                                 </td>
                                                 <td><%= transaction.sm_maker %> <%= transaction.sm_name %></td>
                                                 <td>
-                                                    <span class="badge bg-<%= transaction.transaction_type === 'incoming' ? 'success' : 'danger' %>">
-                                                        <%= transaction.transaction_type === 'incoming' ? 'Received' : 'Sold' %>
-                                                    </span>
+                                                    <% if (transaction.transaction_type === 'incoming') { %>
+                                                        <span class="badge bg-success">Received</span>
+                                                    <% } else if (transaction.transaction_type === 'outgoing') { %>
+                                                        <span class="badge bg-danger">Sold</span>
+                                                    <% } else if (transaction.transaction_type === 'adjustment') { %>
+                                                        <span class="badge bg-warning">Adjustment</span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-secondary"><%= transaction.transaction_type %></span>
+                                                    <% } %>
                                                 </td>
-                                                <td><%= Math.abs(transaction.quantity_changed || 0) %></td>
+                                                <td>
+                                                    <% if (transaction.transaction_type === 'adjustment') { %>
+                                                        <% const qty = parseInt(transaction.quantity_changed || 0); %>
+                                                        <span class="<%= qty > 0 ? 'text-success' : qty < 0 ? 'text-danger' : '' %>">
+                                                            <%= qty > 0 ? '+' : '' %><%= qty %>
+                                                        </span>
+                                                    <% } else { %>
+                                                        <%= Math.abs(transaction.quantity_changed || 0) %>
+                                                    <% } %>
+                                                </td>
                                             </tr>
                                         <% }) %>
                                     </tbody>

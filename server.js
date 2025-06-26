@@ -1040,77 +1040,107 @@ app.post('/phones/:id', isStaffOrAdmin, async (req, res) => {
         const parseString = (value) => {
             return (value === '' || value === null || value === undefined) ? null : value;
         };
-        
-        const updateQuery = `
-            UPDATE phone_specs SET
-                sm_name = ?, sm_maker = ?, sm_price = ?, sm_inventory = ?, color = ?, water_and_dust_rating = ?,
-                processor = ?, process_node = ?, cpu_cores = ?, cpu_frequency = ?, gpu = ?, memory_type = ?,
-                ram = ?, rom = ?, expandable_memory = ?, length_mm = ?, width_mm = ?, thickness_mm = ?, weight_g = ?,
-                display_size = ?, resolution = ?, pixel_density = ?, refresh_rate = ?, brightness = ?, display_features = ?,
-                rear_camera_main = ?, rear_camera_macro = ?, rear_camera_features = ?, rear_video_resolution = ?,
-                front_camera = ?, front_camera_features = ?, front_video_resolution = ?,
-                battery_capacity = ?, fast_charging = ?, connector = ?, security_features = ?, sim_card = ?,
-                nfc = ?, network_bands = ?, wireless_connectivity = ?, navigation = ?, audio_jack = ?,
-                audio_playback = ?, video_playback = ?, sensors = ?,
-                operating_system = ?, package_contents = ?
-            WHERE id = ?
-        `;
 
-        const values = [
-            parseString(req.body.sm_name),
-            parseString(req.body.sm_maker),
-            parseNumeric(req.body.sm_price),
-            parseInteger(req.body.sm_inventory) || 0,
-            parseString(req.body.color),
-            parseString(req.body.water_and_dust_rating),
-            parseString(req.body.processor),
-            parseString(req.body.process_node),
-            parseString(req.body.cpu_cores),
-            parseString(req.body.cpu_frequency),
-            parseString(req.body.gpu),
-            parseString(req.body.memory_type),
-            parseString(req.body.ram),
-            parseString(req.body.rom),
-            parseString(req.body.expandable_memory),
-            parseNumeric(req.body.length_mm),
-            parseNumeric(req.body.width_mm),
-            parseNumeric(req.body.thickness_mm),
-            parseNumeric(req.body.weight_g),
-            parseNumeric(req.body.display_size),
-            parseString(req.body.resolution),
-            parseString(req.body.pixel_density),
-            parseString(req.body.refresh_rate),
-            parseString(req.body.brightness),
-            parseString(req.body.display_features),
-            parseString(req.body.rear_camera_main),
-            parseString(req.body.rear_camera_macro),
-            parseString(req.body.rear_camera_features),
-            parseString(req.body.rear_video_resolution),
-            parseString(req.body.front_camera),
-            parseString(req.body.front_camera_features),
-            parseString(req.body.front_video_resolution),
-            parseString(req.body.battery_capacity),
-            parseString(req.body.fast_charging),
-            parseString(req.body.connector),
-            parseString(req.body.security_features),
-            parseString(req.body.sim_card),
-            parseString(req.body.nfc),
-            parseString(req.body.network_bands),
-            parseString(req.body.wireless_connectivity),
-            parseString(req.body.navigation),
-            parseString(req.body.audio_jack),
-            parseString(req.body.audio_playback),
-            parseString(req.body.video_playback),
-            parseString(req.body.sensors),
-            parseString(req.body.operating_system),
-            parseString(req.body.package_contents),
-            req.params.id
-        ];
+        try {
+            await conn.beginTransaction();
 
-        await conn.query(updateQuery, values);
-        conn.end();
+            // Get current inventory level before update
+            const currentStockResult = await conn.query('SELECT sm_inventory FROM phone_specs WHERE id = ?', [req.params.id]);
+            if (currentStockResult.length === 0) {
+                throw new Error('Phone not found');
+            }
+            const currentStock = parseInt(currentStockResult[0].sm_inventory) || 0;
+            const newStock = parseInteger(req.body.sm_inventory) || 0;
+            
+            const updateQuery = `
+                UPDATE phone_specs SET
+                    sm_name = ?, sm_maker = ?, sm_price = ?, sm_inventory = ?, color = ?, water_and_dust_rating = ?,
+                    processor = ?, process_node = ?, cpu_cores = ?, cpu_frequency = ?, gpu = ?, memory_type = ?,
+                    ram = ?, rom = ?, expandable_memory = ?, length_mm = ?, width_mm = ?, thickness_mm = ?, weight_g = ?,
+                    display_size = ?, resolution = ?, pixel_density = ?, refresh_rate = ?, brightness = ?, display_features = ?,
+                    rear_camera_main = ?, rear_camera_macro = ?, rear_camera_features = ?, rear_video_resolution = ?,
+                    front_camera = ?, front_camera_features = ?, front_video_resolution = ?,
+                    battery_capacity = ?, fast_charging = ?, connector = ?, security_features = ?, sim_card = ?,
+                    nfc = ?, network_bands = ?, wireless_connectivity = ?, navigation = ?, audio_jack = ?,
+                    audio_playback = ?, video_playback = ?, sensors = ?,
+                    operating_system = ?, package_contents = ?
+                WHERE id = ?
+            `;
 
-        res.redirect(`/phone/${req.params.id}?success=updated`);
+            const values = [
+                parseString(req.body.sm_name),
+                parseString(req.body.sm_maker),
+                parseNumeric(req.body.sm_price),
+                newStock,
+                parseString(req.body.color),
+                parseString(req.body.water_and_dust_rating),
+                parseString(req.body.processor),
+                parseString(req.body.process_node),
+                parseString(req.body.cpu_cores),
+                parseString(req.body.cpu_frequency),
+                parseString(req.body.gpu),
+                parseString(req.body.memory_type),
+                parseString(req.body.ram),
+                parseString(req.body.rom),
+                parseString(req.body.expandable_memory),
+                parseNumeric(req.body.length_mm),
+                parseNumeric(req.body.width_mm),
+                parseNumeric(req.body.thickness_mm),
+                parseNumeric(req.body.weight_g),
+                parseNumeric(req.body.display_size),
+                parseString(req.body.resolution),
+                parseString(req.body.pixel_density),
+                parseString(req.body.refresh_rate),
+                parseString(req.body.brightness),
+                parseString(req.body.display_features),
+                parseString(req.body.rear_camera_main),
+                parseString(req.body.rear_camera_macro),
+                parseString(req.body.rear_camera_features),
+                parseString(req.body.rear_video_resolution),
+                parseString(req.body.front_camera),
+                parseString(req.body.front_camera_features),
+                parseString(req.body.front_video_resolution),
+                parseString(req.body.battery_capacity),
+                parseString(req.body.fast_charging),
+                parseString(req.body.connector),
+                parseString(req.body.security_features),
+                parseString(req.body.sim_card),
+                parseString(req.body.nfc),
+                parseString(req.body.network_bands),
+                parseString(req.body.wireless_connectivity),
+                parseString(req.body.navigation),
+                parseString(req.body.audio_jack),
+                parseString(req.body.audio_playback),
+                parseString(req.body.video_playback),
+                parseString(req.body.sensors),
+                parseString(req.body.operating_system),
+                parseString(req.body.package_contents),
+                req.params.id
+            ];
+
+            await conn.query(updateQuery, values);
+
+            // Log inventory change as adjustment if inventory level changed
+            if (currentStock !== newStock) {
+                const quantityChanged = newStock - currentStock;
+                const notes = `Inventory adjustment from product edit: ${currentStock} → ${newStock}`;
+                
+                await conn.query(
+                    `INSERT INTO inventory_log (phone_id, transaction_type, quantity_changed, new_inventory_level, notes) 
+                     VALUES (?, 'adjustment', ?, ?, ?)`,
+                    [req.params.id, quantityChanged, newStock, notes]
+                );
+            }
+
+            await conn.commit();
+            conn.end();
+
+            res.redirect(`/phone/${req.params.id}?success=updated`);
+        } catch (transactionErr) {
+            await conn.rollback();
+            conn.end();
+            throw transactionErr;
+        }
     } catch (err) {
         console.error('Database error:', err);
         res.status(500).render('error', {
