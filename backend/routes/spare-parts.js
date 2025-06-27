@@ -2,6 +2,8 @@ const asyncHandler = require('../utils/asyncHandler');
 const express = require('express');
 const router = express.Router();
 const { requirePermission } = require('../middleware/rbacMiddleware');
+const RecommendationService = require('../services/RecommendationService');
+const { convertBigIntToNumber } = require('../services/SanitizationService');
 
 module.exports = () => {
   const SparePartsService = require('../services/SparePartsService');
@@ -27,6 +29,82 @@ module.exports = () => {
       console.error('Error creating spare part:', err);
       res.status(500).json({ error: 'Failed to create spare part' });
     }
+  }));
+
+  // ========================================================================
+  // SPARE PARTS RECOMMENDATIONS (must come before /:id)
+  // ========================================================================
+
+  /**
+   * GET /api/spare-parts/recommendations
+   * Get pending spare parts recommendations
+   */
+  router.get('/recommendations', requirePermission('inventory:read'), asyncHandler(async (req, res) => {
+    const { urgency_level } = req.query;
+    let list = RecommendationService.recommendations.filter(r => r.spare_part_id && r.status === 'PENDING');
+    if (urgency_level) {
+      list = list.filter(r => r.urgency_level === urgency_level);
+    }
+    res.json({
+      success: true,
+      data: list.map(convertBigIntToNumber)
+    });
+  }));
+
+  /**
+   * GET /api/spare-parts/recommendations/summary
+   * Get spare parts recommendations stats summary
+   */
+  router.get('/recommendations/summary', requirePermission('inventory:read'), asyncHandler(async (req, res) => {
+    const list = RecommendationService.recommendations.filter(r => r.spare_part_id && r.status === 'PENDING');
+    const criticalCount = list.filter(r => r.urgency_level === 'CRITICAL').length;
+    const highCount = list.filter(r => r.urgency_level === 'HIGH').length;
+    const pendingCount = list.length;
+    
+    res.json({
+      success: true,
+      data: {
+        criticalCount,
+        highCount,
+        pendingCount,
+        critical_count: criticalCount,
+        high_count: highCount,
+        pending_count: pendingCount
+      }
+    });
+  }));
+
+  /**
+   * POST /api/spare-parts/recommendations/generate
+   * Trigger generation of spare parts recommendations
+   */
+  router.post('/recommendations/generate', requirePermission('inventory:write'), asyncHandler(async (req, res) => {
+    await RecommendationService.generateRecommendations();
+    const list = RecommendationService.recommendations.filter(r => r.spare_part_id && r.status === 'PENDING');
+    res.json({
+      success: true,
+      count: list.length
+    });
+  }));
+
+  /**
+   * PUT /api/spare-parts/recommendations/:id/status
+   * Update status of a spare part recommendation
+   */
+  router.put('/recommendations/:id/status', requirePermission('inventory:write'), asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    const rec = RecommendationService.recommendations.find(r => r.recommendation_id === id);
+    if (!rec) {
+      return res.status(404).json({ success: false, error: 'Recommendation not found' });
+    }
+    
+    rec.status = status;
+    res.json({
+      success: true,
+      message: `Status updated to ${status}`
+    });
   }));
 
   // GET /api/spare-parts/:id

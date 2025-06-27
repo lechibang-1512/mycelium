@@ -3,7 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "overrides": {
-    "diff": ">=8.0.3"
+    "diff": ">=8.0.3",
+    "uuid": "$uuid"
   },
   "scripts": {
     "start": "node backend/server.cjs",
@@ -57,10 +58,11 @@
     "xmlbuilder2": "^4.0.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.36.0",
+    "@eslint/js": "^9.39.4",
     "@vitejs/plugin-react": "^5.2.0",
-    "eslint": "^9.39.3",
-    "globals": "^16.4.0",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^16.5.0",
     "knip": "^5.82.1",
     "swagger-autogen": "^2.23.7",
     "vite": "^7.1.7"

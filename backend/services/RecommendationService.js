@@ -16,19 +16,32 @@ class RecommendationService {
         this.pool = pool;
     }
 
+    static getPool() {
+        if (!this.pool) {
+            const mariadb = require('mariadb');
+            const dbConfig = {
+                host: process.env.DB_HOST || '127.0.0.1',
+                port: process.env.DB_PORT || 3306,
+                user: process.env.DB_USER,
+                password: process.env.DB_PASSWORD,
+                database: process.env.DB_NAME || 'master_db',
+                connectionLimit: 10
+            };
+            this.pool = mariadb.createPool(dbConfig);
+        }
+        return this.pool;
+    }
+
     /**
      * Generate purchase recommendations for products and spare parts below reorder levels
      * @param {object} options
      * @returns {Promise<Array>}
      */
     static async generateRecommendations(_options = {}) {
-        if (!this.pool) {
-            throw new Error('Database pool not initialized. Call setPool() first.');
-        }
-
+        const pool = this.getPool();
         let conn;
         try {
-            conn = await this.pool.getConnection();
+            conn = await pool.getConnection();
 
             // 1. Get products below reorder point
             const productsQuery = `
@@ -137,6 +150,7 @@ class RecommendationService {
                     estimated_stockout_days: estimatedStockoutDays,
                     estimated_stockout_date: estimatedStockoutDate,
                     supplier_name: p.supplier_name,
+                    status: 'PENDING',
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 });
@@ -185,6 +199,7 @@ class RecommendationService {
                     estimated_stockout_days: estimatedStockoutDays,
                     estimated_stockout_date: estimatedStockoutDate,
                     supplier_name: sp.supplier_name,
+                    status: 'PENDING',
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 });

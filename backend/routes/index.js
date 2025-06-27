@@ -38,6 +38,10 @@ module.exports = () => {
     const stocktakeAPI = require('./stocktake')();
     router.use('/stocktake', stocktakeAPI);
 
+    // Recommendations
+    const recommendationsAPI = require('./recommendations')();
+    router.use('/recommendations', recommendationsAPI);
+
     // ========================================================================
     // WAREHOUSE MANAGEMENT
     // ========================================================================
