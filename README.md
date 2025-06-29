@@ -1,3 +1,4 @@
+#DISCLAIMER : WORK IN PROGRESS.
 # mycelium ERP
 
 mycelium ERP is a local-based Enterprise Resource Planning (ERP) system designed for small and medium-sized businesses who require on-premises control of their business processes. Built using EJS, JavaScript, and CSS, mycelium ERP provides a customizable, user-friendly solution for managing core business operations offline or within a private network.
