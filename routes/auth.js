@@ -54,7 +54,7 @@ module.exports = (authPool, convertBigIntToNumber) => {
             // Check password
             console.log('Comparing password with hash...');
             const passwordMatch = await bcrypt.compare(password, user.password);
-            console.log('Password match result:', passwordMatch);
+            console.log('Password comparison completed.');
             
             if (!passwordMatch) {
                 console.log('Password does not match for user:', username);
