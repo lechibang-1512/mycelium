@@ -117,6 +117,13 @@ const csrfProtection = csrf({
 // Apply CSRF protection to all state-changing routes
 app.use(csrfProtection);
 
+// Expose CSRF token to the client for forms or AJAX requests
+app.use((req, res, next) => {
+    res.locals.csrfToken = req.csrfToken();
+    next();
+});
+app.use(csrfProtection);
+
 // Expose CSRF token for client-side use
 app.get('/csrf-token', (req, res) => {
     res.json({ csrfToken: req.csrfToken() });
