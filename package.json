@@ -21,11 +21,11 @@
   },
   "homepage": "https://github.com/lechibang-1512/Project-1#readme",
   "dependencies": {
+    "@dr.pogodin/csurf": "^1.16.5",
     "axios": "^1.10.0",
     "bcrypt": "^6.0.0",
     "connect-flash": "^0.1.1",
     "cookie-parser": "^1.4.7",
-    "csurf": "^1.11.0",
     "date-fns": "^4.1.0",
     "ejs": "^3.1.10",
     "express": "^5.1.0",

@@ -5,7 +5,7 @@ const { format, isValid, parseISO } = require('date-fns');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const flash = require('connect-flash');
-const csrf = require('csurf');
+const csrf = require('@dr.pogodin/csurf');
 const cookieParser = require('cookie-parser');
 
 const app = express();
