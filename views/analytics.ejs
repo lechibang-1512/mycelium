@@ -283,7 +283,10 @@
         }
 
         function exportData(format) {
-            const period = document.getElementById('periodSelector').value;
+            let period = document.getElementById('periodSelector').value;
+            if (!/^\d+$/.test(period)) {
+                period = '7'; // Default to 7 days if the input is invalid
+            }
             const url = `/api/analytics/export?period=${period}&format=${format}`;
             
             // Download as file
