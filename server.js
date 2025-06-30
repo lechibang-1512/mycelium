@@ -114,7 +114,13 @@ const csrfProtection = csrf({
     }
 });
 
-// Apply CSRF protection to all routes except API GET routes
+// Apply CSRF protection to all state-changing routes
+app.use(csrfProtection);
+
+// Expose CSRF token for client-side use
+app.get('/csrf-token', (req, res) => {
+    res.json({ csrfToken: req.csrfToken() });
+});
 app.use((req, res, next) => {
     // Skip CSRF for API GET requests (they don't modify state)
     if (req.method === 'GET' && req.path.startsWith('/api/')) {
