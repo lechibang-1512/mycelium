@@ -100,51 +100,34 @@ app.use(cookieParser());
 // CSRF protection middleware with proper configuration
 const csrfProtection = csrf({ 
     cookie: {
+        key: '_csrf',
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
         sameSite: 'strict'
     },
+    ignoreMethods: ['GET', 'HEAD', 'OPTIONS'], // Only protect state-changing methods
     value: (req) => {
-        // Look for CSRF token in various places
+        // Look for CSRF token in various places (ordered by preference)
         return req.body._csrf || 
                req.query._csrf || 
-               req.headers['csrf-token'] ||
                req.headers['x-csrf-token'] ||
+               req.headers['csrf-token'] ||
                req.headers['x-xsrf-token'];
     }
 });
 
-// Apply CSRF protection to all state-changing routes
-app.use(csrfProtection);
-
-// Expose CSRF token to the client for forms or AJAX requests
+// Apply CSRF protection conditionally
 app.use((req, res, next) => {
-    res.locals.csrfToken = req.csrfToken();
-    next();
-});
-app.use(csrfProtection);
-
-// Expose CSRF token to the client for forms or AJAX requests
-app.use((req, res, next) => {
-    res.locals.csrfToken = req.csrfToken();
-    next();
-});
-app.use(csrfProtection);
-
-// Expose CSRF token for client-side use
-app.get('/csrf-token', (req, res) => {
-    res.json({ csrfToken: req.csrfToken() });
-});
-app.use((req, res, next) => {
-    // Skip CSRF for API GET requests (they don't modify state)
-    if (req.method === 'GET' && req.path.startsWith('/api/')) {
+    // Skip CSRF for safe HTTP methods on API routes (but not /csrf-token)
+    if ((req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') && 
+        req.path.startsWith('/api/')) {
         return next();
     }
     
     // Add debugging for development
     if (process.env.NODE_ENV !== 'production') {
         console.log(`CSRF check for ${req.method} ${req.path}`);
-        if (req.method !== 'GET') {
+        if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
             console.log('CSRF token in body:', req.body._csrf);
             console.log('CSRF token in headers:', {
                 'csrf-token': req.headers['csrf-token'],
@@ -154,12 +137,17 @@ app.use((req, res, next) => {
         }
     }
     
-    // Apply CSRF protection for all other routes
+    // Apply CSRF protection for all state-changing requests
     csrfProtection(req, res, next);
 });
 
+// Expose CSRF token for client-side use (requires CSRF middleware to run first)
+app.get('/csrf-token', csrfProtection, (req, res) => {
+    res.json({ csrfToken: req.csrfToken() });
+});
+
+// Set CSRF token in locals for all templates
 app.use((req, res, next) => {
-    // Only set CSRF token if the request went through CSRF middleware successfully
     try {
         res.locals.csrfToken = req.csrfToken();
     } catch (err) {
@@ -177,17 +165,21 @@ app.use((err, req, res, next) => {
         console.error('Request headers:', req.headers);
         console.error('Request body:', req.body);
         
-        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
             // For AJAX requests, return JSON error
             return res.status(403).json({ 
                 error: 'Invalid CSRF token',
                 code: 'CSRF_TOKEN_INVALID'
             });
         } else {
-            // For regular requests, render error page
+            // For regular requests, render error page with proper locals
             return res.status(403).render('error', {
                 error: 'Invalid CSRF token. Please refresh the page and try again.',
-                title: 'Security Error'
+                title: 'Security Error',
+                user: req.session?.user || null,
+                isAuthenticated: !!req.session?.user,
+                isAdmin: req.session?.user?.role === 'admin',
+                isStaffOrAdmin: req.session?.user && (req.session.user.role === 'admin' || req.session.user.role === 'staff')
             });
         }
     }
