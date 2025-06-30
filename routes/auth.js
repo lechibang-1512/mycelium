@@ -31,7 +31,7 @@ module.exports = (authPool, convertBigIntToNumber) => {
             // Add debug logging
             console.log('=== LOGIN ATTEMPT ===');
             console.log('Username:', username);
-            console.log('Password length:', password ? password.length : 'undefined');
+            console.log('Password provided:', password ? 'Yes' : 'No');
             console.log('Remember Me:', rememberMe);
             
             const conn = await authPool.getConnection();
