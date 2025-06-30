@@ -87,19 +87,91 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+        sameSite: 'strict'
     }
 }));
 
 // Cookie parser middleware (required for CSRF)
 app.use(cookieParser());
 
-// CSRF protection middleware
-const csrfProtection = csrf({ cookie: true });
-app.use(csrfProtection);
+// CSRF protection middleware with proper configuration
+const csrfProtection = csrf({ 
+    cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+        sameSite: 'strict'
+    },
+    value: (req) => {
+        // Look for CSRF token in various places
+        return req.body._csrf || 
+               req.query._csrf || 
+               req.headers['csrf-token'] ||
+               req.headers['x-csrf-token'] ||
+               req.headers['x-xsrf-token'];
+    }
+});
+
+// Apply CSRF protection to all routes except API GET routes
 app.use((req, res, next) => {
-    res.locals.csrfToken = req.csrfToken();
+    // Skip CSRF for API GET requests (they don't modify state)
+    if (req.method === 'GET' && req.path.startsWith('/api/')) {
+        return next();
+    }
+    
+    // Add debugging for development
+    if (process.env.NODE_ENV !== 'production') {
+        console.log(`CSRF check for ${req.method} ${req.path}`);
+        if (req.method !== 'GET') {
+            console.log('CSRF token in body:', req.body._csrf);
+            console.log('CSRF token in headers:', {
+                'csrf-token': req.headers['csrf-token'],
+                'x-csrf-token': req.headers['x-csrf-token'],
+                'x-xsrf-token': req.headers['x-xsrf-token']
+            });
+        }
+    }
+    
+    // Apply CSRF protection for all other routes
+    csrfProtection(req, res, next);
+});
+
+app.use((req, res, next) => {
+    // Only set CSRF token if the request went through CSRF middleware successfully
+    try {
+        res.locals.csrfToken = req.csrfToken();
+    } catch (err) {
+        // In case csrfToken() is not available (e.g., for exempted routes)
+        res.locals.csrfToken = '';
+    }
     next();
+});
+
+// CSRF error handling middleware
+app.use((err, req, res, next) => {
+    if (err.code === 'EBADCSRFTOKEN') {
+        // Handle CSRF token errors
+        console.error('CSRF token validation failed for:', req.method, req.path);
+        console.error('Request headers:', req.headers);
+        console.error('Request body:', req.body);
+        
+        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+            // For AJAX requests, return JSON error
+            return res.status(403).json({ 
+                error: 'Invalid CSRF token',
+                code: 'CSRF_TOKEN_INVALID'
+            });
+        } else {
+            // For regular requests, render error page
+            return res.status(403).render('error', {
+                error: 'Invalid CSRF token. Please refresh the page and try again.',
+                title: 'Security Error'
+            });
+        }
+    }
+    next(err);
 });
 
 // Flash messages middleware
