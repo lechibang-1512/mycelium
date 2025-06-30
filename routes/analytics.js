@@ -88,6 +88,9 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
     router.get('/api/analytics/forecast', isStaffOrAdmin, async (req, res) => {
         try {
             const days = parseInt(req.query.days) || 30;
+            if (days < 1 || days > 365) { // Enforce a maximum of 365 days
+                return res.status(400).json({ error: "Invalid 'days' parameter. Must be between 1 and 365." });
+            }
             const productId = req.query.productId || null;
             
             const forecast = await analyticsService.generateForecast(days, productId);

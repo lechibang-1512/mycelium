@@ -855,6 +855,9 @@ class AnalyticsService {
      * Generate sales forecast using simple linear regression
      */
     async generateForecast(days, productId = null) {
+        if (days < 1 || days > this.config.DEFAULTS.MAX_FORECAST_DAYS) {
+            throw new Error(`Invalid 'days' parameter. Must be between 1 and ${this.config.DEFAULTS.MAX_FORECAST_DAYS}.`);
+        }
         const conn = await this.pool.getConnection();
         
         try {
