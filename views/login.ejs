@@ -8,18 +8,6 @@
                     <h3 class="mb-0">Login</h3>
                 </div>
                 <div class="card-body">
-                    <% if (messages && messages.error) { %>
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <%= messages.error %>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    <% } %>
-                    <% if (messages && messages.success) { %>
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <%= messages.success %>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    <% } %>
                     <form id="loginForm" action="/login" method="POST" novalidate>
                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <div class="mb-3">

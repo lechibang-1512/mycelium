@@ -82,7 +82,9 @@ module.exports = (authPool, convertBigIntToNumber) => {
             delete req.session.returnTo;
             
             console.log('Redirecting to:', returnTo);
-            res.redirect(returnTo);
+            // Add success parameter for login notification
+            const separator = returnTo.includes('?') ? '&' : '?';
+            res.redirect(`${returnTo}${separator}success=login`);
         } catch (err) {
             console.error('Login error:', err);
             req.flash('error', 'An error occurred during login');
@@ -93,7 +95,7 @@ module.exports = (authPool, convertBigIntToNumber) => {
     // Logout route
     router.get('/logout', (req, res) => {
         req.session.destroy();
-        res.redirect('/login?logout=true');
+        res.redirect('/login?success=logout');
     });
 
     // Forgot password route
@@ -190,8 +192,7 @@ module.exports = (authPool, convertBigIntToNumber) => {
             req.session.user.fullName = fullName;
             req.session.user.email = email;
             
-            req.flash('success', 'Profile updated successfully');
-            res.redirect('/profile');
+            res.redirect('/profile?success=profile_updated');
         } catch (err) {
             console.error('Profile update error:', err);
             req.flash('error', 'An error occurred while updating your profile');
@@ -290,8 +291,7 @@ module.exports = (authPool, convertBigIntToNumber) => {
             
             conn.end();
             
-            req.flash('success', 'User created successfully');
-            res.redirect('/users');
+            res.redirect('/users?success=user_created');
         } catch (err) {
             console.error('Create user error:', err);
             req.flash('error', 'Failed to create user');
@@ -324,8 +324,7 @@ module.exports = (authPool, convertBigIntToNumber) => {
             
             conn.end();
             
-            req.flash('success', 'User updated successfully');
-            res.redirect('/users');
+            res.redirect('/users?success=user_updated');
         } catch (err) {
             console.error('Update user error:', err);
             req.flash('error', 'Failed to update user');
@@ -348,8 +347,7 @@ module.exports = (authPool, convertBigIntToNumber) => {
             await conn.query('DELETE FROM users WHERE id = ?', [userId]);
             conn.end();
             
-            req.flash('success', 'User deleted successfully');
-            res.redirect('/users');
+            res.redirect('/users?success=user_deleted');
         } catch (err) {
             console.error('Delete user error:', err);
             req.flash('error', 'Failed to delete user');

@@ -335,6 +335,13 @@
         
         // Show keyboard shortcuts on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Show filter notification if filters are applied
+            <% if (showFilterNotification) { %>
+                if (window.notificationManager) {
+                    window.notificationManager.showInfo('Filters have been applied to the report results');
+                }
+            <% } %>
+            
             // Add tooltip to export button
             const exportBtn = document.querySelector('[onclick="exportToExcel()"]');
             if (exportBtn) {

@@ -1,8 +1,10 @@
-// Client-side NotificationManager for browser usage
+// Universal NotificationManager for both Node.js and browser
 class NotificationManager {
     constructor() {
         this.isBootstrapAvailable = false;
-        this.initBrowser();
+        if (typeof window !== 'undefined') {
+            this.initBrowser();
+        }
     }
 
     initBrowser() {
@@ -35,12 +37,20 @@ class NotificationManager {
     }
 
     showToast(message, type = 'info', duration = 5000) {
+        if (typeof window === 'undefined') {
+            // Server-side: log to console
+            if (type === 'error') {
+                console.error(`[${type.toUpperCase()}] ${message}`);
+            } else {
+                console.log(`[${type.toUpperCase()}] ${message}`);
+            }
+            return null;
+        }
         // Browser: show Bootstrap toast
         if (!this.isBootstrapAvailable) {
             alert(`${type.toUpperCase()}: ${message}`);
             return null;
         }
-        
         const toastId = 'toast-' + Date.now();
         const iconMap = {
             success: 'fas fa-check-circle',
@@ -54,7 +64,6 @@ class NotificationManager {
             warning: 'text-warning',
             info: 'text-info'
         };
-        
         const toastHTML = `
             <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="${duration}">
                 <div class="toast-header">
@@ -68,46 +77,44 @@ class NotificationManager {
                 </div>
             </div>
         `;
-        
         const container = document.getElementById('toast-container');
         if (!container) this.createToastContainer();
         document.getElementById('toast-container').insertAdjacentHTML('beforeend', toastHTML);
-        
         const toastElement = document.getElementById(toastId);
         const toast = new bootstrap.Toast(toastElement);
         toast.show();
-        
         toastElement.addEventListener('hidden.bs.toast', function() {
             toastElement.remove();
         });
-        
         return toast;
     }
 
     showSuccess(message, duration = 5000) {
         return this.showToast(message, 'success', duration);
     }
-    
     showError(message, duration = 7000) {
         return this.showToast(message, 'error', duration);
     }
-    
     showWarning(message, duration = 6000) {
         return this.showToast(message, 'warning', duration);
     }
-    
     showInfo(message, duration = 5000) {
         return this.showToast(message, 'info', duration);
     }
 
     showConfirmDialog(title, message, onConfirm, onCancel = null) {
+        if (typeof window === 'undefined') {
+            // Server-side: log and auto-confirm
+            console.log(`[CONFIRM] ${title}: ${message}`);
+            if (onConfirm) onConfirm();
+            return null;
+        }
         if (!this.isBootstrapAvailable) {
             const result = confirm(`${title}\n\n${message}`);
             if (result && onConfirm) onConfirm();
             else if (!result && onCancel) onCancel();
             return null;
         }
-        
         const modalId = 'confirm-modal-' + Date.now();
         const modalHTML = `
             <div class="modal fade" id="${modalId}" tabindex="-1" aria-labelledby="${modalId}-label" aria-hidden="true">
@@ -130,21 +137,17 @@ class NotificationManager {
                 </div>
             </div>
         `;
-        
         document.body.insertAdjacentHTML('beforeend', modalHTML);
         const modalElement = document.getElementById(modalId);
         const modal = new bootstrap.Modal(modalElement);
-        
         document.getElementById(modalId + '-confirm').addEventListener('click', function() {
             modal.hide();
             if (onConfirm) onConfirm();
         });
-        
         modalElement.addEventListener('hidden.bs.modal', function() {
             modalElement.remove();
             if (onCancel) onCancel();
         });
-        
         modal.show();
         return modal;
     }
@@ -152,120 +155,6 @@ class NotificationManager {
     capitalizeFirst(str) {
         return str.charAt(0).toUpperCase() + str.slice(1);
     }
-
-    // Utility method to show notifications from URL parameters
-    showFromUrlParams() {
-        const urlParams = new URLSearchParams(window.location.search);
-        
-        if (urlParams.get('success')) {
-            const successType = urlParams.get('success');
-            let message = 'Operation completed successfully!';
-            
-            switch(successType) {
-                case 'login':
-                    message = 'Welcome! You have been logged in successfully.';
-                    break;
-                case 'logout':
-                    message = 'You have been logged out successfully.';
-                    break;
-                case 'created':
-                    message = 'Item created successfully!';
-                    break;
-                case 'updated':
-                    message = 'Item updated successfully!';
-                    break;
-                case 'deleted':
-                    message = 'Item deleted successfully!';
-                    break;
-                case 'stock_received':
-                    message = 'Stock received successfully!';
-                    break;
-                case 'stock_sold':
-                    message = 'Stock sold successfully!';
-                    break;
-                case 'filter_applied':
-                    message = 'Filters applied successfully!';
-                    break;
-                case 'user_created':
-                    message = 'User created successfully!';
-                    break;
-                case 'user_updated':
-                    message = 'User updated successfully!';
-                    break;
-                case 'user_deleted':
-                    message = 'User deleted successfully!';
-                    break;
-                case 'profile_updated':
-                    message = 'Profile updated successfully!';
-                    break;
-                default:
-                    message = 'Operation completed successfully!';
-            }
-            this.showSuccess(message);
-        }
-        
-        if (urlParams.get('error')) {
-            const errorType = urlParams.get('error');
-            let message = 'An error occurred.';
-            
-            switch(errorType) {
-                case 'login_failed':
-                    message = 'Login failed. Please check your credentials.';
-                    break;
-                case 'access_denied':
-                    message = 'Access denied. Insufficient permissions.';
-                    break;
-                case 'not_found':
-                    message = 'The requested item was not found.';
-                    break;
-                case 'database_error':
-                    message = 'Database error occurred. Please try again.';
-                    break;
-                default:
-                    message = urlParams.get('error');
-            }
-            this.showError(message);
-        }
-        
-        if (urlParams.get('warning')) {
-            this.showWarning(urlParams.get('warning'));
-        }
-        
-        if (urlParams.get('info')) {
-            this.showInfo(urlParams.get('info'));
-        }
-    }
 }
 
-// Create global instance
-window.notificationManager = new NotificationManager();
-
-// Auto-show notifications from URL parameters when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    window.notificationManager.showFromUrlParams();
-});
-
-// Backward compatibility - expose methods globally
-window.showNotification = function(message, type = 'info', duration = 5000) {
-    return window.notificationManager.showToast(message, type, duration);
-};
-
-window.showSuccess = function(message, duration = 5000) {
-    return window.notificationManager.showSuccess(message, duration);
-};
-
-window.showError = function(message, duration = 7000) {
-    return window.notificationManager.showError(message, duration);
-};
-
-window.showWarning = function(message, duration = 6000) {
-    return window.notificationManager.showWarning(message, duration);
-};
-
-window.showInfo = function(message, duration = 5000) {
-    return window.notificationManager.showInfo(message, duration);
-};
-
-window.showConfirm = function(title, message, onConfirm, onCancel = null) {
-    return window.notificationManager.showConfirmDialog(title, message, onConfirm, onCancel);
-};
+module.exports = NotificationManager;

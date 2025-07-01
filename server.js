@@ -792,6 +792,7 @@ app.get('/reports', isAuthenticated, async (req, res) => {
         const phoneId = req.query.phone_id || '';
         const startDate = req.query.start_date || '';
         const endDate = req.query.end_date || '';
+        const hasFilters = transactionType || phoneId || startDate || endDate;
 
         let query = `
             SELECT il.log_id, il.phone_id, il.transaction_type, il.quantity_changed, 
@@ -885,7 +886,8 @@ app.get('/reports', isAuthenticated, async (req, res) => {
                 phone_id: phoneId,
                 start_date: startDate,
                 end_date: endDate
-            }
+            },
+            showFilterNotification: hasFilters
         });
     } catch (err) {
         console.error('Database error:', err);

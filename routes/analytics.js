@@ -11,6 +11,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
     router.get('/analytics', isAuthenticated, async (req, res) => {
         try {
             const period = parseInt(req.query.period) || 30; // Default to 30 days
+            const hasFilters = req.query.period && req.query.period !== '30';
             
             // Get analytics data using the service
             const analyticsData = await analyticsService.getAnalyticsData(period);
@@ -23,7 +24,8 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 insights,
                 title: 'Analytics Dashboard',
                 currentPage: 'analytics',
-                filters: { period }
+                filters: { period },
+                showFilterNotification: hasFilters
             });
             
         } catch (err) {

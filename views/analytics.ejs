@@ -297,6 +297,15 @@
             link.click();
             document.body.removeChild(link);
         }
+
+        // Show filter notification when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            <% if (showFilterNotification) { %>
+                if (window.notificationManager) {
+                    window.notificationManager.showInfo('Analytics filtered for custom time period');
+                }
+            <% } %>
+        });
     </script>
 </body>
 </html>
