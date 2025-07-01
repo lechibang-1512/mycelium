@@ -116,6 +116,98 @@
                             </div>
                         </div>
 
+                        <!-- Tax and Financial Information -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="tax_rate" class="form-label">Sales Tax Rate (%)</label>
+                                <select class="form-select" id="tax_rate" name="tax_rate">
+                                    <option value="0">0% (No Tax)</option>
+                                    <option value="0.05">5%</option>
+                                    <option value="0.075">7.5%</option>
+                                    <option value="0.10" selected>10% (Standard)</option>
+                                    <option value="0.125">12.5%</option>
+                                    <option value="0.15">15%</option>
+                                </select>
+                                <div class="form-text">Applicable sales tax rate</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="discount_percent" class="form-label">Discount (%)</label>
+                                <input type="number" class="form-control" id="discount_percent" name="discount_percent" 
+                                       min="0" max="100" step="0.1" value="0" placeholder="0">
+                                <div class="form-text">Discount percentage (if any)</div>
+                            </div>
+                        </div>
+
+                        <!-- Customer Information -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-user me-2"></i>
+                                    Customer Information (Optional)
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="customer_name" class="form-label">Customer Name</label>
+                                        <input type="text" class="form-control" id="customer_name" name="customer_name" 
+                                               placeholder="Walk-in Customer">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="customer_email" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="customer_email" name="customer_email" 
+                                               placeholder="customer@example.com">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="customer_phone" class="form-label">Phone</label>
+                                        <input type="tel" class="form-control" id="customer_phone" name="customer_phone" 
+                                               placeholder="+1 (555) 123-4567">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="form-check mt-4">
+                                            <input class="form-check-input" type="checkbox" id="generate_receipt" name="generate_receipt" checked>
+                                            <label class="form-check-label" for="generate_receipt">
+                                                <i class="fas fa-receipt me-1"></i>
+                                                Generate Sales Receipt
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Enhanced Sale Summary -->
+                        <div id="sale-summary" class="mb-3" style="display: none;">
+                            <div class="card border-success">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-calculator me-2 text-success"></i>
+                                        Sale Summary
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-md-4">
+                                            <div class="border-end">
+                                                <h6 class="text-muted mb-1">Subtotal</h6>
+                                                <h5 class="mb-0" id="subtotal-value">$0.00</h5>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="border-end">
+                                                <h6 class="text-muted mb-1">Tax Amount</h6>
+                                                <h5 class="mb-0" id="tax-amount">$0.00</h5>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h6 class="text-muted mb-1">Remaining</h6>
+                                            <h5 class="mb-0 text-info" id="remaining-stock-display">0</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label for="notes" class="form-label">Sale Notes (Optional)</label>
                             <textarea class="form-control" id="notes" name="notes" rows="3" 
@@ -212,10 +304,30 @@
             updateTotalValue(quantity);
         });
 
-        // Function to update total sale value
+        // Tax rate input handler to update total with tax
+        document.getElementById('tax_rate').addEventListener('change', function() {
+            const quantity = parseInt(document.getElementById('quantity').value) || 0;
+            updateTotalValue(quantity);
+        });
+
+        // Function to update total sale value with tax
         function updateTotalValue(quantity) {
-            const totalValue = currentPhonePrice * quantity;
+            const subtotal = currentPhonePrice * quantity;
+            const taxRate = parseFloat(document.getElementById('tax_rate').value) || 0;
+            const taxAmount = subtotal * taxRate;
+            const totalValue = subtotal + taxAmount;
+            
+            // Update the displayed values
+            document.getElementById('subtotal-value').textContent = `$${subtotal.toFixed(2)}`;
+            document.getElementById('tax-amount').textContent = `$${taxAmount.toFixed(2)}`;
             document.getElementById('total-value').textContent = `$${totalValue.toFixed(2)}`;
+            
+            // Show or hide the summary based on if we have valid values
+            if (quantity > 0 && currentPhonePrice > 0) {
+                document.getElementById('sale-summary').style.display = 'block';
+            } else {
+                document.getElementById('sale-summary').style.display = 'none';
+            }
         }
 
         // Form validation with modern notifications

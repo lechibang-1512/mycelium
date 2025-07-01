@@ -373,6 +373,7 @@ app.get('/phone/:id', isAuthenticated, async (req, res) => {
         res.render('details', {
             phone,
             success: req.query.success,
+            receipt: req.query.receipt, // Add receipt ID if provided
             inventoryHistory,
             salesAnalytics: {
                 ...salesAnalytics,
@@ -681,28 +682,86 @@ app.post('/inventory/receive', isStaffOrAdmin, async (req, res) => {
         phone_id,
         supplier_id,
         quantity,
-        notes
+        unit_cost,
+        vat_rate,
+        notes,
+        generate_receipt,
+        po_number
     } = req.body;
     const conn = await pool.getConnection();
+    const suppliersConn = await suppliersPool.getConnection();
 
     try {
         await conn.beginTransaction();
 
-        const currentStockResult = await conn.query('SELECT sm_inventory FROM phone_specs WHERE id = ?', [phone_id]);
-        const currentStock = currentStockResult[0].sm_inventory;
-        const newStockLevel = parseInt(currentStock) + parseInt(quantity);
+        // Get the phone details
+        const phoneResult = await conn.query('SELECT * FROM phone_specs WHERE id = ?', [phone_id]);
+        if (phoneResult.length === 0) {
+            throw new Error('Phone not found');
+        }
+        const phone = convertBigIntToNumber(phoneResult[0]);
+        
+        // Get supplier details
+        const supplierResult = await suppliersConn.query('SELECT * FROM suppliers WHERE supplier_id = ?', [supplier_id]);
+        if (supplierResult.length === 0) {
+            throw new Error('Supplier not found');
+        }
+        const supplier = convertBigIntToNumber(supplierResult[0]);
+
+        // Update inventory
+        const currentStock = parseInt(phone.sm_inventory) || 0;
+        const newStockLevel = currentStock + parseInt(quantity);
 
         await conn.query('UPDATE phone_specs SET sm_inventory = ? WHERE id = ?', [newStockLevel, phone_id]);
 
+        // Add transaction notes
+        const fullNotes = po_number ? `${notes || ''}${notes ? '\n' : ''}PO #: ${po_number}` : notes;
+        
+        // Log inventory change
         await conn.query(
             `INSERT INTO inventory_log (phone_id, transaction_type, quantity_changed, new_inventory_level, supplier_id, notes) VALUES (?, 'incoming', ?, ?, ?, ?)`,
-            [phone_id, quantity, newStockLevel, supplier_id, notes]
+            [phone_id, quantity, newStockLevel, supplier_id, fullNotes]
         );
+
+        // Generate receipt if requested
+        let receiptId = null;
+        if (generate_receipt === 'on') {
+            // Create receipt service instance
+            const receiptService = new (require('./services/ReceiptService'))();
+            
+            // Generate receipt data
+            const receiptData = {
+                receiptId: receiptService.generateReceiptId('PUR'),
+                date: new Date(),
+                phone,
+                supplier,
+                quantity: parseInt(quantity),
+                unitPrice: parseFloat(unit_cost),
+                vatRate: parseFloat(vat_rate),
+                notes: fullNotes
+            };
+            
+            // Generate receipt and save to database
+            const receipt = receiptService.generateReceiveReceipt(receiptData);
+            receiptId = await receiptService.saveReceipt(conn, receipt, {
+                phone_id,
+                supplier_id,
+                quantity,
+                unit_cost,
+                vat_rate,
+                notes: fullNotes
+            });
+        }
 
         await conn.commit();
         conn.end();
+        suppliersConn.end();
 
-        res.redirect(`/phone/${phone_id}?success=stock_received`);
+        // Redirect with appropriate success message and receipt ID if available
+        const redirectUrl = receiptId ? 
+            `/phone/${phone_id}?success=stock_received&receipt=${receiptId}` : 
+            `/phone/${phone_id}?success=stock_received`;
+        res.redirect(redirectUrl);
 
     } catch (err) {
         await conn.rollback();
@@ -741,21 +800,31 @@ app.post('/inventory/sell', isStaffOrAdmin, async (req, res) => {
     const {
         phone_id,
         quantity,
-        notes
+        tax_rate,
+        customer_name,
+        customer_email,
+        customer_phone,
+        notes,
+        generate_receipt
     } = req.body;
     const conn = await pool.getConnection();
 
     try {
         await conn.beginTransaction();
 
-        const stockResult = await conn.query('SELECT sm_inventory FROM phone_specs WHERE id = ? FOR UPDATE', [phone_id]);
-        const currentStock = stockResult[0].sm_inventory;
+        // Get the phone details
+        const phoneResult = await conn.query('SELECT * FROM phone_specs WHERE id = ? FOR UPDATE', [phone_id]);
+        if (phoneResult.length === 0) {
+            throw new Error('Phone not found');
+        }
+        const phone = convertBigIntToNumber(phoneResult[0]);
+        const currentStock = parseInt(phone.sm_inventory);
 
         if (currentStock < quantity) {
             throw new Error('Insufficient stock to complete the sale.');
         }
 
-        const newStockLevel = parseInt(currentStock) - parseInt(quantity);
+        const newStockLevel = currentStock - parseInt(quantity);
 
         await conn.query('UPDATE phone_specs SET sm_inventory = ? WHERE id = ?', [newStockLevel, phone_id]);
 
@@ -764,10 +833,46 @@ app.post('/inventory/sell', isStaffOrAdmin, async (req, res) => {
             [phone_id, quantity, newStockLevel, notes]
         );
 
+        // Generate receipt if requested
+        let receiptId = null;
+        if (generate_receipt === 'on') {
+            // Create receipt service instance
+            const receiptService = new (require('./services/ReceiptService'))();
+            
+            // Generate receipt data
+            const receiptData = {
+                receiptId: receiptService.generateReceiptId('SAL'),
+                date: new Date(),
+                phone,
+                quantity: parseInt(quantity),
+                unitPrice: parseFloat(phone.sm_price),
+                taxRate: parseFloat(tax_rate),
+                customerInfo: {
+                    name: customer_name || 'Walk-in Customer',
+                    email: customer_email || '',
+                    phone: customer_phone || ''
+                },
+                notes
+            };
+            
+            // Generate receipt and save to database
+            const receipt = receiptService.generateSaleReceipt(receiptData);
+            receiptId = await receiptService.saveReceipt(conn, receipt, {
+                phone_id,
+                quantity,
+                tax_rate,
+                notes
+            });
+        }
+
         await conn.commit();
         conn.end();
 
-        res.redirect(`/phone/${phone_id}?success=stock_sold`);
+        // Redirect with appropriate success message and receipt ID if available
+        const redirectUrl = receiptId ? 
+            `/phone/${phone_id}?success=stock_sold&receipt=${receiptId}` : 
+            `/phone/${phone_id}?success=stock_sold`;
+        res.redirect(redirectUrl);
 
     } catch (err) {
         await conn.rollback();
@@ -1386,6 +1491,35 @@ app.get('/stock-alerts', isAuthenticated, async (req, res) => {
         console.error('Stock alerts error:', err);
         res.status(500).render('error', {
             error: 'Failed to load stock alerts: ' + err.message
+        });
+    }
+});
+
+// View receipt
+app.get('/receipt/:id', isAuthenticated, async (req, res) => {
+    try {
+        const conn = await pool.getConnection();
+        const receiptService = new (require('./services/ReceiptService'))();
+        
+        const receipt = await receiptService.getReceipt(conn, req.params.id);
+        conn.end();
+        
+        if (!receipt) {
+            return res.status(404).render('error', {
+                error: 'Receipt not found'
+            });
+        }
+        
+        // Generate HTML view of receipt
+        const receiptHtml = receiptService.generateHTML(receipt.receipt_data);
+        
+        // Send the receipt HTML directly to the browser
+        res.send(receiptHtml);
+        
+    } catch (err) {
+        console.error('Receipt error:', err);
+        res.status(500).render('error', {
+            error: 'Failed to load receipt: ' + err.message
         });
     }
 });

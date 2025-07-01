@@ -1,5 +1,4 @@
 // Client-side NotificationManager for browser usage
-import DOMPurify from 'dompurify';
 class NotificationManager {
     constructor() {
         this.isBootstrapAvailable = false;
@@ -65,7 +64,7 @@ class NotificationManager {
                     <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
                 </div>
                 <div class="toast-body">
-                    ${DOMPurify.sanitize(message)}
+                    ${this.sanitizeHTML(message)}
                 </div>
             </div>
         `;
@@ -152,6 +151,25 @@ class NotificationManager {
 
     capitalizeFirst(str) {
         return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    // Simple HTML sanitization with optional DOMPurify fallback
+    sanitizeHTML(str) {
+        if (typeof str !== 'string') return '';
+        
+        // Use DOMPurify if available, otherwise fallback to basic escaping
+        if (typeof DOMPurify !== 'undefined' && DOMPurify.sanitize) {
+            return DOMPurify.sanitize(str);
+        }
+        
+        // Basic HTML escaping
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#x27;')
+            .replace(/\//g, '&#x2F;');
     }
 
     // Utility method to show notifications from URL parameters

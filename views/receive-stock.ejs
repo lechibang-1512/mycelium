@@ -115,10 +115,93 @@
                             <div class="form-text">Enter the number of units received</div>
                         </div>
 
+                        <!-- Financial Information -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="unit_cost" class="form-label">Unit Cost *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="unit_cost" name="unit_cost" 
+                                           step="0.01" min="0" required placeholder="0.00">
+                                </div>
+                                <div class="form-text">Cost per unit from supplier</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="vat_rate" class="form-label">VAT Rate (%)</label>
+                                <select class="form-select" id="vat_rate" name="vat_rate">
+                                    <option value="0">0% (No VAT)</option>
+                                    <option value="0.05">5%</option>
+                                    <option value="0.10">10%</option>
+                                    <option value="0.15">15%</option>
+                                    <option value="0.20" selected>20% (Standard)</option>
+                                    <option value="0.25">25%</option>
+                                </select>
+                                <div class="form-text">VAT rate for this purchase</div>
+                            </div>
+                        </div>
+
+                        <!-- Cost Summary -->
+                        <div id="cost-summary" class="mb-3" style="display: none;">
+                            <div class="card border-info">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-calculator me-2 text-info"></i>
+                                        Purchase Summary
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-md-3">
+                                            <div class="border-end">
+                                                <h6 class="text-muted mb-1">Subtotal</h6>
+                                                <h5 class="mb-0" id="subtotal-amount">$0.00</h5>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="border-end">
+                                                <h6 class="text-muted mb-1">VAT</h6>
+                                                <h5 class="mb-0" id="vat-amount">$0.00</h5>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="border-end">
+                                                <h6 class="text-muted mb-1">Total Cost</h6>
+                                                <h5 class="mb-0 text-primary" id="total-amount">$0.00</h5>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <h6 class="text-muted mb-1">New Stock</h6>
+                                            <h5 class="mb-0 text-success" id="new-stock-level">0</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Receipt Options -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="generate_receipt" name="generate_receipt" checked>
+                                    <label class="form-check-label" for="generate_receipt">
+                                        <i class="fas fa-receipt me-1"></i>
+                                        Generate Purchase Receipt
+                                    </label>
+                                </div>
+                                <div class="form-text">Create a formal receipt for this purchase</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="po_number" class="form-label">Purchase Order # (Optional)</label>
+                                <input type="text" class="form-control" id="po_number" name="po_number" 
+                                       placeholder="PO-2025-001">
+                                <div class="form-text">Reference purchase order number</div>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label for="notes" class="form-label">Notes (Optional)</label>
                             <textarea class="form-control" id="notes" name="notes" rows="3" 
-                                      placeholder="e.g., Purchase Order #12345, Delivery receipt number..."></textarea>
+                                      placeholder="e.g., Purchase Order #12345, Delivery receipt number, condition notes..."></textarea>
                         </div>
 
                         <div class="d-flex justify-content-between">
@@ -142,6 +225,9 @@
     <script src="/js/notifications.js"></script>
 
     <script>
+        let currentPhoneStock = 0;
+        let currentPhonePrice = 0;
+
         // Phone selection handler to show details
         document.getElementById('phone_id').addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
@@ -156,6 +242,10 @@
                 const stock = selectedOption.getAttribute('data-stock');
                 const maker = selectedOption.getAttribute('data-maker');
                 
+                // Store current phone data
+                currentPhoneStock = parseInt(stock) || 0;
+                currentPhonePrice = parseFloat(price) || 0;
+                
                 // Update display elements
                 document.getElementById('phone-maker').textContent = maker;
                 document.getElementById('phone-stock').textContent = stock;
@@ -164,19 +254,60 @@
                 document.getElementById('phone-rom').textContent = rom;
                 document.getElementById('phone-color').textContent = color;
                 
+                // Set default unit cost to selling price (can be adjusted)
+                if (currentPhonePrice > 0) {
+                    document.getElementById('unit_cost').value = (currentPhonePrice * 0.7).toFixed(2); // 70% of selling price as default cost
+                }
+                
                 // Show details card
                 detailsDiv.style.display = 'block';
+                
+                // Update calculations
+                updateFinancialSummary();
             } else {
                 // Hide details card
                 detailsDiv.style.display = 'none';
+                currentPhoneStock = 0;
+                currentPhonePrice = 0;
             }
         });
+
+        // Update financial summary when inputs change
+        ['quantity', 'unit_cost', 'vat_rate'].forEach(fieldId => {
+            document.getElementById(fieldId).addEventListener('input', updateFinancialSummary);
+        });
+
+        function updateFinancialSummary() {
+            const quantity = parseInt(document.getElementById('quantity').value) || 0;
+            const unitCost = parseFloat(document.getElementById('unit_cost').value) || 0;
+            const vatRate = parseFloat(document.getElementById('vat_rate').value) || 0;
+            
+            if (quantity > 0 && unitCost > 0) {
+                const subtotal = quantity * unitCost;
+                const vatAmount = subtotal * vatRate;
+                const total = subtotal + vatAmount;
+                const newStockLevel = currentPhoneStock + quantity;
+                
+                // Update display
+                document.getElementById('subtotal-amount').textContent = `$${subtotal.toFixed(2)}`;
+                document.getElementById('vat-amount').textContent = `$${vatAmount.toFixed(2)}`;
+                document.getElementById('total-amount').textContent = `$${total.toFixed(2)}`;
+                document.getElementById('new-stock-level').textContent = newStockLevel;
+                
+                // Show summary
+                document.getElementById('cost-summary').style.display = 'block';
+            } else {
+                // Hide summary
+                document.getElementById('cost-summary').style.display = 'none';
+            }
+        }
 
         // Form validation with modern notifications
         document.querySelector('form').addEventListener('submit', function(e) {
             const phoneId = document.getElementById('phone_id').value;
             const supplierId = document.getElementById('supplier_id').value;
             const quantity = document.getElementById('quantity').value;
+            const unitCost = document.getElementById('unit_cost').value;
             
             if (!phoneId) {
                 e.preventDefault();
@@ -196,6 +327,13 @@
                 e.preventDefault();
                 showWarning('Please enter a valid quantity.');
                 document.getElementById('quantity').focus();
+                return;
+            }
+
+            if (!unitCost || unitCost < 0) {
+                e.preventDefault();
+                showWarning('Please enter a valid unit cost.');
+                document.getElementById('unit_cost').focus();
                 return;
             }
 

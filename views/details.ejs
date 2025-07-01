@@ -64,6 +64,20 @@
                     <i class="fas fa-check-circle me-2"></i>Phone created successfully!
                 <% } else if (success === 'updated') { %>
                     <i class="fas fa-check-circle me-2"></i>Phone updated successfully!
+                <% } else if (success === 'stock_received') { %>
+                    <i class="fas fa-check-circle me-2"></i>Stock received successfully!
+                    <% if (typeof receipt !== 'undefined') { %>
+                        <a href="/receipt/<%= receipt %>" class="btn btn-sm btn-outline-success ms-2" target="_blank">
+                            <i class="fas fa-receipt me-1"></i>View Receipt
+                        </a>
+                    <% } %>
+                <% } else if (success === 'stock_sold') { %>
+                    <i class="fas fa-check-circle me-2"></i>Stock sold successfully!
+                    <% if (typeof receipt !== 'undefined') { %>
+                        <a href="/receipt/<%= receipt %>" class="btn btn-sm btn-outline-success ms-2" target="_blank">
+                            <i class="fas fa-receipt me-1"></i>View Receipt
+                        </a>
+                    <% } %>
                 <% } %>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
