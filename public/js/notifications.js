@@ -1,4 +1,5 @@
 // Client-side NotificationManager for browser usage
+import DOMPurify from 'dompurify';
 class NotificationManager {
     constructor() {
         this.isBootstrapAvailable = false;
@@ -64,14 +65,14 @@ class NotificationManager {
                     <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
                 </div>
                 <div class="toast-body">
-                    ${message}
+                    ${DOMPurify.sanitize(message)}
                 </div>
             </div>
         `;
         
         const container = document.getElementById('toast-container');
         if (!container) this.createToastContainer();
-        document.getElementById('toast-container').insertAdjacentHTML('beforeend', toastHTML);
+        container.insertAdjacentHTML('beforeend', toastHTML);
         
         const toastElement = document.getElementById(toastId);
         const toast = new bootstrap.Toast(toastElement);
