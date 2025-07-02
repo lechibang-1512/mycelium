@@ -7,6 +7,7 @@ const session = require('express-session');
 const flash = require('connect-flash');
 const csrf = require('@dr.pogodin/csurf');
 const cookieParser = require('cookie-parser');
+const SanitizationService = require('./services/SanitizationService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -46,33 +47,8 @@ const pool = mariadb.createPool(dbConfig);
 const suppliersPool = mariadb.createPool(suppliersDbConfig);
 const authPool = mariadb.createPool(authDbConfig);
 
-// Helper function to convert BigInt values to numbers
-function convertBigIntToNumber(obj) {
-    if (obj === null || obj === undefined) return obj;
-
-    if (typeof obj === 'bigint') {
-        return Number(obj);
-    }
-
-    if (Array.isArray(obj)) {
-        return obj.map(convertBigIntToNumber);
-    }
-
-    // Handle Date objects specifically to preserve them
-    if (obj instanceof Date) {
-        return obj;
-    }
-
-    if (typeof obj === 'object') {
-        const converted = {};
-        for (const [key, value] of Object.entries(obj)) {
-            converted[key] = convertBigIntToNumber(value);
-        }
-        return converted;
-    }
-
-    return obj;
-}
+// Use SanitizationService for BigInt conversion
+const convertBigIntToNumber = SanitizationService.convertBigIntToNumber;
 
 // Middleware
 app.use(express.static('public'));
@@ -1113,24 +1089,8 @@ app.post('/phones', isStaffOrAdmin, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         
-        // Helper function to convert empty strings to null for numeric fields
-        const parseNumeric = (value) => {
-            if (value === '' || value === null || value === undefined) return null;
-            const parsed = parseFloat(value);
-            return isNaN(parsed) ? null : parsed;
-        };
-
-        // Helper function to convert empty strings to null for integer fields
-        const parseInteger = (value) => {
-            if (value === '' || value === null || value === undefined) return null;
-            const parsed = parseInt(value);
-            return isNaN(parsed) ? null : parsed;
-        };
-
-        // Helper function to handle empty strings
-        const parseString = (value) => {
-            return (value === '' || value === null || value === undefined) ? null : value;
-        };
+        // Use SanitizationService to sanitize input
+        const sanitizedData = SanitizationService.sanitizePhoneInput(req.body);
 
         const insertQuery = `
             INSERT INTO phone_specs (
@@ -1143,60 +1103,10 @@ app.post('/phones', isStaffOrAdmin, async (req, res) => {
                 battery_capacity, fast_charging, connector, security_features, sim_card,
                 nfc, network_bands, wireless_connectivity, navigation, audio_jack,
                 audio_playback, video_playback, sensors, operating_system, package_contents
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (${Array(46).fill('?').join(', ')})
         `;
 
-        const values = [
-            parseString(req.body.sm_name),
-            parseString(req.body.sm_maker),
-            parseNumeric(req.body.sm_price),
-            parseInteger(req.body.sm_inventory) || 0,
-            parseString(req.body.color),
-            parseString(req.body.water_and_dust_rating),
-            parseString(req.body.processor),
-            parseString(req.body.process_node),
-            parseString(req.body.cpu_cores),
-            parseString(req.body.cpu_frequency),
-            parseString(req.body.gpu),
-            parseString(req.body.memory_type),
-            parseString(req.body.ram),
-            parseString(req.body.rom),
-            parseString(req.body.expandable_memory),
-            parseNumeric(req.body.length_mm),
-            parseNumeric(req.body.width_mm),
-            parseNumeric(req.body.thickness_mm),
-            parseNumeric(req.body.weight_g),
-            parseNumeric(req.body.display_size),
-            parseString(req.body.resolution),
-            parseString(req.body.pixel_density),
-            parseString(req.body.refresh_rate),
-            parseString(req.body.brightness),
-            parseString(req.body.display_features),
-            parseString(req.body.rear_camera_main),
-            parseString(req.body.rear_camera_macro),
-            parseString(req.body.rear_camera_features),
-            parseString(req.body.rear_video_resolution),
-            parseString(req.body.front_camera),
-            parseString(req.body.front_camera_features),
-            parseString(req.body.front_video_resolution),
-            parseString(req.body.battery_capacity),
-            parseString(req.body.fast_charging),
-            parseString(req.body.connector),
-            parseString(req.body.security_features),
-            parseString(req.body.sim_card),
-            parseString(req.body.nfc),
-            parseString(req.body.network_bands),
-            parseString(req.body.wireless_connectivity),
-            parseString(req.body.navigation),
-            parseString(req.body.audio_jack),
-            parseString(req.body.audio_playback),
-            parseString(req.body.video_playback),
-            parseString(req.body.sensors),
-            parseString(req.body.operating_system),
-            parseString(req.body.package_contents)
-        ];
-
-        const result = await conn.query(insertQuery, values);
+        const result = await conn.query(insertQuery, Object.values(sanitizedData));
         conn.end();
 
         res.redirect(`/phone/${result.insertId}?success=created`);
@@ -1212,25 +1122,6 @@ app.post('/phones', isStaffOrAdmin, async (req, res) => {
 app.post('/phones/:id', isStaffOrAdmin, async (req, res) => {
     try {
         const conn = await pool.getConnection();
-        
-        // Helper function to convert empty strings to null for numeric fields
-        const parseNumeric = (value) => {
-            if (value === '' || value === null || value === undefined) return null;
-            const parsed = parseFloat(value);
-            return isNaN(parsed) ? null : parsed;
-        };
-
-        // Helper function to convert empty strings to null for integer fields
-        const parseInteger = (value) => {
-            if (value === '' || value === null || value === undefined) return null;
-            const parsed = parseInt(value);
-            return isNaN(parsed) ? null : parsed;
-        };
-
-        // Helper function to handle empty strings
-        const parseString = (value) => {
-            return (value === '' || value === null || value === undefined) ? null : value;
-        };
 
         try {
             await conn.beginTransaction();
@@ -1241,7 +1132,10 @@ app.post('/phones/:id', isStaffOrAdmin, async (req, res) => {
                 throw new Error('Phone not found');
             }
             const currentStock = parseInt(currentStockResult[0].sm_inventory) || 0;
-            const newStock = parseInteger(req.body.sm_inventory) || 0;
+            
+            // Use SanitizationService to sanitize input
+            const sanitizedData = SanitizationService.sanitizePhoneInput(req.body);
+            const newStock = sanitizedData.sm_inventory;
             
             const updateQuery = `
                 UPDATE phone_specs SET
@@ -1252,62 +1146,13 @@ app.post('/phones/:id', isStaffOrAdmin, async (req, res) => {
                     rear_camera_main = ?, rear_camera_macro = ?, rear_camera_features = ?, rear_video_resolution = ?,
                     front_camera = ?, front_camera_features = ?, front_video_resolution = ?,
                     battery_capacity = ?, fast_charging = ?, connector = ?, security_features = ?, sim_card = ?,
-                    nfc = ?, network_bands = ?, wireless_connectivity = ?, navigation = ?, audio_jack = ?,
+                    nfc = ?, network_bands, wireless_connectivity = ?, navigation = ?, audio_jack = ?,
                     audio_playback = ?, video_playback = ?, sensors = ?,
                     operating_system = ?, package_contents = ?
                 WHERE id = ?
             `;
 
-            const values = [
-                parseString(req.body.sm_name),
-                parseString(req.body.sm_maker),
-                parseNumeric(req.body.sm_price),
-                newStock,
-                parseString(req.body.color),
-                parseString(req.body.water_and_dust_rating),
-                parseString(req.body.processor),
-                parseString(req.body.process_node),
-                parseString(req.body.cpu_cores),
-                parseString(req.body.cpu_frequency),
-                parseString(req.body.gpu),
-                parseString(req.body.memory_type),
-                parseString(req.body.ram),
-                parseString(req.body.rom),
-                parseString(req.body.expandable_memory),
-                parseNumeric(req.body.length_mm),
-                parseNumeric(req.body.width_mm),
-                parseNumeric(req.body.thickness_mm),
-                parseNumeric(req.body.weight_g),
-                parseNumeric(req.body.display_size),
-                parseString(req.body.resolution),
-                parseString(req.body.pixel_density),
-                parseString(req.body.refresh_rate),
-                parseString(req.body.brightness),
-                parseString(req.body.display_features),
-                parseString(req.body.rear_camera_main),
-                parseString(req.body.rear_camera_macro),
-                parseString(req.body.rear_camera_features),
-                parseString(req.body.rear_video_resolution),
-                parseString(req.body.front_camera),
-                parseString(req.body.front_camera_features),
-                parseString(req.body.front_video_resolution),
-                parseString(req.body.battery_capacity),
-                parseString(req.body.fast_charging),
-                parseString(req.body.connector),
-                parseString(req.body.security_features),
-                parseString(req.body.sim_card),
-                parseString(req.body.nfc),
-                parseString(req.body.network_bands),
-                parseString(req.body.wireless_connectivity),
-                parseString(req.body.navigation),
-                parseString(req.body.audio_jack),
-                parseString(req.body.audio_playback),
-                parseString(req.body.video_playback),
-                parseString(req.body.sensors),
-                parseString(req.body.operating_system),
-                parseString(req.body.package_contents),
-                req.params.id
-            ];
+            const values = [...Object.values(sanitizedData), req.params.id];
 
             await conn.query(updateQuery, values);
 
