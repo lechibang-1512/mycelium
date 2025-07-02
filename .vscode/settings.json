@@ -13,5 +13,11 @@
             "database": "master_specs_db",
             "username": "lechibang"
         }
-    ]
+    ],
+    "mcp.servers": {
+        "github": {
+            "type": "http",
+            "url": "https://api.githubcopilot.com/mcp/"
+        }
+    }
 }
