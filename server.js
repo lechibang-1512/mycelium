@@ -1461,16 +1461,50 @@ async function startServer() {
         const topPerformersResult = await conn.query(topPerformersQuery);
         const topPerformers = convertBigIntToNumber(topPerformersResult);
         
-        // Calculate averages
+        // Calculate averages and real performance metrics
         const avgQuery = `
             SELECT 
                 AVG(sm_inventory) as avg_inventory,
-                AVG(sm_price * sm_inventory) as avg_inventory_value
+                AVG(sm_price * sm_inventory) as avg_inventory_value,
+                SUM(sm_inventory * sm_price) as total_inventory_value,
+                COUNT(*) as total_products
             FROM phone_specs
             WHERE sm_inventory > 0
         `;
         const avgResult = await conn.query(avgQuery);
         const avgData = convertBigIntToNumber(avgResult[0]);
+        
+        // Calculate real stock turnover (sales/average inventory over 30 days)
+        const stockTurnoverQuery = `
+            SELECT 
+                ps.id,
+                ps.sm_inventory,
+                COALESCE(SUM(ABS(il.quantity_changed)), 0) as units_sold_30_days
+            FROM phone_specs ps
+            LEFT JOIN inventory_log il ON ps.id = il.phone_id 
+                AND il.transaction_type = 'outgoing'
+                AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            WHERE ps.sm_inventory > 0
+            GROUP BY ps.id, ps.sm_inventory
+            HAVING units_sold_30_days > 0
+        `;
+        const stockTurnoverResult = await conn.query(stockTurnoverQuery);
+        const stockTurnoverData = convertBigIntToNumber(stockTurnoverResult);
+        
+        // Calculate average stock turnover ratio (annualized)
+        let totalTurnoverRatio = 0;
+        let validTurnoverCount = 0;
+        
+        stockTurnoverData.forEach(product => {
+            if (product.sm_inventory > 0 && product.units_sold_30_days > 0) {
+                // Annualized turnover: (units sold in 30 days / current inventory) * 12
+                const turnoverRatio = (product.units_sold_30_days / product.sm_inventory) * 12;
+                totalTurnoverRatio += turnoverRatio;
+                validTurnoverCount++;
+            }
+        });
+        
+        const avgStockTurnover = validTurnoverCount > 0 ? Math.round((totalTurnoverRatio / validTurnoverCount) * 10) / 10 : 0;
         
         // Generate smart recommendations
         const recommendations = [];
@@ -1512,9 +1546,8 @@ async function startServer() {
             lowStockCount: lowStockProducts.length,
             fastMovingCount: fastMovingProducts.length,
             slowMovingCount: slowMovingProducts.length,
-            avgStockTurnover: fastMovingProducts.length > 0 ? 
-                fastMovingProducts.reduce((sum, p) => sum + p.total_sold, 0) / fastMovingProducts.length : 0,
-            avgInventoryValue: avgData.avg_inventory_value || 0
+            avgStockTurnover: avgStockTurnover,
+            avgInventoryValue: Math.floor(avgData.avg_inventory_value || 0)
         });
         
     } catch (err) {

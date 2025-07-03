@@ -338,11 +338,20 @@ class AnalyticsService {
         const query = `
             SELECT 
                 COALESCE(SUM(sm_inventory * sm_price), 0) as total_inventory_value,
-                COALESCE(SUM(sm_inventory), 0) as total_units_in_stock
+                COALESCE(SUM(sm_inventory), 0) as total_units_in_stock,
+                COALESCE(AVG(sm_inventory * sm_price), 0) as avg_inventory_value
             FROM phone_specs
+            WHERE sm_inventory > 0
         `;
         const result = await conn.query(query);
-        return this.convertBigIntToNumber(result[0]);
+        const data = this.convertBigIntToNumber(result[0]);
+        
+        // Round down financial values for display
+        if (data.avg_inventory_value) {
+            data.avg_inventory_value = Math.floor(data.avg_inventory_value);
+        }
+        
+        return data;
     }
 
     /**
@@ -532,13 +541,25 @@ class AnalyticsService {
                 AVG(sm_inventory) as avg_inventory_level,
                 SUM(sm_inventory * sm_price) as total_inventory_value,
                 AVG(sm_price) as avg_product_price,
+                AVG(sm_inventory * sm_price) as avg_inventory_value,
                 MAX(sm_price) as highest_price,
                 MIN(sm_price) as lowest_price,
                 STDDEV(sm_price) as price_standard_deviation
             FROM phone_specs
+            WHERE sm_inventory > 0
         `;
         const result = await conn.query(query);
-        return this.convertBigIntToNumber(result[0]);
+        const data = this.convertBigIntToNumber(result[0]);
+        
+        // Round down average financial values for display
+        if (data.avg_product_price) {
+            data.avg_product_price = Math.floor(data.avg_product_price);
+        }
+        if (data.avg_inventory_value) {
+            data.avg_inventory_value = Math.floor(data.avg_inventory_value);
+        }
+        
+        return data;
     }
 
     /**

@@ -6,8 +6,9 @@
  */
 
 class SecurityLogger {
-    constructor(authPool = null, convertBigIntToNumber = null) {
+    constructor(authPool = null, convertBigIntToNumber = null, securityDbPool = null) {
         this.authPool = authPool;
+        this.securityDbPool = securityDbPool || authPool; // Use separate security db pool if provided, otherwise use auth pool
         this.convertBigIntToNumber = convertBigIntToNumber;
         this.eventBuffer = [];
         this.bufferFlushInterval = null;
@@ -33,15 +34,22 @@ class SecurityLogger {
      * Log a security event
      */
     async logSecurityEvent(eventType, details = {}) {
+        // Ensure eventType is a string
+        let cleanEventType = eventType;
+        if (typeof eventType === 'object') {
+            cleanEventType = JSON.stringify(eventType);
+        }
+        cleanEventType = String(cleanEventType || '').substring(0, 50);
+        
         const event = {
-            event_type: eventType,
+            event_type: cleanEventType,
             user_id: details.userId || null,
             username: details.username || null,
             ip_address: details.ipAddress || null,
             user_agent: details.userAgent || null,
             session_id: details.sessionId || null,
             details: JSON.stringify(details.additionalData || {}),
-            risk_level: this.calculateRiskLevel(eventType, details),
+            risk_level: this.calculateRiskLevel(cleanEventType, details),
             timestamp: Date.now()
         };
 
@@ -55,7 +63,7 @@ class SecurityLogger {
 
         // Log to console for immediate visibility
         const riskEmoji = this.getRiskEmoji(event.risk_level);
-        console.log(`${riskEmoji} Security Event: ${eventType} | User: ${details.username || 'unknown'} | Risk: ${event.risk_level}`);
+        console.log(`${riskEmoji} Security Event: ${cleanEventType} | User: ${details.username || 'unknown'} | Risk: ${event.risk_level}`);
     }
 
     /**
@@ -233,21 +241,28 @@ class SecurityLogger {
      * Flush event buffer to database
      */
     async flushEventBuffer() {
-        if (this.eventBuffer.length === 0 || !this.authPool) return;
+        if (this.eventBuffer.length === 0 || !this.securityDbPool) return;
+
+        const events = [...this.eventBuffer];
+        this.eventBuffer = [];
 
         try {
-            const events = [...this.eventBuffer];
-            this.eventBuffer = [];
-
-            const conn = await this.authPool.getConnection();
+            const conn = await this.securityDbPool.getConnection();
             
             for (const event of events) {
+                // Ensure event_type is a string - handle object case
+                let eventType = event.event_type;
+                if (typeof eventType === 'object') {
+                    eventType = JSON.stringify(eventType);
+                }
+                eventType = String(eventType || '').substring(0, 50);
+                
                 await conn.query(
                     `INSERT INTO security_events 
                      (event_type, user_id, username, ip_address, user_agent, session_id, details, risk_level) 
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                     [
-                        event.event_type,
+                        eventType,
                         event.user_id,
                         event.username,
                         event.ip_address,
@@ -285,6 +300,7 @@ class SecurityLogger {
             case 'password_change':
                 return details.additionalData?.forced ? 'medium' : 'low';
             case 'login':
+            case 'login_success':
                 return 'low';
             case 'logout':
                 return 'low';
@@ -330,9 +346,9 @@ class SecurityLogger {
      */
     async getSecurityDashboard(days = 7) {
         try {
-            if (!this.authPool) return null;
+            if (!this.securityDbPool) return null;
 
-            const conn = await this.authPool.getConnection();
+            const conn = await this.securityDbPool.getConnection();
             
             // Get recent security events summary
             const eventsSummary = await conn.query(
@@ -346,16 +362,21 @@ class SecurityLogger {
                 [days]
             );
 
-            // Get failed login summary
-            const failedLogins = await conn.query(
-                `SELECT DATE(attempt_time) as date, COUNT(*) as attempts,
-                        COUNT(DISTINCT identifier) as unique_identifiers
-                 FROM failed_login_attempts 
-                 WHERE attempt_time >= DATE_SUB(NOW(), INTERVAL ? DAY)
-                 GROUP BY DATE(attempt_time)
-                 ORDER BY date DESC`,
-                [days]
-            );
+            // Get failed login summary from auth database
+            let failedLogins = [];
+            if (this.authPool) {
+                const authConn = await this.authPool.getConnection();
+                failedLogins = await authConn.query(
+                    `SELECT DATE(attempt_time) as date, COUNT(*) as attempts,
+                            COUNT(DISTINCT identifier) as unique_identifiers
+                     FROM failed_login_attempts 
+                     WHERE attempt_time >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                     GROUP BY DATE(attempt_time)
+                     ORDER BY date DESC`,
+                    [days]
+                );
+                authConn.end();
+            }
 
             // Get top risk IPs
             const riskIPs = await conn.query(
@@ -393,14 +414,14 @@ class SecurityLogger {
      */
     async initialize() {
         try {
-            if (this.authPool) {
-                const conn = await this.authPool.getConnection();
+            if (this.securityDbPool) {
+                const conn = await this.securityDbPool.getConnection();
                 
                 // Ensure the security_events table exists
                 await conn.query(`
                     CREATE TABLE IF NOT EXISTS security_events (
                         id INT AUTO_INCREMENT PRIMARY KEY,
-                        event_type ENUM('login', 'logout', 'failed_login', 'session_hijack', 'token_invalidation', 'password_change', 'account_lockout') NOT NULL,
+                        event_type ENUM('login', 'logout', 'failed_login', 'login_success', 'session_hijack', 'token_invalidation', 'password_change', 'account_lockout') NOT NULL,
                         user_id INT,
                         username VARCHAR(50),
                         ip_address VARCHAR(45),
@@ -417,8 +438,15 @@ class SecurityLogger {
                     )
                 `);
                 
+                conn.end();
+            }
+            
+            // Initialize failed login attempts table in the auth database
+            if (this.authPool) {
+                const authConn = await this.authPool.getConnection();
+                
                 // Ensure the failed_login_attempts table exists
-                await conn.query(`
+                await authConn.query(`
                     CREATE TABLE IF NOT EXISTS failed_login_attempts (
                         id INT AUTO_INCREMENT PRIMARY KEY,
                         identifier VARCHAR(100) NOT NULL,
@@ -432,7 +460,7 @@ class SecurityLogger {
                     )
                 `);
                 
-                conn.end();
+                authConn.end();
                 console.log('✅ Security logger service initialized with database tables');
             } else {
                 console.log('✅ Security logger service initialized (memory-only mode)');

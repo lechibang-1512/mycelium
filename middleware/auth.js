@@ -238,17 +238,16 @@ const isAuthenticated = async (req, res, next) => {
             
             // Log session validation failure
             if (SessionSecurity.securityLogger && req.session?.user) {
-                await SessionSecurity.securityLogger.logSecurityEvent({
-                    eventType: 'session_validation_failed',
+                await SessionSecurity.securityLogger.logSecurityEvent('session_validation_failed', {
                     userId: req.session.user.id,
                     username: req.session.user.username,
                     ipAddress: req.ip,
                     userAgent: req.get('User-Agent'),
-                    details: { 
+                    additionalData: { 
                         reason: validation.reason,
-                        sessionToken: req.session.user.sessionToken?.substring(0, 8) + '...'
-                    },
-                    riskScore: 60
+                        sessionToken: req.session.user.sessionToken?.substring(0, 8) + '...',
+                        riskScore: 60
+                    }
                 });
             }
             
@@ -279,14 +278,15 @@ const isAuthenticated = async (req, res, next) => {
         
         // Log authentication error
         if (SessionSecurity.securityLogger) {
-            await SessionSecurity.securityLogger.logSecurityEvent({
-                eventType: 'authentication_error',
+            await SessionSecurity.securityLogger.logSecurityEvent('authentication_error', {
                 userId: req.session?.user?.id || null,
                 username: req.session?.user?.username || 'unknown',
                 ipAddress: req.ip,
                 userAgent: req.get('User-Agent'),
-                details: { error: err.message },
-                riskScore: 80
+                additionalData: { 
+                    error: err.message,
+                    riskScore: 80
+                }
             });
         }
         

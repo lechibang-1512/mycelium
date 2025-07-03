@@ -42,14 +42,15 @@ module.exports = (authPool, convertBigIntToNumber) => {
             if (result.length === 0) {
                 // Log failed login attempt
                 if (SessionSecurity.securityLogger) {
-                    await SessionSecurity.securityLogger.logSecurityEvent({
-                        eventType: 'login_failed',
+                    await SessionSecurity.securityLogger.logSecurityEvent('login_failed', {
                         userId: null,
                         username: username,
                         ipAddress: req.ip,
                         userAgent: req.get('User-Agent'),
-                        details: { reason: 'user_not_found' },
-                        riskScore: 30
+                        additionalData: { 
+                            reason: 'user_not_found',
+                            riskScore: 30
+                        }
                     });
                 }
                 
@@ -65,14 +66,15 @@ module.exports = (authPool, convertBigIntToNumber) => {
             if (!passwordMatch) {
                 // Log failed login attempt
                 if (SessionSecurity.securityLogger) {
-                    await SessionSecurity.securityLogger.logSecurityEvent({
-                        eventType: 'login_failed',
+                    await SessionSecurity.securityLogger.logSecurityEvent('login_failed', {
                         userId: user.id,
                         username: username,
                         ipAddress: req.ip,
                         userAgent: req.get('User-Agent'),
-                        details: { reason: 'incorrect_password' },
-                        riskScore: 50
+                        additionalData: { 
+                            reason: 'incorrect_password',
+                            riskScore: 50
+                        }
                     });
                 }
                 
@@ -86,17 +88,16 @@ module.exports = (authPool, convertBigIntToNumber) => {
             
             // Log successful login
             if (SessionSecurity.securityLogger) {
-                await SessionSecurity.securityLogger.logSecurityEvent({
-                    eventType: 'login_success',
+                await SessionSecurity.securityLogger.logSecurityEvent('login_success', {
                     userId: user.id,
                     username: username,
                     ipAddress: req.ip,
                     userAgent: req.get('User-Agent'),
-                    details: { 
+                    additionalData: { 
                         rememberMe: !!rememberMe,
-                        sessionToken: sessionTokens.sessionToken.substring(0, 8) + '...'
-                    },
-                    riskScore: 0
+                        sessionToken: sessionTokens.sessionToken.substring(0, 8) + '...',
+                        riskScore: 0
+                    }
                 });
             }
             
@@ -123,14 +124,15 @@ module.exports = (authPool, convertBigIntToNumber) => {
             
             // Log login error
             if (SessionSecurity.securityLogger) {
-                await SessionSecurity.securityLogger.logSecurityEvent({
-                    eventType: 'login_error',
+                await SessionSecurity.securityLogger.logSecurityEvent('login_error', {
                     userId: null,
                     username: req.body.username || 'unknown',
                     ipAddress: req.ip,
                     userAgent: req.get('User-Agent'),
-                    details: { error: err.message },
-                    riskScore: 70
+                    additionalData: { 
+                        error: err.message,
+                        riskScore: 70
+                    }
                 });
             }
             
@@ -153,17 +155,16 @@ module.exports = (authPool, convertBigIntToNumber) => {
                 
                 // Log logout event
                 if (SessionSecurity.securityLogger) {
-                    await SessionSecurity.securityLogger.logSecurityEvent({
-                        eventType: 'logout',
+                    await SessionSecurity.securityLogger.logSecurityEvent('logout', {
                         userId: sessionInfo.userId,
                         username: sessionInfo.username,
                         ipAddress: req.ip,
                         userAgent: req.get('User-Agent'),
-                        details: { 
+                        additionalData: { 
                             sessionToken: sessionInfo.sessionToken.substring(0, 8) + '...',
-                            invalidated: true 
-                        },
-                        riskScore: 0
+                            invalidated: true,
+                            riskScore: 0
+                        }
                     });
                 }
             }
@@ -174,14 +175,15 @@ module.exports = (authPool, convertBigIntToNumber) => {
             
             // Log logout error but still redirect
             if (SessionSecurity.securityLogger) {
-                await SessionSecurity.securityLogger.logSecurityEvent({
-                    eventType: 'logout_error',
+                await SessionSecurity.securityLogger.logSecurityEvent('logout_error', {
                     userId: req.session?.user?.id || null,
                     username: req.session?.user?.username || 'unknown',
                     ipAddress: req.ip,
                     userAgent: req.get('User-Agent'),
-                    details: { error: err.message },
-                    riskScore: 40
+                    additionalData: { 
+                        error: err.message,
+                        riskScore: 40
+                    }
                 });
             }
             
