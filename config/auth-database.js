@@ -1,9 +1,12 @@
+// Load environment variables
+require('dotenv').config();
+
 module.exports = {
     development: {
         host: process.env.AUTH_DB_HOST || 'localhost',
         port: process.env.AUTH_DB_PORT || 3306,
-        user: process.env.AUTH_DB_USER || 'lechibang',
-        password: process.env.AUTH_DB_PASSWORD || '1212',
+        user: process.env.AUTH_DB_USER,
+        password: process.env.AUTH_DB_PASSWORD,
         database: process.env.AUTH_DB_NAME || 'users_db',
         connectionLimit: 5,
         acquireTimeout: 60000,

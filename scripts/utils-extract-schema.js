@@ -1,12 +1,15 @@
+// Load environment variables
+require('dotenv').config();
+
 const { exec, spawn } = require('child_process');
 const fs = require('fs').promises;
 const path = require('path');
 
 // --- CONFIGURATION ---
 const dbs = [
-  { name: 'master_specs_db', config: { host: '127.0.0.1', user: 'lechibang', password: '1212', database: 'master_specs_db' } },
-  { name: 'suppliers_db', config: { host: '127.0.0.1', user: 'lechibang', password: '1212', database: 'suppliers_db' } },
-  { name: 'users_db', config: { host: '127.0.0.1', user: 'lechibang', password: '1212', database: 'users_db' } }
+  { name: 'master_specs_db', config: { host: process.env.DB_HOST || '127.0.0.1', user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME || 'master_specs_db' } },
+  { name: 'suppliers_db', config: { host: process.env.SUPPLIERS_DB_HOST || '127.0.0.1', user: process.env.SUPPLIERS_DB_USER, password: process.env.SUPPLIERS_DB_PASSWORD, database: process.env.SUPPLIERS_DB_NAME || 'suppliers_db' } },
+  { name: 'users_db', config: { host: process.env.AUTH_DB_HOST || '127.0.0.1', user: process.env.AUTH_DB_USER, password: process.env.AUTH_DB_PASSWORD, database: process.env.AUTH_DB_NAME || 'users_db' } }
 ];
 const SQL_DIR = path.join(__dirname, 'sql');
 

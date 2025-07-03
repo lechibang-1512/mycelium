@@ -1,3 +1,31 @@
+// Load environment variables first
+require('dotenv').config();
+
+// Validate required environment variables
+const requiredEnvVars = [
+    'DB_USER',
+    'DB_PASSWORD',
+    'SUPPLIERS_DB_USER', 
+    'SUPPLIERS_DB_PASSWORD',
+    'AUTH_DB_USER',
+    'AUTH_DB_PASSWORD',
+    'SESSION_SECRET'
+];
+
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingEnvVars.length > 0) {
+    console.error('❌ Missing required environment variables:');
+    missingEnvVars.forEach(varName => {
+        console.error(`   - ${varName}`);
+    });
+    console.error('\nPlease check your .env file and ensure all required variables are set.');
+    console.error('See .env.example for reference.');
+    process.exit(1);
+}
+
+console.log('✅ All required environment variables are present');
+
 const express = require('express');
 const mariadb = require('mariadb');
 const path = require('path');
@@ -8,36 +36,40 @@ const flash = require('connect-flash');
 const csrf = require('@dr.pogodin/csurf');
 const cookieParser = require('cookie-parser');
 const SanitizationService = require('./services/SanitizationService');
+const SessionManagementService = require('./services/SessionManagementService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Database configuration
 const dbConfig = {
-    host: '127.0.0.1', // Note: If you have issues, try changing this back to 'localhost'
-    user: 'lechibang', // Change this to your database user
-    password: '1212', // Change this to your database password
-    database: 'master_specs_db',
+    host: process.env.DB_HOST || '127.0.0.1',
+    port: process.env.DB_PORT || 3306,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME || 'master_specs_db',
     connectionLimit: 5,
     bigIntAsNumber: true // Convert BigInt to Number
 };
 
 // Suppliers database configuration
 const suppliersDbConfig = {
-    host: '127.0.0.1', // Note: If you have issues, try changing this back to 'localhost'
-    user: 'lechibang',
-    password: '1212',
-    database: 'suppliers_db',
+    host: process.env.SUPPLIERS_DB_HOST || '127.0.0.1',
+    port: process.env.SUPPLIERS_DB_PORT || 3306,
+    user: process.env.SUPPLIERS_DB_USER,
+    password: process.env.SUPPLIERS_DB_PASSWORD,
+    database: process.env.SUPPLIERS_DB_NAME || 'suppliers_db',
     connectionLimit: 5,
     bigIntAsNumber: true
 };
 
 // Authentication database configuration
 const authDbConfig = {
-    host: '127.0.0.1',
-    user: 'lechibang',
-    password: '1212',
-    database: 'users_db',
+    host: process.env.AUTH_DB_HOST || '127.0.0.1',
+    port: process.env.AUTH_DB_PORT || 3306,
+    user: process.env.AUTH_DB_USER,
+    password: process.env.AUTH_DB_PASSWORD,
+    database: process.env.AUTH_DB_NAME || 'users_db',
     connectionLimit: 5,
     bigIntAsNumber: true
 };
@@ -50,6 +82,22 @@ const authPool = mariadb.createPool(authDbConfig);
 // Use SanitizationService for BigInt conversion
 const convertBigIntToNumber = SanitizationService.convertBigIntToNumber;
 
+// Initialize Session Management Service
+const sessionManagementService = new SessionManagementService(authPool, convertBigIntToNumber);
+
+// Graceful shutdown handler
+process.on('SIGTERM', () => {
+    console.log('🛑 SIGTERM received, shutting down gracefully...');
+    sessionManagementService.shutdown();
+    process.exit(0);
+});
+
+process.on('SIGINT', () => {
+    console.log('🛑 SIGINT received, shutting down gracefully...');
+    sessionManagementService.shutdown();
+    process.exit(0);
+});
+
 // Middleware
 app.use(express.static('public'));
 app.use(express.json());
@@ -59,7 +107,7 @@ app.use(express.urlencoded({
 
 // Session configuration
 app.use(session({
-    secret: 'inventoryapp-secret-key',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -166,7 +214,11 @@ app.use((err, req, res, next) => {
 app.use(flash());
 
 // Import and use auth middleware
-const { setUserLocals } = require('./middleware/auth');
+const { setUserLocals, SessionSecurity } = require('./middleware/auth');
+
+// Connect session management service to auth middleware
+SessionSecurity.setSessionManagementService(sessionManagementService);
+
 app.use(setUserLocals);
 
 // Set view engine

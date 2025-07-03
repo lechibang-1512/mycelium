@@ -1,0 +1,208 @@
+<%- include('partials/head', {title: title}) %>
+<body>
+    <%- include('partials/navbar') %>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h1><i class="fas fa-users-cog"></i> Session Management</h1>
+                
+                <!-- Display flash messages -->
+                <% if (messages.success.length > 0) { %>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <%= messages.success[0] %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+                
+                <% if (messages.error.length > 0) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <%= messages.error[0] %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <!-- Session Statistics Overview -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="card-title">Active Sessions</h5>
+                                        <h2><%= sessionReport.summary.totalActiveSessions %></h2>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-users fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="card-title">Unique Users</h5>
+                                        <h2><%= sessionReport.summary.uniqueUsers %></h2>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-user-check fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="card-title">Avg. Duration</h5>
+                                        <h2><%= sessionReport.summary.averageSessionDurationHours %>h</h2>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-clock fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-dark">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="card-title">Report Time</h5>
+                                        <p class="mb-0"><%= new Date(sessionReport.timestamp).toLocaleString() %></p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-calendar fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Sessions by User -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-list"></i> Active Sessions by User</h5>
+                    </div>
+                    <div class="card-body">
+                        <% if (sessionReport.userBreakdown.length === 0) { %>
+                            <p class="text-muted">No active sessions found.</p>
+                        <% } else { %>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>User ID</th>
+                                            <th>Active Sessions</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% sessionReport.userBreakdown.forEach(user => { %>
+                                            <tr>
+                                                <td><%= user.userId %></td>
+                                                <td>
+                                                    <span class="badge bg-primary"><%= user.activeSessions %></span>
+                                                </td>
+                                                <td>
+                                                    <a href="/admin/sessions/user/<%= user.userId %>" class="btn btn-sm btn-info me-2">
+                                                        <i class="fas fa-eye"></i> View Sessions
+                                                    </a>
+                                                    <% if (user.activeSessions > 1) { %>
+                                                        <form method="POST" action="/admin/sessions/logout-user/<%= user.userId %>" class="d-inline" 
+                                                              onsubmit="return confirm('Are you sure you want to logout this user from all sessions?')">
+                                                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                                            <button type="submit" class="btn btn-sm btn-warning">
+                                                                <i class="fas fa-sign-out-alt"></i> Force Logout
+                                                            </button>
+                                                        </form>
+                                                    <% } %>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Oldest Session Information -->
+                <% if (sessionReport.oldestSession) { %>
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5><i class="fas fa-history"></i> Longest Running Session</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>User:</strong> <%= sessionReport.oldestSession.username %> (ID: <%= sessionReport.oldestSession.userId %>)</p>
+                                    <p><strong>Started:</strong> <%= new Date(sessionReport.oldestSession.sessionStart).toLocaleString() %></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Duration:</strong> <%= sessionReport.oldestSession.durationHours %> hours</p>
+                                    <a href="/admin/sessions/user/<%= sessionReport.oldestSession.userId %>" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i> View User Sessions
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+
+                <!-- Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-tools"></i> Session Management Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Security Actions</h6>
+                                <p class="text-muted">Manage session security and monitor for suspicious activity.</p>
+                                <button class="btn btn-warning" onclick="window.location.reload()">
+                                    <i class="fas fa-sync"></i> Refresh Data
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Monitoring</h6>
+                                <p class="text-muted">Real-time session monitoring and security alerts.</p>
+                                <div class="small">
+                                    <i class="fas fa-shield-alt text-success"></i> Session security validation enabled<br>
+                                    <i class="fas fa-broom text-info"></i> Automatic cleanup every 15 minutes<br>
+                                    <i class="fas fa-chart-line text-primary"></i> Real-time session tracking active
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <a href="/users" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to User Management
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+
+    <script>
+        // Auto-refresh every 30 seconds
+        setTimeout(function() {
+            window.location.reload();
+        }, 30000);
+    </script>
+</body>
+</html>

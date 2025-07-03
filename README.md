@@ -41,15 +41,62 @@ mycelium ERP is a local-based Enterprise Resource Planning (ERP) system designed
     ```
 
 3. **Configuration:**
-    - Create a `.env` file in the root directory.
-    - Set environment variables as needed (e.g., database path, secret keys).
+    - Copy `.env.example` to `.env` in the root directory:
+        ```bash
+        cp .env.example .env
+        ```
+    - Edit the `.env` file with your database credentials and configuration:
+        ```env
+        # Database Configuration
+        DB_HOST=localhost
+        DB_PORT=3306
+        DB_USER=your_db_user
+        DB_PASSWORD=your_db_password
+        DB_NAME=master_specs_db
 
-4. **Run the application:**
+        # Suppliers Database Configuration
+        SUPPLIERS_DB_HOST=localhost
+        SUPPLIERS_DB_PORT=3306
+        SUPPLIERS_DB_USER=your_db_user
+        SUPPLIERS_DB_PASSWORD=your_db_password
+        SUPPLIERS_DB_NAME=suppliers_db
+
+        # Authentication Database Configuration
+        AUTH_DB_HOST=localhost
+        AUTH_DB_PORT=3306
+        AUTH_DB_USER=your_db_user
+        AUTH_DB_PASSWORD=your_db_password
+        AUTH_DB_NAME=users_db
+
+        # Session Configuration
+        SESSION_SECRET=your-secret-key-here
+
+        # Server Configuration
+        PORT=3000
+        NODE_ENV=development
+        ```
+        
+    **⚠️ Important Security Notes:**
+    - All database credentials are now **required** environment variables
+    - No fallback credentials are used for enhanced security
+    - Generate a cryptographically secure SESSION_SECRET using:
+      ```bash
+      node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+      ```
+
+4. **Verify your configuration:**
+    ```bash
+    npm run verify-env
+    ```
+    
+    This will check that all required environment variables are set and test database connections.
+
+5. **Run the application:**
     ```bash
     npm start
     ```
 
-5. **Access the system:**
+6. **Access the system:**
     - Open your browser and go to `http://localhost:3000` (or your configured port).
 
 ## Project Structure

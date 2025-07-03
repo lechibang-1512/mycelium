@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const { isAdmin, isAuthenticated } = require('../middleware/auth');
+const { isAdmin, isAuthenticated, SessionSecurity } = require('../middleware/auth');
 
 module.exports = (authPool, convertBigIntToNumber) => {
     // ===============================================
@@ -64,17 +64,26 @@ module.exports = (authPool, convertBigIntToNumber) => {
             
             console.log('Login successful for user:', username);
             
-            // Store user in session (without password)
+            // Store user in session (without password) using enhanced security
             delete user.password;
-            req.session.user = user;
+            const sessionTokens = SessionSecurity.initializeSecureSession(req, user);
+            
+            console.log('Secure session initialized:', {
+                userId: user.id,
+                username: user.username,
+                sessionId: sessionTokens.sessionId,
+                tokenLength: sessionTokens.sessionToken.length
+            });
             
             // Set session expiration based on "Remember me" option
             if (rememberMe) {
                 // If "Remember me" is checked, set session to expire in 30 days
                 req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
+                req.session.user.sessionExpiry = Date.now() + (30 * 24 * 60 * 60 * 1000);
             } else {
                 // Otherwise, use the default session expiration (usually browser close)
                 req.session.cookie.expires = false;
+                req.session.user.sessionExpiry = Date.now() + (24 * 60 * 60 * 1000); // 24 hours default
             }
             
             // Redirect to returnTo URL if it exists, otherwise to home
@@ -92,9 +101,18 @@ module.exports = (authPool, convertBigIntToNumber) => {
         }
     });
 
-    // Logout route
+    // Enhanced logout route with secure session clearing
     router.get('/logout', (req, res) => {
-        req.session.destroy();
+        const sessionInfo = SessionSecurity.clearSession(req);
+        
+        if (sessionInfo) {
+            console.log('User logged out:', {
+                userId: sessionInfo.userId,
+                username: sessionInfo.username,
+                sessionToken: sessionInfo.sessionToken.substring(0, 8) + '...'
+            });
+        }
+        
         res.redirect('/login?success=logout');
     });
 
@@ -352,6 +370,100 @@ module.exports = (authPool, convertBigIntToNumber) => {
             console.error('Delete user error:', err);
             req.flash('error', 'Failed to delete user');
             res.redirect('/users');
+        }
+    });
+
+    // Session management routes (admin only)
+    router.get('/admin/sessions', isAdmin, async (req, res) => {
+        try {
+            const { SessionSecurity } = require('../middleware/auth');
+            const sessionService = SessionSecurity.sessionManagementService;
+            
+            if (!sessionService) {
+                req.flash('error', 'Session management service not available');
+                return res.redirect('/');
+            }
+
+            const sessionStats = sessionService.getSessionStats();
+            const sessionReport = sessionService.generateSessionReport();
+
+            res.render('session-management', {
+                title: 'Session Management',
+                sessionStats,
+                sessionReport,
+                messages: {
+                    success: req.flash('success'),
+                    error: req.flash('error')
+                }
+            });
+        } catch (err) {
+            console.error('Session management error:', err);
+            req.flash('error', 'Failed to retrieve session information');
+            res.redirect('/');
+        }
+    });
+
+    // Force logout user (admin only)
+    router.post('/admin/sessions/logout-user/:userId', isAdmin, async (req, res) => {
+        try {
+            const { SessionSecurity } = require('../middleware/auth');
+            const sessionService = SessionSecurity.sessionManagementService;
+            const userId = parseInt(req.params.userId);
+            
+            if (!sessionService) {
+                req.flash('error', 'Session management service not available');
+                return res.redirect('/admin/sessions');
+            }
+
+            const loggedOutSessions = sessionService.forceLogoutUser(userId);
+            
+            req.flash('success', `Successfully logged out user from ${loggedOutSessions} sessions`);
+            res.redirect('/admin/sessions');
+        } catch (err) {
+            console.error('Force logout error:', err);
+            req.flash('error', 'Failed to logout user sessions');
+            res.redirect('/admin/sessions');
+        }
+    });
+
+    // View user sessions (admin only)
+    router.get('/admin/sessions/user/:userId', isAdmin, async (req, res) => {
+        try {
+            const { SessionSecurity } = require('../middleware/auth');
+            const sessionService = SessionSecurity.sessionManagementService;
+            const userId = parseInt(req.params.userId);
+            
+            if (!sessionService) {
+                req.flash('error', 'Session management service not available');
+                return res.redirect('/admin/sessions');
+            }
+
+            // Get user information
+            const conn = await authPool.getConnection();
+            const userResult = await conn.query('SELECT id, username, fullName, email, role FROM users WHERE id = ?', [userId]);
+            conn.end();
+            
+            if (userResult.length === 0) {
+                req.flash('error', 'User not found');
+                return res.redirect('/admin/sessions');
+            }
+
+            const user = convertBigIntToNumber(userResult[0]);
+            const userSessions = sessionService.getUserSessions(userId);
+
+            res.render('user-sessions', {
+                title: `Sessions for ${user.username}`,
+                user,
+                userSessions,
+                messages: {
+                    success: req.flash('success'),
+                    error: req.flash('error')
+                }
+            });
+        } catch (err) {
+            console.error('User sessions error:', err);
+            req.flash('error', 'Failed to retrieve user session information');
+            res.redirect('/admin/sessions');
         }
     });
 
