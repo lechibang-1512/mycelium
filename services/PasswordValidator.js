@@ -5,6 +5,8 @@
  * and security policy enforcement.
  */
 
+const crypto = require('crypto');
+
 class PasswordValidator {
     constructor() {
         this.minLength = 8;
@@ -228,19 +230,24 @@ class PasswordValidator {
         let password = '';
         
         // Ensure at least one character from each category
-        password += uppercase[Math.floor(Math.random() * uppercase.length)];
-        password += lowercase[Math.floor(Math.random() * lowercase.length)];
-        password += numbers[Math.floor(Math.random() * numbers.length)];
-        password += symbols[Math.floor(Math.random() * symbols.length)];
+        password += uppercase[this.getSecureRandomIndex(uppercase.length)];
+        password += lowercase[this.getSecureRandomIndex(lowercase.length)];
+        password += numbers[this.getSecureRandomIndex(numbers.length)];
+        password += symbols[this.getSecureRandomIndex(symbols.length)];
         
         // Fill the rest randomly
         const allChars = uppercase + lowercase + numbers + symbols;
         for (let i = password.length; i < length; i++) {
-            password += allChars[Math.floor(Math.random() * allChars.length)];
+            password += allChars[this.getSecureRandomIndex(allChars.length)];
         }
         
-        // Shuffle the password
-        return password.split('').sort(() => Math.random() - 0.5).join('');
+        // Shuffle the password using Fisher-Yates algorithm with secure random
+        const chars = password.split('');
+        for (let i = chars.length - 1; i > 0; i--) {
+            const j = this.getSecureRandomIndex(i + 1);
+            [chars[i], chars[j]] = [chars[j], chars[i]];
+        }
+        return chars.join('');
     }
 
     /**
@@ -292,6 +299,17 @@ class PasswordValidator {
         }
 
         return result;
+    }
+
+    /**
+     * Generate a cryptographically secure random index
+     * @param {number} max - Maximum value (exclusive)
+     * @returns {number} Secure random index
+     */
+    getSecureRandomIndex(max) {
+        const randomBytes = crypto.randomBytes(4);
+        const randomInt = randomBytes.readUInt32BE(0);
+        return randomInt % max;
     }
 }
 

@@ -85,7 +85,14 @@ async function verifyEnvironmentVariables() {
     log.info('Checking optional environment variables:');
     for (const envVar of optionalEnvVars) {
         if (process.env[envVar.name]) {
-            log.success(`${envVar.name}: ${process.env[envVar.name]} (${envVar.description})`);
+            // Sanitize sensitive values before logging
+            const value = envVar.name.toLowerCase().includes('secret') || 
+                         envVar.name.toLowerCase().includes('password') || 
+                         envVar.name.toLowerCase().includes('token') || 
+                         envVar.name.toLowerCase().includes('key')
+                         ? '[REDACTED]'
+                         : process.env[envVar.name];
+            log.success(`${envVar.name}: ${value} (${envVar.description})`);
         } else {
             log.warning(`${envVar.name}: Using default "${envVar.default}" (${envVar.description})`);
         }

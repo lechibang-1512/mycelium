@@ -17,7 +17,7 @@ class DynamicSessionMiddleware {
             cookie: {
                 maxAge: 24 * 60 * 60 * 1000, // 24 hours
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production', // Force HTTPS in production
+                secure: process.env.NODE_ENV === 'production' || process.env.FORCE_HTTPS === 'true', // Force HTTPS in production or when explicitly set
                 sameSite: 'strict'
             },
             // Merge any additional options
@@ -26,7 +26,7 @@ class DynamicSessionMiddleware {
             cookie: {
                 maxAge: 24 * 60 * 60 * 1000,
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
+                secure: process.env.NODE_ENV === 'production' || process.env.FORCE_HTTPS === 'true',
                 sameSite: 'strict',
                 ...(options.cookie || {})
             }

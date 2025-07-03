@@ -207,7 +207,7 @@ async function startServer() {
             cookie: {
                 key: '_csrf',
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
+                secure: process.env.NODE_ENV === 'production' || process.env.FORCE_HTTPS === 'true',
                 sameSite: 'strict'
             },
             ignoreMethods: ['GET', 'HEAD', 'OPTIONS'],
@@ -220,12 +220,13 @@ async function startServer() {
             }
         });
 
-        // Apply CSRF protection conditionally
+        // Apply CSRF protection to all state-changing requests
         app.use((req, res, next) => {
-            if ((req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') && 
-                req.path.startsWith('/api/')) {
+            // Skip CSRF for safe methods only
+            if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') {
                 return next();
             }
+            // Apply CSRF protection to all POST, PUT, DELETE, PATCH requests
             csrfProtection(req, res, next);
         });
 
