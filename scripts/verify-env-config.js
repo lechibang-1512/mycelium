@@ -169,7 +169,7 @@ function generateSecurityRecommendations() {
             log.success('SESSION_SECRET length is adequate');
         }
         
-        if (sessionSecret === 'your-secret-key-here' || sessionSecret === 'inventoryapp-secret-key') {
+        if (sessionSecret === 'your_session_secret_here' || sessionSecret === 'your_generated_session_secret' || sessionSecret === 'session-secret-example') {
             log.error('SESSION_SECRET is using a default/example value - change it immediately!');
         }
     }
@@ -187,7 +187,7 @@ function generateSecurityRecommendations() {
     }
     
     // Check for default/weak session secrets
-    if (sessionSecret === 'your-secret-key-here' || sessionSecret === 'inventoryapp-secret-key') {
+    if (sessionSecret === 'your_session_secret_here' || sessionSecret === 'your_generated_session_secret' || sessionSecret === 'session-secret-example') {
         log.error('SESSION_SECRET is using a default/example value - change it immediately!');
     } else if (sessionSecret && sessionSecret.length >= 32) {
         log.success('SESSION_SECRET appears to be properly configured');

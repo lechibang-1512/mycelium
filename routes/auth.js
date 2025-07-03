@@ -28,52 +28,32 @@ module.exports = (authPool, convertBigIntToNumber) => {
         try {
             const { username, password, rememberMe } = req.body;
             
-            // Add debug logging
-            console.log('=== LOGIN ATTEMPT ===');
-            console.log('Username:', username);
-            console.log('Password provided:', password ? 'Yes' : 'No');
-            console.log('Remember Me:', rememberMe);
-            
             const conn = await authPool.getConnection();
             
             // Find user by username
             const result = await conn.query('SELECT * FROM users WHERE username = ?', [username]);
-            console.log('User query result length:', result.length);
             
             conn.end();
             
             if (result.length === 0) {
-                console.log('No user found with username:', username);
                 req.flash('error', 'Invalid username or password');
                 return res.redirect('/login');
             }
             
             const user = convertBigIntToNumber(result[0]);
-            console.log('Found user:', user.username, 'Role:', user.role);
             
             // Check password
-            console.log('Comparing password with hash...');
             const passwordMatch = await bcrypt.compare(password, user.password);
-            console.log('Password comparison completed.');
             
             if (!passwordMatch) {
-                console.log('Password does not match for user:', username);
                 req.flash('error', 'Invalid username or password');
                 return res.redirect('/login');
             }
-            
-            console.log('Login successful for user:', username);
             
             // Store user in session (without password) using enhanced security
             delete user.password;
             const sessionTokens = SessionSecurity.initializeSecureSession(req, user);
             
-            console.log('Secure session initialized:', {
-                userId: user.id,
-                username: user.username,
-                sessionId: sessionTokens.sessionId,
-                tokenLength: sessionTokens.sessionToken.length
-            });
             
             // Set session expiration based on "Remember me" option
             if (rememberMe) {
@@ -90,7 +70,6 @@ module.exports = (authPool, convertBigIntToNumber) => {
             const returnTo = req.session.returnTo || '/';
             delete req.session.returnTo;
             
-            console.log('Redirecting to:', returnTo);
             // Add success parameter for login notification
             const separator = returnTo.includes('?') ? '&' : '?';
             res.redirect(`${returnTo}${separator}success=login`);

@@ -11,7 +11,7 @@
             "driver": "MariaDB",
             "name": "inventory",
             "database": "master_specs_db",
-            "username": "lechibang"
+            "username": ""
         }
     ],
     "mcp.servers": {

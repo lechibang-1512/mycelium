@@ -12,16 +12,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lechibang-1512/Project-1.git"
+    "url": "git+https://github.com/your-username/inventory-management-system.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/lechibang-1512/Project-1/issues"
+    "url": "https://github.com/your-username/inventory-management-system/issues"
   },
-  "homepage": "https://github.com/lechibang-1512/Project-1#readme",
+  "homepage": "https://github.com/your-username/inventory-management-system#readme",
   "dependencies": {
     "@dr.pogodin/csurf": "^1.16.5",
     "axios": "^1.10.0",

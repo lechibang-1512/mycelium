@@ -148,19 +148,6 @@ app.use((req, res, next) => {
         return next();
     }
     
-    // Add debugging for development
-    if (process.env.NODE_ENV !== 'production') {
-        console.log(`CSRF check for ${req.method} ${req.path}`);
-        if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
-            console.log('CSRF token in body:', req.body._csrf);
-            console.log('CSRF token in headers:', {
-                'csrf-token': req.headers['csrf-token'],
-                'x-csrf-token': req.headers['x-csrf-token'],
-                'x-xsrf-token': req.headers['x-xsrf-token']
-            });
-        }
-    }
-    
     // Apply CSRF protection for all state-changing requests
     csrfProtection(req, res, next);
 });
