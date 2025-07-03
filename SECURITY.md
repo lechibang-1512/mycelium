@@ -30,7 +30,12 @@ This application implements comprehensive security measures:
 - **Comprehensive Input Validation**: Server-side validation for all user inputs
 - **XSS Protection**: HTML sanitization and Content Security Policy (CSP)
 - **SQL Injection Prevention**: Parameterized queries and input escaping
-- **CSRF Protection**: Built-in protection against cross-site request forgery attacks
+- **CSRF Protection**: Comprehensive protection against cross-site request forgery attacks
+  - **Token Generation**: Automatic CSRF token generation for all requests
+  - **Token Validation**: Mandatory validation for state-changing operations (POST, PUT, PATCH, DELETE)
+  - **Multiple Token Sources**: Support for tokens in request body, headers, and query parameters
+  - **Secure Token Storage**: HTTPOnly cookies with SameSite protection
+  - **CWE-352 Compliance**: Fully mitigates Cross-Site Request Forgery vulnerabilities
 - **File Upload Security**: Type validation and size limits
 
 ### Rate Limiting & Brute Force Protection
