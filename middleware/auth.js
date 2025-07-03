@@ -6,12 +6,32 @@ const crypto = require('crypto');
 const SessionSecurity = {
     // Session Management Service instance (will be set by server)
     sessionManagementService: null,
+    
+    // Token Invalidation Service instance (will be set by server)
+    tokenInvalidationService: null,
+    
+    // Security Logger instance (will be set by server)
+    securityLogger: null,
 
     /**
      * Set the session management service instance
      */
     setSessionManagementService(service) {
         this.sessionManagementService = service;
+    },
+
+    /**
+     * Set the token invalidation service instance
+     */
+    setTokenInvalidationService(service) {
+        this.tokenInvalidationService = service;
+    },
+
+    /**
+     * Set the security logger instance
+     */
+    setSecurityLogger(service) {
+        this.securityLogger = service;
     },
 
     /**
@@ -29,9 +49,9 @@ const SessionSecurity = {
     },
 
     /**
-     * Validate session integrity and security
+     * Validate session integrity and security with enhanced token checking
      */
-    validateSession(req) {
+    async validateSession(req) {
         if (!req.session.user) {
             return { valid: false, reason: 'No user session' };
         }
@@ -39,6 +59,23 @@ const SessionSecurity = {
         // Check if session has required security tokens
         if (!req.session.user.sessionToken || !req.session.user.sessionId) {
             return { valid: false, reason: 'Missing security tokens' };
+        }
+
+        // Check if session token is invalidated
+        if (this.tokenInvalidationService) {
+            const isInvalidated = await this.tokenInvalidationService.isTokenInvalidated(req.session.user.sessionToken);
+            if (isInvalidated) {
+                return { valid: false, reason: 'Session token invalidated' };
+            }
+
+            // Check if all user tokens are invalidated
+            const userTokensInvalidated = await this.tokenInvalidationService.areUserTokensInvalidated(
+                req.session.user.id, 
+                req.session.user.sessionStart
+            );
+            if (userTokensInvalidated) {
+                return { valid: false, reason: 'All user sessions invalidated' };
+            }
         }
 
         // Check session expiration
@@ -120,15 +157,25 @@ const SessionSecurity = {
     },
 
     /**
-     * Clear session securely
+     * Enhanced secure session clearing with token invalidation
      */
-    clearSession(req) {
+    async clearSession(req, reason = 'logout') {
         const sessionInfo = req.session.user ? {
             userId: req.session.user.id,
             username: req.session.user.username,
             sessionToken: req.session.user.sessionToken,
             sessionId: req.session.user.sessionId
         } : null;
+
+        // Invalidate session token if token invalidation service is available
+        if (sessionInfo && this.tokenInvalidationService && sessionInfo.sessionToken) {
+            await this.tokenInvalidationService.invalidateToken(
+                sessionInfo.sessionToken, 
+                'session', 
+                sessionInfo.userId, 
+                reason
+            );
+        }
 
         // Remove from session management service
         if (sessionInfo && this.sessionManagementService && sessionInfo.sessionId) {
@@ -146,6 +193,21 @@ const SessionSecurity = {
         }
         
         return sessionInfo;
+    },
+
+    /**
+     * Force invalidate all user sessions (for security incidents)
+     */
+    async forceInvalidateAllUserSessions(userId, reason = 'security_action') {
+        if (this.tokenInvalidationService) {
+            await this.tokenInvalidationService.invalidateAllUserTokens(userId, reason);
+        }
+        
+        if (this.sessionManagementService) {
+            this.sessionManagementService.forceLogoutUser(userId);
+        }
+        
+        console.log(`🚫 All sessions force invalidated for user ${userId}: ${reason}`);
     }
 };
 
@@ -153,32 +215,71 @@ const SessionSecurity = {
  * Middleware to check if a user is authenticated
  * If not, redirects to the login page and stores the original URL for later redirect
  */
-const isAuthenticated = (req, res, next) => {
-    // Update session activity
-    SessionSecurity.updateSessionActivity(req);
-    
-    // Validate session security
-    const validation = SessionSecurity.validateSession(req);
-    
-    if (!validation.valid) {
-        console.log(`Session validation failed: ${validation.reason}`);
+const isAuthenticated = async (req, res, next) => {
+    try {
+        // Update session activity
+        SessionSecurity.updateSessionActivity(req);
         
-        // Clear invalid session safely
-        if (req.session && req.session.user) {
-            SessionSecurity.clearSession(req);
-        }
+        // Validate session security (now async)
+        const validation = await SessionSecurity.validateSession(req);
         
-        // Store original URL for redirect after login (ensure session exists)
-        if (!req.session) {
-            // This shouldn't happen in normal express-session flow, but handle it safely
+        if (!validation.valid) {
+            console.log(`Session validation failed: ${validation.reason}`);
+            
+            // Log session validation failure
+            if (SessionSecurity.securityLogger && req.session?.user) {
+                await SessionSecurity.securityLogger.logSecurityEvent({
+                    eventType: 'session_validation_failed',
+                    userId: req.session.user.id,
+                    username: req.session.user.username,
+                    ipAddress: req.ip,
+                    userAgent: req.get('User-Agent'),
+                    details: { 
+                        reason: validation.reason,
+                        sessionToken: req.session.user.sessionToken?.substring(0, 8) + '...'
+                    },
+                    riskScore: 60
+                });
+            }
+            
+            // Clear invalid session safely
+            if (req.session && req.session.user) {
+                await SessionSecurity.clearSession(req);
+            }
+            
+            // Store original URL for redirect after login (ensure session exists)
+            if (!req.session) {
+                // This shouldn't happen in normal express-session flow, but handle it safely
+                return res.redirect('/login');
+            }
+            req.session.returnTo = req.originalUrl;
+            
             return res.redirect('/login');
         }
-        req.session.returnTo = req.originalUrl;
         
-        return res.redirect('/login');
+        return next();
+    } catch (err) {
+        console.error('Authentication middleware error:', err);
+        
+        // Log authentication error
+        if (SessionSecurity.securityLogger) {
+            await SessionSecurity.securityLogger.logSecurityEvent({
+                eventType: 'authentication_error',
+                userId: req.session?.user?.id || null,
+                username: req.session?.user?.username || 'unknown',
+                ipAddress: req.ip,
+                userAgent: req.get('User-Agent'),
+                details: { error: err.message },
+                riskScore: 80
+            });
+        }
+        
+        // Clear session and redirect to login
+        if (req.session && req.session.user) {
+            await SessionSecurity.clearSession(req);
+        }
+        res.redirect('/login');
     }
-    
-    return next();
 };
 
 /**

@@ -40,6 +40,19 @@ module.exports = (authPool, convertBigIntToNumber) => {
             conn.end();
             
             if (result.length === 0) {
+                // Log failed login attempt
+                if (SessionSecurity.securityLogger) {
+                    await SessionSecurity.securityLogger.logSecurityEvent({
+                        eventType: 'login_failed',
+                        userId: null,
+                        username: username,
+                        ipAddress: req.ip,
+                        userAgent: req.get('User-Agent'),
+                        details: { reason: 'user_not_found' },
+                        riskScore: 30
+                    });
+                }
+                
                 req.flash('error', 'Invalid username or password');
                 return res.redirect('/login');
             }
@@ -50,6 +63,19 @@ module.exports = (authPool, convertBigIntToNumber) => {
             const passwordMatch = await bcrypt.compare(password, user.password);
             
             if (!passwordMatch) {
+                // Log failed login attempt
+                if (SessionSecurity.securityLogger) {
+                    await SessionSecurity.securityLogger.logSecurityEvent({
+                        eventType: 'login_failed',
+                        userId: user.id,
+                        username: username,
+                        ipAddress: req.ip,
+                        userAgent: req.get('User-Agent'),
+                        details: { reason: 'incorrect_password' },
+                        riskScore: 50
+                    });
+                }
+                
                 req.flash('error', 'Invalid username or password');
                 return res.redirect('/login');
             }
@@ -58,6 +84,21 @@ module.exports = (authPool, convertBigIntToNumber) => {
             delete user.password;
             const sessionTokens = SessionSecurity.initializeSecureSession(req, user);
             
+            // Log successful login
+            if (SessionSecurity.securityLogger) {
+                await SessionSecurity.securityLogger.logSecurityEvent({
+                    eventType: 'login_success',
+                    userId: user.id,
+                    username: username,
+                    ipAddress: req.ip,
+                    userAgent: req.get('User-Agent'),
+                    details: { 
+                        rememberMe: !!rememberMe,
+                        sessionToken: sessionTokens.sessionToken.substring(0, 8) + '...'
+                    },
+                    riskScore: 0
+                });
+            }
             
             // Set session expiration based on "Remember me" option
             if (rememberMe) {
@@ -79,24 +120,75 @@ module.exports = (authPool, convertBigIntToNumber) => {
             res.redirect(`${returnTo}${separator}success=login`);
         } catch (err) {
             console.error('Login error:', err);
+            
+            // Log login error
+            if (SessionSecurity.securityLogger) {
+                await SessionSecurity.securityLogger.logSecurityEvent({
+                    eventType: 'login_error',
+                    userId: null,
+                    username: req.body.username || 'unknown',
+                    ipAddress: req.ip,
+                    userAgent: req.get('User-Agent'),
+                    details: { error: err.message },
+                    riskScore: 70
+                });
+            }
+            
             req.flash('error', 'An error occurred during login');
             res.redirect('/login');
         }
     });
 
     // Enhanced logout route with secure session clearing
-    router.get('/logout', (req, res) => {
-        const sessionInfo = SessionSecurity.clearSession(req);
-        
-        if (sessionInfo) {
-            console.log('User logged out:', {
-                userId: sessionInfo.userId,
-                username: sessionInfo.username,
-                sessionToken: sessionInfo.sessionToken.substring(0, 8) + '...'
-            });
+    router.get('/logout', async (req, res) => {
+        try {
+            const sessionInfo = await SessionSecurity.clearSession(req);
+            
+            if (sessionInfo) {
+                console.log('User logged out:', {
+                    userId: sessionInfo.userId,
+                    username: sessionInfo.username,
+                    sessionToken: sessionInfo.sessionToken.substring(0, 8) + '...'
+                });
+                
+                // Log logout event
+                if (SessionSecurity.securityLogger) {
+                    await SessionSecurity.securityLogger.logSecurityEvent({
+                        eventType: 'logout',
+                        userId: sessionInfo.userId,
+                        username: sessionInfo.username,
+                        ipAddress: req.ip,
+                        userAgent: req.get('User-Agent'),
+                        details: { 
+                            sessionToken: sessionInfo.sessionToken.substring(0, 8) + '...',
+                            invalidated: true 
+                        },
+                        riskScore: 0
+                    });
+                }
+            }
+            
+            res.redirect('/login?success=logout');
+        } catch (err) {
+            console.error('Logout error:', err);
+            
+            // Log logout error but still redirect
+            if (SessionSecurity.securityLogger) {
+                await SessionSecurity.securityLogger.logSecurityEvent({
+                    eventType: 'logout_error',
+                    userId: req.session?.user?.id || null,
+                    username: req.session?.user?.username || 'unknown',
+                    ipAddress: req.ip,
+                    userAgent: req.get('User-Agent'),
+                    details: { error: err.message },
+                    riskScore: 40
+                });
+            }
+            
+            // Clear session anyway
+            req.session.destroy();
+            res.redirect('/login?success=logout');
         }
-        
-        res.redirect('/login?success=logout');
     });
 
     // Forgot password route

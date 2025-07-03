@@ -60,6 +60,10 @@ const InputValidator = require('./middleware/inputValidation');
 // Import password validation service
 const PasswordValidator = require('./services/PasswordValidator');
 
+// Import security enhancement services
+const TokenInvalidationService = require('./services/TokenInvalidationService');
+const SecurityLogger = require('./services/SecurityLogger');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -109,6 +113,10 @@ const dynamicSecretService = new DynamicSessionSecretService();
 
 // Initialize Session Management Service
 const sessionManagementService = new SessionManagementService(authPool, convertBigIntToNumber);
+
+// Initialize security enhancement services
+const tokenInvalidationService = new TokenInvalidationService(authPool);
+const securityLogger = new SecurityLogger(authPool);
 
 // Enhanced startup function
 async function startServer() {
@@ -275,8 +283,16 @@ async function startServer() {
         // Import and use auth middleware
         const { setUserLocals, SessionSecurity } = require('./middleware/auth');
 
-        // Connect session management service to auth middleware
+        // Initialize security enhancement services
+        console.log('🔒 Initializing security enhancement services...');
+        await tokenInvalidationService.initialize();
+        await securityLogger.initialize();
+        console.log('✅ Security enhancement services ready');
+
+        // Connect services to auth middleware
         SessionSecurity.setSessionManagementService(sessionManagementService);
+        SessionSecurity.setTokenInvalidationService(tokenInvalidationService);
+        SessionSecurity.setSecurityLogger(securityLogger);
 
         app.use(setUserLocals);
 
