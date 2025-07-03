@@ -31,12 +31,18 @@ const mariadb = require('mariadb');
 const path = require('path');
 const { format, isValid, parseISO } = require('date-fns');
 const bcrypt = require('bcrypt');
-const session = require('express-session');
 const flash = require('connect-flash');
 const csrf = require('@dr.pogodin/csurf');
 const cookieParser = require('cookie-parser');
 const SanitizationService = require('./services/SanitizationService');
 const SessionManagementService = require('./services/SessionManagementService');
+
+// Import dynamic session secret services
+const DynamicSessionSecretService = require('./services/DynamicSessionSecretService');
+const { createDynamicSessionMiddleware } = require('./middleware/DynamicSessionMiddleware');
+
+// Import security middleware
+const { sanitizeApiResponse, securityHeaders, preventSecretExposure } = require('./middleware/security');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -82,155 +88,265 @@ const authPool = mariadb.createPool(authDbConfig);
 // Use SanitizationService for BigInt conversion
 const convertBigIntToNumber = SanitizationService.convertBigIntToNumber;
 
+// Initialize Dynamic Session Secret Service
+const dynamicSecretService = new DynamicSessionSecretService();
+
 // Initialize Session Management Service
 const sessionManagementService = new SessionManagementService(authPool, convertBigIntToNumber);
 
-// Graceful shutdown handler
-process.on('SIGTERM', () => {
-    console.log('🛑 SIGTERM received, shutting down gracefully...');
-    sessionManagementService.shutdown();
-    process.exit(0);
-});
-
-process.on('SIGINT', () => {
-    console.log('🛑 SIGINT received, shutting down gracefully...');
-    sessionManagementService.shutdown();
-    process.exit(0);
-});
-
-// Middleware
-app.use(express.static('public'));
-app.use(express.json());
-app.use(express.urlencoded({
-    extended: true
-})); // For form data
-
-// Session configuration
-app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-        sameSite: 'strict'
-    }
-}));
-
-// Cookie parser middleware (required for CSRF)
-app.use(cookieParser());
-
-// CSRF protection middleware with proper configuration
-const csrfProtection = csrf({ 
-    cookie: {
-        key: '_csrf',
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-        sameSite: 'strict'
-    },
-    ignoreMethods: ['GET', 'HEAD', 'OPTIONS'], // Only protect state-changing methods
-    value: (req) => {
-        // Look for CSRF token in various places (ordered by preference)
-        return req.body._csrf || 
-               req.query._csrf || 
-               req.headers['x-csrf-token'] ||
-               req.headers['csrf-token'] ||
-               req.headers['x-xsrf-token'];
-    }
-});
-
-// Apply CSRF protection conditionally
-app.use((req, res, next) => {
-    // Skip CSRF for safe HTTP methods on API routes (but not /csrf-token)
-    if ((req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') && 
-        req.path.startsWith('/api/')) {
-        return next();
-    }
-    
-    // Apply CSRF protection for all state-changing requests
-    csrfProtection(req, res, next);
-});
-
-// Expose CSRF token for client-side use (requires CSRF middleware to run first)
-app.get('/csrf-token', csrfProtection, (req, res) => {
-    res.json({ csrfToken: req.csrfToken() });
-});
-
-// Set CSRF token in locals for all templates
-app.use((req, res, next) => {
+// Enhanced startup function
+async function startServer() {
     try {
-        res.locals.csrfToken = req.csrfToken();
-    } catch (err) {
-        // In case csrfToken() is not available (e.g., for exempted routes)
-        res.locals.csrfToken = '';
-    }
-    next();
-});
-
-// CSRF error handling middleware
-app.use((err, req, res, next) => {
-    if (err.code === 'EBADCSRFTOKEN') {
-        // Handle CSRF token errors
-        console.error('CSRF token validation failed for:', req.method, req.path);
-        console.error('Request headers:', req.headers);
-        console.error('Request body:', req.body);
+        console.log('� Starting Mycelium ERP Server with Dynamic Session Management...');
         
-        if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
-            // For AJAX requests, return JSON error
-            return res.status(403).json({ 
-                error: 'Invalid CSRF token',
-                code: 'CSRF_TOKEN_INVALID'
+        // Initialize dynamic session secret service
+        const secretServiceInitialized = await dynamicSecretService.initialize();
+        
+        if (secretServiceInitialized) {
+            console.log('✅ Dynamic session secret service ready');
+            
+            // Log secret service statistics (secure - no actual secrets logged)
+            const stats = dynamicSecretService.getStatistics();
+            console.log('📊 Session Secret Statistics (secure):', {
+                secretLength: stats.currentSecretLength,
+                totalRotations: stats.totalRotations,
+                autoRotation: stats.autoRotationEnabled ? 'enabled' : 'disabled',
+                validSecretsCount: stats.validSecretsCount
             });
         } else {
-            // For regular requests, render error page with proper locals
-            return res.status(403).render('error', {
-                error: 'Invalid CSRF token. Please refresh the page and try again.',
-                title: 'Security Error',
-                user: req.session?.user || null,
-                isAuthenticated: !!req.session?.user,
-                isAdmin: req.session?.user?.role === 'admin',
-                isStaffOrAdmin: req.session?.user && (req.session.user.role === 'admin' || req.session.user.role === 'staff')
-            });
+            console.warn('⚠️  Falling back to static session secret from environment');
         }
-    }
-    next(err);
-});
+        
+        // Create dynamic session middleware
+        const dynamicSessionMiddleware = createDynamicSessionMiddleware(dynamicSecretService, {
+            cookie: {
+                maxAge: 24 * 60 * 60 * 1000, // 24 hours
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict'
+            }
+        });
 
-// Flash messages middleware
-app.use(flash());
+        // Middleware
+        app.use(express.static('public'));
+        app.use(express.json());
+        app.use(express.urlencoded({ extended: true }));
+        
+        // Security middleware
+        app.use(securityHeaders);
+        app.use(preventSecretExposure);
+        app.use(sanitizeApiResponse);
+        
+        // Block access to sensitive files
+        app.use((req, res, next) => {
+            const sensitivePatterns = [
+                /\.session-secrets\.json$/,
+                /\.env$/,
+                /\/\.env$/,
+                /\/\.session-secrets\.json$/,
+                /\/secrets\//,
+                /\/config\/.*\.js$/
+            ];
+            
+            const path = req.path || req.url;
+            
+            for (const pattern of sensitivePatterns) {
+                if (pattern.test(path)) {
+                    console.warn(`🚨 Blocked access to sensitive file: ${path} from IP: ${req.ip}`);
+                    return res.status(403).json({
+                        error: 'Access denied',
+                        message: 'This resource is not accessible'
+                    });
+                }
+            }
+            
+            next();
+        });
+        
+        // Use dynamic session middleware instead of static session
+        app.use(dynamicSessionMiddleware.getMiddleware());
 
-// Import and use auth middleware
-const { setUserLocals, SessionSecurity } = require('./middleware/auth');
+        
+        // Cookie parser middleware (required for CSRF)
+        app.use(cookieParser());
 
-// Connect session management service to auth middleware
-SessionSecurity.setSessionManagementService(sessionManagementService);
+        // CSRF protection middleware
+        const csrfProtection = csrf({ 
+            cookie: {
+                key: '_csrf',
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict'
+            },
+            ignoreMethods: ['GET', 'HEAD', 'OPTIONS'],
+            value: (req) => {
+                return req.body._csrf || 
+                       req.query._csrf || 
+                       req.headers['x-csrf-token'] ||
+                       req.headers['csrf-token'] ||
+                       req.headers['x-xsrf-token'];
+            }
+        });
 
-app.use(setUserLocals);
+        // Apply CSRF protection conditionally
+        app.use((req, res, next) => {
+            if ((req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') && 
+                req.path.startsWith('/api/')) {
+                return next();
+            }
+            csrfProtection(req, res, next);
+        });
 
-// Set view engine
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+        // CSRF token route
+        app.get('/csrf-token', csrfProtection, (req, res) => {
+            res.json({ csrfToken: req.csrfToken() });
+        });
 
-// ===============================================
-// IMPORT ROUTES
-// ===============================================
-const authRoutes = require('./routes/auth')(authPool, convertBigIntToNumber);
-app.use('/', authRoutes);
+        // Set CSRF token in locals for all templates
+        app.use((req, res, next) => {
+            try {
+                res.locals.csrfToken = req.csrfToken();
+            } catch (err) {
+                res.locals.csrfToken = '';
+            }
+            next();
+        });
 
-// Import analytics routes
-const analyticsRoutes = require('./routes/analytics')(pool, suppliersPool, convertBigIntToNumber);
-app.use('/', analyticsRoutes);
+        // CSRF error handling middleware
+        app.use((err, req, res, next) => {
+            if (err.code === 'EBADCSRFTOKEN') {
+                console.error('CSRF token validation failed for:', req.method, req.path);
+                
+                if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+                    return res.status(403).json({ 
+                        error: 'Invalid CSRF token',
+                        code: 'CSRF_TOKEN_INVALID'
+                    });
+                } else {
+                    return res.status(403).render('error', {
+                        error: 'Invalid CSRF token. Please refresh the page and try again.',
+                        title: 'Security Error',
+                        user: req.session?.user || null,
+                        isAuthenticated: !!req.session?.user,
+                        isAdmin: req.session?.user?.role === 'admin',
+                        isStaffOrAdmin: req.session?.user && (req.session.user.role === 'admin' || req.session.user.role === 'staff')
+                    });
+                }
+            }
+            next(err);
+        });
 
-// Import auth middleware for protecting routes
-const { isAuthenticated, isAdmin, isStaffOrAdmin } = require('./middleware/auth');
+        // Flash messages middleware
+        app.use(flash());
 
-// ===============================================
-// ROUTES
-// ===============================================
+        // Import and use auth middleware
+        const { setUserLocals, SessionSecurity } = require('./middleware/auth');
 
-// Home page - display all phone specs
-app.get('/', isAuthenticated, async (req, res) => {
+        // Connect session management service to auth middleware
+        SessionSecurity.setSessionManagementService(sessionManagementService);
+
+        app.use(setUserLocals);
+
+        // Set view engine
+        app.set('view engine', 'ejs');
+        app.set('views', path.join(__dirname, 'views'));
+
+        // Import routes
+        const authRoutes = require('./routes/auth')(authPool, convertBigIntToNumber);
+        app.use('/', authRoutes);
+
+        const analyticsRoutes = require('./routes/analytics')(pool, suppliersPool, convertBigIntToNumber);
+        app.use('/', analyticsRoutes);
+
+        // Import auth middleware for protecting routes
+        const { isAuthenticated, isAdmin, isStaffOrAdmin } = require('./middleware/auth');
+
+        // Dynamic session management routes (admin only)
+        app.get('/admin/session-secrets', isAdmin, (req, res) => {
+            try {
+                const stats = dynamicSecretService.getStatistics();
+                const rotationStatus = dynamicSecretService.getRotationStatus();
+                const middlewareStats = dynamicSessionMiddleware.getStatistics();
+                
+                // Sanitize statistics to prevent secret exposure
+                const sanitizedStats = {
+                    ...stats,
+                    // Don't include actual secrets in stats
+                    currentSecretPreview: stats.currentSecretLength > 8 ? 
+                        stats.currentSecretLength + ' characters (secure)' : 'configured'
+                };
+                
+                const sanitizedRotationStatus = {
+                    ...rotationStatus,
+                    // Remove actual secret data from history
+                    secretHistory: rotationStatus.secretHistory.map(entry => ({
+                        rotatedAt: entry.rotatedAt,
+                        age: entry.age,
+                        secretLength: '64 characters (secure)'
+                    }))
+                };
+                
+                const sanitizedMiddlewareStats = {
+                    ...middlewareStats,
+                    // Mask the secret preview
+                    currentSecretInUse: middlewareStats.currentSecretInUse
+                };
+                
+                res.render('session-secret-management', {
+                    title: 'Session Secret Management',
+                    stats: sanitizedStats,
+                    rotationStatus: sanitizedRotationStatus,
+                    middlewareStats: sanitizedMiddlewareStats,
+                    messages: {
+                        success: req.flash('success'),
+                        error: req.flash('error')
+                    }
+                });
+            } catch (err) {
+                console.error('Session secret management error:', err);
+                req.flash('error', 'Failed to retrieve session secret information');
+                res.redirect('/admin/sessions');
+            }
+        });
+
+        // Force session secret rotation (admin only)
+        app.post('/admin/session-secrets/rotate', isAdmin, async (req, res) => {
+            try {
+                await dynamicSecretService.forceRotation();
+                req.flash('success', 'Session secret rotated successfully');
+                res.redirect('/admin/session-secrets');
+            } catch (err) {
+                console.error('Session secret rotation error:', err);
+                req.flash('error', 'Failed to rotate session secret');
+                res.redirect('/admin/session-secrets');
+            }
+        });
+
+        // Toggle auto-rotation (admin only)
+        app.post('/admin/session-secrets/toggle-auto-rotation', isAdmin, (req, res) => {
+            try {
+                if (dynamicSecretService.rotationInterval) {
+                    dynamicSecretService.stopAutoRotation();
+                    req.flash('success', 'Auto-rotation disabled');
+                } else {
+                    dynamicSecretService.startAutoRotation();
+                    req.flash('success', 'Auto-rotation enabled');
+                }
+                res.redirect('/admin/session-secrets');
+            } catch (err) {
+                console.error('Toggle auto-rotation error:', err);
+                req.flash('error', 'Failed to toggle auto-rotation');
+                res.redirect('/admin/session-secrets');
+            }
+        });
+
+        
+        // ===============================================
+        // ROUTES
+        // ===============================================
+
+        // Home page - display all phone specs
+        app.get('/', isAuthenticated, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         const page = parseInt(req.query.page) || 1;
@@ -280,7 +396,7 @@ app.get('/', isAuthenticated, async (req, res) => {
 });
 
 // Phone details page
-app.get('/phone/:id', isAuthenticated, async (req, res) => {
+        app.get('/phone/:id', isAuthenticated, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         const suppliersConn = await suppliersPool.getConnection();
@@ -414,7 +530,7 @@ app.get('/phone/:id', isAuthenticated, async (req, res) => {
 // ===============================================
 
 // Suppliers page - display all suppliers
-app.get('/suppliers', isAuthenticated, async (req, res) => {
+        app.get('/suppliers', isAuthenticated, async (req, res) => {
     try {
         const conn = await suppliersPool.getConnection();
         const page = parseInt(req.query.page) || 1;
@@ -462,7 +578,7 @@ app.get('/suppliers', isAuthenticated, async (req, res) => {
 });
 
 // Supplier details page
-app.get('/supplier/:id', isAuthenticated, async (req, res) => {
+        app.get('/supplier/:id', isAuthenticated, async (req, res) => {
     try {
         const conn = await suppliersPool.getConnection();
         const suppliersResult = await conn.query('SELECT * FROM suppliers WHERE id = ?', [req.params.id]);
@@ -493,7 +609,7 @@ app.get('/supplier/:id', isAuthenticated, async (req, res) => {
 // ===============================================
 
 // Add supplier form page
-app.get('/suppliers/add', isStaffOrAdmin, (req, res) => {
+        app.get('/suppliers/add', isStaffOrAdmin, (req, res) => {
     res.render('supplier-form', {
         supplier: null,
         action: 'add',
@@ -502,7 +618,7 @@ app.get('/suppliers/add', isStaffOrAdmin, (req, res) => {
 });
 
 // Edit supplier form page
-app.get('/suppliers/edit/:id', isStaffOrAdmin, async (req, res) => {
+        app.get('/suppliers/edit/:id', isStaffOrAdmin, async (req, res) => {
     try {
         const conn = await suppliersPool.getConnection();
         const suppliersResult = await conn.query('SELECT * FROM suppliers WHERE id = ?', [req.params.id]);
@@ -529,7 +645,7 @@ app.get('/suppliers/edit/:id', isStaffOrAdmin, async (req, res) => {
 });
 
 // Create new supplier (POST)
-app.post('/suppliers', isStaffOrAdmin, async (req, res) => {
+        app.post('/suppliers', isStaffOrAdmin, async (req, res) => {
     try {
         const {
             name,
@@ -563,7 +679,7 @@ app.post('/suppliers', isStaffOrAdmin, async (req, res) => {
 });
 
 // Update supplier (POST)
-app.post('/suppliers/:id', async (req, res) => {
+        app.post('/suppliers/:id', async (req, res) => {
     try {
         const {
             name,
@@ -603,7 +719,7 @@ app.post('/suppliers/:id', async (req, res) => {
 });
 
 // Delete supplier (POST)
-app.post('/suppliers/:id/delete', async (req, res) => {
+        app.post('/suppliers/:id/delete', async (req, res) => {
     try {
         const conn = await suppliersPool.getConnection();
         const result = await conn.query('DELETE FROM suppliers WHERE id = ?', [req.params.id]);
@@ -625,7 +741,7 @@ app.post('/suppliers/:id/delete', async (req, res) => {
 });
 
 // Toggle supplier active status (POST)
-app.post('/suppliers/:id/toggle-status', async (req, res) => {
+        app.post('/suppliers/:id/toggle-status', async (req, res) => {
     try {
         const conn = await suppliersPool.getConnection();
         const currentResult = await conn.query('SELECT is_active FROM suppliers WHERE id = ?', [req.params.id]);
@@ -662,7 +778,7 @@ app.post('/suppliers/:id/toggle-status', async (req, res) => {
 // ===============================================
 
 // Display form to receive new stock
-app.get('/inventory/receive', isStaffOrAdmin, async (req, res) => {
+        app.get('/inventory/receive', isStaffOrAdmin, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         const suppliersConn = await suppliersPool.getConnection();
@@ -692,7 +808,7 @@ app.get('/inventory/receive', isStaffOrAdmin, async (req, res) => {
 });
 
 // Handle the form submission for receiving stock
-app.post('/inventory/receive', isStaffOrAdmin, async (req, res) => {
+        app.post('/inventory/receive', isStaffOrAdmin, async (req, res) => {
     const {
         phone_id,
         supplier_id,
@@ -789,7 +905,7 @@ app.post('/inventory/receive', isStaffOrAdmin, async (req, res) => {
 });
 
 // Display form to sell stock
-app.get('/inventory/sell', isStaffOrAdmin, async (req, res) => {
+        app.get('/inventory/sell', isStaffOrAdmin, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         const phonesResult = await conn.query(
@@ -811,7 +927,7 @@ app.get('/inventory/sell', isStaffOrAdmin, async (req, res) => {
 });
 
 // Handle the form submission for selling stock
-app.post('/inventory/sell', isStaffOrAdmin, async (req, res) => {
+        app.post('/inventory/sell', isStaffOrAdmin, async (req, res) => {
     const {
         phone_id,
         quantity,
@@ -900,7 +1016,7 @@ app.post('/inventory/sell', isStaffOrAdmin, async (req, res) => {
 });
 
 // Reports page -  display inventory log
-app.get('/reports', isAuthenticated, async (req, res) => {
+        app.get('/reports', isAuthenticated, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         const suppliersConn = await suppliersPool.getConnection();
@@ -1020,7 +1136,7 @@ app.get('/reports', isAuthenticated, async (req, res) => {
 // ===============================================
 // API ROUTES
 // ===============================================
-app.get('/api/phones', async (req, res) => {
+        app.get('/api/phones', async (req, res) => {
     try {
         const conn = await pool.getConnection();
         const phonesResult = await conn.query('SELECT * FROM phone_specs');
@@ -1033,7 +1149,7 @@ app.get('/api/phones', async (req, res) => {
     }
 });
 
-app.get('/api/phones/:id', async (req, res) => {
+        app.get('/api/phones/:id', async (req, res) => {
     try {
         const conn = await pool.getConnection();
         const phonesResult = await conn.query('SELECT * FROM phone_specs WHERE id = ?', [req.params.id]);
@@ -1051,7 +1167,7 @@ app.get('/api/phones/:id', async (req, res) => {
     }
 });
 
-app.get('/api/suppliers', async (req, res) => {
+        app.get('/api/suppliers', async (req, res) => {
     try {
         const conn = await suppliersPool.getConnection();
         const suppliersResult = await conn.query('SELECT * FROM suppliers');
@@ -1064,7 +1180,7 @@ app.get('/api/suppliers', async (req, res) => {
     }
 });
 
-app.get('/api/suppliers/:id', async (req, res) => {
+        app.get('/api/suppliers/:id', async (req, res) => {
     try {
         const conn = await suppliersPool.getConnection();
         const suppliersResult = await conn.query('SELECT * FROM suppliers WHERE id = ?', [req.params.id]);
@@ -1088,7 +1204,7 @@ app.get('/api/suppliers/:id', async (req, res) => {
 // ===============================================
 
 // Add phone form page
-app.get('/phones/add', isStaffOrAdmin, (req, res) => {
+        app.get('/phones/add', isStaffOrAdmin, (req, res) => {
     res.render('phone-form', {
         phone: null,
         action: 'add',
@@ -1097,7 +1213,7 @@ app.get('/phones/add', isStaffOrAdmin, (req, res) => {
 });
 
 // Edit phone form page
-app.get('/phones/edit/:id', isStaffOrAdmin, async (req, res) => {
+        app.get('/phones/edit/:id', isStaffOrAdmin, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         const phonesResult = await conn.query('SELECT * FROM phone_specs WHERE id = ?', [req.params.id]);
@@ -1124,7 +1240,7 @@ app.get('/phones/edit/:id', isStaffOrAdmin, async (req, res) => {
 });
 
 // Create new phone (POST)
-app.post('/phones', isStaffOrAdmin, async (req, res) => {
+        app.post('/phones', isStaffOrAdmin, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         
@@ -1158,7 +1274,7 @@ app.post('/phones', isStaffOrAdmin, async (req, res) => {
 });
 
 // Update phone (POST)
-app.post('/phones/:id', isStaffOrAdmin, async (req, res) => {
+        app.post('/phones/:id', isStaffOrAdmin, async (req, res) => {
     try {
         const conn = await pool.getConnection();
 
@@ -1225,7 +1341,7 @@ app.post('/phones/:id', isStaffOrAdmin, async (req, res) => {
 });
 
 // Delete phone (POST)
-app.post('/phones/:id/delete', isStaffOrAdmin, async (req, res) => {
+        app.post('/phones/:id/delete', isStaffOrAdmin, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         await conn.query('DELETE FROM phone_specs WHERE id = ?', [req.params.id]);
@@ -1245,7 +1361,7 @@ app.post('/phones/:id/delete', isStaffOrAdmin, async (req, res) => {
 // ===============================================
 
 // Stock Alerts and Recommendations page
-app.get('/stock-alerts', isAuthenticated, async (req, res) => {
+        app.get('/stock-alerts', isAuthenticated, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         
@@ -1379,35 +1495,76 @@ app.get('/stock-alerts', isAuthenticated, async (req, res) => {
     }
 });
 
-// View receipt
-app.get('/receipt/:id', isAuthenticated, async (req, res) => {
-    try {
-        const conn = await pool.getConnection();
-        const receiptService = new (require('./services/ReceiptService'))();
-        
-        const receipt = await receiptService.getReceipt(conn, req.params.id);
-        conn.end();
-        
-        if (!receipt) {
-            return res.status(404).render('error', {
-                error: 'Receipt not found'
-            });
-        }
-        
-        // Generate HTML view of receipt
-        const receiptHtml = receiptService.generateHTML(receipt.receipt_data);
-        
-        // Send the receipt HTML directly to the browser
-        res.send(receiptHtml);
-        
-    } catch (err) {
-        console.error('Receipt error:', err);
-        res.status(500).render('error', {
-            error: 'Failed to load receipt: ' + err.message
+        // View receipt
+        app.get('/receipt/:id', isAuthenticated, async (req, res) => {
+            try {
+                const conn = await pool.getConnection();
+                const receiptService = new (require('./services/ReceiptService'))();
+                
+                const receipt = await receiptService.getReceipt(conn, req.params.id);
+                conn.end();
+                
+                if (!receipt) {
+                    return res.status(404).render('error', {
+                        error: 'Receipt not found'
+                    });
+                }
+                
+                // Generate HTML view of receipt
+                const receiptHtml = receiptService.generateHTML(receipt.receipt_data);
+                
+                // Send the receipt HTML directly to the browser
+                res.send(receiptHtml);
+                
+            } catch (err) {
+                console.error('Receipt error:', err);
+                res.status(500).render('error', {
+                    error: 'Failed to load receipt: ' + err.message
+                });
+            }
         });
-    }
-});
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+        // Start server
+        app.listen(PORT, () => {
+            console.log(`🌟 Server running on port ${PORT}`);
+            console.log(`🔗 Access your application at: http://localhost:${PORT}`);
+            console.log(`🔐 Session security: Enhanced with dynamic secret management`);
+            
+            if (process.env.NODE_ENV === 'development') {
+                console.log(`📊 Admin Panel: http://localhost:${PORT}/admin/sessions`);
+                console.log(`🔑 Secret Management: http://localhost:${PORT}/admin/session-secrets`);
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Failed to start server:', error);
+        process.exit(1);
+    }
+}
+
+// Enhanced graceful shutdown handler
+async function gracefulShutdown(signal) {
+    console.log(`🛑 ${signal} received, shutting down gracefully...`);
+    
+    try {
+        // Shutdown dynamic secret service
+        await dynamicSecretService.shutdown();
+        
+        // Shutdown session management service
+        sessionManagementService.shutdown();
+        
+        console.log('✅ Graceful shutdown complete');
+        process.exit(0);
+    } catch (error) {
+        console.error('❌ Error during shutdown:', error);
+        process.exit(1);
+    }
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Start the server
+startServer();
+
+module.exports = app;
