@@ -52,7 +52,7 @@ const SessionSecurity = {
      * Validate session integrity and security with enhanced token checking
      */
     async validateSession(req) {
-        if (!req.session.user) {
+        if (!req.session || !req.session.user) {
             return { valid: false, reason: 'No user session' };
         }
 
@@ -81,24 +81,24 @@ const SessionSecurity = {
         }
 
         // Check session expiration
-        if (req.session.user && req.session.user.sessionExpiry && Date.now() > req.session.user.sessionExpiry) {
+        if (req.session && req.session.user && req.session.user.sessionExpiry && Date.now() > req.session.user.sessionExpiry) {
             return { valid: false, reason: 'Session expired' };
         }
 
         // Check for idle timeout (30 minutes of inactivity)
         const idleTimeout = 30 * 60 * 1000; // 30 minutes
-        if (req.session.user && req.session.user.lastActivity && (Date.now() - req.session.user.lastActivity) > idleTimeout) {
+        if (req.session && req.session.user && req.session.user.lastActivity && (Date.now() - req.session.user.lastActivity) > idleTimeout) {
             return { valid: false, reason: 'Session idle timeout' };
         }
 
         // Check for session hijacking by validating user agent consistency
-        if (req.session.userAgent && req.session.userAgent !== req.get('User-Agent')) {
+        if (req.session && req.session.userAgent && req.session.userAgent !== req.get('User-Agent')) {
             return { valid: false, reason: 'Session security violation - User agent mismatch' };
         }
 
         // Check for maximum session duration (24 hours for regular sessions, 30 days for "remember me")
-        const maxSessionDuration = req.session.cookie.maxAge || (24 * 60 * 60 * 1000);
-        if (req.session.user.sessionStart && (Date.now() - req.session.user.sessionStart) > maxSessionDuration) {
+        const maxSessionDuration = (req.session && req.session.cookie && req.session.cookie.maxAge) || (24 * 60 * 60 * 1000);
+        if (req.session && req.session.user && req.session.user.sessionStart && (Date.now() - req.session.user.sessionStart) > maxSessionDuration) {
             return { valid: false, reason: 'Maximum session duration exceeded' };
         }
 
@@ -170,13 +170,21 @@ const SessionSecurity = {
         } : null;
 
         // Invalidate session token if token invalidation service is available
+        // and the token hasn't been invalidated already
         if (sessionInfo && this.tokenInvalidationService && sessionInfo.sessionToken) {
-            await this.tokenInvalidationService.invalidateToken(
-                sessionInfo.sessionToken, 
-                'session', 
-                sessionInfo.userId, 
-                reason
-            );
+            // Check if token is already invalidated to prevent double invalidation
+            const isAlreadyInvalidated = await this.tokenInvalidationService.isTokenInvalidated(sessionInfo.sessionToken);
+            
+            if (!isAlreadyInvalidated) {
+                await this.tokenInvalidationService.invalidateToken(
+                    sessionInfo.sessionToken, 
+                    'session', 
+                    sessionInfo.userId, 
+                    reason
+                );
+            } else {
+                console.log(`🔄 Token already invalidated, skipping: ${sessionInfo.sessionToken.substring(0, 8)}...`);
+            }
         }
 
         // Remove from session management service
@@ -244,9 +252,15 @@ const isAuthenticated = async (req, res, next) => {
                 });
             }
             
-            // Clear invalid session safely
-            if (req.session && req.session.user) {
-                await SessionSecurity.clearSession(req);
+            // Only clear session if it's not already invalidated due to logout
+            // This prevents double token invalidation messages
+            if (req.session && req.session.user && 
+                !validation.reason.includes('token invalidated') && 
+                !validation.reason.includes('sessions invalidated')) {
+                await SessionSecurity.clearSession(req, 'session_validation_failure');
+            } else if (req.session && req.session.user) {
+                // For already invalidated tokens, just clear session data without token invalidation
+                req.session.destroy();
             }
             
             // Store original URL for redirect after login (ensure session exists)
@@ -288,13 +302,21 @@ const isAuthenticated = async (req, res, next) => {
  * Enhanced middleware to check if a user has admin privileges with session validation
  * If not, returns a 403 Forbidden error
  */
-const isAdmin = (req, res, next) => {
+const isAdmin = async (req, res, next) => {
     // First validate session security
-    const validation = SessionSecurity.validateSession(req);
+    const validation = await SessionSecurity.validateSession(req);
     
     if (!validation.valid) {
         console.log(`Admin access denied - Session validation failed: ${validation.reason}`);
-        SessionSecurity.clearSession(req);
+        
+        // Only clear session if it's not already invalidated
+        if (!validation.reason.includes('token invalidated') && 
+            !validation.reason.includes('sessions invalidated')) {
+            await SessionSecurity.clearSession(req, 'admin_validation_failure');
+        } else if (req.session && req.session.user) {
+            req.session.destroy();
+        }
+        
         return res.redirect('/login');
     }
     
@@ -312,13 +334,21 @@ const isAdmin = (req, res, next) => {
  * Enhanced middleware to check if a user has staff or admin privileges with session validation
  * If not, returns a 403 Forbidden error
  */
-const isStaffOrAdmin = (req, res, next) => {
+const isStaffOrAdmin = async (req, res, next) => {
     // First validate session security
-    const validation = SessionSecurity.validateSession(req);
+    const validation = await SessionSecurity.validateSession(req);
     
     if (!validation.valid) {
         console.log(`Staff access denied - Session validation failed: ${validation.reason}`);
-        SessionSecurity.clearSession(req);
+        
+        // Only clear session if it's not already invalidated
+        if (!validation.reason.includes('token invalidated') && 
+            !validation.reason.includes('sessions invalidated')) {
+            await SessionSecurity.clearSession(req, 'staff_validation_failure');
+        } else if (req.session && req.session.user) {
+            req.session.destroy();
+        }
+        
         return res.redirect('/login');
     }
     
@@ -333,14 +363,22 @@ const isStaffOrAdmin = (req, res, next) => {
 };
 
 // Enhanced middleware to make user data available to all templates with session validation
-const setUserLocals = (req, res, next) => {
+const setUserLocals = async (req, res, next) => {
     // Validate session if user exists
     if (req.session.user) {
-        const validation = SessionSecurity.validateSession(req);
+        const validation = await SessionSecurity.validateSession(req);
         
         if (!validation.valid) {
             console.log(`Template access denied - Session validation failed: ${validation.reason}`);
-            SessionSecurity.clearSession(req);
+            
+            // Only clear session if it's not already invalidated to prevent double invalidation
+            if (!validation.reason.includes('token invalidated') && 
+                !validation.reason.includes('sessions invalidated')) {
+                await SessionSecurity.clearSession(req, 'template_validation_failure');
+            } else if (req.session && req.session.user) {
+                req.session.destroy();
+            }
+            
             res.locals.user = null;
             res.locals.isAdmin = false;
             res.locals.isStaffOrAdmin = false;

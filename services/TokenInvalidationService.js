@@ -57,7 +57,12 @@ class TokenInvalidationService {
                 conn.end();
             }
             
-            console.log(`🚫 Token invalidated: Type=${tokenType}, Reason=${reason}, User=${userId || 'unknown'}`);
+            console.log(`🚫 Token invalidated: Type=${tokenType}, Reason=${reason}, User=${userId || 'unknown'}, Token=${hashedToken.substring(0, 8)}...`);
+            
+            // Add debug stack trace to help identify source of invalidation calls
+            if (process.env.NODE_ENV === 'development') {
+                console.log('📍 Token invalidation called from:', new Error().stack.split('\n')[2].trim());
+            }
             return true;
         } catch (error) {
             console.error('Failed to invalidate token:', error);

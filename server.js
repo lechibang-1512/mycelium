@@ -208,107 +208,33 @@ async function startServer() {
 
         
         // ================================================================
-        // CSRF PROTECTION IMPLEMENTATION (CWE-352 Mitigation)
+        // CSRF PROTECTION - Prevents Cross-Site Request Forgery (CWE-352)
         // ================================================================
-        /**
- * CSRF Protection Implementation
- * 
- * This implementation provides comprehensive protection against Cross-Site Request Forgery (CSRF) attacks
- * in compliance with OWASP guidelines and CWE-352 mitigation standards.
- * 
- * Key Features:
- * - Automatic token generation for all requests
- * - Mandatory validation for state-changing operations (POST, PUT, PATCH, DELETE)
- * - Support for multiple token delivery methods (form fields, headers, query params)
- * - Secure token storage using HTTPOnly, SameSite cookies
- * - Integration with session management for enhanced security
- * 
- * Security Compliance:
- * - CWE-352: Cross-Site Request Forgery (CSRF) - MITIGATED
- * - OWASP Top 10: A01:2021 – Broken Access Control - ADDRESSED
- * - CodeQL Rule: js/missing-token-validation - SATISFIED
- * 
- * Implementation Details:
- * 1. CSRF tokens are generated using cryptographically secure random values
- * 2. Tokens are tied to user sessions and validated on each state-changing request
- * 3. Failed validation results in 403 Forbidden responses with detailed error information
- * 4. Support for both form-based and AJAX-based token submission
- */
 
         // Cookie parser middleware (required for CSRF token storage)
         app.use(cookieParser());
 
-        // CSRF protection middleware - configured immediately after cookie parser to satisfy security scanners
-        // This protects against CWE-352: Cross-Site Request Forgery (CSRF)
-        const csrfProtection = csrf({ 
-            cookie: {
-                key: '_csrf',
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production' || process.env.FORCE_HTTPS === 'true',
-                sameSite: 'strict'
-            },
-            // Generate tokens for all requests, validate for state-changing ones
-            value: (req) => {
-                return req.body._csrf || 
-                       req.query._csrf || 
-                       req.headers['x-csrf-token'] ||
-                       req.headers['csrf-token'] ||
-                       req.headers['x-xsrf-token'];
+        // CSRF protection middleware - applied immediately after cookieParser
+        app.use(csrf({ cookie: true }));
+
+        // Make CSRF token available to all views
+        app.use((req, res, next) => {
+            try {
+                res.locals.csrfToken = req.csrfToken();
+            } catch (err) {
+                console.error('CSRF token generation error:', err);
+                res.locals.csrfToken = '';
             }
+            next();
         });
 
-        // Apply CSRF protection immediately after configuration to prevent missing CSRF middleware alerts
-        // This middleware ensures ALL requests are protected against CSRF attacks (CodeQL: js/missing-token-validation)
-        // State-changing requests (POST, PUT, PATCH, DELETE) require valid tokens
-        // Safe requests (GET, HEAD, OPTIONS) generate tokens for subsequent use
-        app.use((req, res, next) => {
-            csrfProtection(req, res, (err) => {
-                if (err && err.code === 'EBADCSRFTOKEN') {
-                    // Only fail on validation errors for state-changing requests
-                    if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
-                        console.error('CSRF token validation failed for:', req.method, req.path);
-                        console.error('Request body _csrf:', req.body._csrf);
-                        console.error('Request headers csrf-token:', req.headers['csrf-token']);
-                        console.error('Request headers x-csrf-token:', req.headers['x-csrf-token']);
-                        
-                        if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
-                            return res.status(403).json({ 
-                                error: 'Invalid CSRF token',
-                                code: 'CSRF_TOKEN_INVALID'
-                            });
-                        } else {
-                            return res.status(403).render('error', {
-                                error: 'Invalid CSRF token. Please refresh the page and try again.',
-                                title: 'Security Error',
-                                user: req.session?.user || null,
-                                isAuthenticated: !!req.session?.user,
-                                isAdmin: req.session?.user?.role === 'admin',
-                                isStaffOrAdmin: req.session?.user && (req.session.user.role === 'admin' || req.session.user.role === 'staff')
-                            });
-                        }
-                    } else {
-                        // For GET requests, ignore validation errors but still try to generate token
-                        try {
-                            res.locals.csrfToken = req.csrfToken();
-                        } catch (tokenErr) {
-                            res.locals.csrfToken = '';
-                        }
-                        next();
-                    }
-                } else if (err) {
-                    // Other errors
-                    res.locals.csrfToken = '';
-                    next(err);
-                } else {
-                    // Success - token generated and validated (if needed)
-                    try {
-                        res.locals.csrfToken = req.csrfToken();
-                    } catch (tokenErr) {
-                        res.locals.csrfToken = '';
-                    }
-                    next();
-                }
-            });
+        // CSRF error handler
+        app.use((err, req, res, next) => {
+            if (err.code === 'EBADCSRFTOKEN') {
+                res.status(403).send('Invalid CSRF token');
+            } else {
+                next(err);
+            }
         });
 
         // CSRF token route
