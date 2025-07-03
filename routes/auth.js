@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const { isAdmin, isAuthenticated, SessionSecurity } = require('../middleware/auth');
 const PasswordValidator = require('../services/PasswordValidator');
+const InputValidator = require('../middleware/inputValidation');
 
 // Initialize password validator
 const passwordValidator = new PasswordValidator();
@@ -27,8 +28,8 @@ module.exports = (authPool, convertBigIntToNumber) => {
         });
     });
 
-    // Login process
-    router.post('/login', async (req, res) => {
+    // Login process with input validation
+    router.post('/login', InputValidator.validateLoginData, async (req, res) => {
         try {
             const { username, password, rememberMe } = req.body;
             
@@ -204,7 +205,7 @@ module.exports = (authPool, convertBigIntToNumber) => {
     });
 
     // Process forgot password request
-    router.post('/forgot-password', async (req, res) => {
+    router.post('/forgot-password', InputValidator.validatePasswordResetData, async (req, res) => {
         const { email } = req.body;
         
         try {

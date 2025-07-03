@@ -1,4 +1,4 @@
-/**
+2/**
  * Enhanced Input Validation Middleware
  * 
  * Provides comprehensive input validation and sanitization
@@ -210,6 +210,86 @@ class InputValidator {
         if (errors.length > 0) {
             req.flash('error', errors.join('. '));
             return res.redirect('back');
+        }
+
+        next();
+    }
+
+    /**
+     * Validate login data
+     */
+    static validateLoginData(req, res, next) {
+        const errors = [];
+        const { username, password } = req.body;
+
+        // Check if request body is present
+        if (!req.body || Object.keys(req.body).length === 0) {
+            errors.push('Login data is required');
+        }
+
+        // Username validation
+        if (!username || typeof username !== 'string' || !username.trim()) {
+            errors.push('Username is required');
+        } else if (!validator.isLength(username.trim(), { min: 1, max: 50 })) {
+            errors.push('Username must be between 1 and 50 characters');
+        } else {
+            // Sanitize username
+            req.body.username = validator.escape(username.trim());
+        }
+
+        // Password validation
+        if (!password || typeof password !== 'string' || !password.trim()) {
+            errors.push('Password is required');
+        } else if (!validator.isLength(password, { min: 1, max: 200 })) {
+            errors.push('Password length is invalid');
+        }
+
+        // Check for potential script injection in login fields
+        if (username && (username.includes('<script') || username.includes('javascript:'))) {
+            errors.push('Invalid characters in username');
+        }
+        
+        if (password && (password.includes('<script') || password.includes('javascript:'))) {
+            errors.push('Invalid characters in password');
+        }
+
+        if (errors.length > 0) {
+            console.warn(`🚨 Invalid login attempt from IP: ${req.ip}, errors: ${errors.join(', ')}`);
+            req.flash('error', 'Invalid login data provided');
+            return res.redirect('/login');
+        }
+
+        next();
+    }
+
+    /**
+     * Validate password reset data
+     */
+    static validatePasswordResetData(req, res, next) {
+        const errors = [];
+        const { email } = req.body;
+
+        // Check if request body is present
+        if (!req.body || Object.keys(req.body).length === 0) {
+            errors.push('Email data is required');
+        }
+
+        // Email validation
+        if (!email || typeof email !== 'string' || !email.trim()) {
+            errors.push('Email is required');
+        } else if (!validator.isEmail(email.trim())) {
+            errors.push('Please provide a valid email address');
+        } else if (!validator.isLength(email.trim(), { max: 100 })) {
+            errors.push('Email address is too long');
+        } else {
+            // Sanitize email
+            req.body.email = validator.normalizeEmail(email.trim());
+        }
+
+        if (errors.length > 0) {
+            console.warn(`🚨 Invalid password reset attempt from IP: ${req.ip}, errors: ${errors.join(', ')}`);
+            req.flash('error', 'Invalid email provided');
+            return res.redirect('/forgot-password');
         }
 
         next();

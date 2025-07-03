@@ -9,6 +9,8 @@ const requiredEnvVars = [
     'SUPPLIERS_DB_PASSWORD',
     'AUTH_DB_USER',
     'AUTH_DB_PASSWORD',
+    'SECURITY_DB_USER',
+    'SECURITY_DB_PASSWORD',
     'SESSION_SECRET'
 ];
 
@@ -74,7 +76,11 @@ const dbConfig = {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME || 'master_specs_db',
-    connectionLimit: 5,
+    connectionLimit: 20, // Increased further from 15 to 20
+    acquireTimeout: 30000, // 30 seconds timeout
+    timeout: 60000, // 60 seconds query timeout
+    idleTimeout: 300000, // 5 minutes idle timeout
+    minimumIdle: 2, // Minimum idle connections
     bigIntAsNumber: true // Convert BigInt to Number
 };
 
@@ -85,7 +91,11 @@ const suppliersDbConfig = {
     user: process.env.SUPPLIERS_DB_USER,
     password: process.env.SUPPLIERS_DB_PASSWORD,
     database: process.env.SUPPLIERS_DB_NAME || 'suppliers_db',
-    connectionLimit: 5,
+    connectionLimit: 15, // Increased from 10 to 15
+    acquireTimeout: 30000,
+    timeout: 60000,
+    idleTimeout: 300000,
+    minimumIdle: 2,
     bigIntAsNumber: true
 };
 
@@ -96,7 +106,26 @@ const authDbConfig = {
     user: process.env.AUTH_DB_USER,
     password: process.env.AUTH_DB_PASSWORD,
     database: process.env.AUTH_DB_NAME || 'users_db',
-    connectionLimit: 5,
+    connectionLimit: 20, // Increased from 15 to 20 (auth is heavily used)
+    acquireTimeout: 30000,
+    timeout: 60000,
+    idleTimeout: 300000,
+    minimumIdle: 3,
+    bigIntAsNumber: true
+};
+
+// Security database configuration
+const securityDbConfig = {
+    host: process.env.SECURITY_DB_HOST || '127.0.0.1',
+    port: process.env.SECURITY_DB_PORT || 3306,
+    user: process.env.SECURITY_DB_USER,
+    password: process.env.SECURITY_DB_PASSWORD,
+    database: process.env.SECURITY_DB_NAME || 'security_db',
+    connectionLimit: 15, // Increased from 10 to 15
+    acquireTimeout: 30000,
+    timeout: 60000,
+    idleTimeout: 300000,
+    minimumIdle: 2,
     bigIntAsNumber: true
 };
 
@@ -104,6 +133,23 @@ const authDbConfig = {
 const pool = mariadb.createPool(dbConfig);
 const suppliersPool = mariadb.createPool(suppliersDbConfig);
 const authPool = mariadb.createPool(authDbConfig);
+const securityPool = mariadb.createPool(securityDbConfig);
+
+// Connection pool monitoring
+function logPoolStats() {
+    try {
+        console.log('📊 Database Pool Statistics:');
+        console.log(`  Main DB: ${pool.activeConnections()}/${pool.totalConnections()} active, ${pool.idleConnections()} idle, queue: ${pool.taskQueueSize()}`);
+        console.log(`  Suppliers: ${suppliersPool.activeConnections()}/${suppliersPool.totalConnections()} active, ${suppliersPool.idleConnections()} idle, queue: ${suppliersPool.taskQueueSize()}`);
+        console.log(`  Auth: ${authPool.activeConnections()}/${authPool.totalConnections()} active, ${authPool.idleConnections()} idle, queue: ${authPool.taskQueueSize()}`);
+        console.log(`  Security: ${securityPool.activeConnections()}/${securityPool.totalConnections()} active, ${securityPool.idleConnections()} idle, queue: ${securityPool.taskQueueSize()}`);
+    } catch (error) {
+        console.error('Error getting pool stats:', error.message);
+    }
+}
+
+// Log pool stats every 5 minutes
+const logPoolStatsInterval = setInterval(logPoolStats, 5 * 60 * 1000);
 
 // Use SanitizationService for BigInt conversion
 const convertBigIntToNumber = SanitizationService.convertBigIntToNumber;
@@ -115,8 +161,8 @@ const dynamicSecretService = new DynamicSessionSecretService();
 const sessionManagementService = new SessionManagementService(authPool, convertBigIntToNumber);
 
 // Initialize security enhancement services
-const tokenInvalidationService = new TokenInvalidationService(authPool);
-const securityLogger = new SecurityLogger(authPool);
+const tokenInvalidationService = new TokenInvalidationService(securityPool);
+const securityLogger = new SecurityLogger(authPool, convertBigIntToNumber, securityPool);
 
 // Enhanced startup function
 async function startServer() {
@@ -155,6 +201,17 @@ async function startServer() {
         app.use(express.static('public'));
         app.use(express.json({ limit: '10mb' }));
         app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+        
+        // Request timeout middleware to prevent long-running requests
+        app.use((req, res, next) => {
+            req.setTimeout(120000, () => { // 2 minutes timeout
+                console.warn(`⚠️ Request timeout for ${req.method} ${req.path} from IP: ${req.ip}`);
+                if (!res.headersSent) {
+                    res.status(408).json({ error: 'Request timeout' });
+                }
+            });
+            next();
+        });
         
         // Apply rate limiting
         app.use(generalLimiter);
@@ -377,8 +434,9 @@ async function startServer() {
 
         // Home page - display all phone specs
         app.get('/', isAuthenticated, async (req, res) => {
+    let conn = null;
     try {
-        const conn = await pool.getConnection();
+        conn = await pool.getConnection();
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
@@ -404,7 +462,6 @@ async function startServer() {
 
         const phonesResult = await conn.query(query, params);
         const phones = convertBigIntToNumber(phonesResult);
-        conn.end();
 
         const totalPages = Math.ceil(total / limit);
 
@@ -422,22 +479,30 @@ async function startServer() {
         res.status(500).render('error', {
             error: 'Database connection failed'
         });
+    } finally {
+        if (conn) {
+            try {
+                conn.end();
+            } catch (releaseError) {
+                console.error('Error releasing connection:', releaseError.message);
+            }
+        }
     }
 });
 
 // Phone details page
         app.get('/phone/:id', isAuthenticated, async (req, res) => {
+    let conn = null;
+    let suppliersConn = null;
     try {
-        const conn = await pool.getConnection();
-        const suppliersConn = await suppliersPool.getConnection();
+        conn = await pool.getConnection();
+        suppliersConn = await suppliersPool.getConnection();
         
         // Get phone details
         const phonesResult = await conn.query('SELECT * FROM phone_specs WHERE id = ?', [req.params.id]);
         const phones = convertBigIntToNumber(phonesResult);
 
         if (phones.length === 0) {
-            conn.end();
-            suppliersConn.end();
             return res.status(404).render('error', {
                 error: 'Phone not found'
             });
@@ -552,6 +617,404 @@ async function startServer() {
         res.status(500).render('error', {
             error: 'Database connection failed'
         });
+    } finally {
+        if (conn) {
+            try {
+                conn.end();
+            } catch (releaseError) {
+                console.error('Error releasing main connection:', releaseError.message);
+            }
+        }
+        if (suppliersConn) {
+            try {
+                suppliersConn.end();
+            } catch (releaseError) {
+                console.error('Error releasing suppliers connection:', releaseError.message);
+            }
+        }
+    }
+});
+
+// ===============================================
+// SUPPLIERS ROUTES
+// ===============================================
+
+// Suppliers page - display all suppliers
+        app.get('/suppliers', isAuthenticated, async (req, res) => {
+    try {
+        const conn = await suppliersPool.getConnection();
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+        const search = req.query.search || '';
+
+        let query = 'SELECT * FROM suppliers';
+        let countQuery = 'SELECT COUNT(*) as total FROM suppliers';
+        let params = [];
+
+        if (search) {
+            query += ' WHERE name LIKE ? OR contact_person LIKE ? OR contact_email LIKE ? OR email LIKE ? OR category LIKE ?';
+            countQuery += ' WHERE name LIKE ? OR contact_person LIKE ? OR contact_email LIKE ? OR email LIKE ? OR category LIKE ?';
+            params = [`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`];
+        }
+
+        const countResult = await conn.query(countQuery, params);
+        const total = convertBigIntToNumber(countResult[0].total);
+
+        query += ' ORDER BY id LIMIT ? OFFSET ?';
+        params.push(limit, offset);
+
+        const suppliersResult = await conn.query(query, params);
+        const suppliers = convertBigIntToNumber(suppliersResult);
+        conn.end();
+
+        const totalPages = Math.ceil(total / limit);
+
+        res.render('suppliers', {
+            suppliers,
+            currentPage: page,
+            totalPages,
+            limit,
+            search,
+            total,
+            success: req.query.success
+        });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).render('error', {
+            error: 'Suppliers database connection failed'
+        });
+    }
+});
+
+// Supplier details page
+        app.get('/supplier/:id', isAuthenticated, async (req, res) => {
+    try {
+        const conn = await suppliersPool.getConnection();
+        const suppliersResult = await conn.query('SELECT * FROM suppliers WHERE id = ?', [req.params.id]);
+        const suppliers = convertBigIntToNumber(suppliersResult);
+        conn.end();
+
+        if (suppliers.length === 0) {
+            return res.status(404).render('error', {
+                error: 'Supplier not found'
+            });
+        }
+
+        res.render('supplier-details', {
+            supplier: suppliers[0],
+            success: req.query.success
+        });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).render('error', {
+            error: 'Suppliers database connection failed'
+        });
+    }
+});
+
+
+        // Database connection status endpoint (admin only)
+        app.get('/admin/database-status', isAdmin, async (req, res) => {
+            try {
+                const status = {
+                    timestamp: new Date().toISOString(),
+                    pools: {},
+                    overall: 'healthy'
+                };
+
+                // Check main database pool
+                try {
+                    status.pools.main = {
+                        active: pool.activeConnections(),
+                        total: pool.totalConnections(),
+                        idle: pool.idleConnections(),
+                        queue: pool.taskQueueSize(),
+                        limit: 20,
+                        status: 'connected'
+                    };
+                } catch (err) {
+                    status.pools.main = { status: 'error', error: err.message };
+                    status.overall = 'warning';
+                }
+
+                // Check suppliers database pool
+                try {
+                    status.pools.suppliers = {
+                        active: suppliersPool.activeConnections(),
+                        total: suppliersPool.totalConnections(),
+                        idle: suppliersPool.idleConnections(),
+                        queue: suppliersPool.taskQueueSize(),
+                        limit: 15,
+                        status: 'connected'
+                    };
+                } catch (err) {
+                    status.pools.suppliers = { status: 'error', error: err.message };
+                    status.overall = 'warning';
+                }
+
+                // Check auth database pool
+                try {
+                    status.pools.auth = {
+                        active: authPool.activeConnections(),
+                        total: authPool.totalConnections(),
+                        idle: authPool.idleConnections(),
+                        queue: authPool.taskQueueSize(),
+                        limit: 20,
+                        status: 'connected'
+                    };
+                } catch (err) {
+                    status.pools.auth = { status: 'error', error: err.message };
+                    status.overall = 'critical';
+                }
+
+                // Check security database pool
+                try {
+                    status.pools.security = {
+                        active: securityPool.activeConnections(),
+                        total: securityPool.totalConnections(),
+                        idle: securityPool.idleConnections(),
+                        queue: securityPool.taskQueueSize(),
+                        limit: 15,
+                        status: 'connected'
+                    };
+                } catch (err) {
+                    status.pools.security = { status: 'error', error: err.message };
+                    status.overall = 'warning';
+                }
+
+                // Check for connection pool exhaustion warnings
+                Object.keys(status.pools).forEach(poolName => {
+                    const pool = status.pools[poolName];
+                    if (pool.active && pool.limit) {
+                        const utilizationPercent = (pool.active / pool.limit) * 100;
+                        pool.utilization = `${utilizationPercent.toFixed(1)}%`;
+                        
+                        if (utilizationPercent > 90) {
+                            pool.warning = 'High utilization';
+                            status.overall = status.overall === 'healthy' ? 'warning' : status.overall;
+                        } else if (utilizationPercent > 80) {
+                            pool.warning = 'Moderate utilization';
+                        }
+                    }
+                });
+
+                res.json(status);
+            } catch (error) {
+                console.error('Database status check error:', error);
+                res.status(500).json({
+                    error: 'Failed to check database status',
+                    message: error.message,
+                    overall: 'critical'
+                });
+            }
+        });
+
+        
+        // ===============================================
+        // ROUTES
+        // ===============================================
+
+        // Home page - display all phone specs
+        app.get('/', isAuthenticated, async (req, res) => {
+    let conn = null;
+    try {
+        conn = await pool.getConnection();
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+        const search = req.query.search || '';
+
+        let query = 'SELECT * FROM phone_specs';
+        let countQuery = 'SELECT COUNT(*) as total FROM phone_specs';
+        let params = [];
+
+        if (search) {
+            query += ' WHERE sm_name LIKE ? OR sm_maker LIKE ?';
+            countQuery += ' WHERE sm_name LIKE ? OR sm_maker LIKE ?';
+            params = [`%${search}%`, `%${search}%`];
+        }
+
+        // Get total count
+        const countResult = await conn.query(countQuery, params);
+        const total = convertBigIntToNumber(countResult[0].total);
+
+        // Get paginated results
+        query += ' ORDER BY id LIMIT ? OFFSET ?';
+        params.push(limit, offset);
+
+        const phonesResult = await conn.query(query, params);
+        const phones = convertBigIntToNumber(phonesResult);
+
+        const totalPages = Math.ceil(total / limit);
+
+        res.render('index', {
+            phones,
+            currentPage: page,
+            totalPages,
+            limit,
+            search,
+            total,
+            req
+        });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).render('error', {
+            error: 'Database connection failed'
+        });
+    } finally {
+        if (conn) {
+            try {
+                conn.end();
+            } catch (releaseError) {
+                console.error('Error releasing connection:', releaseError.message);
+            }
+        }
+    }
+});
+
+// Phone details page
+        app.get('/phone/:id', isAuthenticated, async (req, res) => {
+    let conn = null;
+    let suppliersConn = null;
+    try {
+        conn = await pool.getConnection();
+        suppliersConn = await suppliersPool.getConnection();
+        
+        // Get phone details
+        const phonesResult = await conn.query('SELECT * FROM phone_specs WHERE id = ?', [req.params.id]);
+        const phones = convertBigIntToNumber(phonesResult);
+
+        if (phones.length === 0) {
+            return res.status(404).render('error', {
+                error: 'Phone not found'
+            });
+        }
+
+        const phone = phones[0];
+        
+        // Get inventory history for this phone
+        const inventoryHistoryQuery = `
+            SELECT 
+                il.transaction_type, il.quantity_changed, il.new_inventory_level, il.notes, il.supplier_id,
+                DATE_FORMAT(il.transaction_date, '%Y-%m-%d %H:%i:%s') as formatted_date
+            FROM inventory_log il
+            WHERE il.phone_id = ?
+            ORDER BY il.transaction_date DESC
+            LIMIT 10
+        `;
+        const inventoryHistoryResult = await conn.query(inventoryHistoryQuery, [req.params.id]);
+        let inventoryHistory = convertBigIntToNumber(inventoryHistoryResult);
+        
+        // Get supplier names for history items that don't have supplier names
+        if (inventoryHistory.length > 0) {
+            const supplierIds = inventoryHistory
+                .filter(item => item.supplier_id)
+                .map(item => item.supplier_id);
+                
+            if (supplierIds.length > 0) {
+                const suppliersResult = await suppliersConn.query(
+                    'SELECT supplier_id, name FROM suppliers WHERE supplier_id IN (?)', 
+                    [supplierIds]
+                );
+                const suppliers = convertBigIntToNumber(suppliersResult);
+                const supplierMap = {};
+                suppliers.forEach(supplier => {
+                    supplierMap[supplier.supplier_id] = supplier.name;
+                });
+                
+                inventoryHistory = inventoryHistory.map(item => ({
+                    ...item,
+                    supplier_name: supplierMap[item.supplier_id] || null
+                }));
+            }
+        }
+        
+        // Calculate analytics for this phone
+        const salesAnalyticsQuery = `
+            SELECT 
+                SUM(CASE WHEN transaction_type = 'outgoing' THEN ABS(quantity_changed) ELSE 0 END) as total_sold,
+                SUM(CASE WHEN transaction_type = 'incoming' THEN quantity_changed ELSE 0 END) as total_received,
+                COUNT(CASE WHEN transaction_type = 'outgoing' THEN 1 END) as sale_transactions,
+                MIN(CASE WHEN transaction_type = 'outgoing' THEN transaction_date END) as first_sale,
+                MAX(CASE WHEN transaction_type = 'outgoing' THEN transaction_date END) as last_sale
+            FROM inventory_log 
+            WHERE phone_id = ?
+        `;
+        const salesAnalyticsResult = await conn.query(salesAnalyticsQuery, [req.params.id]);
+        const salesAnalytics = convertBigIntToNumber(salesAnalyticsResult[0]);
+        
+        // Calculate revenue
+        const totalRevenue = (salesAnalytics.total_sold || 0) * (phone.sm_price || 0);
+        
+        // Calculate days since last sale
+        const daysSinceLastSale = salesAnalytics.last_sale ? 
+            Math.floor((new Date() - new Date(salesAnalytics.last_sale)) / (1000 * 60 * 60 * 24)) : null;
+        
+        // Get stock level recommendation
+        const avgMonthlySales = salesAnalytics.total_sold > 0 && salesAnalytics.first_sale ? 
+            (salesAnalytics.total_sold / Math.max(1, Math.floor((new Date() - new Date(salesAnalytics.first_sale)) / (1000 * 60 * 60 * 24 * 30)))) : 0;
+        
+        const stockRecommendation = avgMonthlySales > 0 ? Math.ceil(avgMonthlySales * 2) : 10; // 2 months of stock
+        
+        // Determine stock status
+        let stockStatus = 'good';
+        let stockStatusText = 'Good Stock Level';
+        let stockStatusClass = 'success';
+        
+        if (phone.sm_inventory <= 1) {
+            stockStatus = 'critical';
+            stockStatusText = 'Critical - Restock Immediately';
+            stockStatusClass = 'danger';
+        } else if (phone.sm_inventory <= 5) {
+            stockStatus = 'low';
+            stockStatusText = 'Low Stock - Restock Soon';
+            stockStatusClass = 'warning';
+        } else if (phone.sm_inventory > stockRecommendation * 1.5) {
+            stockStatus = 'high';
+            stockStatusText = 'High Stock - Consider Promotion';
+            stockStatusClass = 'info';
+        }
+        
+        conn.end();
+        suppliersConn.end();
+
+        res.render('details', {
+            phone,
+            success: req.query.success,
+            receipt: req.query.receipt, // Add receipt ID if provided
+            inventoryHistory,
+            salesAnalytics: {
+                ...salesAnalytics,
+                totalRevenue,
+                daysSinceLastSale,
+                avgMonthlySales: avgMonthlySales.toFixed(1)
+            },
+            stockRecommendation,
+            stockStatus,
+            stockStatusText,
+            stockStatusClass
+        });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).render('error', {
+            error: 'Database connection failed'
+        });
+    } finally {
+        if (conn) {
+            try {
+                conn.end();
+            } catch (releaseError) {
+                console.error('Error releasing main connection:', releaseError.message);
+            }
+        }
+        if (suppliersConn) {
+            try {
+                suppliersConn.end();
+            } catch (releaseError) {
+                console.error('Error releasing suppliers connection:', releaseError.message);
+            }
+        }
     }
 });
 
@@ -849,10 +1312,14 @@ async function startServer() {
         generate_receipt,
         po_number
     } = req.body;
-    const conn = await pool.getConnection();
-    const suppliersConn = await suppliersPool.getConnection();
+    
+    let conn = null;
+    let suppliersConn = null;
 
     try {
+        conn = await pool.getConnection();
+        suppliersConn = await suppliersPool.getConnection();
+        
         await conn.beginTransaction();
 
         // Get the phone details
@@ -915,8 +1382,6 @@ async function startServer() {
         }
 
         await conn.commit();
-        conn.end();
-        suppliersConn.end();
 
         // Redirect with appropriate success message and receipt ID if available
         const redirectUrl = receiptId ? 
@@ -925,12 +1390,32 @@ async function startServer() {
         res.redirect(redirectUrl);
 
     } catch (err) {
-        await conn.rollback();
-        conn.end();
+        if (conn) {
+            try {
+                await conn.rollback();
+            } catch (rollbackError) {
+                console.error('Error rolling back transaction:', rollbackError.message);
+            }
+        }
         console.error('Transaction Error:', err);
         res.status(500).render('error', {
             error: 'Failed to update stock: ' + err.message
         });
+    } finally {
+        if (conn) {
+            try {
+                conn.end();
+            } catch (releaseError) {
+                console.error('Error releasing main connection:', releaseError.message);
+            }
+        }
+        if (suppliersConn) {
+            try {
+                suppliersConn.end();
+            } catch (releaseError) {
+                console.error('Error releasing suppliers connection:', releaseError.message);
+            }
+        }
     }
 });
 
@@ -968,9 +1453,11 @@ async function startServer() {
         notes,
         generate_receipt
     } = req.body;
-    const conn = await pool.getConnection();
+    
+    let conn = null;
 
     try {
+        conn = await pool.getConnection();
         await conn.beginTransaction();
 
         // Get the phone details
@@ -1027,7 +1514,6 @@ async function startServer() {
         }
 
         await conn.commit();
-        conn.end();
 
         // Redirect with appropriate success message and receipt ID if available
         const redirectUrl = receiptId ? 
@@ -1036,12 +1522,25 @@ async function startServer() {
         res.redirect(redirectUrl);
 
     } catch (err) {
-        await conn.rollback();
-        conn.end();
+        if (conn) {
+            try {
+                await conn.rollback();
+            } catch (rollbackError) {
+                console.error('Error rolling back sale transaction:', rollbackError.message);
+            }
+        }
         console.error('Transaction Error:', err);
         res.status(500).render('error', {
             error: 'Failed to record sale: ' + err.message
         });
+    } finally {
+        if (conn) {
+            try {
+                conn.end();
+            } catch (releaseError) {
+                console.error('Error releasing connection in sell route:', releaseError.message);
+            }
+        }
     }
 });
 
@@ -1610,11 +2109,30 @@ async function gracefulShutdown(signal) {
     console.log(`🛑 ${signal} received, shutting down gracefully...`);
     
     try {
+        // Stop pool monitoring
+        clearInterval(logPoolStatsInterval);
+        
+        // Shutdown security logger first to flush any remaining events
+        await securityLogger.shutdown();
+        
+        // Shutdown token invalidation service
+        await tokenInvalidationService.shutdown();
+        
         // Shutdown dynamic secret service
         await dynamicSecretService.shutdown();
         
         // Shutdown session management service
         sessionManagementService.shutdown();
+        
+        // Close all database pools
+        console.log('🔌 Closing database connections...');
+        await Promise.all([
+            pool.end(),
+            suppliersPool.end(),
+            authPool.end(),
+            securityPool.end()
+        ]);
+        console.log('✅ All database connections closed');
         
         console.log('✅ Graceful shutdown complete');
         process.exit(0);
@@ -1631,3 +2149,8 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 startServer();
 
 module.exports = app;
+
+        
+        // ===============================================
+        // ROUTES
+        // ===============================================

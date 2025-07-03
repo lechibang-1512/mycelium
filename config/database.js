@@ -8,7 +8,7 @@ module.exports = {
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME || 'master_specs_db',
-        connectionLimit: 5,
+        connectionLimit: 20,
         acquireTimeout: 60000,
         timeout: 60000,
         reconnect: true
@@ -19,7 +19,7 @@ module.exports = {
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME,
-        connectionLimit: 10,
+        connectionLimit: 25,
         acquireTimeout: 60000,
         timeout: 60000,
         reconnect: true,

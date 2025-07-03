@@ -9,8 +9,8 @@
 const crypto = require('crypto');
 
 class TokenInvalidationService {
-    constructor(authPool = null) {
-        this.authPool = authPool;
+    constructor(securityPool = null) {
+        this.securityPool = securityPool;
         this.invalidatedTokens = new Set(); // In-memory blacklist for immediate checking
         this.cleanupInterval = null;
         
@@ -46,8 +46,8 @@ class TokenInvalidationService {
             this.invalidatedTokens.add(hashedToken);
             
             // Store in database if available
-            if (this.authPool) {
-                const conn = await this.authPool.getConnection();
+            if (this.securityPool) {
+                const conn = await this.securityPool.getConnection();
                 await conn.query(
                     `INSERT INTO invalidated_tokens (token_hash, token_type, user_id, invalidated_at, expires_at, reason) 
                      VALUES (?, ?, ?, NOW(), FROM_UNIXTIME(?), ?) 
@@ -85,8 +85,8 @@ class TokenInvalidationService {
             }
             
             // Check database if available
-            if (this.authPool) {
-                const conn = await this.authPool.getConnection();
+            if (this.securityPool) {
+                const conn = await this.securityPool.getConnection();
                 const result = await conn.query(
                     'SELECT 1 FROM invalidated_tokens WHERE token_hash = ? AND expires_at > NOW() LIMIT 1',
                     [hashedToken]
@@ -115,8 +115,8 @@ class TokenInvalidationService {
      */
     async invalidateAllUserTokens(userId, reason = 'security_action') {
         try {
-            if (this.authPool) {
-                const conn = await this.authPool.getConnection();
+            if (this.securityPool) {
+                const conn = await this.securityPool.getConnection();
                 
                 // Get all active session tokens for user and invalidate them
                 // This would require tracking session tokens in database
@@ -146,8 +146,8 @@ class TokenInvalidationService {
      */
     async areUserTokensInvalidated(userId, tokenIssuedAt) {
         try {
-            if (this.authPool) {
-                const conn = await this.authPool.getConnection();
+            if (this.securityPool) {
+                const conn = await this.securityPool.getConnection();
                 const result = await conn.query(
                     'SELECT invalidated_at FROM user_token_invalidation WHERE user_id = ? AND invalidated_at > FROM_UNIXTIME(?)',
                     [userId, Math.floor(tokenIssuedAt / 1000)]
@@ -171,8 +171,8 @@ class TokenInvalidationService {
         try {
             let cleanedCount = 0;
             
-            if (this.authPool) {
-                const conn = await this.authPool.getConnection();
+            if (this.securityPool) {
+                const conn = await this.securityPool.getConnection();
                 
                 // Clean up expired tokens from database
                 const result = await conn.query('DELETE FROM invalidated_tokens WHERE expires_at < NOW()');
@@ -216,8 +216,8 @@ class TokenInvalidationService {
                 invalidatedUsers: 0
             };
             
-            if (this.authPool) {
-                const conn = await this.authPool.getConnection();
+            if (this.securityPool) {
+                const conn = await this.securityPool.getConnection();
                 
                 // Get total invalidated tokens
                 const totalResult = await conn.query('SELECT COUNT(*) as count FROM invalidated_tokens');
@@ -252,8 +252,8 @@ class TokenInvalidationService {
      */
     async initialize() {
         try {
-            if (this.authPool) {
-                const conn = await this.authPool.getConnection();
+            if (this.securityPool) {
+                const conn = await this.securityPool.getConnection();
                 
                 // Ensure the invalidated_tokens table exists
                 await conn.query(`
