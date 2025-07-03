@@ -210,7 +210,7 @@ async function startServer() {
         // Cookie parser middleware (required for CSRF)
         app.use(cookieParser());
 
-        // CSRF protection middleware
+        // CSRF protection middleware - generate tokens for all requests but only validate for state-changing ones
         const csrfProtection = csrf({ 
             cookie: {
                 key: '_csrf',
@@ -218,7 +218,8 @@ async function startServer() {
                 secure: process.env.NODE_ENV === 'production' || process.env.FORCE_HTTPS === 'true',
                 sameSite: 'strict'
             },
-            ignoreMethods: ['GET', 'HEAD', 'OPTIONS'],
+            // Remove ignoreMethods so tokens are generated for all requests
+            // We'll handle validation logic in the middleware below
             value: (req) => {
                 return req.body._csrf || 
                        req.query._csrf || 
@@ -228,53 +229,60 @@ async function startServer() {
             }
         });
 
-        // Apply CSRF protection to all state-changing requests
+        // Apply CSRF protection to all requests (but handle validation differently for GET vs POST)
         app.use((req, res, next) => {
-            // Skip CSRF for safe methods only
-            if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') {
-                return next();
-            }
-            // Apply CSRF protection to all POST, PUT, DELETE, PATCH requests
-            csrfProtection(req, res, next);
+            csrfProtection(req, res, (err) => {
+                if (err && err.code === 'EBADCSRFTOKEN') {
+                    // Only fail on validation errors for state-changing requests
+                    if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
+                        console.error('CSRF token validation failed for:', req.method, req.path);
+                        console.error('Request body _csrf:', req.body._csrf);
+                        console.error('Request headers csrf-token:', req.headers['csrf-token']);
+                        console.error('Request headers x-csrf-token:', req.headers['x-csrf-token']);
+                        
+                        if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+                            return res.status(403).json({ 
+                                error: 'Invalid CSRF token',
+                                code: 'CSRF_TOKEN_INVALID'
+                            });
+                        } else {
+                            return res.status(403).render('error', {
+                                error: 'Invalid CSRF token. Please refresh the page and try again.',
+                                title: 'Security Error',
+                                user: req.session?.user || null,
+                                isAuthenticated: !!req.session?.user,
+                                isAdmin: req.session?.user?.role === 'admin',
+                                isStaffOrAdmin: req.session?.user && (req.session.user.role === 'admin' || req.session.user.role === 'staff')
+                            });
+                        }
+                    } else {
+                        // For GET requests, ignore validation errors but still try to generate token
+                        try {
+                            res.locals.csrfToken = req.csrfToken();
+                        } catch (tokenErr) {
+                            res.locals.csrfToken = '';
+                        }
+                        next();
+                    }
+                } else if (err) {
+                    // Other errors
+                    res.locals.csrfToken = '';
+                    next(err);
+                } else {
+                    // Success - token generated and validated (if needed)
+                    try {
+                        res.locals.csrfToken = req.csrfToken();
+                    } catch (tokenErr) {
+                        res.locals.csrfToken = '';
+                    }
+                    next();
+                }
+            });
         });
 
         // CSRF token route
-        app.get('/csrf-token', csrfProtection, (req, res) => {
-            res.json({ csrfToken: req.csrfToken() });
-        });
-
-        // Set CSRF token in locals for all templates
-        app.use((req, res, next) => {
-            try {
-                res.locals.csrfToken = req.csrfToken();
-            } catch (err) {
-                res.locals.csrfToken = '';
-            }
-            next();
-        });
-
-        // CSRF error handling middleware
-        app.use((err, req, res, next) => {
-            if (err.code === 'EBADCSRFTOKEN') {
-                console.error('CSRF token validation failed for:', req.method, req.path);
-                
-                if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
-                    return res.status(403).json({ 
-                        error: 'Invalid CSRF token',
-                        code: 'CSRF_TOKEN_INVALID'
-                    });
-                } else {
-                    return res.status(403).render('error', {
-                        error: 'Invalid CSRF token. Please refresh the page and try again.',
-                        title: 'Security Error',
-                        user: req.session?.user || null,
-                        isAuthenticated: !!req.session?.user,
-                        isAdmin: req.session?.user?.role === 'admin',
-                        isStaffOrAdmin: req.session?.user && (req.session.user.role === 'admin' || req.session.user.role === 'staff')
-                    });
-                }
-            }
-            next(err);
+        app.get('/csrf-token', (req, res) => {
+            res.json({ csrfToken: res.locals.csrfToken || '' });
         });
 
         // Flash messages middleware

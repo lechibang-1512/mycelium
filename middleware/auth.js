@@ -69,23 +69,25 @@ const SessionSecurity = {
             }
 
             // Check if all user tokens are invalidated
-            const userTokensInvalidated = await this.tokenInvalidationService.areUserTokensInvalidated(
-                req.session.user.id, 
-                req.session.user.sessionStart
-            );
-            if (userTokensInvalidated) {
-                return { valid: false, reason: 'All user sessions invalidated' };
+            if (req.session.user && req.session.user.id && req.session.user.sessionStart) {
+                const userTokensInvalidated = await this.tokenInvalidationService.areUserTokensInvalidated(
+                    req.session.user.id, 
+                    req.session.user.sessionStart
+                );
+                if (userTokensInvalidated) {
+                    return { valid: false, reason: 'All user sessions invalidated' };
+                }
             }
         }
 
         // Check session expiration
-        if (req.session.user.sessionExpiry && Date.now() > req.session.user.sessionExpiry) {
+        if (req.session.user && req.session.user.sessionExpiry && Date.now() > req.session.user.sessionExpiry) {
             return { valid: false, reason: 'Session expired' };
         }
 
         // Check for idle timeout (30 minutes of inactivity)
         const idleTimeout = 30 * 60 * 1000; // 30 minutes
-        if (req.session.user.lastActivity && (Date.now() - req.session.user.lastActivity) > idleTimeout) {
+        if (req.session.user && req.session.user.lastActivity && (Date.now() - req.session.user.lastActivity) > idleTimeout) {
             return { valid: false, reason: 'Session idle timeout' };
         }
 
@@ -183,7 +185,7 @@ const SessionSecurity = {
         }
 
         // Only destroy session if user exists, otherwise just clear user data
-        if (req.session.user) {
+        if (req.session && req.session.user) {
             req.session.destroy();
         } else if (req.session) {
             // Clear any existing session data but don't destroy the session itself
