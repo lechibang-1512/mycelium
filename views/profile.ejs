@@ -51,6 +51,8 @@
                                 <div class="mb-3">
                                     <label for="newPassword" class="form-label">New Password</label>
                                     <input type="password" class="form-control" id="newPassword" name="newPassword">
+                                    <div id="password-strength-indicator"></div>
+                                    <small class="text-muted">Password must be at least 8 characters with uppercase, lowercase, number, and special character</small>
                                 </div>
                                 <div class="mb-3">
                                     <label for="confirmPassword" class="form-label">Confirm New Password</label>
@@ -67,6 +69,21 @@
         </div>
     </div>
 </div>
+
+<script src="/js/password-strength.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize password strength indicator for new password field
+    const newPasswordField = document.getElementById('newPassword');
+    if (newPasswordField) {
+        new PasswordStrengthIndicator('newPassword', 'password-strength-indicator', {
+            minLength: 8,
+            showSuggestions: true,
+            showStrengthBar: true
+        });
+    }
+});
+</script>
 
 <style>
 .avatar-circle {

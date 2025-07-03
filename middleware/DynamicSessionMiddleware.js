@@ -17,10 +17,19 @@ class DynamicSessionMiddleware {
             cookie: {
                 maxAge: 24 * 60 * 60 * 1000, // 24 hours
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
+                secure: process.env.NODE_ENV === 'production', // Force HTTPS in production
                 sameSite: 'strict'
             },
-            ...options
+            // Merge any additional options
+            ...options,
+            // Ensure cookie security is not overridden unless explicitly set
+            cookie: {
+                maxAge: 24 * 60 * 60 * 1000,
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                ...(options.cookie || {})
+            }
         };
         
         this.currentMiddleware = null;

@@ -1,0 +1,298 @@
+/**
+ * Password Security Validation Service
+ * 
+ * Provides comprehensive password validation, strength checking,
+ * and security policy enforcement.
+ */
+
+class PasswordValidator {
+    constructor() {
+        this.minLength = 8;
+        this.maxLength = 128;
+        this.requireUppercase = true;
+        this.requireLowercase = true;
+        this.requireNumbers = true;
+        this.requireSpecialChars = true;
+        this.maxConsecutiveChars = 3;
+        this.commonPasswords = [
+            'password', 'password123', '123456', '12345678', 'qwerty',
+            'abc123', 'password1', 'admin', 'administrator', 'root',
+            'guest', 'test', 'user', 'demo', '111111', '000000',
+            'welcome', 'login', 'pass', 'secret', 'mycelium'
+        ];
+    }
+
+    /**
+     * Validate password against security policies
+     * @param {string} password - The password to validate
+     * @param {string} username - The username (to check for similarity)
+     * @param {string} email - The email (to check for similarity)
+     * @returns {Object} Validation result with success status and details
+     */
+    validatePassword(password, username = '', email = '') {
+        const result = {
+            valid: true,
+            errors: [],
+            warnings: [],
+            strength: 0,
+            strengthText: 'Weak'
+        };
+
+        // Check if password exists
+        if (!password) {
+            result.valid = false;
+            result.errors.push('Password is required');
+            return result;
+        }
+
+        // Length validation
+        if (password.length < this.minLength) {
+            result.valid = false;
+            result.errors.push(`Password must be at least ${this.minLength} characters long`);
+        }
+
+        if (password.length > this.maxLength) {
+            result.valid = false;
+            result.errors.push(`Password must not exceed ${this.maxLength} characters`);
+        }
+
+        // Character requirements
+        if (this.requireUppercase && !/[A-Z]/.test(password)) {
+            result.valid = false;
+            result.errors.push('Password must contain at least one uppercase letter');
+        }
+
+        if (this.requireLowercase && !/[a-z]/.test(password)) {
+            result.valid = false;
+            result.errors.push('Password must contain at least one lowercase letter');
+        }
+
+        if (this.requireNumbers && !/\d/.test(password)) {
+            result.valid = false;
+            result.errors.push('Password must contain at least one number');
+        }
+
+        if (this.requireSpecialChars && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/.test(password)) {
+            result.valid = false;
+            result.errors.push('Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)');
+        }
+
+        // Check for consecutive characters
+        if (this.hasConsecutiveChars(password, this.maxConsecutiveChars)) {
+            result.warnings.push(`Avoid using more than ${this.maxConsecutiveChars} consecutive identical characters`);
+        }
+
+        // Check against common passwords
+        if (this.isCommonPassword(password)) {
+            result.valid = false;
+            result.errors.push('This password is too common. Please choose a more unique password');
+        }
+
+        // Check for username/email similarity
+        if (username && this.isSimilarToIdentifier(password, username)) {
+            result.valid = false;
+            result.errors.push('Password should not be similar to your username');
+        }
+
+        if (email && this.isSimilarToIdentifier(password, email.split('@')[0])) {
+            result.warnings.push('Consider using a password that is not similar to your email');
+        }
+
+        // Check for keyboard patterns
+        if (this.hasKeyboardPattern(password)) {
+            result.warnings.push('Avoid using keyboard patterns (like qwerty, asdf, 123456)');
+        }
+
+        // Calculate password strength
+        result.strength = this.calculateStrength(password);
+        result.strengthText = this.getStrengthText(result.strength);
+
+        // Add strength warnings
+        if (result.strength < 60) {
+            result.warnings.push('Consider using a stronger password for better security');
+        }
+
+        return result;
+    }
+
+    /**
+     * Check for consecutive characters
+     */
+    hasConsecutiveChars(password, maxConsecutive) {
+        let consecutive = 1;
+        for (let i = 1; i < password.length; i++) {
+            if (password[i] === password[i - 1]) {
+                consecutive++;
+                if (consecutive > maxConsecutive) {
+                    return true;
+                }
+            } else {
+                consecutive = 1;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if password is in common passwords list
+     */
+    isCommonPassword(password) {
+        const lowerPassword = password.toLowerCase();
+        return this.commonPasswords.includes(lowerPassword);
+    }
+
+    /**
+     * Check if password is similar to username or email
+     */
+    isSimilarToIdentifier(password, identifier) {
+        if (!identifier) return false;
+        
+        const lowerPassword = password.toLowerCase();
+        const lowerIdentifier = identifier.toLowerCase();
+        
+        // Direct match
+        if (lowerPassword === lowerIdentifier) return true;
+        
+        // Password contains identifier or vice versa
+        if (lowerPassword.includes(lowerIdentifier) || lowerIdentifier.includes(lowerPassword)) {
+            return true;
+        }
+        
+        // Reverse check
+        if (lowerPassword === lowerIdentifier.split('').reverse().join('')) return true;
+        
+        return false;
+    }
+
+    /**
+     * Check for keyboard patterns
+     */
+    hasKeyboardPattern(password) {
+        const patterns = [
+            'qwerty', 'qwertyuiop', 'asdf', 'asdfghjkl', 'zxcv', 'zxcvbnm',
+            '123456', '1234567890', 'abcdef', 'password', 'admin'
+        ];
+        
+        const lowerPassword = password.toLowerCase();
+        return patterns.some(pattern => lowerPassword.includes(pattern));
+    }
+
+    /**
+     * Calculate password strength score (0-100)
+     */
+    calculateStrength(password) {
+        let score = 0;
+
+        // Length scoring
+        if (password.length >= 8) score += 20;
+        if (password.length >= 12) score += 10;
+        if (password.length >= 16) score += 10;
+
+        // Character diversity
+        if (/[a-z]/.test(password)) score += 10;
+        if (/[A-Z]/.test(password)) score += 10;
+        if (/\d/.test(password)) score += 10;
+        if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/.test(password)) score += 15;
+
+        // Bonus for variety
+        const uniqueChars = new Set(password).size;
+        if (uniqueChars >= password.length * 0.7) score += 10;
+
+        // Penalty for patterns
+        if (this.hasKeyboardPattern(password)) score -= 15;
+        if (this.hasConsecutiveChars(password, 2)) score -= 10;
+
+        return Math.max(0, Math.min(100, score));
+    }
+
+    /**
+     * Get strength text description
+     */
+    getStrengthText(score) {
+        if (score >= 80) return 'Very Strong';
+        if (score >= 60) return 'Strong';
+        if (score >= 40) return 'Moderate';
+        if (score >= 20) return 'Weak';
+        return 'Very Weak';
+    }
+
+    /**
+     * Generate a secure password suggestion
+     */
+    generateSecurePassword(length = 12) {
+        const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+        const numbers = '0123456789';
+        const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+        
+        let password = '';
+        
+        // Ensure at least one character from each category
+        password += uppercase[Math.floor(Math.random() * uppercase.length)];
+        password += lowercase[Math.floor(Math.random() * lowercase.length)];
+        password += numbers[Math.floor(Math.random() * numbers.length)];
+        password += symbols[Math.floor(Math.random() * symbols.length)];
+        
+        // Fill the rest randomly
+        const allChars = uppercase + lowercase + numbers + symbols;
+        for (let i = password.length; i < length; i++) {
+            password += allChars[Math.floor(Math.random() * allChars.length)];
+        }
+        
+        // Shuffle the password
+        return password.split('').sort(() => Math.random() - 0.5).join('');
+    }
+
+    /**
+     * Validate password change request
+     */
+    validatePasswordChange(currentPassword, newPassword, confirmPassword, username = '', email = '') {
+        const result = {
+            valid: true,
+            errors: [],
+            warnings: []
+        };
+
+        // Check if all required fields are provided
+        if (!currentPassword) {
+            result.valid = false;
+            result.errors.push('Current password is required');
+        }
+
+        if (!newPassword) {
+            result.valid = false;
+            result.errors.push('New password is required');
+        }
+
+        if (!confirmPassword) {
+            result.valid = false;
+            result.errors.push('Password confirmation is required');
+        }
+
+        // Check if new passwords match
+        if (newPassword !== confirmPassword) {
+            result.valid = false;
+            result.errors.push('New password and confirmation do not match');
+        }
+
+        // Check if new password is different from current
+        if (currentPassword === newPassword) {
+            result.valid = false;
+            result.errors.push('New password must be different from current password');
+        }
+
+        // Validate new password strength
+        if (newPassword) {
+            const passwordValidation = this.validatePassword(newPassword, username, email);
+            if (!passwordValidation.valid) {
+                result.valid = false;
+                result.errors.push(...passwordValidation.errors);
+            }
+            result.warnings.push(...passwordValidation.warnings);
+        }
+
+        return result;
+    }
+}
+
+module.exports = PasswordValidator;

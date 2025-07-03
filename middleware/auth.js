@@ -46,9 +46,21 @@ const SessionSecurity = {
             return { valid: false, reason: 'Session expired' };
         }
 
+        // Check for idle timeout (30 minutes of inactivity)
+        const idleTimeout = 30 * 60 * 1000; // 30 minutes
+        if (req.session.user.lastActivity && (Date.now() - req.session.user.lastActivity) > idleTimeout) {
+            return { valid: false, reason: 'Session idle timeout' };
+        }
+
         // Check for session hijacking by validating user agent consistency
         if (req.session.userAgent && req.session.userAgent !== req.get('User-Agent')) {
             return { valid: false, reason: 'Session security violation - User agent mismatch' };
+        }
+
+        // Check for maximum session duration (24 hours for regular sessions, 30 days for "remember me")
+        const maxSessionDuration = req.session.cookie.maxAge || (24 * 60 * 60 * 1000);
+        if (req.session.user.sessionStart && (Date.now() - req.session.user.sessionStart) > maxSessionDuration) {
+            return { valid: false, reason: 'Maximum session duration exceeded' };
         }
 
         return { valid: true };

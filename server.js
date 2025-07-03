@@ -44,6 +44,22 @@ const { createDynamicSessionMiddleware } = require('./middleware/DynamicSessionM
 // Import security middleware
 const { sanitizeApiResponse, securityHeaders, preventSecretExposure } = require('./middleware/security');
 
+// Import rate limiting middleware
+const {
+    generalLimiter,
+    authLimiter,
+    passwordResetLimiter,
+    speedLimiter,
+    adminLimiter,
+    apiWriteLimiter
+} = require('./middleware/rateLimiting');
+
+// Import input validation middleware
+const InputValidator = require('./middleware/inputValidation');
+
+// Import password validation service
+const PasswordValidator = require('./services/PasswordValidator');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -129,15 +145,21 @@ async function startServer() {
 
         // Middleware
         app.use(express.static('public'));
-        app.use(express.json());
-        app.use(express.urlencoded({ extended: true }));
+        app.use(express.json({ limit: '10mb' }));
+        app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+        
+        // Apply rate limiting
+        app.use(generalLimiter);
+        app.use(speedLimiter);
         
         // Security middleware
         app.use(securityHeaders);
         app.use(preventSecretExposure);
         app.use(sanitizeApiResponse);
+        app.use(InputValidator.sanitizeText);
+        app.use(InputValidator.validateApiParams);
         
-        // Block access to sensitive files
+        // Block access to sensitive files with optimized regex patterns
         app.use((req, res, next) => {
             const sensitivePatterns = [
                 /\.session-secrets\.json$/,
@@ -145,10 +167,20 @@ async function startServer() {
                 /\/\.env$/,
                 /\/\.session-secrets\.json$/,
                 /\/secrets\//,
-                /\/config\/.*\.js$/
+                // Fixed: Non-backtracking pattern for config files
+                /^\/config\/[^\/]*\.js$/
             ];
             
             const path = req.path || req.url;
+            
+            // Limit path length to prevent ReDoS attacks
+            if (path.length > 1000) {
+                console.warn(`🚨 Blocked excessively long path: ${path.substring(0, 100)}... from IP: ${req.ip}`);
+                return res.status(403).json({
+                    error: 'Access denied',
+                    message: 'Invalid request path'
+                });
+            }
             
             for (const pattern of sensitivePatterns) {
                 if (pattern.test(path)) {
@@ -251,8 +283,24 @@ async function startServer() {
         app.set('view engine', 'ejs');
         app.set('views', path.join(__dirname, 'views'));
 
-        // Import routes
+        // Import routes with rate limiting
         const authRoutes = require('./routes/auth')(authPool, convertBigIntToNumber);
+        
+        // Apply rate limiting to auth routes
+        app.use('/auth/login', authLimiter);
+        app.use('/auth/forgot-password', passwordResetLimiter);
+        app.use('/login', authLimiter);
+        app.use('/forgot-password', passwordResetLimiter);
+        app.use('/admin', adminLimiter);
+        
+        // Apply API rate limiting to write operations
+        app.use((req, res, next) => {
+            if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+                return apiWriteLimiter(req, res, next);
+            }
+            next();
+        });
+        
         app.use('/', authRoutes);
 
         const analyticsRoutes = require('./routes/analytics')(pool, suppliersPool, convertBigIntToNumber);
@@ -645,7 +693,7 @@ async function startServer() {
 });
 
 // Create new supplier (POST)
-        app.post('/suppliers', isStaffOrAdmin, async (req, res) => {
+        app.post('/suppliers', isStaffOrAdmin, InputValidator.validateSupplierData, async (req, res) => {
     try {
         const {
             name,
@@ -679,7 +727,7 @@ async function startServer() {
 });
 
 // Update supplier (POST)
-        app.post('/suppliers/:id', async (req, res) => {
+        app.post('/suppliers/:id', InputValidator.validateSupplierData, async (req, res) => {
     try {
         const {
             name,
@@ -808,7 +856,7 @@ async function startServer() {
 });
 
 // Handle the form submission for receiving stock
-        app.post('/inventory/receive', isStaffOrAdmin, async (req, res) => {
+        app.post('/inventory/receive', isStaffOrAdmin, InputValidator.validateTransactionData, async (req, res) => {
     const {
         phone_id,
         supplier_id,
@@ -1240,7 +1288,7 @@ async function startServer() {
 });
 
 // Create new phone (POST)
-        app.post('/phones', isStaffOrAdmin, async (req, res) => {
+        app.post('/phones', isStaffOrAdmin, InputValidator.validatePhoneData, async (req, res) => {
     try {
         const conn = await pool.getConnection();
         
@@ -1274,7 +1322,7 @@ async function startServer() {
 });
 
 // Update phone (POST)
-        app.post('/phones/:id', isStaffOrAdmin, async (req, res) => {
+        app.post('/phones/:id', isStaffOrAdmin, InputValidator.validatePhoneData, async (req, res) => {
     try {
         const conn = await pool.getConnection();
 

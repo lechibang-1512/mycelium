@@ -26,7 +26,14 @@ const log = {
     success: (msg) => console.log(`${colors.green}✅ ${msg}${colors.reset}`),
     error: (msg) => console.log(`${colors.red}❌ ${msg}${colors.reset}`),
     warning: (msg) => console.log(`${colors.yellow}⚠️  ${msg}${colors.reset}`),
-    info: (msg) => console.log(`${colors.blue}ℹ️  ${msg}${colors.reset}`),
+    info: (msg) => {
+        // Sanitize message to prevent logging sensitive information
+        const sanitizedMsg = msg.replace(/SESSION_SECRET[=:]\s*[^\s]+/gi, 'SESSION_SECRET=[REDACTED]')
+                               .replace(/secret[=:]\s*[^\s]+/gi, 'secret=[REDACTED]')
+                               .replace(/password[=:]\s*[^\s]+/gi, 'password=[REDACTED]')
+                               .replace(/token[=:]\s*[^\s]+/gi, 'token=[REDACTED]');
+        console.log(`${colors.blue}ℹ️  ${sanitizedMsg}${colors.reset}`);
+    },
     header: (msg) => console.log(`${colors.bold}${colors.blue}${msg}${colors.reset}`)
 };
 

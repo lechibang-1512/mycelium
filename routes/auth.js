@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const { isAdmin, isAuthenticated, SessionSecurity } = require('../middleware/auth');
+const PasswordValidator = require('../services/PasswordValidator');
+
+// Initialize password validator
+const passwordValidator = new PasswordValidator();
 
 module.exports = (authPool, convertBigIntToNumber) => {
     // ===============================================
@@ -171,15 +175,28 @@ module.exports = (authPool, convertBigIntToNumber) => {
                     return res.redirect('/profile');
                 }
                 
-                // Check if new passwords match
-                if (newPassword !== confirmPassword) {
+                // Validate password change with enhanced security
+                const passwordValidation = passwordValidator.validatePasswordChange(
+                    currentPassword, 
+                    newPassword, 
+                    confirmPassword, 
+                    req.session.user.username, 
+                    email
+                );
+                
+                if (!passwordValidation.valid) {
                     conn.end();
-                    req.flash('error', 'New passwords do not match');
+                    req.flash('error', passwordValidation.errors.join('. '));
                     return res.redirect('/profile');
                 }
                 
+                // Show warnings if any
+                if (passwordValidation.warnings.length > 0) {
+                    req.flash('warning', passwordValidation.warnings.join('. '));
+                }
+                
                 // Hash and save new password
-                const hashedPassword = await bcrypt.hash(newPassword, 10);
+                const hashedPassword = await bcrypt.hash(newPassword, 12); // Increased from 10 to 12 for better security
                 await conn.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
             }
             
@@ -267,6 +284,19 @@ module.exports = (authPool, convertBigIntToNumber) => {
         try {
             const { username, password, fullName, email, role } = req.body;
             
+            // Validate password with enhanced security
+            const passwordValidation = passwordValidator.validatePassword(password, username, email);
+            
+            if (!passwordValidation.valid) {
+                req.flash('error', passwordValidation.errors.join('. '));
+                return res.redirect('/users/add');
+            }
+            
+            // Show warnings if any
+            if (passwordValidation.warnings.length > 0) {
+                req.flash('warning', passwordValidation.warnings.join('. '));
+            }
+            
             // Check if username already exists
             const conn = await authPool.getConnection();
             const existingUser = await conn.query('SELECT * FROM users WHERE username = ?', [username]);
@@ -277,8 +307,17 @@ module.exports = (authPool, convertBigIntToNumber) => {
                 return res.redirect('/users/add');
             }
             
-            // Hash password
-            const hashedPassword = await bcrypt.hash(password, 10);
+            // Check if email already exists
+            const existingEmail = await conn.query('SELECT * FROM users WHERE email = ?', [email]);
+            
+            if (existingEmail.length > 0) {
+                conn.end();
+                req.flash('error', 'Email address already exists');
+                return res.redirect('/users/add');
+            }
+            
+            // Hash password with increased rounds for better security
+            const hashedPassword = await bcrypt.hash(password, 12);
             
             // Create new user
             await conn.query(
@@ -288,6 +327,7 @@ module.exports = (authPool, convertBigIntToNumber) => {
             
             conn.end();
             
+            console.log(`✅ New user created: ${username} (${role}) by admin: ${req.session.user.username}`);
             res.redirect('/users?success=user_created');
         } catch (err) {
             console.error('Create user error:', err);
@@ -304,13 +344,37 @@ module.exports = (authPool, convertBigIntToNumber) => {
             
             const conn = await authPool.getConnection();
             
-            // If password is provided, update it
+            // If password is provided, validate and update it
             if (password && password.trim() !== '') {
-                const hashedPassword = await bcrypt.hash(password, 10);
+                // Get current user info for validation
+                const userResult = await conn.query('SELECT username, email FROM users WHERE id = ?', [userId]);
+                const currentUser = userResult[0];
+                
+                // Validate password with enhanced security
+                const passwordValidation = passwordValidator.validatePassword(
+                    password, 
+                    currentUser.username, 
+                    email || currentUser.email
+                );
+                
+                if (!passwordValidation.valid) {
+                    conn.end();
+                    req.flash('error', passwordValidation.errors.join('. '));
+                    return res.redirect(`/users/edit/${userId}`);
+                }
+                
+                // Show warnings if any
+                if (passwordValidation.warnings.length > 0) {
+                    req.flash('warning', passwordValidation.warnings.join('. '));
+                }
+                
+                const hashedPassword = await bcrypt.hash(password, 12); // Increased security
                 await conn.query(
                     'UPDATE users SET fullName = ?, email = ?, role = ?, password = ? WHERE id = ?',
                     [fullName, email, role, hashedPassword, userId]
                 );
+                
+                console.log(`🔄 Password updated for user ID: ${userId} by admin: ${req.session.user.username}`);
             } else {
                 // Otherwise just update the other fields
                 await conn.query(

@@ -27,8 +27,11 @@
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
                             <input type="password" class="form-control" id="password" name="password" <%= user ? '' : 'required' %>>
+                            <div id="password-strength-indicator"></div>
                             <% if (user) { %>
                                 <small class="text-muted">Leave blank to keep current password</small>
+                            <% } else { %>
+                                <small class="text-muted">Password must be at least 8 characters with uppercase, lowercase, number, and special character</small>
                             <% } %>
                         </div>
                         <div class="mb-3">
@@ -57,5 +60,20 @@
         </div>
     </div>
 </div>
+
+<script src="/js/password-strength.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize password strength indicator if password field exists and is not readonly
+    const passwordField = document.getElementById('password');
+    if (passwordField && !passwordField.readOnly) {
+        new PasswordStrengthIndicator('password', 'password-strength-indicator', {
+            minLength: 8,
+            showSuggestions: true,
+            showStrengthBar: true
+        });
+    }
+});
+</script>
 
 <%- include('./partials/footer') %>
