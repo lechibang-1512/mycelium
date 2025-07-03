@@ -64,36 +64,55 @@
                             <div class="form-text">Choose the phone model to restock</div>
                         </div>
 
-                        <!-- Phone Details Display -->
+                        <!-- Phone Details Display - Compact version -->
                         <div id="phone-details" class="mb-3" style="display: none;">
-                            <div class="phone-details-card">
-                                <h5>
-                                    <i class="fas fa-info-circle me-2 text-primary"></i>
-                                    Selected Phone Details
-                                </h5>
-                                <div class="phone-detail-item">
-                                    <span class="phone-detail-label">Manufacturer:</span>
-                                    <span class="phone-detail-value" id="phone-maker">-</span>
+                            <div class="card">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center" style="cursor: pointer;" onclick="togglePhoneDetails()">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-info-circle me-2 text-primary"></i>
+                                        Selected Phone: <span id="phone-title">-</span>
+                                    </h6>
+                                    <i class="fas fa-chevron-down" id="details-toggle-icon"></i>
                                 </div>
-                                <div class="phone-detail-item">
-                                    <span class="phone-detail-label">Current Stock:</span>
-                                    <span class="phone-detail-value inventory" id="phone-stock">-</span>
-                                </div>
-                                <div class="phone-detail-item">
-                                    <span class="phone-detail-label">Price:</span>
-                                    <span class="phone-detail-value price" id="phone-price">-</span>
-                                </div>
-                                <div class="phone-detail-item">
-                                    <span class="phone-detail-label">RAM:</span>
-                                    <span class="phone-detail-value specs" id="phone-ram">-</span>
-                                </div>
-                                <div class="phone-detail-item">
-                                    <span class="phone-detail-label">Storage:</span>
-                                    <span class="phone-detail-value specs" id="phone-rom">-</span>
-                                </div>
-                                <div class="phone-detail-item">
-                                    <span class="phone-detail-label">Color:</span>
-                                    <span class="phone-detail-value specs" id="phone-color">-</span>
+                                <div class="card-body p-2" id="phone-details-body">
+                                    <div class="row g-2">
+                                        <div class="col-6 col-md-4">
+                                            <div class="p-2 border rounded text-center h-100">
+                                                <div class="text-muted small">Manufacturer</div>
+                                                <div class="fw-bold" id="phone-maker">-</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <div class="p-2 border rounded text-center h-100">
+                                                <div class="text-muted small">Current Stock</div>
+                                                <div class="fw-bold inventory" id="phone-stock">-</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <div class="p-2 border rounded text-center h-100">
+                                                <div class="text-muted small">Price</div>
+                                                <div class="fw-bold price" id="phone-price">-</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <div class="p-2 border rounded text-center h-100">
+                                                <div class="text-muted small">RAM</div>
+                                                <div class="fw-bold specs" id="phone-ram">-</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <div class="p-2 border rounded text-center h-100">
+                                                <div class="text-muted small">Storage</div>
+                                                <div class="fw-bold specs" id="phone-rom">-</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <div class="p-2 border rounded text-center h-100">
+                                                <div class="text-muted small">Color</div>
+                                                <div class="fw-bold specs" id="phone-color">-</div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -127,51 +146,95 @@
                                 <div class="form-text">Cost per unit from supplier</div>
                             </div>
                             <div class="col-md-6">
-                                <label for="vat_rate" class="form-label">VAT Rate (%)</label>
-                                <select class="form-select" id="vat_rate" name="vat_rate">
-                                    <option value="0">0% (No VAT)</option>
-                                    <option value="0.05">5%</option>
-                                    <option value="0.10">10%</option>
-                                    <option value="0.15">15%</option>
-                                    <option value="0.20" selected>20% (Standard)</option>
-                                    <option value="0.25">25%</option>
-                                </select>
-                                <div class="form-text">VAT rate for this purchase</div>
+                                <div class="mb-2">
+                                    <label for="tax_type" class="form-label">Tax Type</label>
+                                    <select class="form-select" id="tax_type" name="tax_type">
+                                        <option value="vat" selected>VAT</option>
+                                        <option value="sales">Sales Tax</option>
+                                        <option value="none">No Tax</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="vat_rate_display" value="20" min="0" max="100" step="0.1" placeholder="20">
+                                    <span class="input-group-text">%</span>
+                                    <input type="hidden" id="vat_rate" name="vat_rate" value="0.20">
+                                </div>
+                                <div class="form-text">Tax rate for this purchase</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="import_duty" class="form-label">Import Duty (%)</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="import_duty" name="import_duty" value="0" min="0" max="100" step="0.01">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                <div class="form-text">Import duty percentage (if applicable)</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="other_fees" class="form-label">Other Fees</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="other_fees" name="other_fees" value="0" min="0" step="0.01">
+                                </div>
+                                <div class="form-text">Additional charges (shipping, handling, etc.)</div>
                             </div>
                         </div>
 
-                        <!-- Cost Summary -->
+                        <!-- Cost Summary - Compact version -->
                         <div id="cost-summary" class="mb-3" style="display: none;">
                             <div class="card border-info">
-                                <div class="card-header bg-light">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center" style="cursor: pointer;" onclick="toggleSummaryDetails()">
                                     <h6 class="mb-0">
                                         <i class="fas fa-calculator me-2 text-info"></i>
                                         Purchase Summary
                                     </h6>
+                                    <div>
+                                        <span class="me-2" id="total-summary">$0.00</span>
+                                        <i class="fas fa-chevron-down" id="summary-toggle-icon"></i>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <div class="row text-center">
-                                        <div class="col-md-3">
-                                            <div class="border-end">
-                                                <h6 class="text-muted mb-1">Subtotal</h6>
-                                                <h5 class="mb-0" id="subtotal-amount">$0.00</h5>
+                                <div class="card-body" id="summary-details">
+                                    <div class="row g-2">
+                                        <div class="col-6 col-md-3">
+                                            <div class="p-2 border rounded text-center">
+                                                <div class="text-muted small">Subtotal</div>
+                                                <div class="fw-bold" id="subtotal-amount">$0.00</div>
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
-                                            <div class="border-end">
-                                                <h6 class="text-muted mb-1">VAT</h6>
-                                                <h5 class="mb-0" id="vat-amount">$0.00</h5>
+                                        <div class="col-6 col-md-3">
+                                            <div class="p-2 border rounded text-center">
+                                                <div class="text-muted small" id="tax-label">VAT</div>
+                                                <div class="fw-bold" id="vat-amount">$0.00</div>
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
-                                            <div class="border-end">
-                                                <h6 class="text-muted mb-1">Total Cost</h6>
-                                                <h5 class="mb-0 text-primary" id="total-amount">$0.00</h5>
+                                        <div class="col-6 col-md-3">
+                                            <div class="p-2 border rounded text-center">
+                                                <div class="text-muted small">Import Duty</div>
+                                                <div class="fw-bold" id="duty-amount">$0.00</div>
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
-                                            <h6 class="text-muted mb-1">New Stock</h6>
-                                            <h5 class="mb-0 text-success" id="new-stock-level">0</h5>
+                                        <div class="col-6 col-md-3">
+                                            <div class="p-2 border rounded text-center">
+                                                <div class="text-muted small">Other Fees</div>
+                                                <div class="fw-bold" id="fees-amount">$0.00</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr class="my-2">
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <div class="p-2 border border-primary rounded text-center">
+                                                <div class="text-primary small">Total Cost</div>
+                                                <div class="fw-bold text-primary" id="total-amount">$0.00</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="p-2 border border-success rounded text-center">
+                                                <div class="text-success small">New Stock</div>
+                                                <div class="fw-bold text-success" id="new-stock-level">0</div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -227,6 +290,40 @@
     <script>
         let currentPhoneStock = 0;
         let currentPhonePrice = 0;
+        let isPhoneDetailsCollapsed = false;
+        let isSummaryCollapsed = false;
+
+        // Toggle phone details visibility
+        function togglePhoneDetails() {
+            const detailsBody = document.getElementById('phone-details-body');
+            const toggleIcon = document.getElementById('details-toggle-icon');
+            
+            if (isPhoneDetailsCollapsed) {
+                detailsBody.style.display = 'block';
+                toggleIcon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+            } else {
+                detailsBody.style.display = 'none';
+                toggleIcon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+            }
+            
+            isPhoneDetailsCollapsed = !isPhoneDetailsCollapsed;
+        }
+        
+        // Toggle summary details visibility
+        function toggleSummaryDetails() {
+            const summaryDetails = document.getElementById('summary-details');
+            const toggleIcon = document.getElementById('summary-toggle-icon');
+            
+            if (isSummaryCollapsed) {
+                summaryDetails.style.display = 'block';
+                toggleIcon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+            } else {
+                summaryDetails.style.display = 'none';
+                toggleIcon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+            }
+            
+            isSummaryCollapsed = !isSummaryCollapsed;
+        }
 
         // Phone selection handler to show details
         document.getElementById('phone_id').addEventListener('change', function() {
@@ -241,12 +338,14 @@
                 const color = selectedOption.getAttribute('data-color');
                 const stock = selectedOption.getAttribute('data-stock');
                 const maker = selectedOption.getAttribute('data-maker');
+                const name = selectedOption.textContent;
                 
                 // Store current phone data
                 currentPhoneStock = parseInt(stock) || 0;
                 currentPhonePrice = parseFloat(price) || 0;
                 
                 // Update display elements
+                document.getElementById('phone-title').textContent = name;
                 document.getElementById('phone-maker').textContent = maker;
                 document.getElementById('phone-stock').textContent = stock;
                 document.getElementById('phone-price').textContent = price !== 'N/A' ? `$${price}` : 'N/A';
@@ -272,26 +371,56 @@
             }
         });
 
+        // Tax type change handler
+        document.getElementById('tax_type').addEventListener('change', function() {
+            const taxLabel = document.getElementById('tax-label');
+            if (this.value === 'vat') {
+                taxLabel.textContent = 'VAT';
+            } else if (this.value === 'sales') {
+                taxLabel.textContent = 'Sales Tax';
+            } else {
+                taxLabel.textContent = 'Tax';
+            }
+            updateFinancialSummary();
+        });
+
+        // No VAT rate preset handler needed anymore
+
         // Update financial summary when inputs change
-        ['quantity', 'unit_cost', 'vat_rate'].forEach(fieldId => {
+        ['quantity', 'unit_cost', 'import_duty', 'other_fees'].forEach(fieldId => {
             document.getElementById(fieldId).addEventListener('input', updateFinancialSummary);
+        });
+        
+        // Handle tax rate display conversion
+        document.getElementById('vat_rate_display').addEventListener('input', function() {
+            const displayValue = parseFloat(this.value) || 0;
+            const decimalValue = (displayValue / 100).toFixed(2);
+            document.getElementById('vat_rate').value = decimalValue;
+            updateFinancialSummary();
         });
 
         function updateFinancialSummary() {
             const quantity = parseInt(document.getElementById('quantity').value) || 0;
             const unitCost = parseFloat(document.getElementById('unit_cost').value) || 0;
             const vatRate = parseFloat(document.getElementById('vat_rate').value) || 0;
+            const importDuty = parseFloat(document.getElementById('import_duty').value) / 100 || 0;
+            const otherFees = parseFloat(document.getElementById('other_fees').value) || 0;
+            const taxType = document.getElementById('tax_type').value;
             
             if (quantity > 0 && unitCost > 0) {
                 const subtotal = quantity * unitCost;
-                const vatAmount = subtotal * vatRate;
-                const total = subtotal + vatAmount;
+                const vatAmount = taxType !== 'none' ? subtotal * vatRate : 0;
+                const dutyAmount = subtotal * importDuty;
+                const total = subtotal + vatAmount + dutyAmount + otherFees;
                 const newStockLevel = currentPhoneStock + quantity;
                 
                 // Update display
                 document.getElementById('subtotal-amount').textContent = `$${subtotal.toFixed(2)}`;
                 document.getElementById('vat-amount').textContent = `$${vatAmount.toFixed(2)}`;
+                document.getElementById('duty-amount').textContent = `$${dutyAmount.toFixed(2)}`;
+                document.getElementById('fees-amount').textContent = `$${otherFees.toFixed(2)}`;
                 document.getElementById('total-amount').textContent = `$${total.toFixed(2)}`;
+                document.getElementById('total-summary').textContent = `$${total.toFixed(2)}`;
                 document.getElementById('new-stock-level').textContent = newStockLevel;
                 
                 // Show summary

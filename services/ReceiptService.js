@@ -370,9 +370,19 @@ class ReceiptService {
         if (result.length === 0) return null;
         
         const receiptRecord = result[0];
+        
+        // Handle the receipt_data based on its type
+        let parsedData;
+        if (typeof receiptRecord.receipt_data === 'string') {
+            parsedData = JSON.parse(receiptRecord.receipt_data);
+        } else {
+            // It's already an object
+            parsedData = receiptRecord.receipt_data;
+        }
+        
         return {
             ...receiptRecord,
-            receipt_data: JSON.parse(receiptRecord.receipt_data)
+            receipt_data: parsedData
         };
     }
 }
