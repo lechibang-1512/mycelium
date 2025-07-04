@@ -9,7 +9,7 @@ const path = require('path');
 const dbs = [
   { name: 'master_specs_db', config: { host: process.env.DB_HOST || '127.0.0.1', user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME || 'master_specs_db' } },
   { name: 'suppliers_db', config: { host: process.env.SUPPLIERS_DB_HOST || '127.0.0.1', user: process.env.SUPPLIERS_DB_USER, password: process.env.SUPPLIERS_DB_PASSWORD, database: process.env.SUPPLIERS_DB_NAME || 'suppliers_db' } },
-  { name: 'users_db', config: { host: process.env.AUTH_DB_HOST || '127.0.0.1', user: process.env.AUTH_DB_USER, password: process.env.AUTH_DB_PASSWORD, database: process.env.AUTH_DB_NAME || 'users_db' } }
+  { name: 'security_db', config: { host: process.env.AUTH_DB_HOST || '127.0.0.1', user: process.env.AUTH_DB_USER, password: process.env.AUTH_DB_PASSWORD, database: process.env.AUTH_DB_NAME || 'security_db' } }
 ];
 const SQL_DIR = path.join(__dirname, 'sql');
 
@@ -89,12 +89,63 @@ async function run() {
         try { await fs.access(SQL_DIR); } catch (error) { await fs.mkdir(SQL_DIR); }
     }
 
-    function dumpDatabaseSchemas() {
-      // ... (This function remains the same as before)
+    async function dumpDatabaseSchemas() {
+        await ensureSqlDirExists();
+        console.log('\n--- Dumping Database Schemas ---');
+        
+        for (const db of dbs) {
+            console.log(`\nProcessing ${db.name}...`);
+            
+            const outputFile = path.join(SQL_DIR, `${db.name}-schema.sql`);
+            const { host, user, password, database } = db.config;
+            
+            // Build mariadb-dump command (MariaDB equivalent of mysqldump)
+            let command = `mariadb-dump -h ${host} -u ${user}`;
+            if (password) {
+                command += ` -p${password}`;
+            }
+            command += ` --no-data --routines --triggers ${database} > ${outputFile}`;
+            
+            try {
+                await new Promise((resolve, reject) => {
+                    exec(command, (error, stdout, stderr) => {
+                        if (error) {
+                            console.error(`  ✗ Failed to dump ${db.name}: ${error.message}`);
+                            reject(error);
+                        } else {
+                            console.log(`  ✓ Schema dumped to: ${outputFile}`);
+                            resolve();
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error(`  ✗ Error dumping ${db.name}:`, error.message);
+                console.error(`  Please check your database connection settings for ${db.name}`);
+            }
+        }
+        
+        console.log('\nSchema dump process completed.\n');
     }
 
     async function getAvailableSchemas() {
-      // ... (This function remains the same as before)
+        await ensureSqlDirExists();
+        
+        try {
+            const files = await fs.readdir(SQL_DIR);
+            const schemaFiles = files
+                .filter(file => file.endsWith('-schema.sql'))
+                .map(file => file.replace('-schema.sql', ''));
+            
+            if (schemaFiles.length === 0) {
+                console.log('\nNo schema files found in the sql directory.');
+                console.log('Please run "Dump Database Schemas" first to generate schema files.\n');
+            }
+            
+            return schemaFiles;
+        } catch (error) {
+            console.error('Error reading SQL directory:', error.message);
+            return [];
+        }
     }
 
     async function analyzeSchema(schemaName) {
