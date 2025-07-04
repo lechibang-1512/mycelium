@@ -1,6 +1,6 @@
 # Mycelium Inventory Management System
 
-A secure, multi-database inventory management system built with Node.js, Express, and MySQL. Features advanced session security, user management, supplier tracking, and comprehensive analytics.
+A secure, multi-database inventory management system built with Node.js, Express, and MariaDB. Features advanced session security, user management, supplier tracking, and comprehensive analytics.
 
 ## 🚀 Features
 
