@@ -225,9 +225,20 @@ class NotificationManager {
         
         if (urlParams.get('error')) {
             const errorType = urlParams.get('error');
+            const reason = urlParams.get('reason');
             let message = 'An error occurred.';
             
             switch(errorType) {
+                case 'csrf_invalid':
+                    if (reason === 'token_mismatch') {
+                        message = 'Security token expired. The page will refresh automatically.';
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 3000);
+                    } else {
+                        message = 'Security token invalid. Please refresh the page and try again.';
+                    }
+                    break;
                 case 'login_failed':
                     message = 'Login failed. Please check your credentials.';
                     break;
@@ -243,7 +254,7 @@ class NotificationManager {
                 default:
                     message = urlParams.get('error');
             }
-            this.showError(message);
+            this.showError(message, errorType === 'csrf_invalid' ? 8000 : 7000);
         }
         
         if (urlParams.get('warning')) {
@@ -286,5 +297,10 @@ window.showInfo = function(message, duration = 5000) {
 };
 
 window.showConfirm = function(title, message, onConfirm, onCancel = null) {
+    return window.notificationManager.showConfirmDialog(title, message, onConfirm, onCancel);
+};
+
+// Backward compatibility alias
+window.confirmDialog = function(title, message, onConfirm, onCancel = null) {
     return window.notificationManager.showConfirmDialog(title, message, onConfirm, onCancel);
 };

@@ -48,7 +48,7 @@
                             <select class="form-select" id="phone_id" name="phone_id" required>
                                 <option value="" disabled selected>Select a phone to sell...</option>
                                 <% phones.forEach(phone => { %>
-                                    <option value="<%= phone.id %>"
+                                    <option value="<%= phone.product_id %>"
                                             data-price="<%= phone.device_price || 'N/A' %>"
                                             data-ram="<%= phone.ram || 'N/A' %>"
                                             data-rom="<%= phone.rom || 'N/A' %>"

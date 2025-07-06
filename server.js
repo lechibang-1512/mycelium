@@ -203,7 +203,10 @@ async function startServer() {
             next();
         });
         
-        // Use dynamic session middleware instead of static session
+        // Cookie parser middleware (required for both session and CSRF)
+        app.use(cookieParser());
+        
+        // Use dynamic session middleware
         app.use(dynamicSessionMiddleware.getMiddleware());
 
         
@@ -211,30 +214,68 @@ async function startServer() {
         // CSRF PROTECTION - Prevents Cross-Site Request Forgery (CWE-352)
         // ================================================================
 
-        // Cookie parser middleware (required for CSRF token storage)
-        app.use(cookieParser());
-
-        // CSRF protection middleware - applied immediately after cookieParser
-        app.use(csrf({ cookie: true }));
+        // CSRF protection middleware with session-based tokens
+        app.use(csrf({ 
+            cookie: {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict'
+            },
+            // Add ignore methods for certain safe operations
+            ignoreMethods: ['GET', 'HEAD', 'OPTIONS'],
+            // Use a more lenient error handling for session-related issues
+            value: (req) => {
+                // Try multiple places to find CSRF token
+                return req.body._csrf || 
+                       req.query._csrf || 
+                       req.headers['csrf-token'] ||
+                       req.headers['xsrf-token'] ||
+                       req.headers['x-csrf-token'] ||
+                       req.headers['x-xsrf-token'];
+            }
+        }));
 
         // Make CSRF token available to all views
         app.use((req, res, next) => {
             try {
                 res.locals.csrfToken = req.csrfToken();
             } catch (err) {
-                console.error('CSRF token generation error:', err);
-                res.locals.csrfToken = '';
+                console.error('CSRF token generation error:', err.message);
+                
+                // If this is a session-related error, try to regenerate session and retry
+                if (err.message.includes('session') || err.message.includes('secret')) {
+                    console.log('🔄 Attempting to regenerate session for CSRF token generation...');
+                    
+                    // Regenerate session if possible
+                    if (req.session && typeof req.session.regenerate === 'function') {
+                        req.session.regenerate((regenerateErr) => {
+                            if (!regenerateErr) {
+                                try {
+                                    res.locals.csrfToken = req.csrfToken();
+                                    console.log('✅ CSRF token generated after session regeneration');
+                                } catch (retryErr) {
+                                    console.error('CSRF token retry failed after regeneration:', retryErr.message);
+                                    res.locals.csrfToken = '';
+                                }
+                            } else {
+                                console.error('Session regeneration failed:', regenerateErr.message);
+                                res.locals.csrfToken = '';
+                            }
+                            next();
+                        });
+                        return; // Exit early to prevent double next() call
+                    }
+                }
+                
+                // Fallback: try once more without session regeneration
+                try {
+                    res.locals.csrfToken = req.csrfToken();
+                } catch (retryErr) {
+                    console.error('CSRF token retry failed:', retryErr.message);
+                    res.locals.csrfToken = '';
+                }
             }
             next();
-        });
-
-        // CSRF error handler
-        app.use((err, req, res, next) => {
-            if (err.code === 'EBADCSRFTOKEN') {
-                res.status(403).send('Invalid CSRF token');
-            } else {
-                next(err);
-            }
         });
 
         // CSRF token route
@@ -1032,7 +1073,7 @@ async function startServer() {
 });
 
 // Handle the form submission for selling stock
-        app.post('/inventory/sell', isStaffOrAdmin, async (req, res) => {
+        app.post('/inventory/sell', isStaffOrAdmin, InputValidator.validateTransactionData, async (req, res) => {
     const {
         phone_id,
         quantity,
@@ -1449,14 +1490,56 @@ async function startServer() {
         app.post('/phones/:id/delete', isStaffOrAdmin, async (req, res) => {
     try {
         const conn = await pool.getConnection();
-        await conn.query('DELETE FROM specs_db WHERE product_id = ?', [req.params.id]);
-        conn.end();
-
-        res.redirect('/?success=deleted');
+        
+        try {
+            await conn.beginTransaction();
+            
+            // Get phone details before deletion for logging
+            const phoneResult = await conn.query('SELECT device_name, device_maker FROM specs_db WHERE product_id = ?', [req.params.id]);
+            if (phoneResult.length === 0) {
+                await conn.rollback();
+                conn.end();
+                return res.status(404).render('error', {
+                    error: 'Phone not found'
+                });
+            }
+            
+            const phone = convertBigIntToNumber(phoneResult[0]);
+            
+            // First, delete all inventory log records for this phone
+            const deleteInventoryLogsResult = await conn.query('DELETE FROM inventory_log WHERE phone_id = ?', [req.params.id]);
+            const deletedLogCount = deleteInventoryLogsResult.affectedRows || 0;
+            
+            // Then delete the phone from specs_db
+            const deletePhoneResult = await conn.query('DELETE FROM specs_db WHERE product_id = ?', [req.params.id]);
+            const deletedPhoneCount = deletePhoneResult.affectedRows || 0;
+            
+            await conn.commit();
+            conn.end();
+            
+            console.log(`Successfully deleted phone: ${phone.device_maker} ${phone.device_name} (ID: ${req.params.id})`);
+            console.log(`Deleted ${deletedLogCount} inventory log records and ${deletedPhoneCount} phone record`);
+            
+            res.redirect('/?success=deleted');
+        } catch (transactionErr) {
+            await conn.rollback();
+            conn.end();
+            throw transactionErr;
+        }
     } catch (err) {
-        console.error('Database error:', err);
+        console.error('Database error during phone deletion:', err);
+        
+        // Provide more specific error messages
+        let errorMessage = 'Failed to delete phone';
+        if (err.code === 'ER_ROW_IS_REFERENCED_2') {
+            errorMessage = 'Cannot delete phone: it has associated inventory records';
+        } else if (err.code === 'ER_NO_REFERENCED_ROW_2') {
+            errorMessage = 'Cannot delete phone: foreign key constraint error';
+        }
+        
         res.status(500).render('error', {
-            error: 'Failed to delete phone'
+            error: errorMessage,
+            details: process.env.NODE_ENV === 'development' ? err.message : undefined
         });
     }
 });
@@ -1660,6 +1743,35 @@ async function startServer() {
                     error: 'Failed to load receipt: ' + err.message
                 });
             }
+        });
+
+        // ================================================================
+        // CSRF ERROR HANDLER - Must come after all routes
+        // ================================================================
+        app.use((err, req, res, next) => {
+            if (err.code === 'EBADCSRFTOKEN') {
+                console.warn(`🚨 CSRF token validation failed for ${req.method} ${req.path} from IP: ${req.ip}`);
+                console.warn(`   Request body keys: ${Object.keys(req.body).join(', ')}`);
+                console.warn(`   CSRF token in body: ${req.body._csrf ? 'Present' : 'Missing'}`);
+                console.warn(`   Session ID: ${req.sessionID ? req.sessionID.substring(0, 8) + '...' : 'None'}`);
+                
+                // If it's an AJAX request, return JSON
+                if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+                    return res.status(403).json({
+                        error: 'Invalid CSRF token',
+                        message: 'Your session has expired. Please refresh the page and try again.',
+                        code: 'CSRF_INVALID'
+                    });
+                }
+                
+                // For regular requests, redirect to the same page with error
+                const redirectUrl = req.get('Referer') || '/dashboard';
+                const separator = redirectUrl.includes('?') ? '&' : '?';
+                return res.redirect(`${redirectUrl}${separator}error=csrf_invalid&reason=token_mismatch`);
+            }
+            
+            // Pass other errors to the next error handler
+            next(err);
         });
 
         // Start server

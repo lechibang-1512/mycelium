@@ -140,10 +140,13 @@ class DynamicSessionMiddleware {
      */
     migrateSessionToCurrentSecret(req) {
         if (req.session && req.session.user) {
-            // Force session save with current secret on next request
-            req.session.regenerate((err) => {
+            // Instead of regenerating, just save the session with current secret
+            // This is less disruptive than regenerate() which can break CSRF tokens
+            req.session.save((err) => {
                 if (!err) {
-                    console.log('🔄 Session migrated to current secret');
+                    console.log('🔄 Session saved with current secret');
+                } else {
+                    console.error('Failed to save session with current secret:', err.message);
                 }
             });
         }
