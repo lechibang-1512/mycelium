@@ -51,13 +51,13 @@
                                 <option value="" disabled selected>Select a phone...</option>
                                 <% phones.forEach(phone => { %>
                                     <option value="<%= phone.id %>" 
-                                            data-price="<%= phone.sm_price || 'N/A' %>"
+                                            data-price="<%= phone.device_price || 'N/A' %>"
                                             data-ram="<%= phone.ram || 'N/A' %>"
                                             data-rom="<%= phone.rom || 'N/A' %>"
                                             data-color="<%= phone.color || 'N/A' %>"
-                                            data-stock="<%= phone.sm_inventory || 0 %>"
-                                            data-maker="<%= phone.sm_maker || 'N/A' %>">
-                                        <%= phone.sm_name %>
+                                            data-stock="<%= phone.device_inventory || 0 %>"
+                                            data-maker="<%= phone.device_maker || 'N/A' %>">
+                                        <%= phone.device_name %>
                                     </option>
                                 <% }); %>
                             </select>

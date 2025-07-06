@@ -28,12 +28,12 @@
     </div>
 
     <div class="container my-4">
-        <a href="<%= action === 'edit' ? '/phone/' + phone.id : '/' %>" class="btn btn-outline-primary mb-4">
+        <a href="<%= action === 'edit' ? '/phone/' + phone.product_id : '/' %>" class="btn btn-outline-primary mb-4">
             <i class="fas fa-arrow-left me-2"></i>
             <%= action === 'edit' ? 'Back to Phone Details' : 'Back to Phone List' %>
         </a>
 
-        <form method="POST" action="<%= action === 'add' ? '/phones' : '/phones/' + phone.id %>">
+        <form method="POST" action="<%= action === 'add' ? '/phones' : '/phones/' + phone.product_id %>">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <!-- Basic Information -->
             <div class="form-section mb-5">
@@ -43,20 +43,20 @@
                 </h4>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="sm_name" class="form-label">
+                        <label for="device_name" class="form-label">
                             <i class="fas fa-mobile-alt me-1"></i>
                             Phone Name *
                         </label>
-                        <input type="text" class="form-control" id="sm_name" name="sm_name" 
-                               value="<%= phone ? phone.sm_name : '' %>" required>
+                        <input type="text" class="form-control" id="device_name" name="device_name" 
+                               value="<%= phone ? phone.device_name : '' %>" required>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="sm_maker" class="form-label">
+                        <label for="device_maker" class="form-label">
                             <i class="fas fa-industry me-1"></i>
                             Manufacturer *
                         </label>
-                        <input type="text" class="form-control" id="sm_maker" name="sm_maker" 
-                               value="<%= phone ? phone.sm_maker : '' %>" required>
+                        <input type="text" class="form-control" id="device_maker" name="device_maker" 
+                               value="<%= phone ? phone.device_maker : '' %>" required>
                     </div>
                 </div>
                 <div class="row">
@@ -65,17 +65,17 @@
                             <i class="fas fa-dollar-sign me-1"></i>
                             Price
                         </label>
-                        <input type="number" class="form-control" id="sm_price" name="sm_price" 
-                               step="0.01" min="0" value="<%= phone ? phone.sm_price : '' %>" placeholder="0.00">
+                        <input type="number" class="form-control" id="device_price" name="device_price" 
+                               step="0.01" min="0" value="<%= phone ? phone.device_price : '' %>" placeholder="0.00">
                         <div class="form-text">Leave empty if price is unknown</div>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label for="sm_inventory" class="form-label">
+                        <label for="device_inventory" class="form-label">
                             <i class="fas fa-box me-1"></i>
                             Inventory
                         </label>
-                        <input type="number" class="form-control" id="sm_inventory" name="sm_inventory" 
-                               min="0" value="<%= phone ? phone.sm_inventory : 0 %>">
+                        <input type="number" class="form-control" id="device_inventory" name="device_inventory" 
+                               min="0" value="<%= phone ? phone.device_inventory : 0 %>">
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="color" class="form-label">
@@ -499,13 +499,13 @@
     <script>
         // Form validation
         document.querySelector('form').addEventListener('submit', function(e) {
-            const name = document.getElementById('sm_name').value.trim();
+            const name = document.getElementById('device_name').value.trim();
             const maker = document.getElementById('sm_maker').value.trim();
             
             if (!name) {
                 e.preventDefault();
                 showWarning('Phone name is required');
-                document.getElementById('sm_name').focus();
+                document.getElementById('device_name').focus();
                 return;
             }
             

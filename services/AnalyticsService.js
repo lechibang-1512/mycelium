@@ -94,9 +94,9 @@ class AnalyticsService {
      */
     async getRevenueData(conn, period) {
         const query = `
-            SELECT COALESCE(SUM(ps.sm_price * ABS(il.quantity_changed)), 0) as total_revenue
+            SELECT COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as total_revenue
             FROM inventory_log il
-            JOIN phone_specs ps ON il.phone_id = ps.id
+            JOIN specs_db ps ON il.phone_id = ps.product_id
             WHERE il.transaction_type = 'outgoing' 
             AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
         `;
@@ -122,7 +122,7 @@ class AnalyticsService {
      * Get total products count
      */
     async getProductsData(conn) {
-        const query = `SELECT COUNT(*) as total FROM phone_specs`;
+        const query = `SELECT COUNT(*) as total FROM specs_db`;
         const result = await conn.query(query);
         return this.convertBigIntToNumber(result[0]);
     }
@@ -132,10 +132,10 @@ class AnalyticsService {
      */
     async getLowStockData(conn) {
         const query = `
-            SELECT id, sm_name, sm_maker, sm_inventory, sm_price 
-            FROM phone_specs 
-            WHERE sm_inventory <= ? 
-            ORDER BY sm_inventory ASC
+            SELECT product_id, device_name, device_maker, device_inventory, device_price 
+            FROM specs_db 
+            WHERE device_inventory <= ? 
+            ORDER BY device_inventory ASC
         `;
         const result = await conn.query(query, [this.config.DEFAULTS.LOW_STOCK_THRESHOLD]);
         return this.convertBigIntToNumber(result);
@@ -148,10 +148,10 @@ class AnalyticsService {
         const query = `
             SELECT 
                 DATE_FORMAT(il.transaction_date, '%Y-%m-%d') as sale_date,
-                COALESCE(SUM(ps.sm_price * ABS(il.quantity_changed)), 0) as daily_revenue,
+                COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as daily_revenue,
                 COALESCE(SUM(ABS(il.quantity_changed)), 0) as daily_units
             FROM inventory_log il
-            JOIN phone_specs ps ON il.phone_id = ps.id
+            JOIN specs_db ps ON il.phone_id = ps.product_id
             WHERE il.transaction_type = 'outgoing' 
             AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
             GROUP BY DATE(il.transaction_date)
@@ -167,13 +167,13 @@ class AnalyticsService {
     async getTopProductsData(conn, period) {
         const query = `
             SELECT 
-                ps.id, ps.sm_name, ps.sm_maker, ps.sm_price, ps.sm_inventory,
+                ps.product_id, ps.device_name, ps.device_maker, ps.device_price, ps.device_inventory,
                 COALESCE(SUM(ABS(il.quantity_changed)), 0) as total_sold,
-                COALESCE(SUM(ps.sm_price * ABS(il.quantity_changed)), 0) as revenue
-            FROM phone_specs ps
-            LEFT JOIN inventory_log il ON ps.id = il.phone_id AND il.transaction_type = 'outgoing'
+                COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as revenue
+            FROM specs_db ps
+            LEFT JOIN inventory_log il ON ps.product_id = il.phone_id AND il.transaction_type = 'outgoing'
             AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-            GROUP BY ps.id, ps.sm_name, ps.sm_maker, ps.sm_price, ps.sm_inventory
+            GROUP BY ps.product_id, ps.device_name, ps.device_maker, ps.device_price, ps.device_inventory
             ORDER BY total_sold DESC
             LIMIT ?
         `;
@@ -187,10 +187,10 @@ class AnalyticsService {
     async getInventoryStatusData(conn) {
         const query = `
             SELECT 
-                SUM(CASE WHEN sm_inventory > 5 THEN 1 ELSE 0 END) as in_stock,
-                SUM(CASE WHEN sm_inventory > 0 AND sm_inventory <= 5 THEN 1 ELSE 0 END) as low_stock,
-                SUM(CASE WHEN sm_inventory = 0 THEN 1 ELSE 0 END) as out_of_stock
-            FROM phone_specs
+                SUM(CASE WHEN device_inventory > 5 THEN 1 ELSE 0 END) as in_stock,
+                SUM(CASE WHEN device_inventory > 0 AND device_inventory <= 5 THEN 1 ELSE 0 END) as low_stock,
+                SUM(CASE WHEN device_inventory = 0 THEN 1 ELSE 0 END) as out_of_stock
+            FROM specs_db
         `;
         const result = await conn.query(query);
         return this.convertBigIntToNumber(result[0]);
@@ -222,10 +222,10 @@ class AnalyticsService {
     async getPreviousPeriodData(conn, period) {
         const query = `
             SELECT 
-                COALESCE(SUM(ps.sm_price * ABS(il.quantity_changed)), 0) as previous_revenue,
+                COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as previous_revenue,
                 COALESCE(SUM(ABS(il.quantity_changed)), 0) as previous_units
             FROM inventory_log il
-            JOIN phone_specs ps ON il.phone_id = ps.id
+            JOIN specs_db ps ON il.phone_id = ps.product_id
             WHERE il.transaction_type = 'outgoing' 
             AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
             AND il.transaction_date < DATE_SUB(NOW(), INTERVAL ? DAY)
@@ -245,11 +245,11 @@ class AnalyticsService {
                 il.notes,
                 il.transaction_date,
                 DATE_FORMAT(il.transaction_date, '%M %d, %Y at %h:%i %p') as formatted_date,
-                ps.sm_name, 
-                ps.sm_maker, 
-                ps.sm_price
+                ps.device_name, 
+                ps.device_maker, 
+                ps.device_price
             FROM inventory_log il
-            JOIN phone_specs ps ON il.phone_id = ps.id
+            JOIN specs_db ps ON il.phone_id = ps.product_id
             ORDER BY il.transaction_date DESC
             LIMIT ?
         `;
@@ -271,10 +271,10 @@ class AnalyticsService {
                     il.supplier_id,
                     SUM(il.quantity_changed) as total_received,
                     COUNT(*) as transaction_count,
-                    AVG(ps.sm_price * il.quantity_changed) as avg_delivery_value,
+                    AVG(ps.device_price * il.quantity_changed) as avg_delivery_value,
                     MAX(il.transaction_date) as last_delivery_date
                 FROM inventory_log il
-                JOIN phone_specs ps ON il.phone_id = ps.id
+                JOIN specs_db ps ON il.phone_id = ps.product_id
                 WHERE il.transaction_type = 'incoming'
                 AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
                 AND il.supplier_id IS NOT NULL
@@ -337,11 +337,11 @@ class AnalyticsService {
     async getInventoryValueData(conn) {
         const query = `
             SELECT 
-                COALESCE(SUM(sm_inventory * sm_price), 0) as total_inventory_value,
-                COALESCE(SUM(sm_inventory), 0) as total_units_in_stock,
-                COALESCE(AVG(sm_inventory * sm_price), 0) as avg_inventory_value
-            FROM phone_specs
-            WHERE sm_inventory > 0
+                COALESCE(SUM(device_inventory * device_price), 0) as total_inventory_value,
+                COALESCE(SUM(device_inventory), 0) as total_units_in_stock,
+                COALESCE(AVG(device_inventory * device_price), 0) as avg_inventory_value
+            FROM specs_db
+            WHERE device_inventory > 0
         `;
         const result = await conn.query(query);
         const data = this.convertBigIntToNumber(result[0]);
@@ -360,16 +360,16 @@ class AnalyticsService {
     async getCategoryPerformanceData(conn, period) {
         const query = `
             SELECT 
-                ps.sm_maker as category,
-                COUNT(DISTINCT ps.id) as product_count,
+                ps.device_maker as category,
+                COUNT(DISTINCT ps.product_id) as product_count,
                 COALESCE(SUM(ABS(il.quantity_changed)), 0) as total_sold,
-                COALESCE(SUM(ps.sm_price * ABS(il.quantity_changed)), 0) as revenue,
-                COALESCE(AVG(ps.sm_price), 0) as avg_price
-            FROM phone_specs ps
-            LEFT JOIN inventory_log il ON ps.id = il.phone_id 
+                COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as revenue,
+                COALESCE(AVG(ps.device_price), 0) as avg_price
+            FROM specs_db ps
+            LEFT JOIN inventory_log il ON ps.product_id = il.phone_id 
                 AND il.transaction_type = 'outgoing'
                 AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-            GROUP BY ps.sm_maker
+            GROUP BY ps.device_maker
             ORDER BY revenue DESC
             LIMIT 10
         `;
@@ -383,11 +383,11 @@ class AnalyticsService {
     async getProfitabilityData(conn, period) {
         const query = `
             SELECT 
-                COALESCE(SUM(ps.sm_price * ABS(il.quantity_changed)), 0) as total_revenue,
+                COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as total_revenue,
                 COALESCE(COUNT(DISTINCT il.phone_id), 0) as products_sold,
-                COALESCE(AVG(ps.sm_price), 0) as avg_selling_price
+                COALESCE(AVG(ps.device_price), 0) as avg_selling_price
             FROM inventory_log il
-            JOIN phone_specs ps ON il.phone_id = ps.id
+            JOIN specs_db ps ON il.phone_id = ps.product_id
             WHERE il.transaction_type = 'outgoing' 
             AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
         `;
@@ -412,22 +412,22 @@ class AnalyticsService {
     async getStockTurnoverData(conn, period) {
         const query = `
             SELECT 
-                ps.id,
-                ps.sm_name,
-                ps.sm_maker,
-                ps.sm_inventory,
+                ps.product_id,
+                ps.device_name,
+                ps.device_maker,
+                ps.device_inventory,
                 COALESCE(SUM(ABS(il.quantity_changed)), 0) as total_sold,
                 CASE 
-                    WHEN ps.sm_inventory > 0 AND SUM(ABS(il.quantity_changed)) > 0 
-                    THEN SUM(ABS(il.quantity_changed)) / ps.sm_inventory 
+                    WHEN ps.device_inventory > 0 AND SUM(ABS(il.quantity_changed)) > 0 
+                    THEN SUM(ABS(il.quantity_changed)) / ps.device_inventory 
                     ELSE 0 
                 END as turnover_ratio
-            FROM phone_specs ps
-            LEFT JOIN inventory_log il ON ps.id = il.phone_id 
+            FROM specs_db ps
+            LEFT JOIN inventory_log il ON ps.product_id = il.phone_id 
                 AND il.transaction_type = 'outgoing'
                 AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-            GROUP BY ps.id, ps.sm_name, ps.sm_maker, ps.sm_inventory
-            HAVING total_sold > 0 OR ps.sm_inventory > 0
+            GROUP BY ps.product_id, ps.device_name, ps.device_maker, ps.device_inventory
+            HAVING total_sold > 0 OR ps.device_inventory > 0
             ORDER BY turnover_ratio DESC
         `;
         const result = await conn.query(query, [period]);
@@ -448,17 +448,17 @@ class AnalyticsService {
     async getMarketTrendsData(conn, period) {
         const query = `
             SELECT 
-                ps.sm_maker as brand,
-                COUNT(DISTINCT ps.id) as product_count,
-                COALESCE(SUM(ps.sm_inventory), 0) as total_inventory,
-                COALESCE(SUM(ps.sm_inventory * ps.sm_price), 0) as inventory_value,
-                COALESCE(AVG(ps.sm_price), 0) as avg_price,
+                ps.device_maker as brand,
+                COUNT(DISTINCT ps.product_id) as product_count,
+                COALESCE(SUM(ps.device_inventory), 0) as total_inventory,
+                COALESCE(SUM(ps.device_inventory * ps.device_price), 0) as inventory_value,
+                COALESCE(AVG(ps.device_price), 0) as avg_price,
                 COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END), 0) as units_sold,
-                COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ps.sm_price * ABS(il.quantity_changed) ELSE 0 END), 0) as revenue
-            FROM phone_specs ps
-            LEFT JOIN inventory_log il ON ps.id = il.phone_id 
+                COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ps.device_price * ABS(il.quantity_changed) ELSE 0 END), 0) as revenue
+            FROM specs_db ps
+            LEFT JOIN inventory_log il ON ps.product_id = il.phone_id 
                 AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-            GROUP BY ps.sm_maker
+            GROUP BY ps.device_maker
             HAVING product_count > 0
             ORDER BY revenue DESC, units_sold DESC
         `;
@@ -477,9 +477,9 @@ class AnalyticsService {
                 YEAR(il.transaction_date) as year_num,
                 COUNT(*) as transaction_count,
                 SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END) as units_sold,
-                SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ps.sm_price * ABS(il.quantity_changed) ELSE 0 END) as revenue
+                SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ps.device_price * ABS(il.quantity_changed) ELSE 0 END) as revenue
             FROM inventory_log il
-            JOIN phone_specs ps ON il.phone_id = ps.id
+            JOIN specs_db ps ON il.phone_id = ps.product_id
             WHERE il.transaction_date >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
             GROUP BY YEAR(il.transaction_date), MONTH(il.transaction_date)
             ORDER BY year_num DESC, month_num DESC
@@ -494,16 +494,16 @@ class AnalyticsService {
     async getProductLifecycleData(conn, period) {
         const query = `
             SELECT 
-                ps.id,
-                ps.sm_name,
-                ps.sm_maker,
-                ps.sm_price,
-                ps.sm_inventory,
+                ps.product_id,
+                ps.device_name,
+                ps.device_maker,
+                ps.device_price,
+                ps.device_inventory,
                 lifecycle_data.days_since_first_sale,
                 lifecycle_data.total_sold,
                 lifecycle_data.sales_velocity,
                 lifecycle_data.lifecycle_stage
-            FROM phone_specs ps
+            FROM specs_db ps
             LEFT JOIN (
                 SELECT 
                     il.phone_id,
@@ -521,7 +521,7 @@ class AnalyticsService {
                 FROM inventory_log il
                 WHERE il.transaction_type = 'outgoing'
                 GROUP BY il.phone_id
-            ) lifecycle_data ON ps.id = lifecycle_data.phone_id
+            ) lifecycle_data ON ps.product_id = lifecycle_data.phone_id
             ORDER BY lifecycle_data.sales_velocity DESC
         `;
         const result = await conn.query(query);
@@ -535,18 +535,18 @@ class AnalyticsService {
         const query = `
             SELECT 
                 COUNT(*) as total_products,
-                SUM(CASE WHEN sm_inventory = 0 THEN 1 ELSE 0 END) as out_of_stock_count,
-                SUM(CASE WHEN sm_inventory > 0 AND sm_inventory <= 5 THEN 1 ELSE 0 END) as low_stock_count,
-                SUM(CASE WHEN sm_inventory > 50 THEN 1 ELSE 0 END) as overstock_count,
-                AVG(sm_inventory) as avg_inventory_level,
-                SUM(sm_inventory * sm_price) as total_inventory_value,
-                AVG(sm_price) as avg_product_price,
-                AVG(sm_inventory * sm_price) as avg_inventory_value,
-                MAX(sm_price) as highest_price,
-                MIN(sm_price) as lowest_price,
-                STDDEV(sm_price) as price_standard_deviation
-            FROM phone_specs
-            WHERE sm_inventory > 0
+                SUM(CASE WHEN device_inventory = 0 THEN 1 ELSE 0 END) as out_of_stock_count,
+                SUM(CASE WHEN device_inventory > 0 AND device_inventory <= 5 THEN 1 ELSE 0 END) as low_stock_count,
+                SUM(CASE WHEN device_inventory > 50 THEN 1 ELSE 0 END) as overstock_count,
+                AVG(device_inventory) as avg_inventory_level,
+                SUM(device_inventory * device_price) as total_inventory_value,
+                AVG(device_price) as avg_product_price,
+                AVG(device_inventory * device_price) as avg_inventory_value,
+                MAX(device_price) as highest_price,
+                MIN(device_price) as lowest_price,
+                STDDEV(device_price) as price_standard_deviation
+            FROM specs_db
+            WHERE device_inventory > 0
         `;
         const result = await conn.query(query);
         const data = this.convertBigIntToNumber(result[0]);
@@ -570,20 +570,20 @@ class AnalyticsService {
             SELECT 
                 COUNT(CASE WHEN il.transaction_type = 'outgoing' THEN 1 END) as today_sales_count,
                 COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END), 0) as today_units_sold,
-                COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ps.sm_price * ABS(il.quantity_changed) ELSE 0 END), 0) as today_revenue,
+                COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ps.device_price * ABS(il.quantity_changed) ELSE 0 END), 0) as today_revenue,
                 COUNT(CASE WHEN il.transaction_type = 'incoming' THEN 1 END) as today_receiving_count,
                 COALESCE(SUM(CASE WHEN il.transaction_type = 'incoming' THEN il.quantity_changed ELSE 0 END), 0) as today_units_received
             FROM inventory_log il
-            JOIN phone_specs ps ON il.phone_id = ps.id
+            JOIN specs_db ps ON il.phone_id = ps.product_id
             WHERE DATE(il.transaction_date) = CURDATE()
         `;
         
         const weeklyQuery = `
             SELECT 
                 COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END), 0) as week_units_sold,
-                COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ps.sm_price * ABS(il.quantity_changed) ELSE 0 END), 0) as week_revenue
+                COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ps.device_price * ABS(il.quantity_changed) ELSE 0 END), 0) as week_revenue
             FROM inventory_log il
-            JOIN phone_specs ps ON il.phone_id = ps.id
+            JOIN specs_db ps ON il.phone_id = ps.product_id
             WHERE il.transaction_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)
         `;
 
@@ -674,9 +674,9 @@ class AnalyticsService {
             const todayQuery = `
                 SELECT 
                     COALESCE(SUM(ABS(quantity_changed)), 0) as today_units,
-                    COALESCE(SUM(ps.sm_price * ABS(il.quantity_changed)), 0) as today_revenue
+                    COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as today_revenue
                 FROM inventory_log il
-                JOIN phone_specs ps ON il.phone_id = ps.id
+                JOIN specs_db ps ON il.phone_id = ps.product_id
                 WHERE il.transaction_type = 'outgoing' 
                 AND DATE(il.transaction_date) = CURDATE()
             `;
@@ -744,7 +744,7 @@ class AnalyticsService {
                 insights.push({
                     type: 'info',
                     title: 'Top Performer',
-                    message: `${topProduct.sm_maker} ${topProduct.sm_name} is your best-selling product with ${topProduct.total_sold} units sold.`
+                    message: `${topProduct.device_maker} ${topProduct.device_name} is your best-selling product with ${topProduct.total_sold} units sold.`
                 });
             }
         }
@@ -796,7 +796,7 @@ class AnalyticsService {
         csv.push('TOP SELLING PRODUCTS');
         csv.push('Maker,Model,Units Sold,Revenue,Current Stock');
         data.top_products.forEach(product => {
-            csv.push(`${product.sm_maker},${product.sm_name},${product.total_sold},$${product.revenue},${product.sm_inventory}`);
+            csv.push(`${product.device_maker},${product.device_name},${product.total_sold},$${product.revenue},${product.device_inventory}`);
         });
         csv.push('');
         
@@ -804,7 +804,7 @@ class AnalyticsService {
         csv.push('LOW STOCK ALERTS');
         csv.push('Maker,Model,Current Stock,Price');
         data.low_stock_alerts.forEach(product => {
-            csv.push(`${product.sm_maker},${product.sm_name},${product.sm_inventory},$${product.sm_price}`);
+            csv.push(`${product.device_maker},${product.device_name},${product.device_inventory},$${product.device_price}`);
         });
         
         return csv.join('\n');
@@ -824,11 +824,11 @@ class AnalyticsService {
                     COALESCE(SUM(CASE WHEN il.transaction_type = 'incoming' THEN il.quantity_changed ELSE 0 END), 0) as total_received,
                     COALESCE(AVG(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE NULL END), 0) as avg_sale_quantity,
                     COUNT(CASE WHEN il.transaction_type = 'outgoing' THEN 1 END) as sale_transactions
-                FROM phone_specs ps
-                LEFT JOIN inventory_log il ON ps.id = il.phone_id
+                FROM specs_db ps
+                LEFT JOIN inventory_log il ON ps.product_id = il.phone_id
                     AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-                WHERE ps.id = ?
-                GROUP BY ps.id
+                WHERE ps.product_id = ?
+                GROUP BY ps.product_id
             `;
             
             const salesTrendQuery = `
@@ -852,8 +852,8 @@ class AnalyticsService {
             const salesTrend = this.convertBigIntToNumber(salesTrendResult);
             
             // Calculate metrics
-            const revenue = product.total_sold * product.sm_price;
-            const stockTurnover = product.sm_inventory > 0 ? product.total_sold / product.sm_inventory : 0;
+            const revenue = product.total_sold * product.device_price;
+            const stockTurnover = product.device_inventory > 0 ? product.total_sold / product.device_inventory : 0;
             const salesVelocity = salesTrend.length > 0 ? product.total_sold / salesTrend.length : 0;
             
             return {
@@ -863,7 +863,7 @@ class AnalyticsService {
                     revenue: revenue.toFixed(2),
                     stock_turnover: stockTurnover.toFixed(2),
                     sales_velocity: salesVelocity.toFixed(2),
-                    days_of_stock: salesVelocity > 0 ? Math.floor(product.sm_inventory / salesVelocity) : null
+                    days_of_stock: salesVelocity > 0 ? Math.floor(product.device_inventory / salesVelocity) : null
                 }
             };
             
@@ -890,9 +890,9 @@ class AnalyticsService {
                     SELECT 
                         DATE(il.transaction_date) as sale_date,
                         SUM(ABS(il.quantity_changed)) as daily_units,
-                        SUM(ps.sm_price * ABS(il.quantity_changed)) as daily_revenue
+                        SUM(ps.device_price * ABS(il.quantity_changed)) as daily_revenue
                     FROM inventory_log il
-                    JOIN phone_specs ps ON il.phone_id = ps.id
+                    JOIN specs_db ps ON il.phone_id = ps.product_id
                     WHERE il.transaction_type = 'outgoing' 
                     AND il.phone_id = ?
                     AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL 90 DAY)
@@ -905,9 +905,9 @@ class AnalyticsService {
                     SELECT 
                         DATE(il.transaction_date) as sale_date,
                         SUM(ABS(il.quantity_changed)) as daily_units,
-                        SUM(ps.sm_price * ABS(il.quantity_changed)) as daily_revenue
+                        SUM(ps.device_price * ABS(il.quantity_changed)) as daily_revenue
                     FROM inventory_log il
-                    JOIN phone_specs ps ON il.phone_id = ps.id
+                    JOIN specs_db ps ON il.phone_id = ps.product_id
                     WHERE il.transaction_type = 'outgoing' 
                     AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL 90 DAY)
                     GROUP BY DATE(il.transaction_date)
@@ -994,20 +994,20 @@ class AnalyticsService {
     async getProductSpecAnalytics(conn) {
         const query = `
             SELECT 
-                sm_maker as brand,
+                device_maker as brand,
                 COUNT(*) as total_products,
-                AVG(sm_price) as avg_price,
-                MIN(sm_price) as min_price,
-                MAX(sm_price) as max_price,
+                AVG(device_price) as avg_price,
+                MIN(device_price) as min_price,
+                MAX(device_price) as max_price,
                 AVG(CAST(REPLACE(ram, 'GB', '') AS DECIMAL(5,2))) as avg_ram,
                 AVG(CAST(REPLACE(REPLACE(rom, 'GB', ''), 'TB', '000') AS DECIMAL(6,2))) as avg_storage,
                 AVG(display_size) as avg_display_size,
                 AVG(CAST(REPLACE(battery_capacity, 'mAh', '') AS DECIMAL(6,0))) as avg_battery,
                 COUNT(CASE WHEN nfc = 'Yes' THEN 1 END) as nfc_enabled_count,
                 COUNT(CASE WHEN fast_charging IS NOT NULL AND fast_charging != '' THEN 1 END) as fast_charging_count
-            FROM phone_specs 
-            WHERE sm_maker IS NOT NULL
-            GROUP BY sm_maker
+            FROM specs_db 
+            WHERE device_maker IS NOT NULL
+            GROUP BY device_maker
             ORDER BY total_products DESC
         `;
         const result = await conn.query(query);
@@ -1022,9 +1022,9 @@ class AnalyticsService {
             SELECT 
                 processor,
                 COUNT(*) as product_count,
-                AVG(sm_price) as avg_price,
-                SUM(sm_inventory) as total_inventory
-            FROM phone_specs 
+                AVG(device_price) as avg_price,
+                SUM(device_inventory) as total_inventory
+            FROM specs_db 
             WHERE processor IS NOT NULL AND processor != ''
             GROUP BY processor
             ORDER BY product_count DESC
@@ -1035,9 +1035,9 @@ class AnalyticsService {
             SELECT 
                 operating_system,
                 COUNT(*) as product_count,
-                AVG(sm_price) as avg_price,
-                SUM(sm_inventory) as total_inventory
-            FROM phone_specs 
+                AVG(device_price) as avg_price,
+                SUM(device_inventory) as total_inventory
+            FROM specs_db 
             WHERE operating_system IS NOT NULL AND operating_system != ''
             GROUP BY operating_system
             ORDER BY product_count DESC
@@ -1047,9 +1047,9 @@ class AnalyticsService {
             SELECT 
                 ram,
                 COUNT(*) as product_count,
-                AVG(sm_price) as avg_price,
-                SUM(sm_inventory) as total_inventory
-            FROM phone_specs 
+                AVG(device_price) as avg_price,
+                SUM(device_inventory) as total_inventory
+            FROM specs_db 
             WHERE ram IS NOT NULL AND ram != ''
             GROUP BY ram
             ORDER BY CAST(REPLACE(ram, 'GB', '') AS DECIMAL(5,2)) DESC
@@ -1074,15 +1074,15 @@ class AnalyticsService {
     async getInventoryEfficiencyData(conn, period) {
         const query = `
             SELECT 
-                ps.sm_maker as brand,
-                ps.sm_name as product_name,
-                ps.sm_price,
-                ps.sm_inventory as current_stock,
+                ps.device_maker as brand,
+                ps.device_name as product_name,
+                ps.device_price,
+                ps.device_inventory as current_stock,
                 COALESCE(sold_data.units_sold, 0) as units_sold,
                 COALESCE(received_data.units_received, 0) as units_received,
                 CASE 
-                    WHEN ps.sm_inventory > 0 AND sold_data.units_sold > 0 
-                    THEN ROUND(sold_data.units_sold / ps.sm_inventory, 2)
+                    WHEN ps.device_inventory > 0 AND sold_data.units_sold > 0 
+                    THEN ROUND(sold_data.units_sold / ps.device_inventory, 2)
                     ELSE 0 
                 END as turnover_ratio,
                 CASE 
@@ -1090,8 +1090,8 @@ class AnalyticsService {
                     THEN ROUND(? / sold_data.units_sold, 1)
                     ELSE NULL 
                 END as days_to_sell_current_stock,
-                (ps.sm_inventory * ps.sm_price) as inventory_value
-            FROM phone_specs ps
+                (ps.device_inventory * ps.device_price) as inventory_value
+            FROM specs_db ps
             LEFT JOIN (
                 SELECT 
                     phone_id,
@@ -1100,7 +1100,7 @@ class AnalyticsService {
                 WHERE transaction_type = 'outgoing' 
                 AND transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
                 GROUP BY phone_id
-            ) sold_data ON ps.id = sold_data.phone_id
+            ) sold_data ON ps.product_id = sold_data.phone_id
             LEFT JOIN (
                 SELECT 
                     phone_id,
@@ -1109,7 +1109,7 @@ class AnalyticsService {
                 WHERE transaction_type = 'incoming' 
                 AND transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
                 GROUP BY phone_id
-            ) received_data ON ps.id = received_data.phone_id
+            ) received_data ON ps.product_id = received_data.phone_id
             ORDER BY turnover_ratio DESC, inventory_value DESC
         `;
         const result = await conn.query(query, [period, period, period]);
@@ -1123,37 +1123,37 @@ class AnalyticsService {
         const priceRangeQuery = `
             SELECT 
                 CASE 
-                    WHEN sm_price < 200 THEN 'Budget (<$200)'
-                    WHEN sm_price BETWEEN 200 AND 500 THEN 'Mid-range ($200-$500)'
-                    WHEN sm_price BETWEEN 500 AND 1000 THEN 'Premium ($500-$1000)'
+                    WHEN device_price < 200 THEN 'Budget (<$200)'
+                    WHEN device_price BETWEEN 200 AND 500 THEN 'Mid-range ($200-$500)'
+                    WHEN device_price BETWEEN 500 AND 1000 THEN 'Premium ($500-$1000)'
                     ELSE 'Flagship (>$1000)'
                 END as price_category,
                 COUNT(*) as product_count,
-                SUM(sm_inventory) as total_inventory,
-                AVG(sm_price) as avg_price,
+                SUM(device_inventory) as total_inventory,
+                AVG(device_price) as avg_price,
                 COALESCE(SUM(sales_data.units_sold), 0) as total_sold,
                 COALESCE(SUM(sales_data.revenue), 0) as total_revenue
-            FROM phone_specs ps
+            FROM specs_db ps
             LEFT JOIN (
                 SELECT 
                     il.phone_id,
                     SUM(ABS(il.quantity_changed)) as units_sold,
-                    SUM(ps2.sm_price * ABS(il.quantity_changed)) as revenue
+                    SUM(ps2.device_price * ABS(il.quantity_changed)) as revenue
                 FROM inventory_log il
-                JOIN phone_specs ps2 ON il.phone_id = ps2.id
+                JOIN specs_db ps2 ON il.phone_id = ps2.id
                 WHERE il.transaction_type = 'outgoing' 
                 AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
                 GROUP BY il.phone_id
-            ) sales_data ON ps.id = sales_data.phone_id
+            ) sales_data ON ps.product_id = sales_data.phone_id
             GROUP BY price_category
             ORDER BY avg_price ASC
         `;
 
         const profitabilityQuery = `
             SELECT 
-                ps.sm_maker as brand,
+                ps.device_maker as brand,
                 COUNT(*) as product_count,
-                AVG(ps.sm_price) as avg_price,
+                AVG(ps.device_price) as avg_price,
                 COALESCE(SUM(sales_data.revenue), 0) as total_revenue,
                 COALESCE(SUM(sales_data.units_sold), 0) as total_units_sold,
                 CASE 
@@ -1161,19 +1161,19 @@ class AnalyticsService {
                     THEN ROUND(SUM(sales_data.revenue) / SUM(sales_data.units_sold), 2)
                     ELSE 0 
                 END as avg_selling_price
-            FROM phone_specs ps
+            FROM specs_db ps
             LEFT JOIN (
                 SELECT 
                     il.phone_id,
                     SUM(ABS(il.quantity_changed)) as units_sold,
-                    SUM(ps2.sm_price * ABS(il.quantity_changed)) as revenue
+                    SUM(ps2.device_price * ABS(il.quantity_changed)) as revenue
                 FROM inventory_log il
-                JOIN phone_specs ps2 ON il.phone_id = ps2.id
+                JOIN specs_db ps2 ON il.phone_id = ps2.id
                 WHERE il.transaction_type = 'outgoing' 
                 AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
                 GROUP BY il.phone_id
-            ) sales_data ON ps.id = sales_data.phone_id
-            GROUP BY ps.sm_maker
+            ) sales_data ON ps.product_id = sales_data.phone_id
+            GROUP BY ps.device_maker
             HAVING total_revenue > 0
             ORDER BY total_revenue DESC
         `;

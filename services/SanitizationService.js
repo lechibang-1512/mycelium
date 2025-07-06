@@ -71,10 +71,10 @@ class SanitizationService {
      */
     static sanitizePhoneInput(data) {
         return {
-            sm_name: this.parseString(data.sm_name),
-            sm_maker: this.parseString(data.sm_maker),
-            sm_price: this.parseNumeric(data.sm_price),
-            sm_inventory: this.parseInteger(data.sm_inventory) || 0,
+            device_name: this.parseString(data.device_name || data.sm_name),
+            device_maker: this.parseString(data.device_maker || data.sm_maker),
+            device_price: this.parseNumeric(data.device_price || data.sm_price),
+            device_inventory: this.parseInteger(data.device_inventory || data.sm_inventory) || 0,
             color: this.parseString(data.color),
             water_and_dust_rating: this.parseString(data.water_and_dust_rating),
             processor: this.parseString(data.processor),

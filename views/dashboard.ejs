@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head', {title: 'Dashboard'}) %>
+
+<body>
+    <%- include('partials/navbar', {currentPage: 'dashboard'}) %>
+
+    <div class="page-header primary">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h1 class="display-4">
+                        <i class="fas fa-tachometer-alt me-3"></i>
+                        Dashboard
+                    </h1>
+                    <p class="lead">
+                        Your inventory management overview
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <!-- Success Messages -->
+        <% if (typeof success !== 'undefined') { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i><%= success %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
+
+        <!-- Quick Stats Overview -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card border-primary">
+                    <div class="card-body text-center">
+                        <i class="fas fa-mobile-alt fa-2x text-primary mb-2"></i>
+                        <h3 class="text-primary"><%= totalProducts || 0 %></h3>
+                        <p class="text-muted mb-1">Total Products</p>
+                        <small class="text-muted">In database</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card border-success">
+                    <div class="card-body text-center">
+                        <i class="fas fa-boxes fa-2x text-success mb-2"></i>
+                        <h3 class="text-success"><%= totalInventory || 0 %></h3>
+                        <p class="text-muted mb-1">Total Stock</p>
+                        <small class="text-muted">Available units</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card border-warning">
+                    <div class="card-body text-center">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                        <h3 class="text-warning"><%= lowStockCount || 0 %></h3>
+                        <p class="text-muted mb-1">Low Stock Items</p>
+                        <small class="text-muted">Need attention</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card border-info">
+                    <div class="card-body text-center">
+                        <i class="fas fa-truck fa-2x text-info mb-2"></i>
+                        <h3 class="text-info"><%= totalSuppliers || 0 %></h3>
+                        <p class="text-muted mb-1">Active Suppliers</p>
+                        <small class="text-muted">Available partners</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bolt me-2 text-primary"></i>
+                            Quick Actions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <a href="/inventory/receive" class="btn btn-primary w-100 h-100 d-flex flex-column justify-content-center align-items-center p-3">
+                                    <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                                    <span>Receive Stock</span>
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <a href="/inventory/sell" class="btn btn-danger w-100 h-100 d-flex flex-column justify-content-center align-items-center p-3">
+                                    <i class="fas fa-minus-circle fa-2x mb-2"></i>
+                                    <span>Sell Stock</span>
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <a href="/analytics" class="btn btn-success w-100 h-100 d-flex flex-column justify-content-center align-items-center p-3">
+                                    <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                                    <span>View Analytics</span>
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <a href="/stock-alerts" class="btn btn-warning w-100 h-100 d-flex flex-column justify-content-center align-items-center p-3">
+                                    <i class="fas fa-bell fa-2x mb-2"></i>
+                                    <span>Stock Alerts</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity & Alerts -->
+        <div class="row mb-4">
+            <!-- Recent Transactions -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2 text-info"></i>
+                            Recent Activity
+                        </h5>
+                        <a href="/reports" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        <% if (recentTransactions && recentTransactions.length > 0) { %>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Product</th>
+                                            <th>Type</th>
+                                            <th>Quantity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% recentTransactions.slice(0, 5).forEach(transaction => { %>
+                                            <tr>
+                                                <td>
+                                                    <% if (transaction.transaction_date) { %>
+                                                        <%= new Date(transaction.transaction_date).toLocaleDateString() %>
+                                                    <% } else if (transaction.formatted_date) { %>
+                                                        <%= transaction.formatted_date %>
+                                                    <% } else { %>
+                                                        N/A
+                                                    <% } %>
+                                                </td>
+                                                <td><%= transaction.device_maker || transaction.sm_maker %> <%= transaction.device_name || transaction.sm_name %></td>
+                                                <td>
+                                                    <% if (transaction.transaction_type === 'incoming') { %>
+                                                        <span class="badge bg-success">Received</span>
+                                                    <% } else if (transaction.transaction_type === 'outgoing') { %>
+                                                        <span class="badge bg-danger">Sold</span>
+                                                    <% } else if (transaction.transaction_type === 'adjustment') { %>
+                                                        <span class="badge bg-warning">Adjustment</span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-secondary"><%= transaction.transaction_type %></span>
+                                                    <% } %>
+                                                </td>
+                                                <td><%= transaction.quantity_changed || 0 %></td>
+                                            </tr>
+                                        <% }); %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <% } else { %>
+                            <div class="text-center py-4">
+                                <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No recent transactions</p>
+                                <a href="/inventory/receive" class="btn btn-primary me-2">Add Stock</a>
+                                <a href="/inventory/sell" class="btn btn-outline-danger">Record Sale</a>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts & Low Stock -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-circle me-2 text-warning"></i>
+                            Stock Alerts
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <% if (lowStockProducts && lowStockProducts.length > 0) { %>
+                            <% lowStockProducts.slice(0, 5).forEach(product => { %>
+                                <div class="d-flex justify-content-between align-items-center mb-3 p-2 border rounded">
+                                    <div>
+                                        <strong><%= product.device_maker || product.sm_maker %></strong><br>
+                                        <small class="text-muted"><%= product.device_name || product.sm_name %></small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-warning"><%= product.device_inventory || product.sm_inventory %> left</span>
+                                    </div>
+                                </div>
+                            <% }); %>
+                            <div class="text-center mt-3">
+                                <a href="/stock-alerts" class="btn btn-sm btn-warning">View All Alerts</a>
+                            </div>
+                        <% } else { %>
+                            <div class="text-center py-3">
+                                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                <p class="text-success">All stock levels are good!</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Top Products -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-star me-2 text-warning"></i>
+                            Top Products
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <% if (topProducts && topProducts.length > 0) { %>
+                            <% topProducts.slice(0, 3).forEach((product, index) => { %>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <span class="badge bg-primary me-2">#<%= index + 1 %></span>
+                                        <strong><%= product.device_maker || product.sm_maker %></strong><br>
+                                        <small class="text-muted"><%= product.device_name || product.sm_name %></small>
+                                    </div>
+                                    <span class="text-success"><%= product.total_sold || 0 %> sold</span>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <p class="text-muted text-center">No sales data available</p>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-sitemap me-2 text-info"></i>
+                            Navigation
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <a href="/" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-mobile-alt me-2"></i>Products
+                                </a>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <a href="/suppliers" class="btn btn-outline-success w-100">
+                                    <i class="fas fa-truck me-2"></i>Suppliers
+                                </a>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <a href="/reports" class="btn btn-outline-info w-100">
+                                    <i class="fas fa-chart-line me-2"></i>Reports
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/notifications.js"></script>
+
+    <script>
+        // Refresh dashboard data every 5 minutes
+        setTimeout(() => {
+            window.location.reload();
+        }, 300000);
+
+        // Show notification for successful actions
+        <% if (typeof success !== 'undefined') { %>
+            showSuccess('<%= success %>');
+        <% } %>
+    </script>
+</body>
+</html>

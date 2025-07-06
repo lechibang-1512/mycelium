@@ -83,24 +83,24 @@
         <div class="row">
             <% phones.forEach(phone => { %>
                 <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="card phone-card h-100" onclick="window.location.href='/phone/<%= phone.id %>'">
+                    <div class="card phone-card h-100" onclick="window.location.href='/phone/<%= phone.product_id %>'">
                         <div class="card-header bg-primary text-white">
                             <h5 class="card-title mb-0">
                                 <i class="fas fa-mobile-alt me-2"></i>
-                                <%= phone.sm_name || 'Unknown Model' %>
+                                <%= phone.device_name || 'Unknown Model' %>
                             </h5>
-                            <small><%= phone.sm_maker || 'Unknown Manufacturer' %></small>
+                            <small><%= phone.device_maker || 'Unknown Manufacturer' %></small>
                         </div>
                         <div class="card-body">
                             <div class="row mb-2">
                                 <div class="col-sm-6">
                                     <strong>Price:</strong> 
-                                    <span class="badge bg-success">$<%= phone.sm_price || 'N/A' %></span>
+                                    <span class="badge bg-success">$<%= phone.device_price || 'N/A' %></span>
                                 </div>
                                 <div class="col-sm-6">
                                     <strong>Stock:</strong> 
-                                    <span class="badge <%= phone.sm_inventory > 0 ? 'bg-success' : 'bg-danger' %>">
-                                        <%= phone.sm_inventory || 0 %>
+                                    <span class="badge <%= phone.device_inventory > 0 ? 'bg-success' : 'bg-danger' %>">
+                                        <%= phone.device_inventory || 0 %>
                                     </span>
                                 </div>
                             </div>

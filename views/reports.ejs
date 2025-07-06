@@ -43,7 +43,7 @@
                                     <option value="">All Phones</option>
                                     <% phones.forEach(phone => { %>
                                         <option value="<%= phone.id %>" <%= filters.phone_id == phone.id ? 'selected' : '' %>>
-                                            <%= phone.sm_maker %> <%= phone.sm_name %>
+                                            <%= phone.device_maker %> <%= phone.device_name %>
                                         </option>
                                     <% }); %>
                                 </select>
@@ -99,8 +99,8 @@
                                                     </small>
                                                 </td>
                                                 <td>
-                                                    <strong><%= report.sm_maker %></strong><br>
-                                                    <small class="text-muted"><%= report.sm_name %></small>
+                                                    <strong><%= report.device_maker %></strong><br>
+                                                    <small class="text-muted"><%= report.device_name %></small>
                                                 </td>
                                                 <td>
                                                     <% 
@@ -275,8 +275,8 @@
             <% reports.forEach(report => { %>
                 csvContent += "<%= report.log_id %>,";
                 csvContent += "<%= report.formatted_date ? report.formatted_date.replace(/,/g, ';') : 'N/A' %>,";
-                csvContent += "<%= (report.sm_maker || '').replace(/,/g, ';') %>,";
-                csvContent += "<%= (report.sm_name || '').replace(/,/g, ';') %>,";
+                csvContent += "<%= (report.device_maker || '').replace(/,/g, ';') %>,";
+                csvContent += "<%= (report.device_name || '').replace(/,/g, ';') %>,";
                 csvContent += "<%= report.transaction_type %>,";
                 csvContent += "<%= report.quantity_changed %>,";
                 csvContent += "<%= report.new_inventory_level %>,";

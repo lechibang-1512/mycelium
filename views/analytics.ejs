@@ -149,7 +149,7 @@
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <div>
                                         <span class="badge bg-primary me-2">#<%= index + 1 %></span>
-                                        <strong><%= product.sm_maker %> <%= product.sm_name %></strong>
+                                        <strong><%= product.device_maker %> <%= product.device_name %></strong>
                                     </div>
                                     <div class="text-end">
                                         <div class="text-success fw-bold"><%= product.total_sold || 0 %> sold</div>
@@ -178,13 +178,13 @@
                             <% lowStockProducts.slice(0, 5).forEach((product) => { %>
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <div>
-                                        <strong><%= product.sm_maker %> <%= product.sm_name %></strong>
+                                        <strong><%= product.device_maker %> <%= product.device_name %></strong>
                                         <br>
-                                        <small class="text-muted">$<%= (product.sm_price || 0).toLocaleString() %></small>
+                                        <small class="text-muted">$<%= (product.device_price || 0).toLocaleString() %></small>
                                     </div>
                                     <div class="text-end">
-                                        <span class="badge bg-<%= product.sm_inventory === 0 ? 'danger' : 'warning' %>">
-                                            <%= product.sm_inventory %> left
+                                        <span class="badge bg-<%= product.device_inventory === 0 ? 'danger' : 'warning' %>">
+                                            <%= product.device_inventory %> left
                                         </span>
                                     </div>
                                 </div>
@@ -231,7 +231,7 @@
                                                         N/A
                                                     <% } %>
                                                 </td>
-                                                <td><%= transaction.sm_maker %> <%= transaction.sm_name %></td>
+                                                <td><%= transaction.device_maker %> <%= transaction.device_name %></td>
                                                 <td>
                                                     <% if (transaction.transaction_type === 'incoming') { %>
                                                         <span class="badge bg-success">Received</span>

@@ -50,7 +50,7 @@ class ReceiptService {
                 address: supplier.address
             },
             items: [{
-                description: `${phone.sm_maker} ${phone.sm_name}`,
+                description: `${phone.device_maker} ${phone.device_name}`,
                 specifications: this.formatSpecs(phone),
                 quantity,
                 unitPrice: this.formatCurrency(unitPrice),
@@ -109,7 +109,7 @@ class ReceiptService {
                 address: customerInfo.address || ''
             },
             items: [{
-                description: `${phone.sm_maker} ${phone.sm_name}`,
+                description: `${phone.device_maker} ${phone.device_name}`,
                 specifications: this.formatSpecs(phone),
                 quantity,
                 unitPrice: this.formatCurrency(unitPrice),

@@ -66,32 +66,45 @@ class InputValidator {
     static validatePhoneData(req, res, next) {
         const errors = [];
         const {
-            sm_name, sm_maker, sm_price, sm_inventory, color,
-            processor, memory_type, ram, storage_type, storage_capacity
+            device_name, device_maker, device_price, device_inventory, 
+            sm_name, sm_maker, sm_price, sm_inventory, // backward compatibility
+            color, processor, memory_type, ram, storage_type, storage_capacity
         } = req.body;
 
+        // Use new field names if available, otherwise use old ones for backward compatibility
+        const name = device_name || sm_name;
+        const maker = device_maker || sm_maker;
+        const price = device_price || sm_price;
+        const inventory = device_inventory || sm_inventory;
+
         // Required fields validation
-        if (!sm_name || !validator.isLength(sm_name, { min: 1, max: 200 })) {
+        if (!name || !validator.isLength(name, { min: 1, max: 200 })) {
             errors.push('Product name is required and must not exceed 200 characters');
         }
 
-        if (!sm_maker || !validator.isLength(sm_maker, { min: 1, max: 100 })) {
+        if (!maker || !validator.isLength(maker, { min: 1, max: 100 })) {
             errors.push('Manufacturer is required and must not exceed 100 characters');
         }
 
         // Price validation
-        if (sm_price && !validator.isFloat(sm_price.toString(), { min: 0 })) {
+        if (price && !validator.isFloat(price.toString(), { min: 0 })) {
             errors.push('Price must be a valid positive number');
         }
 
         // Inventory validation
-        if (sm_inventory && !validator.isInt(sm_inventory.toString(), { min: 0 })) {
+        if (inventory && !validator.isInt(inventory.toString(), { min: 0 })) {
             errors.push('Inventory must be a valid non-negative integer');
         }
 
-        // Sanitize text inputs
-        if (sm_name) req.body.sm_name = xss(sm_name.trim());
-        if (sm_maker) req.body.sm_maker = xss(sm_maker.trim());
+        // Sanitize text inputs (set both old and new field names for compatibility)
+        if (name) {
+            req.body.device_name = xss(name.trim());
+            req.body.sm_name = xss(name.trim()); // backward compatibility
+        }
+        if (maker) {
+            req.body.device_maker = xss(maker.trim());
+            req.body.sm_maker = xss(maker.trim()); // backward compatibility
+        }
         if (color) req.body.color = xss(color.trim());
         if (processor) req.body.processor = xss(processor.trim());
         if (memory_type) req.body.memory_type = xss(memory_type.trim());
