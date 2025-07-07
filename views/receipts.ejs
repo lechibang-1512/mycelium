@@ -112,7 +112,7 @@
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="stat-card analytics-card">
+                            <div class="stat-card analytics-card" onclick="window.location.href='/receipts/analytics'">
                                 <h3><i class="fas fa-chart-line me-2"></i>Analytics</h3>
                                 <p>View detailed insights</p>
                             </div>
@@ -396,7 +396,7 @@
                                                            value="<%= receipt.receipt_id %>" onchange="updateBulkActions()">
                                                 </td>
                                                 <td>
-                                                    <a href="/receipts/<%= receipt.receipt_id %>" class="text-decoration-none">
+                                                    <a href="/receipt/<%= receipt.receipt_id %>" class="text-decoration-none">
                                                         <strong><%= receipt.receipt_id %></strong>
                                                     </a>
                                                     <% if (receipt.notes) { %>
@@ -457,7 +457,7 @@
                                                 </td>
                                                 <td>
                                                     <div class="btn-group btn-group-sm">
-                                                        <a href="/receipts/<%= receipt.receipt_id %>" 
+                                                        <a href="/receipt/<%= receipt.receipt_id %>" 
                                                            class="btn btn-outline-primary" title="View Details">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
@@ -482,7 +482,7 @@
                                 <div class="row g-3 p-3">
                                     <% receipts.forEach(receipt => { %>
                                         <div class="col-md-6 col-lg-4">
-                                            <div class="card receipt-card h-100" onclick="window.location.href='/receipts/<%= receipt.receipt_id %>'">
+                                            <div class="card receipt-card h-100" onclick="window.location.href='/receipt/<%= receipt.receipt_id %>'">
                                                 <div class="card-header d-flex justify-content-between align-items-center">
                                                     <span class="fw-bold"><%= receipt.receipt_id %></span>
                                                     <% if (receipt.receipt_type === 'PURCHASE_RECEIPT') { %>

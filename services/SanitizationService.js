@@ -138,7 +138,6 @@ class SanitizationService {
             website: this.parseString(data.website),
             address: this.parseString(data.address),
             notes: this.parseString(data.notes),
-            supplier_id: this.parseString(data.supplier_id),
             is_active: data.is_active === undefined ? true : Boolean(data.is_active)
         };
     }

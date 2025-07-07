@@ -112,7 +112,15 @@
                         </div>
                         <div class="col-md-3">
                             <div class="stat-card">
-                                <h3><%= receipt.formatted_date.split(' ')[0] %></h3>
+                                <h3>
+                                    <% if (receipt.formatted_date) { %>
+                                        <%= receipt.formatted_date.split(' ')[0] %>
+                                    <% } else if (receipt.transaction_date) { %>
+                                        <%= new Date(receipt.transaction_date).toLocaleDateString() %>
+                                    <% } else { %>
+                                        N/A
+                                    <% } %>
+                                </h3>
                                 <p>Transaction Date</p>
                             </div>
                         </div>
@@ -207,9 +215,28 @@
                 <div class="receipt-preview">
                     <!-- Receipt Header -->
                     <div class="receipt-header text-center">
-                        <h2 class="mb-0"><%= receipt.receipt_data.company.name %></h2>
-                        <p class="mb-1"><%= receipt.receipt_data.company.address %></p>
-                        <p class="mb-0"><%= receipt.receipt_data.company.phone %> | <%= receipt.receipt_data.company.email %></p>
+                        <% 
+                            // Safely access receipt data with fallbacks
+                            let companyInfo = {
+                                name: 'InventoryApp Solutions',
+                                address: '123 Business Street, City, State 12345',
+                                phone: '+1 (555) 123-4567',
+                                email: 'info@inventoryapp.com'
+                            };
+                            
+                            // Try to get company info from receipt_data if it exists
+                            if (receiptData && receiptData.company) {
+                                companyInfo = {
+                                    name: receiptData.company.name || companyInfo.name,
+                                    address: receiptData.company.address || companyInfo.address,
+                                    phone: receiptData.company.phone || companyInfo.phone,
+                                    email: receiptData.company.email || companyInfo.email
+                                };
+                            }
+                        %>
+                        <h2 class="mb-0"><%= companyInfo.name %></h2>
+                        <p class="mb-1"><%= companyInfo.address %></p>
+                        <p class="mb-0"><%= companyInfo.phone %> | <%= companyInfo.email %></p>
                     </div>
 
                     <!-- Receipt Info -->
@@ -224,7 +251,19 @@
                                     <% } %>
                                 </h5>
                                 <p class="mb-1"><strong>Receipt #:</strong> <%= receipt.receipt_id %></p>
-                                <p class="mb-0"><strong>Date:</strong> <%= receipt.receipt_data.date %></p>
+                                <p class="mb-0"><strong>Date:</strong> 
+                                    <% 
+                                        let displayDate = 'N/A';
+                                        if (receiptData && receiptData.date) {
+                                            displayDate = receiptData.date;
+                                        } else if (receipt.formatted_date) {
+                                            displayDate = receipt.formatted_date;
+                                        } else if (receipt.transaction_date) {
+                                            displayDate = new Date(receipt.transaction_date).toLocaleString();
+                                        }
+                                    %>
+                                    <%= displayDate %>
+                                </p>
                             </div>
                             <div class="col-md-6 text-end">
                                 <h5 class="mb-2">
@@ -235,11 +274,32 @@
                                     <% } %>
                                 </h5>
                                 <% 
-                                    const entityInfo = receipt.receipt_type === 'PURCHASE_RECEIPT' 
-                                        ? receipt.receipt_data.supplier 
-                                        : receipt.receipt_data.customer;
+                                    let entityInfo = {};
+                                    
+                                    if (receipt.receipt_type === 'PURCHASE_RECEIPT') {
+                                        // Try to get supplier info from multiple sources
+                                        if (receiptData && receiptData.supplier) {
+                                            entityInfo = receiptData.supplier;
+                                        } else if (supplier) {
+                                            entityInfo = {
+                                                name: supplier.name,
+                                                contactPerson: supplier.contact_person,
+                                                email: supplier.contact_email || supplier.email,
+                                                phone: supplier.phone
+                                            };
+                                        } else {
+                                            entityInfo = { name: 'Supplier information not available' };
+                                        }
+                                    } else {
+                                        // Sales receipt - customer info
+                                        if (receiptData && receiptData.customer) {
+                                            entityInfo = receiptData.customer;
+                                        } else {
+                                            entityInfo = { name: 'Walk-in Customer' };
+                                        }
+                                    }
                                 %>
-                                <p class="mb-1"><strong><%= entityInfo.name %></strong></p>
+                                <p class="mb-1"><strong><%= entityInfo.name || 'N/A' %></strong></p>
                                 <% if (entityInfo.contactPerson) { %>
                                     <p class="mb-1">Contact: <%= entityInfo.contactPerson %></p>
                                 <% } %>
@@ -271,17 +331,37 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <% receipt.receipt_data.items.forEach(item => { %>
+                                        <% 
+                                            let items = [];
+                                            if (receiptData && receiptData.items && Array.isArray(receiptData.items)) {
+                                                items = receiptData.items;
+                                            } else {
+                                                // Create a fallback item from available data
+                                                let description = 'Product';
+                                                if (phone) {
+                                                    description = `${phone.device_maker || ''} ${phone.device_name || ''}`.trim();
+                                                }
+                                                
+                                                items = [{
+                                                    description: description,
+                                                    specifications: phone ? [phone.ram, phone.rom, phone.color].filter(Boolean).join(', ') : '',
+                                                    quantity: 1,
+                                                    unitPrice: receipt.subtotal ? `$${parseFloat(receipt.subtotal).toFixed(2)}` : '$0.00',
+                                                    lineTotal: receipt.subtotal ? `$${parseFloat(receipt.subtotal).toFixed(2)}` : '$0.00'
+                                                }];
+                                            }
+                                        %>
+                                        <% items.forEach(item => { %>
                                             <tr>
                                                 <td>
-                                                    <strong><%= item.description %></strong>
+                                                    <strong><%= item.description || 'Product' %></strong>
                                                     <% if (item.specifications) { %>
                                                         <br><small class="text-muted"><%= item.specifications %></small>
                                                     <% } %>
                                                 </td>
-                                                <td class="text-center"><%= item.quantity %></td>
-                                                <td class="text-end"><%= item.unitPrice %></td>
-                                                <td class="text-end"><strong><%= item.lineTotal %></strong></td>
+                                                <td class="text-center"><%= item.quantity || 1 %></td>
+                                                <td class="text-end"><%= item.unitPrice || '$0.00' %></td>
+                                                <td class="text-end"><strong><%= item.lineTotal || '$0.00' %></strong></td>
                                             </tr>
                                         <% }); %>
                                     </tbody>
@@ -293,41 +373,58 @@
                         <div class="row justify-content-end">
                             <div class="col-md-6">
                                 <div class="financial-summary">
+                                    <% 
+                                        // Try to get financial data from receiptData, fallback to receipt table fields
+                                        let financials = {};
+                                        if (receiptData && receiptData.financials) {
+                                            financials = receiptData.financials;
+                                        } else {
+                                            // Fallback to database fields
+                                            financials = {
+                                                subtotal: receipt.subtotal ? `$${parseFloat(receipt.subtotal).toFixed(2)}` : '$0.00',
+                                                taxAmount: receipt.tax_amount ? `$${parseFloat(receipt.tax_amount).toFixed(2)}` : '$0.00',
+                                                vatAmount: receipt.tax_amount ? `$${parseFloat(receipt.tax_amount).toFixed(2)}` : '$0.00',
+                                                taxRate: '10.0%',
+                                                vatRate: '20.0%',
+                                                total: receipt.total_amount ? `$${parseFloat(receipt.total_amount).toFixed(2)}` : '$0.00'
+                                            };
+                                        }
+                                    %>
                                     <div class="financial-row">
                                         <span>Subtotal:</span>
-                                        <span><%= receipt.receipt_data.financials.subtotal %></span>
+                                        <span><%= financials.subtotal || `$${parseFloat(receipt.subtotal || 0).toFixed(2)}` %></span>
                                     </div>
                                     <div class="financial-row">
                                         <span>
                                             <%= receipt.receipt_type === 'PURCHASE_RECEIPT' ? 'VAT' : 'Tax' %> 
                                             (<%= receipt.receipt_type === 'PURCHASE_RECEIPT' 
-                                                ? receipt.receipt_data.financials.vatRate 
-                                                : receipt.receipt_data.financials.taxRate %>):
+                                                ? (financials.vatRate || '20.0%')
+                                                : (financials.taxRate || '10.0%') %>):
                                         </span>
                                         <span>
                                             <%= receipt.receipt_type === 'PURCHASE_RECEIPT' 
-                                                ? receipt.receipt_data.financials.vatAmount 
-                                                : receipt.receipt_data.financials.taxAmount %>
+                                                ? (financials.vatAmount || `$${parseFloat(receipt.tax_amount || 0).toFixed(2)}`)
+                                                : (financials.taxAmount || `$${parseFloat(receipt.tax_amount || 0).toFixed(2)}`) %>
                                         </span>
                                     </div>
                                     <div class="financial-row total">
                                         <span>Total Amount:</span>
-                                        <span><%= receipt.receipt_data.financials.total %></span>
+                                        <span><%= financials.total || `$${parseFloat(receipt.total_amount || 0).toFixed(2)}` %></span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Notes Section -->
-                        <% if (receipt.receipt_data.notes || receipt.notes) { %>
+                        <% if ((receiptData && receiptData.notes) || receipt.notes) { %>
                             <div class="metadata-section mt-4">
                                 <h6 class="mb-2">
                                     <i class="fas fa-sticky-note me-2"></i>Notes
                                 </h6>
-                                <% if (receipt.receipt_data.notes) { %>
-                                    <p class="mb-2"><%= receipt.receipt_data.notes %></p>
+                                <% if (receiptData && receiptData.notes) { %>
+                                    <p class="mb-2"><%= receiptData.notes %></p>
                                 <% } %>
-                                <% if (receipt.notes && receipt.notes !== receipt.receipt_data.notes) { %>
+                                <% if (receipt.notes && (!receiptData || receipt.notes !== receiptData.notes)) { %>
                                     <p class="mb-0"><strong>Additional Notes:</strong> <%= receipt.notes %></p>
                                 <% } %>
                             </div>

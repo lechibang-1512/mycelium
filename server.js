@@ -412,10 +412,10 @@ async function startServer() {
                 conn = await suppliersPool.getConnection();
                 const sanitizedData = SanitizationService.sanitizeSupplierInput(req.body);
                 
-                // Check if supplier_id already exists
-                const [existingSupplier] = await conn.query('SELECT id FROM suppliers WHERE supplier_id = ?', [sanitizedData.supplier_id]);
+                // Check if supplier name already exists
+                const [existingSupplier] = await conn.query('SELECT id FROM suppliers WHERE name = ?', [sanitizedData.name]);
                 if (existingSupplier) {
-                    req.flash('error', 'Supplier ID already exists. Please use a different ID.');
+                    req.flash('error', 'Supplier name already exists. Please use a different name.');
                     return res.redirect('/suppliers/add');
                 }
                 
@@ -587,7 +587,7 @@ async function startServer() {
                 let supplierMap = {};
                 
                 if (supplierIds.length > 0) {
-                    const supplierQuery = `SELECT supplier_id, name FROM suppliers WHERE supplier_id IN (${supplierIds.map(() => '?').join(',')})`;
+                    const supplierQuery = `SELECT id as supplier_id, name FROM suppliers WHERE id IN (${supplierIds.map(() => '?').join(',')})`;
                     const suppliersData = await suppliersConn.query(supplierQuery, supplierIds);
                     supplierMap = Object.fromEntries(suppliersData.map(s => [s.supplier_id, s.name]));
                 }
@@ -598,7 +598,7 @@ async function startServer() {
                     supplier_name: supplierMap[receipt.supplier_id] || null
                 }));
                 
-                const suppliersResult = await suppliersConn.query('SELECT supplier_id, name FROM suppliers WHERE is_active = 1');
+                const suppliersResult = await suppliersConn.query('SELECT id as supplier_id, name FROM suppliers WHERE is_active = 1');
                 const phonesResult = await conn.query('SELECT product_id, device_name, device_maker FROM specs_db ORDER BY device_name');
 
                 res.render('receipts', {
@@ -618,6 +618,96 @@ async function startServer() {
             }
         });
 
+        // Individual Receipt Details Route
+        app.get('/receipt/:receipt_id', isAuthenticated, async (req, res, next) => {
+            let conn, suppliersConn;
+            try {
+                conn = await pool.getConnection();
+                suppliersConn = await suppliersPool.getConnection();
+                
+                const receiptId = req.params.receipt_id;
+                const isDownload = req.query.download === '1';
+                const isPrint = !('download' in req.query); // Print view if no download param
+                
+                // Get receipt with product info
+                const [receipt] = await conn.query(`
+                    SELECT r.*, s.device_name, s.device_maker, s.ram, s.rom, s.color,
+                           DATE_FORMAT(r.transaction_date, '%M %d, %Y at %h:%i %p') as formatted_date
+                    FROM receipts r
+                    LEFT JOIN specs_db s ON r.phone_id = s.product_id
+                    WHERE r.receipt_id = ?
+                `, [receiptId]);
+                
+                if (!receipt) {
+                    req.flash('error', 'Receipt not found');
+                    return res.redirect('/receipts');
+                }
+                
+                // Get supplier information if this is a purchase receipt
+                let supplier = null;
+                if (receipt.supplier_id && receipt.receipt_type === 'PURCHASE_RECEIPT') {
+                    const [supplierResult] = await suppliersConn.query(
+                        'SELECT * FROM suppliers WHERE id = ?', 
+                        [receipt.supplier_id]
+                    );
+                    supplier = supplierResult;
+                }
+                
+                // Get phone information
+                let phone = null;
+                if (receipt.phone_id) {
+                    const [phoneResult] = await conn.query(
+                        'SELECT * FROM specs_db WHERE product_id = ?', 
+                        [receipt.phone_id]
+                    );
+                    phone = phoneResult;
+                }
+                
+                // Parse receipt data JSON
+                let receiptData = {};
+                try {
+                    receiptData = JSON.parse(receipt.receipt_data || '{}');
+                } catch (e) {
+                    console.warn('Failed to parse receipt data:', e);
+                    receiptData = {};
+                }
+
+                if (isDownload) {
+                    // Handle PDF download - for now, redirect to print view
+                    // PDF generation can be implemented later with libraries like puppeteer
+                    res.setHeader('Content-Type', 'text/html');
+                    res.setHeader('Content-Disposition', `inline; filename="receipt-${receiptId}.html"`);
+                    
+                    res.render('receipt-details', {
+                        title: `Receipt ${receiptId}`,
+                        receipt: convertBigIntToNumber(receipt),
+                        receiptData: receiptData,
+                        supplier: supplier ? convertBigIntToNumber(supplier) : null,
+                        phone: phone ? convertBigIntToNumber(phone) : null,
+                        isDownload: true,
+                        csrfToken: req.csrfToken()
+                    });
+                } else {
+                    // Render normal details view or print view
+                    res.render('receipt-details', {
+                        title: `Receipt ${receiptId}`,
+                        receipt: convertBigIntToNumber(receipt),
+                        receiptData: receiptData,
+                        supplier: supplier ? convertBigIntToNumber(supplier) : null,
+                        phone: phone ? convertBigIntToNumber(phone) : null,
+                        isPrintView: isPrint,
+                        csrfToken: req.csrfToken()
+                    });
+                }
+                
+            } catch (err) {
+                next(err);
+            } finally {
+                if (conn) conn.release();
+                if (suppliersConn) suppliersConn.release();
+            }
+        });
+
         // Receive Stock Route
         app.get('/inventory/receive', isStaffOrAdmin, async (req, res, next) => {
             let conn, suppliersConn;
@@ -625,8 +715,8 @@ async function startServer() {
                 conn = await pool.getConnection();
                 suppliersConn = await suppliersPool.getConnection();
                 
-                const phonesResult = await conn.query('SELECT product_id, device_name, device_maker, device_price FROM specs_db ORDER BY device_name');
-                const suppliersResult = await suppliersConn.query('SELECT supplier_id, name FROM suppliers WHERE is_active = 1');
+                const phonesResult = await conn.query('SELECT product_id, device_name, device_maker, device_price, device_inventory, ram, rom, color FROM specs_db ORDER BY device_name');
+                const suppliersResult = await suppliersConn.query('SELECT id as supplier_id, name FROM suppliers WHERE is_active = 1');
 
                 res.render('receive-stock', {
                     title: 'Receive Stock',
@@ -642,12 +732,113 @@ async function startServer() {
             }
         });
 
+        // Process Receive Stock Route
+        app.post('/inventory/receive', isStaffOrAdmin, async (req, res, next) => {
+            let conn;
+            try {
+                conn = await pool.getConnection();
+                await conn.beginTransaction();
+                
+                const {
+                    phone_id,
+                    supplier_id,
+                    quantity,
+                    unit_cost,
+                    tax_type,
+                    vat_rate,
+                    import_duty,
+                    other_fees,
+                    po_number,
+                    notes,
+                    generate_receipt
+                } = req.body;
+                
+                // Validate inputs
+                if (!phone_id || !supplier_id || !quantity || quantity <= 0) {
+                    req.flash('error', 'Please provide all required fields with valid values');
+                    return res.redirect('/inventory/receive');
+                }
+                
+                // Get current phone data
+                const [phone] = await conn.query('SELECT * FROM specs_db WHERE product_id = ?', [phone_id]);
+                if (!phone) {
+                    req.flash('error', 'Phone not found');
+                    return res.redirect('/inventory/receive');
+                }
+                
+                // Calculate financial values
+                const unitCostValue = parseFloat(unit_cost) || 0;
+                const quantityValue = parseInt(quantity);
+                const vatRateValue = parseFloat(vat_rate) || 0;
+                const importDutyValue = parseFloat(import_duty) || 0;
+                const otherFeesValue = parseFloat(other_fees) || 0;
+                
+                const subtotal = unitCostValue * quantityValue;
+                const vatAmount = tax_type === 'vat' ? subtotal * vatRateValue : 0;
+                const importDutyAmount = (subtotal * importDutyValue) / 100;
+                const totalCost = subtotal + vatAmount + importDutyAmount + otherFeesValue;
+                
+                // Update inventory
+                const newInventoryLevel = (phone.device_inventory || 0) + quantityValue;
+                await conn.query(
+                    'UPDATE specs_db SET device_inventory = ? WHERE product_id = ?',
+                    [newInventoryLevel, phone_id]
+                );
+                
+                // Log the inventory transaction
+                await conn.query(
+                    'INSERT INTO inventory_log (phone_id, transaction_type, quantity_changed, total_value, new_inventory_level, supplier_id, notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                    [phone_id, 'incoming', quantityValue, totalCost, newInventoryLevel, supplier_id, notes || null]
+                );
+                
+                // Generate receipt if requested
+                if (generate_receipt === 'on') {
+                    const receiptData = {
+                        phone_info: {
+                            id: phone.product_id,
+                            name: phone.device_name,
+                            maker: phone.device_maker
+                        },
+                        supplier_id: supplier_id,
+                        quantity: quantityValue,
+                        unit_cost: unitCostValue,
+                        subtotal: subtotal,
+                        vat_amount: vatAmount,
+                        import_duty_amount: importDutyAmount,
+                        other_fees: otherFeesValue,
+                        total_cost: totalCost,
+                        po_number: po_number || null,
+                        tax_type: tax_type,
+                        notes: notes || null
+                    };
+                    
+                    const receiptId = `PUR-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+                    
+                    await conn.query(
+                        'INSERT INTO receipts (receipt_id, receipt_type, receipt_data, phone_id, supplier_id, transaction_date, subtotal, tax_amount, total_amount, notes) VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?)',
+                        [receiptId, 'PURCHASE_RECEIPT', JSON.stringify(receiptData), phone_id, supplier_id, subtotal, vatAmount, totalCost, notes || null]
+                    );
+                }
+                
+                await conn.commit();
+                
+                req.flash('success', `Successfully received ${quantityValue} units of ${phone.device_name}. New inventory level: ${newInventoryLevel}`);
+                res.redirect('/inventory/receive?success=received');
+                
+            } catch (err) {
+                if (conn) await conn.rollback();
+                next(err);
+            } finally {
+                if (conn) conn.release();
+            }
+        });
+
         // Sell Stock Route
         app.get('/inventory/sell', isStaffOrAdmin, async (req, res, next) => {
             let conn;
             try {
                 conn = await pool.getConnection();
-                const phonesResult = await conn.query('SELECT product_id, device_name, device_maker, device_price, device_inventory FROM specs_db WHERE device_inventory > 0 ORDER BY device_name');
+                const phonesResult = await conn.query('SELECT product_id, device_name, device_maker, device_price, device_inventory, ram, rom, color FROM specs_db WHERE device_inventory > 0 ORDER BY device_name');
 
                 res.render('sell-stock', {
                     title: 'Sell Stock',
@@ -655,6 +846,119 @@ async function startServer() {
                     csrfToken: req.csrfToken()
                 });
             } catch (err) {
+                next(err);
+            } finally {
+                if (conn) conn.release();
+            }
+        });
+
+        // Process Sell Stock Route
+        app.post('/inventory/sell', isStaffOrAdmin, async (req, res, next) => {
+            let conn;
+            try {
+                conn = await pool.getConnection();
+                await conn.beginTransaction();
+                
+                const {
+                    phone_id,
+                    quantity,
+                    tax_type,
+                    tax_rate,
+                    discount_percent,
+                    service_fee,
+                    customer_name,
+                    customer_email,
+                    customer_phone,
+                    generate_receipt,
+                    email_receipt,
+                    notes
+                } = req.body;
+                
+                // Validate inputs
+                if (!phone_id || !quantity || quantity <= 0) {
+                    req.flash('error', 'Please provide all required fields with valid values');
+                    return res.redirect('/inventory/sell');
+                }
+                
+                // Get current phone data
+                const [phone] = await conn.query('SELECT * FROM specs_db WHERE product_id = ?', [phone_id]);
+                if (!phone) {
+                    req.flash('error', 'Phone not found');
+                    return res.redirect('/inventory/sell');
+                }
+                
+                const quantityValue = parseInt(quantity);
+                const currentInventory = phone.device_inventory || 0;
+                
+                // Check if sufficient stock is available
+                if (quantityValue > currentInventory) {
+                    req.flash('error', `Insufficient stock. Available: ${currentInventory}, Requested: ${quantityValue}`);
+                    return res.redirect('/inventory/sell');
+                }
+                
+                // Calculate financial values
+                const unitPrice = parseFloat(phone.device_price) || 0;
+                const subtotal = unitPrice * quantityValue;
+                const taxRateValue = parseFloat(tax_rate) || 0;
+                const discountPercentValue = parseFloat(discount_percent) || 0;
+                const serviceFeeValue = parseFloat(service_fee) || 0;
+                
+                const taxAmount = tax_type !== 'none' ? subtotal * taxRateValue : 0;
+                const discountAmount = (subtotal * discountPercentValue) / 100;
+                const totalAmount = subtotal + taxAmount - discountAmount + serviceFeeValue;
+                
+                // Update inventory
+                const newInventoryLevel = currentInventory - quantityValue;
+                await conn.query(
+                    'UPDATE specs_db SET device_inventory = ? WHERE product_id = ?',
+                    [newInventoryLevel, phone_id]
+                );
+                
+                // Log the inventory transaction
+                await conn.query(
+                    'INSERT INTO inventory_log (phone_id, transaction_type, quantity_changed, total_value, new_inventory_level, notes) VALUES (?, ?, ?, ?, ?, ?)',
+                    [phone_id, 'outgoing', -quantityValue, totalAmount, newInventoryLevel, notes || null]
+                );
+                
+                // Generate receipt if requested
+                if (generate_receipt === 'on') {
+                    const receiptData = {
+                        phone_info: {
+                            id: phone.product_id,
+                            name: phone.device_name,
+                            maker: phone.device_maker
+                        },
+                        customer: {
+                            name: customer_name || null,
+                            email: customer_email || null,
+                            phone: customer_phone || null
+                        },
+                        quantity: quantityValue,
+                        unit_price: unitPrice,
+                        subtotal: subtotal,
+                        tax_amount: taxAmount,
+                        discount_amount: discountAmount,
+                        service_fee: serviceFeeValue,
+                        total_amount: totalAmount,
+                        tax_type: tax_type,
+                        notes: notes || null
+                    };
+                    
+                    const receiptId = `SAL-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+                    
+                    await conn.query(
+                        'INSERT INTO receipts (receipt_id, receipt_type, receipt_data, phone_id, transaction_date, subtotal, tax_amount, total_amount, notes) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?)',
+                        [receiptId, 'SALES_RECEIPT', JSON.stringify(receiptData), phone_id, subtotal, taxAmount, totalAmount, notes || null]
+                    );
+                }
+                
+                await conn.commit();
+                
+                req.flash('success', `Successfully sold ${quantityValue} units of ${phone.device_name}. Remaining inventory: ${newInventoryLevel}`);
+                res.redirect('/inventory/sell?success=sold');
+                
+            } catch (err) {
+                if (conn) await conn.rollback();
                 next(err);
             } finally {
                 if (conn) conn.release();
@@ -1050,6 +1354,277 @@ async function startServer() {
                     insights: [],
                     csrfToken: req.csrfToken()
                 });
+            } catch (err) {
+                next(err);
+            } finally {
+                if (conn) conn.release();
+                if (suppliersConn) suppliersConn.release();
+            }
+        });
+
+        // Receipts Analytics Route
+        app.get('/receipts/analytics', isAuthenticated, async (req, res, next) => {
+            let conn, suppliersConn;
+            try {
+                conn = await pool.getConnection();
+                suppliersConn = await suppliersPool.getConnection();
+                
+                // Get receipts analytics data
+                const totalReceipts = await conn.query('SELECT COUNT(*) as count FROM receipts');
+                const totalPurchases = await conn.query('SELECT COUNT(*) as count FROM receipts WHERE receipt_type = "PURCHASE_RECEIPT"');
+                const totalSales = await conn.query('SELECT COUNT(*) as count FROM receipts WHERE receipt_type = "SALE_RECEIPT"');
+                const totalValue = await conn.query('SELECT SUM(total_amount) as total FROM receipts');
+                
+                // Recent receipts
+                const recentReceipts = await conn.query(`
+                    SELECT r.*, s.device_name, s.device_maker,
+                           DATE_FORMAT(r.transaction_date, '%M %d, %Y at %h:%i %p') as formatted_date
+                    FROM receipts r
+                    LEFT JOIN specs_db s ON r.phone_id = s.product_id
+                    ORDER BY r.transaction_date DESC
+                    LIMIT 10
+                `);
+                
+                // Monthly trends
+                const monthlyTrends = await conn.query(`
+                    SELECT 
+                        DATE_FORMAT(transaction_date, '%Y-%m') as month,
+                        COUNT(*) as count,
+                        SUM(total_amount) as total
+                    FROM receipts
+                    WHERE transaction_date >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+                    GROUP BY DATE_FORMAT(transaction_date, '%Y-%m')
+                    ORDER BY month ASC
+                `);
+                
+                res.render('receipts-analytics', {
+                    title: 'Receipts Analytics',
+                    totalReceipts: totalReceipts[0]?.count || 0,
+                    totalPurchases: totalPurchases[0]?.count || 0,
+                    totalSales: totalSales[0]?.count || 0,
+                    totalValue: totalValue[0]?.total || 0,
+                    recentReceipts: convertBigIntToNumber(recentReceipts),
+                    monthlyTrends: convertBigIntToNumber(monthlyTrends),
+                    csrfToken: req.csrfToken()
+                });
+                
+            } catch (err) {
+                next(err);
+            } finally {
+                if (conn) conn.release();
+                if (suppliersConn) suppliersConn.release();
+            }
+        });
+
+        // Delete Receipt Route
+        app.post('/receipts/:receipt_id/delete', isStaffOrAdmin, async (req, res, next) => {
+            let conn;
+            try {
+                conn = await pool.getConnection();
+                
+                const receiptId = req.params.receipt_id;
+                
+                // Check if receipt exists
+                const [receipt] = await conn.query('SELECT * FROM receipts WHERE receipt_id = ?', [receiptId]);
+                if (!receipt) {
+                    return res.json({ success: false, error: 'Receipt not found' });
+                }
+                
+                // Delete the receipt
+                await conn.query('DELETE FROM receipts WHERE receipt_id = ?', [receiptId]);
+                
+                res.json({ success: true, message: 'Receipt deleted successfully' });
+                
+            } catch (err) {
+                console.error('Error deleting receipt:', err);
+                res.json({ success: false, error: 'Failed to delete receipt' });
+            } finally {
+                if (conn) conn.release();
+            }
+        });
+
+        // Bulk Export Receipts Route
+        app.post('/receipts/bulk-export', isAuthenticated, async (req, res, next) => {
+            let conn, suppliersConn;
+            try {
+                conn = await pool.getConnection();
+                suppliersConn = await suppliersPool.getConnection();
+                
+                const receiptIds = JSON.parse(req.body.receiptIds || '[]');
+                
+                if (receiptIds.length === 0) {
+                    req.flash('error', 'No receipts selected for export');
+                    return res.redirect('/receipts');
+                }
+                
+                // Get receipts with product info
+                const placeholders = receiptIds.map(() => '?').join(',');
+                const receipts = await conn.query(`
+                    SELECT r.*, s.device_name, s.device_maker, s.ram, s.rom, s.color,
+                           DATE_FORMAT(r.transaction_date, '%M %d, %Y at %h:%i %p') as formatted_date
+                    FROM receipts r
+                    LEFT JOIN specs_db s ON r.phone_id = s.product_id
+                    WHERE r.receipt_id IN (${placeholders})
+                `, receiptIds);
+                
+                // For now, return JSON. Can be enhanced to CSV/PDF later
+                res.setHeader('Content-Type', 'application/json');
+                res.setHeader('Content-Disposition', 'attachment; filename="receipts-export.json"');
+                res.json(convertBigIntToNumber(receipts));
+                
+            } catch (err) {
+                next(err);
+            } finally {
+                if (conn) conn.release();
+                if (suppliersConn) suppliersConn.release();
+            }
+        });
+
+        // Bulk Delete Receipts Route
+        app.post('/receipts/bulk-delete', isStaffOrAdmin, async (req, res, next) => {
+            let conn;
+            try {
+                conn = await pool.getConnection();
+                
+                const receiptIds = req.body.receiptIds || [];
+                
+                if (receiptIds.length === 0) {
+                    return res.json({ success: false, error: 'No receipts selected for deletion' });
+                }
+                
+                // Delete the receipts
+                const placeholders = receiptIds.map(() => '?').join(',');
+                const result = await conn.query(`DELETE FROM receipts WHERE receipt_id IN (${placeholders})`, receiptIds);
+                
+                res.json({ 
+                    success: true, 
+                    message: `Successfully deleted ${result.affectedRows} receipt(s)` 
+                });
+                
+            } catch (err) {
+                console.error('Error bulk deleting receipts:', err);
+                res.json({ success: false, error: 'Failed to delete receipts' });
+            } finally {
+                if (conn) conn.release();
+            }
+        });
+
+        // Export Receipts Route
+        app.get('/receipts/export/:format', isAuthenticated, async (req, res, next) => {
+            let conn, suppliersConn;
+            try {
+                conn = await pool.getConnection();
+                suppliersConn = await suppliersPool.getConnection();
+                
+                const format = req.params.format;
+                const { search, dateFrom, dateTo, type } = req.query;
+                
+                // Build query with filters
+                let query = `
+                    SELECT r.*, s.device_name, s.device_maker, s.ram, s.rom, s.color,
+                           DATE_FORMAT(r.transaction_date, '%M %d, %Y at %h:%i %p') as formatted_date
+                    FROM receipts r
+                    LEFT JOIN specs_db s ON r.phone_id = s.product_id
+                    WHERE 1=1
+                `;
+                const params = [];
+                
+                if (search) {
+                    query += ` AND (r.receipt_id LIKE ? OR s.device_name LIKE ?)`;
+                    params.push(`%${search}%`, `%${search}%`);
+                }
+                
+                if (dateFrom) {
+                    query += ` AND r.transaction_date >= ?`;
+                    params.push(dateFrom);
+                }
+                
+                if (dateTo) {
+                    query += ` AND r.transaction_date <= ?`;
+                    params.push(dateTo);
+                }
+                
+                if (type) {
+                    query += ` AND r.receipt_type = ?`;
+                    params.push(type);
+                }
+                
+                query += ` ORDER BY r.transaction_date DESC`;
+                
+                const receipts = await conn.query(query, params);
+                
+                // Export based on format
+                if (format === 'csv') {
+                    res.setHeader('Content-Type', 'text/csv');
+                    res.setHeader('Content-Disposition', 'attachment; filename="receipts-export.csv"');
+                    
+                    // Simple CSV export
+                    const csvHeaders = 'Receipt ID,Type,Amount,Phone,Created At\n';
+                    const csvData = receipts.map(r => 
+                        `${r.receipt_id},${r.receipt_type},${r.amount || 0},${r.device_name || 'N/A'},${r.transaction_date}`
+                    ).join('\n');
+                    
+                    res.send(csvHeaders + csvData);
+                } else if (format === 'json') {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.setHeader('Content-Disposition', 'attachment; filename="receipts-export.json"');
+                    res.json(convertBigIntToNumber(receipts));
+                } else if (format === 'pdf') {
+                    // For now, render as HTML that can be printed to PDF
+                    res.setHeader('Content-Type', 'text/html');
+                    res.setHeader('Content-Disposition', 'inline; filename="receipts-export.html"');
+                    
+                    // Render a simple HTML report
+                    const htmlContent = `
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>Receipts Export</title>
+                            <style>
+                                body { font-family: Arial, sans-serif; margin: 20px; }
+                                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                                th { background-color: #f2f2f2; }
+                                .header { text-align: center; margin-bottom: 20px; }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="header">
+                                <h1>Receipts Export Report</h1>
+                                <p>Generated on: ${new Date().toLocaleString()}</p>
+                                <p>Total Receipts: ${receipts.length}</p>
+                            </div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Receipt ID</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Phone</th>
+                                        <th>Created At</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${receipts.map(r => `
+                                        <tr>
+                                            <td>${r.receipt_id}</td>
+                                            <td>${r.receipt_type}</td>
+                                            <td>$${(r.amount || 0).toLocaleString()}</td>
+                                            <td>${r.device_name || 'N/A'}</td>
+                                            <td>${new Date(r.transaction_date).toLocaleString()}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </body>
+                        </html>
+                    `;
+                    
+                    res.send(htmlContent);
+                } else {
+                    res.status(400).json({ error: 'Unsupported export format' });
+                }
+                
             } catch (err) {
                 next(err);
             } finally {

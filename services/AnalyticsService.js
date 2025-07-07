@@ -288,7 +288,7 @@ class AnalyticsService {
             // Then get supplier details from suppliers_db
             const suppliersQuery = `
                 SELECT 
-                    supplier_id,
+                    id as supplier_id,
                     name as supplier_name,
                     category,
                     is_active,
