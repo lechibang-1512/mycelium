@@ -64,7 +64,7 @@ class ReceiptService {
             },
             notes,
             metadata: {
-                phoneId: phone.id,
+                phoneId: phone.product_id,
                 supplierId: supplier.supplier_id,
                 generatedAt: new Date().toISOString()
             }
@@ -123,7 +123,7 @@ class ReceiptService {
             },
             notes,
             metadata: {
-                phoneId: phone.id,
+                phoneId: phone.product_id,
                 generatedAt: new Date().toISOString()
             }
         };
@@ -322,7 +322,7 @@ class ReceiptService {
             receipt_id: receipt.receiptId,
             receipt_type: receipt.type,
             receipt_data: JSON.stringify(receipt),
-            phone_id: receipt.metadata.phoneId,
+            product_id: receipt.metadata.phoneId, // Use product_id instead of phone_id for foreign key reference
             supplier_id: receipt.metadata.supplierId || null,
             transaction_date: new Date(),
             subtotal: this.parseAmount(receipt.financials.subtotal),
@@ -331,9 +331,11 @@ class ReceiptService {
             notes: receipt.notes || null
         };
 
+        // Don't include phone_id in the INSERT since it's auto-increment
+        // Include product_id as foreign key to specs_db.product_id
         const query = `
             INSERT INTO receipts (
-                receipt_id, receipt_type, receipt_data, phone_id, supplier_id, 
+                receipt_id, receipt_type, receipt_data, product_id, supplier_id, 
                 transaction_date, subtotal, tax_amount, total_amount, notes
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
@@ -342,7 +344,7 @@ class ReceiptService {
             receiptData.receipt_id,
             receiptData.receipt_type,
             receiptData.receipt_data,
-            receiptData.phone_id,
+            receiptData.product_id,
             receiptData.supplier_id,
             receiptData.transaction_date,
             receiptData.subtotal,
