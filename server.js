@@ -1331,7 +1331,7 @@ async function startServer() {
                 const [lowStock] = await conn.query('SELECT COUNT(*) as count FROM specs_db WHERE device_inventory <= 5');
                 
                 // Get low stock products
-                const lowStockProducts = await conn.query(`
+                const [lowStockProducts] = await conn.query(`
                     SELECT device_name, device_maker, device_price, device_inventory
                     FROM specs_db
                     WHERE device_inventory <= 5
@@ -1363,7 +1363,7 @@ async function startServer() {
                     showFilterNotification: req.query.period && req.query.period !== '30',
                     insights: [],
                     growthRate: 0, // Default growth rate (will be calculated later)
-                    averageOrderValue: totalUnitsSold.units_sold > 0 ? (parseFloat(totalRevenue.total_revenue || 0) / totalUnitsSold.units_sold).toFixed(2) : '0.00',
+                    averageOrderValue: totalUnitsSold.units_sold > 0 ? parseFloat((parseFloat(totalRevenue.total_revenue || 0) / totalUnitsSold.units_sold).toFixed(2)) : 0.00,
                     csrfToken: req.csrfToken()
                 });
             } catch (err) {
