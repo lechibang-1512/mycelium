@@ -11,7 +11,7 @@ const dbs = [
   { name: 'suppliers_db', config: { host: process.env.SUPPLIERS_DB_HOST || '127.0.0.1', user: process.env.SUPPLIERS_DB_USER, password: process.env.SUPPLIERS_DB_PASSWORD, database: process.env.SUPPLIERS_DB_NAME || 'suppliers_db' } },
   { name: 'users_db', config: { host: process.env.AUTH_DB_HOST || '127.0.0.1', user: process.env.AUTH_DB_USER, password: process.env.AUTH_DB_PASSWORD, database: process.env.AUTH_DB_NAME || 'users_db' } }
 ];
-const SQL_DIR = path.join(__dirname, 'sql');
+const SQL_DIR = path.join(__dirname, '..', 'sql'); // Create sql directory in project root
 
 
 /**
@@ -89,12 +89,90 @@ async function run() {
         try { await fs.access(SQL_DIR); } catch (error) { await fs.mkdir(SQL_DIR); }
     }
 
-    function dumpDatabaseSchemas() {
-      // ... (This function remains the same as before)
+    async function dumpDatabaseSchemas() {
+        const mariadb = require('mariadb');
+        await ensureSqlDirExists();
+        
+        console.log('\n--- Database Schema Dumping ---');
+        
+        for (const db of dbs) {
+            console.log(`\nConnecting to ${db.name}...`);
+            
+            let conn;
+            try {
+                // Create connection pool for this database
+                const pool = mariadb.createPool({
+                    ...db.config,
+                    connectionLimit: 1
+                });
+                
+                conn = await pool.getConnection();
+                console.log(`✓ Connected to ${db.name}`);
+                
+                // Get all tables in the database
+                const tables = await conn.query("SHOW TABLES");
+                
+                if (tables.length === 0) {
+                    console.log(`  No tables found in ${db.name}`);
+                    conn.end();
+                    pool.end();
+                    continue;
+                }
+                
+                console.log(`  Found ${tables.length} tables, generating schema...`);
+                
+                // Generate CREATE TABLE statements for each table
+                let schemaSQL = `-- Schema dump for ${db.name}\n-- Generated on ${new Date().toISOString()}\n\n`;
+                
+                for (const tableRow of tables) {
+                    const tableName = Object.values(tableRow)[0]; // Get table name from result
+                    
+                    try {
+                        const createTableResult = await conn.query(`SHOW CREATE TABLE \`${tableName}\``);
+                        const createStatement = createTableResult[0]['Create Table'];
+                        schemaSQL += `-- Table: ${tableName}\n${createStatement};\n\n`;
+                    } catch (tableError) {
+                        console.warn(`    Warning: Could not get schema for table ${tableName}: ${tableError.message}`);
+                        schemaSQL += `-- Warning: Could not dump table ${tableName} - ${tableError.message}\n\n`;
+                    }
+                }
+                
+                // Write schema to file
+                const outputFile = path.join(SQL_DIR, `${db.name}-schema.sql`);
+                await fs.writeFile(outputFile, schemaSQL);
+                console.log(`  ✓ Schema saved to: ${outputFile}`);
+                
+                conn.end();
+                pool.end();
+                
+            } catch (error) {
+                console.error(`  ✗ Failed to dump ${db.name}:`, error.message);
+                if (conn) conn.end();
+            }
+        }
+        
+        console.log('\n--- Schema dumping completed ---\n');
     }
 
     async function getAvailableSchemas() {
-      // ... (This function remains the same as before)
+        await ensureSqlDirExists();
+        
+        try {
+            const files = await fs.readdir(SQL_DIR);
+            const schemaFiles = files.filter(file => file.endsWith('-schema.sql'));
+            
+            if (schemaFiles.length === 0) {
+                console.log('\nNo schema files found in sql/ directory.');
+                console.log('Please run "Dump Database Schemas" first to generate schema files.\n');
+                return [];
+            }
+            
+            // Extract schema names by removing '-schema.sql' suffix
+            return schemaFiles.map(file => file.replace('-schema.sql', ''));
+        } catch (error) {
+            console.error('Error reading SQL directory:', error.message);
+            return [];
+        }
     }
 
     async function analyzeSchema(schemaName) {
