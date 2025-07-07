@@ -129,10 +129,16 @@ class SanitizationService {
     static sanitizeSupplierInput(data) {
         return {
             name: this.parseString(data.name),
+            category: this.parseString(data.category),
             contact_person: this.parseString(data.contact_person),
+            contact_position: this.parseString(data.contact_position),
+            contact_email: this.parseString(data.contact_email),
             email: this.parseString(data.email),
             phone: this.parseString(data.phone),
+            website: this.parseString(data.website),
             address: this.parseString(data.address),
+            notes: this.parseString(data.notes),
+            supplier_id: this.parseString(data.supplier_id),
             is_active: data.is_active === undefined ? true : Boolean(data.is_active)
         };
     }

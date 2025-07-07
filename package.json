@@ -1,8 +1,8 @@
 {
   "name": "mycelium-project",
-  "version": "",
-  "description": "",
-  "main": "index.js",
+  "version": "1.0.0",
+  "description": "Secure inventory management system with advanced session security and user management",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
@@ -17,8 +17,8 @@
     "type": "git",
     "url": "git+https://github.com/your-username/inventory-management-system.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["inventory", "management", "security", "session", "nodejs", "express", "mysql"],
+  "author": "Your Name <your.email@domain.com>",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
