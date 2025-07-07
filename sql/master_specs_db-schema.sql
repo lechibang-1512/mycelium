@@ -1,0 +1,97 @@
+-- Schema dump for master_specs_db
+-- Generated on 2025-07-07T02:22:12.628Z
+
+-- Table: inventory_log
+CREATE TABLE `inventory_log` (
+  `log_id` int(11) NOT NULL AUTO_INCREMENT,
+  `phone_id` int(11) NOT NULL,
+  `transaction_type` enum('incoming','outgoing','adjustment') NOT NULL,
+  `quantity_changed` int(11) NOT NULL,
+  `total_value` decimal(12,2) DEFAULT NULL,
+  `new_inventory_level` int(11) NOT NULL,
+  `supplier_id` varchar(50) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `transaction_date` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`log_id`),
+  KEY `phone_id` (`phone_id`),
+  CONSTRAINT `inventory_log_ibfk_1` FOREIGN KEY (`phone_id`) REFERENCES `specs_db` (`product_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table: receipts
+CREATE TABLE `receipts` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `receipt_id` varchar(50) NOT NULL,
+  `receipt_type` enum('PURCHASE_RECEIPT','SALES_RECEIPT') NOT NULL,
+  `receipt_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`receipt_data`)),
+  `phone_id` bigint(20) NOT NULL,
+  `supplier_id` varchar(100) DEFAULT NULL,
+  `transaction_date` datetime NOT NULL,
+  `subtotal` decimal(10,2) NOT NULL,
+  `tax_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `total_amount` decimal(10,2) NOT NULL,
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `receipt_id` (`receipt_id`),
+  KEY `idx_receipt_id` (`receipt_id`),
+  KEY `idx_phone_id` (`phone_id`),
+  KEY `idx_supplier_id` (`supplier_id`),
+  KEY `idx_transaction_date` (`transaction_date`),
+  KEY `idx_receipt_type` (`receipt_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table: specs_db
+CREATE TABLE `specs_db` (
+  `product_id` int(11) NOT NULL AUTO_INCREMENT,
+  `device_name` varchar(255) DEFAULT NULL,
+  `device_maker` varchar(255) DEFAULT NULL,
+  `device_price` decimal(10,2) DEFAULT NULL,
+  `device_inventory` int(11) DEFAULT NULL,
+  `color` varchar(255) DEFAULT NULL,
+  `water_and_dust_rating` varchar(255) DEFAULT NULL,
+  `processor` varchar(255) DEFAULT NULL,
+  `process_node` varchar(255) DEFAULT NULL,
+  `cpu_cores` int(11) DEFAULT NULL,
+  `cpu_frequency` varchar(255) DEFAULT NULL,
+  `gpu` varchar(255) DEFAULT NULL,
+  `memory_type` varchar(255) DEFAULT NULL,
+  `ram` varchar(255) DEFAULT NULL,
+  `rom` varchar(255) DEFAULT NULL,
+  `expandable_memory` varchar(255) DEFAULT NULL,
+  `length_mm` decimal(5,2) DEFAULT NULL,
+  `width_mm` decimal(5,2) DEFAULT NULL,
+  `thickness_mm` decimal(5,2) DEFAULT NULL,
+  `weight_g` decimal(6,2) DEFAULT NULL,
+  `display_size` decimal(4,2) DEFAULT NULL,
+  `resolution` varchar(255) DEFAULT NULL,
+  `pixel_density` varchar(255) DEFAULT NULL,
+  `refresh_rate` varchar(255) DEFAULT NULL,
+  `brightness` varchar(255) DEFAULT NULL,
+  `display_features` text DEFAULT NULL,
+  `rear_camera_main` varchar(255) DEFAULT NULL,
+  `rear_camera_macro` varchar(255) DEFAULT NULL,
+  `rear_camera_features` text DEFAULT NULL,
+  `rear_video_resolution` varchar(255) DEFAULT NULL,
+  `front_camera` varchar(255) DEFAULT NULL,
+  `front_camera_features` text DEFAULT NULL,
+  `front_video_resolution` varchar(255) DEFAULT NULL,
+  `battery_capacity` varchar(255) DEFAULT NULL,
+  `fast_charging` varchar(255) DEFAULT NULL,
+  `connector` varchar(255) DEFAULT NULL,
+  `security_features` text DEFAULT NULL,
+  `sim_card` varchar(255) DEFAULT NULL,
+  `nfc` varchar(255) DEFAULT NULL,
+  `network_bands` text DEFAULT NULL,
+  `wireless_connectivity` text DEFAULT NULL,
+  `navigation` text DEFAULT NULL,
+  `audio_jack` varchar(255) DEFAULT NULL,
+  `audio_playback` text DEFAULT NULL,
+  `video_playback` text DEFAULT NULL,
+  `sensors` text DEFAULT NULL,
+  `operating_system` varchar(255) DEFAULT NULL,
+  `package_contents` text DEFAULT NULL,
+  `product_type` varchar(20) NOT NULL,
+  PRIMARY KEY (`product_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
