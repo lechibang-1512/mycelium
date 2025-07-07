@@ -1330,6 +1330,15 @@ async function startServer() {
                 const [totalProducts] = await conn.query('SELECT COUNT(*) as total FROM specs_db');
                 const [lowStock] = await conn.query('SELECT COUNT(*) as count FROM specs_db WHERE device_inventory <= 5');
                 
+                // Get low stock products
+                const lowStockProducts = await conn.query(`
+                    SELECT device_name, device_maker, device_price, device_inventory
+                    FROM specs_db
+                    WHERE device_inventory <= 5
+                    ORDER BY device_inventory ASC
+                    LIMIT 10
+                `);
+                
                 // Get recent transactions
                 const recentTransactions = await conn.query(`
                     SELECT il.*, s.device_name, s.device_maker,
@@ -1347,11 +1356,14 @@ async function startServer() {
                     totalProducts: totalProducts.total || 0,
                     lowStockCount: lowStock.count || 0,
                     topSellingProducts: [],
+                    lowStockProducts: convertBigIntToNumber(lowStockProducts),
                     recentTransactions: convertBigIntToNumber(recentTransactions),
                     selectedPeriod: period,
                     filters: { period },
                     showFilterNotification: req.query.period && req.query.period !== '30',
                     insights: [],
+                    growthRate: 0, // Default growth rate (will be calculated later)
+                    averageOrderValue: totalUnitsSold.units_sold > 0 ? (parseFloat(totalRevenue.total_revenue || 0) / totalUnitsSold.units_sold).toFixed(2) : '0.00',
                     csrfToken: req.csrfToken()
                 });
             } catch (err) {
