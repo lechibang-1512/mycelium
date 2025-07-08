@@ -6,6 +6,15 @@
 const errorHandler = (err, req, res, next) => {
     console.error(err.stack);
 
+    // Ensure user context variables are available for error templates
+    if (!res.locals.user) {
+        res.locals.user = req.session?.user || null;
+        res.locals.isAdmin = req.session?.user && req.session.user.role === 'admin';
+        res.locals.isStaff = req.session?.user && req.session.user.role === 'staff';
+        res.locals.isStaffOrAdmin = req.session?.user && (req.session.user.role === 'admin' || req.session.user.role === 'staff');
+        res.locals.isAuthenticated = !!(req.session?.user);
+    }
+
     // Handle CSRF token errors
     if (err.code === 'EBADCSRFTOKEN') {
         req.flash('error', 'Invalid form submission. Please try again.');

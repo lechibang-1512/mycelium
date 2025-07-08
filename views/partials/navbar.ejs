@@ -54,6 +54,25 @@
                         <i class="fas fa-minus-circle me-1"></i>Sell Stock
                     </a>
                 </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="qrcodeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-qrcode me-1"></i>QR Codes
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="qrcodeDropdown">
+                        <li>
+                            <a class="dropdown-item" href="/qrcode/scan">
+                                <i class="fas fa-camera me-1 text-primary"></i>Scan QR Code
+                            </a>
+                        </li>
+                        <% if (isStaff || isAdmin) { %>
+                        <li>
+                            <a class="dropdown-item" href="/qrcode/generate">
+                                <i class="fas fa-plus me-1 text-success"></i>Generate QR Codes
+                            </a>
+                        </li>
+                        <% } %>
+                    </ul>
+                </li>
                 <% if (isAdmin) { %>
                 <li class="nav-item">
                     <a class="nav-link" href="/users">

@@ -221,6 +221,7 @@ async function startServer() {
         const phonesRoutes = require('./routes/phones')(pool, convertBigIntToNumber, formatDeviceInfo);
         const reportsRoutes = require('./routes/reports')(pool, convertBigIntToNumber);
         const analyticsRoutes = require('./routes/analytics')(pool, suppliersPool, convertBigIntToNumber);
+        const qrcodeRoutes = require('./routes/qrcode')(pool, suppliersPool, convertBigIntToNumber);
 
         // Apply rate limiting to specific routes
         app.use('/auth/login', authLimiter);
@@ -242,6 +243,7 @@ async function startServer() {
         app.use('/', phonesRoutes);
         app.use('/', reportsRoutes);
         app.use('/', analyticsRoutes);
+        app.use('/', qrcodeRoutes);
 
         // ===============================================
         // ERROR HANDLING MIDDLEWARE - Should be last

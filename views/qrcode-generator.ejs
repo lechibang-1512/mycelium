@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Inventory Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .qr-generator-tabs .nav-link {
+            display: flex;
+            align-items: center;
+        }
+        
+        .qr-generator-tabs .nav-link i {
+            margin-right: 8px;
+        }
+        
+        .qr-code-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        
+        .qr-code-image {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 15px;
+            max-width: 220px;
+        }
+        
+        .qr-code-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .qr-batch-container {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .qr-batch-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .qr-batch-item img {
+            max-width: 100%;
+        }
+        
+        .print-container {
+            display: none;
+        }
+        
+        @media print {
+            .print-container {
+                display: block;
+                width: 100%;
+            }
+            
+            .print-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+            
+            .print-item {
+                border: 1px solid #ddd;
+                padding: 10px;
+                text-align: center;
+                page-break-inside: avoid;
+            }
+            
+            .print-item img {
+                max-width: 100%;
+                height: auto;
+            }
+            
+            .print-item p {
+                margin: 5px 0;
+                font-size: 12px;
+            }
+            
+            body > *:not(.print-container) {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/navbar') %>
+
+    <div class="page-header success">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h1 class="display-4">
+                        <i class="fas fa-qrcode me-3"></i>
+                        <%= title %>
+                    </h1>
+                    <p class="lead">
+                        Generate QR codes for products, locations, and inventory
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container my-4">
+        <div class="row">
+            <div class="col-md-10 mx-auto">
+                <ul class="nav nav-tabs qr-generator-tabs" id="qrGeneratorTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="product-qr-tab" data-bs-toggle="tab" data-bs-target="#product-qr" type="button">
+                            <i class="fas fa-mobile-alt"></i> Product QR Codes
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="location-qr-tab" data-bs-toggle="tab" data-bs-target="#location-qr" type="button">
+                            <i class="fas fa-map-marker-alt"></i> Location QR Codes
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="batch-qr-tab" data-bs-toggle="tab" data-bs-target="#batch-qr" type="button">
+                            <i class="fas fa-layer-group"></i> Batch QR Codes
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="custom-qr-tab" data-bs-toggle="tab" data-bs-target="#custom-qr" type="button">
+                            <i class="fas fa-edit"></i> Custom QR Code
+                        </button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content p-4 border border-top-0" id="qrGeneratorTabContent">
+                    <!-- Product QR Code Tab -->
+                    <div class="tab-pane fade show active" id="product-qr" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <form id="product-qr-form">
+                                    <div class="mb-3">
+                                        <label for="product-select" class="form-label">Select Product</label>
+                                        <select class="form-select" id="product-select" required>
+                                            <option value="" selected disabled>Choose a product...</option>
+                                            <% products.forEach(product => { %>
+                                                <option value="<%= product.product_id %>">
+                                                    <%= product.device_maker %> <%= product.device_name %>
+                                                </option>
+                                            <% }); %>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-qrcode me-1"></i> Generate QR Code
+                                    </button>
+                                </form>
+                                
+                                <div class="mt-4">
+                                    <h5>Batch Generation</h5>
+                                    <p>Generate QR codes for multiple products at once.</p>
+                                    <button id="generate-all-products" class="btn btn-info">
+                                        <i class="fas fa-qrcode me-1"></i> Generate All QR Codes
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="qr-code-container" id="product-qr-container" style="display: none;">
+                                    <h5 id="product-qr-title">Product QR Code</h5>
+                                    <div class="qr-code-image">
+                                        <img id="product-qr-image" src="" alt="QR Code">
+                                    </div>
+                                    <div class="qr-code-actions">
+                                        <button class="btn btn-success btn-download">
+                                            <i class="fas fa-download me-1"></i> Download
+                                        </button>
+                                        <button class="btn btn-primary btn-print">
+                                            <i class="fas fa-print me-1"></i> Print
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product Batch QR Container -->
+                        <div class="qr-batch-container" id="product-batch-container" style="display: none;"></div>
+                    </div>
+                    
+                    <!-- Location QR Code Tab -->
+                    <div class="tab-pane fade" id="location-qr" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <form id="location-qr-form">
+                                    <div class="mb-3">
+                                        <label for="location-id" class="form-label">Location ID</label>
+                                        <input type="text" class="form-control" id="location-id" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="location-name" class="form-label">Location Name</label>
+                                        <input type="text" class="form-control" id="location-name" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="warehouse-id" class="form-label">Warehouse ID</label>
+                                        <input type="text" class="form-control" id="warehouse-id" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-qrcode me-1"></i> Generate QR Code
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="qr-code-container" id="location-qr-container" style="display: none;">
+                                    <h5 id="location-qr-title">Location QR Code</h5>
+                                    <div class="qr-code-image">
+                                        <img id="location-qr-image" src="" alt="QR Code">
+                                    </div>
+                                    <div class="qr-code-actions">
+                                        <button class="btn btn-success btn-download">
+                                            <i class="fas fa-download me-1"></i> Download
+                                        </button>
+                                        <button class="btn btn-primary btn-print">
+                                            <i class="fas fa-print me-1"></i> Print
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Batch QR Code Tab -->
+                    <div class="tab-pane fade" id="batch-qr" role="tabpanel">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Batch QR codes can be generated when receiving new inventory.
+                        </div>
+                        
+                        <p>Use batch QR codes to track specific batches of inventory items. When you receive new stock, 
+                        a batch QR code can be generated and attached to the shipment or storage containers.</p>
+                        
+                        <p>For batch QR code generation, please use the <a href="/inventory/receive">Receive Stock</a> function.</p>
+                    </div>
+                    
+                    <!-- Custom QR Code Tab -->
+                    <div class="tab-pane fade" id="custom-qr" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <form id="custom-qr-form">
+                                    <div class="mb-3">
+                                        <label for="custom-qr-type" class="form-label">Data Type</label>
+                                        <select class="form-select" id="custom-qr-type" required>
+                                            <option value="text">Text</option>
+                                            <option value="url">URL</option>
+                                            <option value="json">JSON</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="custom-qr-data" class="form-label">QR Code Data</label>
+                                        <textarea class="form-control" id="custom-qr-data" rows="5" required></textarea>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-qrcode me-1"></i> Generate QR Code
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="qr-code-container" id="custom-qr-container" style="display: none;">
+                                    <h5>Custom QR Code</h5>
+                                    <div class="qr-code-image">
+                                        <img id="custom-qr-image" src="" alt="QR Code">
+                                    </div>
+                                    <div class="qr-code-actions">
+                                        <button class="btn btn-success btn-download">
+                                            <i class="fas fa-download me-1"></i> Download
+                                        </button>
+                                        <button class="btn btn-primary btn-print">
+                                            <i class="fas fa-print me-1"></i> Print
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Print Container (hidden until print) -->
+    <div class="print-container" id="print-container">
+        <div class="print-grid" id="print-grid"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Product QR Code Generation
+            document.getElementById('product-qr-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const productId = document.getElementById('product-select').value;
+                if (!productId) return;
+                
+                try {
+                    const response = await fetch(`/api/qrcode/product/${productId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'CSRF-Token': '<%= csrfToken %>'
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        const container = document.getElementById('product-qr-container');
+                        const title = document.getElementById('product-qr-title');
+                        const image = document.getElementById('product-qr-image');
+                        
+                        title.textContent = `${result.product.maker} ${result.product.name}`;
+                        image.src = result.qrCodeUrl;
+                        image.dataset.productId = result.product.id;
+                        image.dataset.productName = `${result.product.maker} ${result.product.name}`;
+                        container.style.display = 'flex';
+                    } else {
+                        alert('Error generating QR code: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error generating QR code. Please try again.');
+                }
+            });
+            
+            // Generate All Products QR Codes
+            document.getElementById('generate-all-products').addEventListener('click', async function() {
+                const batchContainer = document.getElementById('product-batch-container');
+                batchContainer.innerHTML = '<div class="text-center w-100"><div class="spinner-border" role="status"></div><p>Generating QR codes...</p></div>';
+                batchContainer.style.display = 'block';
+                
+                const productSelect = document.getElementById('product-select');
+                const products = Array.from(productSelect.options)
+                    .filter(option => option.value)
+                    .map(option => ({
+                        id: option.value,
+                        name: option.textContent.trim()
+                    }));
+                
+                if (products.length === 0) {
+                    batchContainer.innerHTML = '<div class="alert alert-warning">No products found</div>';
+                    return;
+                }
+                
+                // Clear the batch container
+                batchContainer.innerHTML = '';
+                
+                try {
+                    for (const product of products) {
+                        const response = await fetch(`/api/qrcode/product/${product.id}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'CSRF-Token': '<%= csrfToken %>'
+                            }
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            const productDiv = document.createElement('div');
+                            productDiv.className = 'qr-batch-item';
+                            productDiv.innerHTML = `
+                                <img src="${result.qrCodeUrl}" 
+                                     alt="${result.product.name} QR Code"
+                                     data-product-id="${result.product.id}"
+                                     data-product-name="${result.product.maker} ${result.product.name}">
+                                <p class="mt-2">${result.product.maker} ${result.product.name}</p>
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-success btn-download">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-primary btn-print">
+                                        <i class="fas fa-print"></i>
+                                    </button>
+                                </div>
+                            `;
+                            batchContainer.appendChild(productDiv);
+                        }
+                    }
+                    
+                    // Add print all button
+                    const printAllDiv = document.createElement('div');
+                    printAllDiv.className = 'w-100 mt-3 text-center';
+                    printAllDiv.innerHTML = `
+                        <button id="print-all-button" class="btn btn-lg btn-primary">
+                            <i class="fas fa-print me-2"></i> Print All QR Codes
+                        </button>
+                    `;
+                    batchContainer.appendChild(printAllDiv);
+                    
+                    document.getElementById('print-all-button').addEventListener('click', function() {
+                        printAllQRCodes();
+                    });
+                    
+                    // Set up download and print buttons
+                    setupBatchButtons();
+                } catch (error) {
+                    console.error('Error:', error);
+                    batchContainer.innerHTML = '<div class="alert alert-danger">Error generating QR codes</div>';
+                }
+            });
+            
+            // Location QR Code Generation
+            document.getElementById('location-qr-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const locationId = document.getElementById('location-id').value;
+                const locationName = document.getElementById('location-name').value;
+                const warehouseId = document.getElementById('warehouse-id').value;
+                
+                if (!locationId || !locationName || !warehouseId) return;
+                
+                try {
+                    const response = await fetch(`/api/qrcode/location/${locationId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'CSRF-Token': '<%= csrfToken %>'
+                        },
+                        body: JSON.stringify({
+                            name: locationName,
+                            warehouse_id: warehouseId
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        const container = document.getElementById('location-qr-container');
+                        const title = document.getElementById('location-qr-title');
+                        const image = document.getElementById('location-qr-image');
+                        
+                        title.textContent = `${result.location.name} (${result.location.warehouse_id})`;
+                        image.src = result.qrCodeUrl;
+                        image.dataset.locationId = result.location.id;
+                        image.dataset.locationName = result.location.name;
+                        container.style.display = 'flex';
+                    } else {
+                        alert('Error generating QR code: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error generating QR code. Please try again.');
+                }
+            });
+            
+            // Custom QR Code Generation
+            document.getElementById('custom-qr-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const type = document.getElementById('custom-qr-type').value;
+                const data = document.getElementById('custom-qr-data').value;
+                
+                if (!data) return;
+                
+                let qrData = data;
+                if (type === 'json') {
+                    try {
+                        // Test if valid JSON
+                        JSON.parse(data);
+                    } catch (error) {
+                        alert('Invalid JSON format');
+                        return;
+                    }
+                }
+                
+                // Generate QR code using client-side library
+                QRCode.toDataURL(qrData, { errorCorrectionLevel: 'M' })
+                    .then(url => {
+                        const container = document.getElementById('custom-qr-container');
+                        const image = document.getElementById('custom-qr-image');
+                        
+                        image.src = url;
+                        image.dataset.customData = qrData;
+                        container.style.display = 'flex';
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error generating QR code. Please try again.');
+                    });
+            });
+            
+            // Setup download and print buttons
+            function setupQRCodeButtons() {
+                // Download buttons
+                document.querySelectorAll('.btn-download').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const img = this.closest('.qr-code-container, .qr-batch-item').querySelector('img');
+                        if (img) {
+                            fetch(img.src)
+                                .then(response => response.blob())
+                                .then(blob => {
+                                    let filename;
+                                    if (img.dataset.productId) {
+                                        filename = `product_${img.dataset.productId}_qr.png`;
+                                    } else if (img.dataset.locationId) {
+                                        filename = `location_${img.dataset.locationId}_qr.png`;
+                                    } else {
+                                        filename = `qrcode_${Date.now()}.png`;
+                                    }
+                                    saveAs(blob, filename);
+                                });
+                        }
+                    });
+                });
+                
+                // Print buttons
+                document.querySelectorAll('.btn-print').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const img = this.closest('.qr-code-container, .qr-batch-item').querySelector('img');
+                        if (img) {
+                            const printGrid = document.getElementById('print-grid');
+                            printGrid.innerHTML = '';
+                            
+                            const printItem = document.createElement('div');
+                            printItem.className = 'print-item';
+                            
+                            // Clone the image
+                            const clonedImg = document.createElement('img');
+                            clonedImg.src = img.src;
+                            
+                            // Add label based on available data
+                            let label = '';
+                            if (img.dataset.productName) {
+                                label = img.dataset.productName;
+                            } else if (img.dataset.locationName) {
+                                label = img.dataset.locationName;
+                            }
+                            
+                            printItem.innerHTML = `
+                                ${clonedImg.outerHTML}
+                                <p>${label}</p>
+                            `;
+                            
+                            printGrid.appendChild(printItem);
+                            window.print();
+                        }
+                    });
+                });
+            }
+            
+            function setupBatchButtons() {
+                // Set up download buttons in batch container
+                document.querySelectorAll('#product-batch-container .btn-download').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const img = this.closest('.qr-batch-item').querySelector('img');
+                        if (img) {
+                            fetch(img.src)
+                                .then(response => response.blob())
+                                .then(blob => {
+                                    const filename = `product_${img.dataset.productId}_qr.png`;
+                                    saveAs(blob, filename);
+                                });
+                        }
+                    });
+                });
+                
+                // Set up print buttons in batch container
+                document.querySelectorAll('#product-batch-container .btn-print').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const img = this.closest('.qr-batch-item').querySelector('img');
+                        if (img) {
+                            const printGrid = document.getElementById('print-grid');
+                            printGrid.innerHTML = '';
+                            
+                            const printItem = document.createElement('div');
+                            printItem.className = 'print-item';
+                            
+                            printItem.innerHTML = `
+                                <img src="${img.src}" alt="QR Code">
+                                <p>${img.dataset.productName}</p>
+                            `;
+                            
+                            printGrid.appendChild(printItem);
+                            window.print();
+                        }
+                    });
+                });
+            }
+            
+            function printAllQRCodes() {
+                const printGrid = document.getElementById('print-grid');
+                printGrid.innerHTML = '';
+                
+                document.querySelectorAll('#product-batch-container .qr-batch-item img').forEach(img => {
+                    const printItem = document.createElement('div');
+                    printItem.className = 'print-item';
+                    
+                    printItem.innerHTML = `
+                        <img src="${img.src}" alt="QR Code">
+                        <p>${img.dataset.productName}</p>
+                    `;
+                    
+                    printGrid.appendChild(printItem);
+                });
+                
+                window.print();
+            }
+            
+            // Initialize buttons
+            setupQRCodeButtons();
+        });
+    </script>
+
+</body>
+</html>

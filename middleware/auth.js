@@ -391,6 +391,7 @@ const setUserLocals = async (req, res, next) => {
     
     res.locals.user = req.session.user || null;
     res.locals.isAdmin = req.session.user && req.session.user.role === 'admin';
+    res.locals.isStaff = req.session.user && req.session.user.role === 'staff';
     res.locals.isStaffOrAdmin = req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'staff');
     res.locals.isAuthenticated = !!req.session.user;
     

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Inventory Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .scanner-container {
+            position: relative;
+            max-width: 100%;
+            overflow: hidden;
+        }
+        
+        .scanner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('/img/scanner-overlay.png') center center no-repeat;
+            background-size: 80% 80%;
+            z-index: 10;
+        }
+        
+        #qr-video {
+            width: 100%;
+            max-height: 70vh;
+            object-fit: cover;
+        }
+        
+        #qr-canvas {
+            display: none;
+        }
+        
+        .scanner-controls {
+            margin-top: 20px;
+        }
+        
+        .result-container {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            display: none;
+        }
+        
+        .flash-notification {
+            position: fixed;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1050;
+            padding: 15px 25px;
+            border-radius: 5px;
+            color: #fff;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        .flash-notification.success {
+            background-color: #28a745;
+        }
+        
+        .flash-notification.error {
+            background-color: #dc3545;
+        }
+        
+        .flash-notification.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/navbar') %>
+
+    <div class="page-header info">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h1 class="display-4">
+                        <i class="fas fa-qrcode me-3"></i>
+                        <%= title %>
+                    </h1>
+                    <p class="lead">
+                        Scan QR codes for products, locations, and transactions
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container my-4">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-camera me-2"></i>
+                            QR Code Scanner
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="scanner-container">
+                            <video id="qr-video" playsinline></video>
+                            <div class="scanner-overlay"></div>
+                        </div>
+                        <canvas id="qr-canvas"></canvas>
+                        
+                        <div class="scanner-controls d-flex justify-content-center">
+                            <button id="start-button" class="btn btn-success me-2">
+                                <i class="fas fa-play me-1"></i> Start Scanner
+                            </button>
+                            <button id="stop-button" class="btn btn-danger" disabled>
+                                <i class="fas fa-stop me-1"></i> Stop Scanner
+                            </button>
+                        </div>
+                        
+                        <div class="result-container mt-4" id="result-container">
+                            <h5 class="text-primary">Scan Result</h5>
+                            <div class="alert alert-info" id="result-data">
+                                Scan a QR code to see the result...
+                            </div>
+                            <div id="result-actions" class="d-flex justify-content-end">
+                                <!-- Action buttons will be added dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Instructions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <ol>
+                            <li>Click "Start Scanner" to activate your camera</li>
+                            <li>Point your camera at a QR code generated by the system</li>
+                            <li>Hold steady until the QR code is recognized</li>
+                            <li>The system will automatically process the scanned QR code</li>
+                            <li>Click "Stop Scanner" when finished</li>
+                        </ol>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Camera access permission is required for scanning
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Flash Notification -->
+    <div class="flash-notification" id="flash-notification"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="/js/qrscanner.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const startButton = document.getElementById('start-button');
+            const stopButton = document.getElementById('stop-button');
+            const resultContainer = document.getElementById('result-container');
+            const resultData = document.getElementById('result-data');
+            const resultActions = document.getElementById('result-actions');
+            
+            // Flash notification function
+            function showFlash(message, type = 'success') {
+                const flash = document.getElementById('flash-notification');
+                flash.textContent = message;
+                flash.className = `flash-notification ${type} show`;
+                setTimeout(() => {
+                    flash.className = 'flash-notification';
+                }, 3000);
+            }
+            
+            // Initialize QR Scanner
+            QRScanner.init('qr-video', 'qr-canvas', async (data) => {
+                // Success callback
+                showFlash('QR Code detected!', 'success');
+                
+                // Process the QR code data
+                try {
+                    const response = await fetch('/api/qrcode/process', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'CSRF-Token': '<%= csrfToken %>'
+                        },
+                        body: JSON.stringify({ qrData: data })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Show the result container
+                        resultContainer.style.display = 'block';
+                        
+                        // Display the data
+                        let displayData = '';
+                        
+                        if (result.data.type === 'product') {
+                            displayData = `
+                                <p><strong>Type:</strong> Product</p>
+                                <p><strong>ID:</strong> ${result.data.id}</p>
+                                <p><strong>Name:</strong> ${result.data.name || 'N/A'}</p>
+                                <p><strong>Maker:</strong> ${result.data.maker || 'N/A'}</p>
+                            `;
+                        } else if (result.data.type === 'location') {
+                            displayData = `
+                                <p><strong>Type:</strong> Storage Location</p>
+                                <p><strong>ID:</strong> ${result.data.id}</p>
+                                <p><strong>Name:</strong> ${result.data.name || 'N/A'}</p>
+                                <p><strong>Warehouse:</strong> ${result.data.warehouse || 'N/A'}</p>
+                            `;
+                        } else if (result.data.type === 'batch') {
+                            displayData = `
+                                <p><strong>Type:</strong> Batch</p>
+                                <p><strong>Batch ID:</strong> ${result.data.id}</p>
+                                <p><strong>Product ID:</strong> ${result.data.product_id}</p>
+                                <p><strong>Quantity:</strong> ${result.data.quantity}</p>
+                                <p><strong>Created:</strong> ${new Date(result.data.created).toLocaleString()}</p>
+                            `;
+                        } else if (result.data.type === 'transaction') {
+                            displayData = `
+                                <p><strong>Type:</strong> Transaction</p>
+                                <p><strong>Transaction ID:</strong> ${result.data.id}</p>
+                                <p><strong>Transaction Type:</strong> ${result.data.transaction_type}</p>
+                                <p><strong>Timestamp:</strong> ${new Date(result.data.timestamp).toLocaleString()}</p>
+                            `;
+                        } else {
+                            displayData = `<pre>${JSON.stringify(result.data, null, 2)}</pre>`;
+                        }
+                        
+                        resultData.innerHTML = displayData;
+                        
+                        // Clear previous actions and add new ones
+                        resultActions.innerHTML = '';
+                        
+                        if (result.action === 'redirect') {
+                            const viewButton = document.createElement('a');
+                            viewButton.className = 'btn btn-primary';
+                            viewButton.href = result.url;
+                            viewButton.innerHTML = '<i class="fas fa-external-link-alt me-1"></i> View Details';
+                            resultActions.appendChild(viewButton);
+                        }
+                        
+                        // Add close button
+                        const closeButton = document.createElement('button');
+                        closeButton.className = 'btn btn-secondary ms-2';
+                        closeButton.innerHTML = '<i class="fas fa-times me-1"></i> Close';
+                        closeButton.addEventListener('click', () => {
+                            resultContainer.style.display = 'none';
+                        });
+                        resultActions.appendChild(closeButton);
+                    } else {
+                        showFlash(`Error: ${result.message}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error processing QR code:', error);
+                    showFlash('Error processing QR code', 'error');
+                }
+            }, (error) => {
+                // Error callback
+                showFlash(`Scanner Error: ${error.message}`, 'error');
+                console.error('Scanner error:', error);
+            });
+            
+            // Start scanner button
+            startButton.addEventListener('click', () => {
+                QRScanner.start();
+                startButton.disabled = true;
+                stopButton.disabled = false;
+            });
+            
+            // Stop scanner button
+            stopButton.addEventListener('click', () => {
+                QRScanner.stop();
+                startButton.disabled = false;
+                stopButton.disabled = true;
+            });
+        });
+    </script>
+
+</body>
+</html>

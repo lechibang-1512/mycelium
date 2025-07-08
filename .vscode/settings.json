@@ -36,5 +36,6 @@
                 "github.copilot-chat/o4-mini"
             ]
         }
-    }
+    },
+    "zencoder.enableRepoIndexing": true
 }
