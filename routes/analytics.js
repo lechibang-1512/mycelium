@@ -1,106 +1,78 @@
 const express = require('express');
 const router = express.Router();
-const { isAuthenticated, isStaffOrAdmin } = require('../middleware/auth');
-const AnalyticsService = require('../services/AnalyticsService');
+const { isAuthenticated } = require('../middleware/auth');
 
 module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
     
-    const analyticsService = new AnalyticsService(pool, suppliersPool, convertBigIntToNumber);
-    
-    // Simple analytics dashboard
-    router.get('/analytics', isAuthenticated, async (req, res) => {
+    // Basic Analytics Route (temporary replacement)
+    router.get('/analytics', isAuthenticated, async (req, res, next) => {
+        let conn, suppliersConn;
         try {
-            const period = parseInt(req.query.period) || 30; // Default to 30 days
-            const hasFilters = req.query.period && req.query.period !== '30';
+            conn = await pool.getConnection();
+            suppliersConn = await suppliersPool.getConnection();
             
-            // Get analytics data using the service
-            const analyticsData = await analyticsService.getAnalyticsData(period);
+            const period = parseInt(req.query.period) || 30;
             
-            // Generate simple insights
-            const insights = analyticsService.generateInsights(analyticsData);
+            // Basic analytics data without complex joins
+            const [totalRevenue] = await conn.query(`
+                SELECT COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as total_revenue
+                FROM inventory_log il
+                JOIN specs_db ps ON il.phone_id = ps.product_id
+                WHERE il.transaction_type = 'outgoing' 
+                AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
+            `, [period]);
+            
+            const [totalUnitsSold] = await conn.query(`
+                SELECT COALESCE(SUM(ABS(il.quantity_changed)), 0) as units_sold
+                FROM inventory_log il
+                WHERE il.transaction_type = 'outgoing' 
+                AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
+            `, [period]);
+            
+            const [totalProducts] = await conn.query('SELECT COUNT(*) as total FROM specs_db');
+            const [lowStock] = await conn.query('SELECT COUNT(*) as count FROM specs_db WHERE device_inventory <= 5');
+            
+            // Get low stock products
+            const [lowStockProducts] = await conn.query(`
+                SELECT device_name, device_maker, device_price, device_inventory
+                FROM specs_db
+                WHERE device_inventory <= 5
+                ORDER BY device_inventory ASC
+                LIMIT 10
+            `);
+            
+            // Get recent transactions
+            const recentTransactions = await conn.query(`
+                SELECT il.*, s.device_name, s.device_maker,
+                       DATE_FORMAT(il.transaction_date, '%M %d, %Y at %h:%i %p') as formatted_date
+                FROM inventory_log il
+                LEFT JOIN specs_db s ON il.phone_id = s.product_id
+                ORDER BY il.transaction_date DESC
+                LIMIT 10
+            `);
             
             res.render('analytics', {
-                ...analyticsData,
-                insights,
                 title: 'Analytics Dashboard',
-                currentPage: 'analytics',
+                totalRevenue: parseFloat(totalRevenue.total_revenue || 0).toFixed(2),
+                totalUnitsSold: totalUnitsSold.units_sold || 0,
+                totalProducts: totalProducts.total || 0,
+                lowStockCount: lowStock.count || 0,
+                topSellingProducts: [],
+                lowStockProducts: convertBigIntToNumber(lowStockProducts),
+                recentTransactions: convertBigIntToNumber(recentTransactions),
+                selectedPeriod: period,
                 filters: { period },
-                showFilterNotification: hasFilters
+                showFilterNotification: req.query.period && req.query.period !== '30',
+                insights: [],
+                growthRate: 0, // Default growth rate (will be calculated later)
+                averageOrderValue: totalUnitsSold.units_sold > 0 ? parseFloat((parseFloat(totalRevenue.total_revenue || 0) / totalUnitsSold.units_sold).toFixed(2)) : 0.00,
+                csrfToken: req.csrfToken()
             });
-            
         } catch (err) {
-            console.error('Analytics error:', err);
-            res.status(500).render('error', {
-                error: 'Failed to load analytics: ' + err.message,
-                title: 'Analytics Error'
-            });
-        }
-    });
-
-    // API endpoint for real-time analytics data
-    router.get('/api/analytics/realtime', isAuthenticated, async (req, res) => {
-        try {
-            const realTimeData = await analyticsService.getRealTimeData();
-            res.json(realTimeData);
-            
-        } catch (err) {
-            console.error('Real-time analytics error:', err);
-            res.status(500).json({ error: 'Failed to load real-time data' });
-        }
-    });
-
-    // API endpoint for analytics export (Staff+ only)
-    router.get('/api/analytics/export', isStaffOrAdmin, async (req, res) => {
-        try {
-            const period = parseInt(req.query.period) || 30;
-            const format = req.query.format || 'json';
-            
-            const exportData = await analyticsService.getExportData(period);
-            
-            if (format === 'csv') {
-                res.setHeader('Content-Type', 'text/csv');
-                res.setHeader('Content-Disposition', 'attachment; filename=analytics-export.csv');
-                res.send(await analyticsService.convertToCSV(exportData));
-            } else {
-                res.json(exportData);
-            }
-            
-        } catch (err) {
-            console.error('Analytics export error:', err);
-            res.status(500).json({ error: 'Failed to export analytics data' });
-        }
-    });
-
-    // API endpoint for product performance analysis
-    router.get('/api/analytics/product/:id', isAuthenticated, async (req, res) => {
-        try {
-            const productId = req.params.id;
-            const period = parseInt(req.query.period) || 90;
-            
-            const productAnalytics = await analyticsService.getProductAnalytics(productId, period);
-            res.json(productAnalytics);
-            
-        } catch (err) {
-            console.error('Product analytics error:', err);
-            res.status(500).json({ error: 'Failed to load product analytics' });
-        }
-    });
-
-    // API endpoint for sales forecasting (Staff+ only)
-    router.get('/api/analytics/forecast', isStaffOrAdmin, async (req, res) => {
-        try {
-            const days = parseInt(req.query.days) || 30;
-            if (days < 1 || days > 365) { // Enforce a maximum of 365 days
-                return res.status(400).json({ error: "Invalid 'days' parameter. Must be between 1 and 365." });
-            }
-            const productId = req.query.productId || null;
-            
-            const forecast = await analyticsService.generateForecast(days, productId);
-            res.json(forecast);
-            
-        } catch (err) {
-            console.error('Forecast error:', err);
-            res.status(500).json({ error: 'Failed to generate forecast' });
+            next(err);
+        } finally {
+            if (conn) conn.release();
+            if (suppliersConn) suppliersConn.release();
         }
     });
 
