@@ -151,8 +151,23 @@ async function startServer() {
             }
         });
 
-        // Middleware
+        // Handle favicon and static assets FIRST - before any other middleware
+        app.get('/favicon.ico', (req, res) => {
+            res.sendFile(path.join(__dirname, 'public', 'favicon.ico'), {
+                headers: {
+                    'Content-Type': 'image/x-icon',
+                    'Cache-Control': 'public, max-age=86400' // Cache for 1 day
+                }
+            });
+        });
+        
+        // Serve static files early to avoid session middleware
+        app.use('/css', express.static(path.join(__dirname, 'public/css')));
+        app.use('/js', express.static(path.join(__dirname, 'public/js')));
+        app.use('/img', express.static(path.join(__dirname, 'public/img')));
+        app.use('/qrcodes', express.static(path.join(__dirname, 'public/qrcodes')));
         app.use(express.static('public'));
+        
         app.use(express.json({ limit: '10mb' }));
         app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -176,6 +191,21 @@ async function startServer() {
             if (sensitivePatterns.some(pattern => pattern.test(req.path))) {
                 console.warn(`🚨 Blocked access to sensitive file: ${req.path} from IP: ${req.ip}`);
                 return res.status(403).json({ error: 'Access denied' });
+            }
+            next();
+        });
+        
+        // Skip expensive middleware for static assets
+        app.use((req, res, next) => {
+            // Check if this is a static asset request
+            if (req.path.startsWith('/css/') || 
+                req.path.startsWith('/js/') || 
+                req.path.startsWith('/img/') || 
+                req.path.startsWith('/qrcodes/') ||
+                req.path === '/favicon.ico' ||
+                req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|map)$/)) {
+                // Skip to next middleware - static files are already handled above
+                return next();
             }
             next();
         });

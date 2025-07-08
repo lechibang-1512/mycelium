@@ -111,7 +111,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 const receiptId = `PUR-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
                 
                 await conn.query(
-                    'INSERT INTO receipts (receipt_id, receipt_type, receipt_data, phone_id, supplier_id, transaction_date, subtotal, tax_amount, total_amount, notes) VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?)',
+                    'INSERT INTO receipts (receipt_id, receipt_type, receipt_data, product_id, supplier_id, transaction_date, subtotal, tax_amount, total_amount, notes) VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?)',
                     [receiptId, 'PURCHASE_RECEIPT', JSON.stringify(receiptData), phone_id, supplier_id, subtotal, vatAmount, totalCost, notes || null]
                 );
             }
@@ -243,7 +243,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 const receiptId = `SAL-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
                 
                 await conn.query(
-                    'INSERT INTO receipts (receipt_id, receipt_type, receipt_data, phone_id, transaction_date, subtotal, tax_amount, total_amount, notes) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?)',
+                    'INSERT INTO receipts (receipt_id, receipt_type, receipt_data, product_id, transaction_date, subtotal, tax_amount, total_amount, notes) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?)',
                     [receiptId, 'SALES_RECEIPT', JSON.stringify(receiptData), phone_id, subtotal, taxAmount, totalAmount, notes || null]
                 );
             }

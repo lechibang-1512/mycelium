@@ -95,6 +95,20 @@ const errorHandler = (err, req, res, next) => {
 
 // 404 handler - should be used before the general error handler
 const notFoundHandler = (req, res, next) => {
+    // Don't log common browser requests that are expected to be missing
+    const commonMissingFiles = ['/favicon.ico', '/robots.txt', '/sitemap.xml', '/apple-touch-icon.png'];
+    const isCommonMissing = commonMissingFiles.includes(req.path) || 
+                           req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)\.map$/);
+    
+    // For favicon.ico specifically, just serve a 204 No Content response
+    if (req.path === '/favicon.ico') {
+        return res.status(204).end();
+    }
+    
+    if (!isCommonMissing) {
+        console.warn(`404 - Page not found: ${req.originalUrl}`);
+    }
+    
     const err = new Error(`Page not found: ${req.originalUrl}`);
     err.status = 404;
     next(err);

@@ -1,5 +1,5 @@
--- Schema dump for suppliers_db
--- Generated on 2025-07-07T02:22:12.642Z
+-- Schema for suppliers_db
+-- Generated on 2025-07-08T17:18:31.514Z
 
 -- Table: suppliers
 CREATE TABLE `suppliers` (

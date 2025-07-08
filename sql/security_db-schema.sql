@@ -1,5 +1,5 @@
--- Schema dump for users_db
--- Generated on 2025-07-07T02:22:12.650Z
+-- Schema for security_db
+-- Generated on 2025-07-08T17:18:31.531Z
 
 -- Table: failed_login_attempts
 CREATE TABLE `failed_login_attempts` (
@@ -51,7 +51,7 @@ CREATE TABLE `security_events` (
   KEY `idx_created_at` (`created_at`),
   KEY `idx_risk_level` (`risk_level`),
   KEY `idx_ip_address` (`ip_address`)
-) ENGINE=InnoDB AUTO_INCREMENT=55 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=72 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Table: user_token_invalidation
 CREATE TABLE `user_token_invalidation` (

@@ -1,10 +1,10 @@
--- Schema dump for master_specs_db
--- Generated on 2025-07-07T02:22:12.628Z
+-- Schema for master_specs_db
+-- Generated on 2025-07-08T17:18:31.486Z
 
 -- Table: inventory_log
 CREATE TABLE `inventory_log` (
   `log_id` int(11) NOT NULL AUTO_INCREMENT,
-  `phone_id` int(11) NOT NULL,
+  `phone_id` bigint(20) unsigned NOT NULL,
   `transaction_type` enum('incoming','outgoing','adjustment') NOT NULL,
   `quantity_changed` int(11) NOT NULL,
   `total_value` decimal(12,2) DEFAULT NULL,
@@ -13,9 +13,8 @@ CREATE TABLE `inventory_log` (
   `notes` text DEFAULT NULL,
   `transaction_date` timestamp NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`log_id`),
-  KEY `phone_id` (`phone_id`),
-  CONSTRAINT `inventory_log_ibfk_1` FOREIGN KEY (`phone_id`) REFERENCES `specs_db` (`product_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  KEY `phone_id` (`phone_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Table: receipts
 CREATE TABLE `receipts` (
@@ -23,7 +22,7 @@ CREATE TABLE `receipts` (
   `receipt_id` varchar(50) NOT NULL,
   `receipt_type` enum('PURCHASE_RECEIPT','SALES_RECEIPT') NOT NULL,
   `receipt_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`receipt_data`)),
-  `phone_id` bigint(20) NOT NULL,
+  `product_id` bigint(20) unsigned NOT NULL,
   `supplier_id` varchar(100) DEFAULT NULL,
   `transaction_date` datetime NOT NULL,
   `subtotal` decimal(10,2) NOT NULL,
@@ -35,15 +34,16 @@ CREATE TABLE `receipts` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `receipt_id` (`receipt_id`),
   KEY `idx_receipt_id` (`receipt_id`),
-  KEY `idx_phone_id` (`phone_id`),
+  KEY `idx_phone_id` (`product_id`),
   KEY `idx_supplier_id` (`supplier_id`),
   KEY `idx_transaction_date` (`transaction_date`),
-  KEY `idx_receipt_type` (`receipt_type`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  KEY `idx_receipt_type` (`receipt_type`),
+  CONSTRAINT `fk_receipts_product` FOREIGN KEY (`product_id`) REFERENCES `specs_db` (`product_id`) ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Table: specs_db
 CREATE TABLE `specs_db` (
-  `product_id` int(11) NOT NULL AUTO_INCREMENT,
+  `product_id` bigint(20) unsigned NOT NULL DEFAULT uuid_short(),
   `device_name` varchar(255) DEFAULT NULL,
   `device_maker` varchar(255) DEFAULT NULL,
   `device_price` decimal(10,2) DEFAULT NULL,
@@ -91,7 +91,7 @@ CREATE TABLE `specs_db` (
   `sensors` text DEFAULT NULL,
   `operating_system` varchar(255) DEFAULT NULL,
   `package_contents` text DEFAULT NULL,
-  `product_type` varchar(20) NOT NULL,
+  `device_type` varchar(20) NOT NULL,
   PRIMARY KEY (`product_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

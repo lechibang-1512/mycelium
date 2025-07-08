@@ -16,7 +16,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 SELECT r.*, s.device_name, s.device_maker,
                        DATE_FORMAT(r.transaction_date, '%M %d, %Y at %h:%i %p') as formatted_date
                 FROM receipts r
-                LEFT JOIN specs_db s ON r.phone_id = s.product_id
+                LEFT JOIN specs_db s ON r.product_id = s.product_id
                 ORDER BY r.transaction_date DESC LIMIT 50
             `);
             
@@ -72,7 +72,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 SELECT r.*, s.device_name, s.device_maker, s.ram, s.rom, s.color,
                        DATE_FORMAT(r.transaction_date, '%M %d, %Y at %h:%i %p') as formatted_date
                 FROM receipts r
-                LEFT JOIN specs_db s ON r.phone_id = s.product_id
+                LEFT JOIN specs_db s ON r.product_id = s.product_id
                 WHERE r.receipt_id = ?
             `, [receiptId]);
             
@@ -93,10 +93,10 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             
             // Get phone information
             let phone = null;
-            if (receipt.phone_id) {
+            if (receipt.product_id) {
                 const [phoneResult] = await conn.query(
                     'SELECT * FROM specs_db WHERE product_id = ?', 
-                    [receipt.phone_id]
+                    [receipt.product_id]
                 );
                 phone = phoneResult;
             }
@@ -164,7 +164,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 SELECT r.*, s.device_name, s.device_maker,
                        DATE_FORMAT(r.transaction_date, '%M %d, %Y at %h:%i %p') as formatted_date
                 FROM receipts r
-                LEFT JOIN specs_db s ON r.phone_id = s.product_id
+                LEFT JOIN specs_db s ON r.product_id = s.product_id
                 ORDER BY r.transaction_date DESC
                 LIMIT 10
             `);
@@ -247,7 +247,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 SELECT r.*, s.device_name, s.device_maker, s.ram, s.rom, s.color,
                        DATE_FORMAT(r.transaction_date, '%M %d, %Y at %h:%i %p') as formatted_date
                 FROM receipts r
-                LEFT JOIN specs_db s ON r.phone_id = s.product_id
+                LEFT JOIN specs_db s ON r.product_id = s.product_id
                 WHERE r.receipt_id IN (${placeholders})
             `, receiptIds);
             
@@ -308,7 +308,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 SELECT r.*, s.device_name, s.device_maker, s.ram, s.rom, s.color,
                        DATE_FORMAT(r.transaction_date, '%M %d, %Y at %h:%i %p') as formatted_date
                 FROM receipts r
-                LEFT JOIN specs_db s ON r.phone_id = s.product_id
+                LEFT JOIN specs_db s ON r.product_id = s.product_id
                 WHERE 1=1
             `;
             const params = [];

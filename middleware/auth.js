@@ -227,6 +227,16 @@ const SessionSecurity = {
  */
 const isAuthenticated = async (req, res, next) => {
     try {
+        // Skip authentication for static assets and favicon
+        if (req.path === '/favicon.ico' ||
+            req.path.startsWith('/css/') || 
+            req.path.startsWith('/js/') || 
+            req.path.startsWith('/img/') || 
+            req.path.startsWith('/qrcodes/') ||
+            req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
+            return next();
+        }
+        
         // Update session activity
         SessionSecurity.updateSessionActivity(req);
         
@@ -364,8 +374,24 @@ const isStaffOrAdmin = async (req, res, next) => {
 
 // Enhanced middleware to make user data available to all templates with session validation
 const setUserLocals = async (req, res, next) => {
+    // Skip session validation for static assets and favicon requests
+    if (req.path === '/favicon.ico' ||
+        req.path.startsWith('/favicon') || 
+        req.path.startsWith('/css/') || 
+        req.path.startsWith('/js/') || 
+        req.path.startsWith('/img/') || 
+        req.path.startsWith('/qrcodes/') ||
+        req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
+        res.locals.user = null;
+        res.locals.isAdmin = false;
+        res.locals.isStaff = false;
+        res.locals.isStaffOrAdmin = false;
+        res.locals.isAuthenticated = false;
+        return next();
+    }
+    
     // Validate session if user exists
-    if (req.session.user) {
+    if (req.session && req.session.user) {
         const validation = await SessionSecurity.validateSession(req);
         
         if (!validation.valid) {
@@ -381,6 +407,7 @@ const setUserLocals = async (req, res, next) => {
             
             res.locals.user = null;
             res.locals.isAdmin = false;
+            res.locals.isStaff = false;
             res.locals.isStaffOrAdmin = false;
             res.locals.isAuthenticated = false;
             return next();
