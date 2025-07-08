@@ -124,37 +124,13 @@ async function addSampleData(conn) {
     // Create users table and add admin user
     await conn.query(`USE \`${process.env.AUTH_DB_NAME || 'security_db'}\``);
     
-    // Check if users table exists, if not create it
+    // Create admin user using dedicated script
     try {
-        await conn.query(`
-            CREATE TABLE IF NOT EXISTS users (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                username VARCHAR(50) UNIQUE NOT NULL,
-                email VARCHAR(100) UNIQUE NOT NULL,
-                password_hash VARCHAR(255) NOT NULL,
-                role ENUM('admin', 'staff', 'viewer') DEFAULT 'viewer',
-                is_active BOOLEAN DEFAULT true,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            )
-        `);
-        
-        const [existingUsers] = await conn.query('SELECT COUNT(*) as count FROM users');
-        
-        if (existingUsers.count === 0) {
-            console.log('  Adding admin user...');
-            const bcrypt = require('bcrypt');
-            const hashedPassword = await bcrypt.hash('admin123', 10);
-            
-            await conn.query(`
-                INSERT INTO users (username, email, password_hash, role) VALUES
-                ('admin', 'admin@example.com', ?, 'admin')
-            `, [hashedPassword]);
-            
-            console.log('  ✅ Admin user created (username: admin, password: admin123)');
-        }
+        const { createAdminUser } = require('./create-admin-user');
+        console.log('  Setting up admin user...');
+        await createAdminUser();
     } catch (err) {
-        console.warn('  ⚠️  Warning creating users table:', err.message);
+        console.warn('  ⚠️  Warning with admin user setup:', err.message);
     }
 }
 
