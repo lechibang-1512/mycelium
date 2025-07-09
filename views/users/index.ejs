@@ -1,0 +1,690 @@
+<%- include('../partials/head', {title: title}) %>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1><i class="fas fa-users"></i> User Management</h1>
+                        <p class="text-muted">Manage user accounts, roles, and permissions</p>
+                    </div>
+                    <div>
+                        <a href="/users/new" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Create New User
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Flash Messages -->
+                <% if (messages.success.length > 0) { %>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <%= messages.success[0] %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+                
+                <% if (messages.error.length > 0) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <%= messages.error[0] %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <% if (messages.warning.length > 0) { %>
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <%= messages.warning[0] %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-2">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4><%= stats.total_users %></h4>
+                                        <p class="mb-0">Total Users</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-users fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4><%= stats.admin_count %></h4>
+                                        <p class="mb-0">Admins</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-user-shield fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4><%= stats.staff_count %></h4>
+                                        <p class="mb-0">Staff</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-user-tie fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4><%= stats.active_count %></h4>
+                                        <p class="mb-0">Active</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-user-check fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4><%= stats.locked_count %></h4>
+                                        <p class="mb-0">Locked</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-user-lock fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card bg-secondary text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4><%= stats.active_30_days %></h4>
+                                        <p class="mb-0">Active 30d</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-chart-line fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters and Search -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form method="GET" class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Search</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                    <input type="text" class="form-control" name="search" 
+                                           value="<%= filters.search %>" 
+                                           placeholder="Search users...">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Role</label>
+                                <select class="form-select" name="role">
+                                    <option value="">All Roles</option>
+                                    <option value="admin" <%= filters.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                                    <option value="staff" <%= filters.role === 'staff' ? 'selected' : '' %>>Staff</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" name="status">
+                                    <option value="">All Status</option>
+                                    <option value="active" <%= filters.status === 'active' ? 'selected' : '' %>>Active</option>
+                                    <option value="inactive" <%= filters.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
+                                    <option value="locked" <%= filters.status === 'locked' ? 'selected' : '' %>>Locked</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Sort By</label>
+                                <select class="form-select" name="sortBy">
+                                    <option value="created_at" <%= filters.sortBy === 'created_at' ? 'selected' : '' %>>Created Date</option>
+                                    <option value="username" <%= filters.sortBy === 'username' ? 'selected' : '' %>>Username</option>
+                                    <option value="fullName" <%= filters.sortBy === 'fullName' ? 'selected' : '' %>>Full Name</option>
+                                    <option value="last_login" <%= filters.sortBy === 'last_login' ? 'selected' : '' %>>Last Login</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Order</label>
+                                <select class="form-select" name="sortOrder">
+                                    <option value="DESC" <%= filters.sortOrder === 'DESC' ? 'selected' : '' %>>Descending</option>
+                                    <option value="ASC" <%= filters.sortOrder === 'ASC' ? 'selected' : '' %>>Ascending</option>
+                                </select>
+                            </div>
+                            <div class="col-md-1">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="submit" class="btn btn-primary d-block w-100">
+                                    <i class="fas fa-filter"></i> Filter
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Bulk Actions -->
+                <div class="card mb-4" id="bulkActionsCard" style="display: none;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span id="selectedCount">0 users selected</span>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-success btn-sm" onclick="bulkAction('activate')">
+                                    <i class="fas fa-check"></i> Activate
+                                </button>
+                                <button type="button" class="btn btn-warning btn-sm" onclick="bulkAction('deactivate')">
+                                    <i class="fas fa-times"></i> Deactivate
+                                </button>
+                                <button type="button" class="btn btn-info btn-sm" onclick="bulkAction('unlock')">
+                                    <i class="fas fa-unlock"></i> Unlock
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                Users (<%= pagination.totalRecords %> total)
+                            </h5>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAll">
+                                <label class="form-check-label" for="selectAll">
+                                    Select All
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="50">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="selectAllTable">
+                                            </div>
+                                        </th>
+                                        <th>User</th>
+                                        <th>Contact</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Last Login</th>
+                                        <th>Created</th>
+                                        <th width="120">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (users.length === 0) { %>
+                                        <tr>
+                                            <td colspan="8" class="text-center py-4">
+                                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                                <p class="text-muted">No users found matching your criteria</p>
+                                            </td>
+                                        </tr>
+                                    <% } else { %>
+                                        <% users.forEach(user => { %>
+                                        <tr id="user-row-<%= user.id %>">
+                                            <td>
+                                                <div class="form-check">
+                                                    <input class="form-check-input user-checkbox" type="checkbox" 
+                                                           value="<%= user.id %>" data-username="<%= user.username %>">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-circle me-3">
+                                                        <%= user.fullName.charAt(0).toUpperCase() %>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold">
+                                                            <a href="/users/<%= user.id %>" class="text-decoration-none">
+                                                                <%= user.fullName %>
+                                                            </a>
+                                                        </div>
+                                                        <small class="text-muted">@<%= user.username %></small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <i class="fas fa-envelope text-muted"></i>
+                                                    <a href="mailto:<%= user.email %>" class="text-decoration-none ms-1">
+                                                        <%= user.email %>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-<%= user.role === 'admin' ? 'danger' : 'primary' %>">
+                                                    <i class="fas fa-<%= user.role === 'admin' ? 'shield-alt' : 'user' %>"></i>
+                                                    <%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <% if (user.is_locked) { %>
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-lock"></i> Locked
+                                                    </span>
+                                                <% } else if (user.is_active) { %>
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check"></i> Active
+                                                    </span>
+                                                <% } else { %>
+                                                    <span class="badge bg-secondary">
+                                                        <i class="fas fa-times"></i> Inactive
+                                                    </span>
+                                                <% } %>
+                                                
+                                                <% if (user.failed_login_attempts > 0) { %>
+                                                    <br><small class="text-warning">
+                                                        <i class="fas fa-exclamation-triangle"></i>
+                                                        <%= user.failed_login_attempts %> failed attempt(s)
+                                                    </small>
+                                                <% } %>
+                                            </td>
+                                            <td>
+                                                <% if (user.last_login) { %>
+                                                    <span title="<%= new Date(user.last_login).toLocaleString() %>">
+                                                        <%= new Date(user.last_login).toLocaleDateString() %>
+                                                    </span>
+                                                <% } else { %>
+                                                    <span class="text-muted">Never</span>
+                                                <% } %>
+                                            </td>
+                                            <td>
+                                                <span title="<%= new Date(user.created_at).toLocaleString() %>">
+                                                    <%= new Date(user.created_at).toLocaleDateString() %>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="/users/<%= user.id %>" class="btn btn-outline-info" title="View Details">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="/users/<%= user.id %>/edit" class="btn btn-outline-primary" title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" 
+                                                                data-bs-toggle="dropdown" title="More Actions">
+                                                            <i class="fas fa-ellipsis-v"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            <li>
+                                                                <button class="dropdown-item toggle-status-btn" 
+                                                                        data-user-id="<%= user.id %>" 
+                                                                        data-full-name="<%= user.fullName %>" 
+                                                                        data-is-active="<%= user.is_active %>">
+                                                                    <i class="fas fa-<%= user.is_active ? 'ban' : 'check' %>"></i>
+                                                                    <%= user.is_active ? 'Deactivate' : 'Activate' %>
+                                                                </button>
+                                                            </li>
+                                                            <% if (user.failed_login_attempts > 0 || user.is_locked) { %>
+                                                            <li>
+                                                                <button class="dropdown-item reset-attempts-btn" 
+                                                                        data-user-id="<%= user.id %>" 
+                                                                        data-full-name="<%= user.fullName %>">
+                                                                    <i class="fas fa-unlock"></i> Unlock Account
+                                                                </button>
+                                                            </li>
+                                                            <% } %>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li>
+                                                                <button class="dropdown-item text-danger delete-user-btn" 
+                                                                        data-user-id="<%= user.id %>" 
+                                                                        data-full-name="<%= user.fullName %>">
+                                                                    <i class="fas fa-trash"></i> Delete
+                                                                </button>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <% }); %>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <% if (pagination.total > 1) { %>
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-muted">
+                                Showing <%= (pagination.current - 1) * filters.limit + 1 %> to 
+                                <%= Math.min(pagination.current * filters.limit, pagination.totalRecords) %> of 
+                                <%= pagination.totalRecords %> entries
+                            </div>
+                            <nav>
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item <%= !pagination.hasPrev ? 'disabled' : '' %>">
+                                        <a class="page-link" href="?<%= new URLSearchParams({...filters, page: pagination.current - 1}).toString() %>">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                    
+                                    <% for (let i = Math.max(1, pagination.current - 2); i <= Math.min(pagination.total, pagination.current + 2); i++) { %>
+                                    <li class="page-item <%= i === pagination.current ? 'active' : '' %>">
+                                        <a class="page-link" href="?<%= new URLSearchParams({...filters, page: i}).toString() %>">
+                                            <%= i %>
+                                        </a>
+                                    </li>
+                                    <% } %>
+                                    
+                                    <li class="page-item <%= !pagination.hasNext ? 'disabled' : '' %>">
+                                        <a class="page-link" href="?<%= new URLSearchParams({...filters, page: pagination.current + 1}).toString() %>">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle text-danger"></i>
+                        Confirm Delete
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the user <strong id="deleteUserName"></strong>?</p>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-warning"></i>
+                        <strong>Warning:</strong> This action cannot be undone. The user will be permanently removed from the system.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                        <i class="fas fa-trash"></i> Delete User
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .avatar-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+    </style>
+
+    <script>
+        let selectedUsers = new Set();
+        let userToDelete = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            updateBulkActions();
+            
+            // Setup checkbox handlers
+            document.getElementById('selectAll').addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.user-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                    if (this.checked) {
+                        selectedUsers.add(checkbox.value);
+                    } else {
+                        selectedUsers.delete(checkbox.value);
+                    }
+                });
+                updateBulkActions();
+            });
+
+            document.getElementById('selectAllTable').addEventListener('change', function() {
+                document.getElementById('selectAll').checked = this.checked;
+                document.getElementById('selectAll').dispatchEvent(new Event('change'));
+            });
+
+            document.querySelectorAll('.user-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        selectedUsers.add(this.value);
+                    } else {
+                        selectedUsers.delete(this.value);
+                    }
+                    updateBulkActions();
+                    
+                    // Update select all checkbox
+                    const allCheckboxes = document.querySelectorAll('.user-checkbox');
+                    const checkedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+                    document.getElementById('selectAll').checked = allCheckboxes.length === checkedCheckboxes.length;
+                    document.getElementById('selectAllTable').checked = allCheckboxes.length === checkedCheckboxes.length;
+                });
+            });
+
+            // Event listeners for action buttons
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.toggle-status-btn')) {
+                    const btn = e.target.closest('.toggle-status-btn');
+                    const userId = btn.dataset.userId;
+                    const fullName = btn.dataset.fullName;
+                    const isActive = btn.dataset.isActive === 'true';
+                    toggleUserStatus(userId, fullName, isActive);
+                }
+                
+                if (e.target.closest('.reset-attempts-btn')) {
+                    const btn = e.target.closest('.reset-attempts-btn');
+                    const userId = btn.dataset.userId;
+                    const fullName = btn.dataset.fullName;
+                    resetFailedAttempts(userId, fullName);
+                }
+                
+                if (e.target.closest('.delete-user-btn')) {
+                    const btn = e.target.closest('.delete-user-btn');
+                    const userId = btn.dataset.userId;
+                    const fullName = btn.dataset.fullName;
+                    deleteUser(userId, fullName);
+                }
+            });
+        });
+
+        function updateBulkActions() {
+            const bulkCard = document.getElementById('bulkActionsCard');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            if (selectedUsers.size > 0) {
+                bulkCard.style.display = 'block';
+                selectedCount.textContent = `${selectedUsers.size} user(s) selected`;
+            } else {
+                bulkCard.style.display = 'none';
+            }
+        }
+
+        function deleteUser(userId, fullName) {
+            userToDelete = userId;
+            document.getElementById('deleteUserName').textContent = fullName;
+            new bootstrap.Modal(document.getElementById('deleteUserModal')).show();
+        }
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+            if (userToDelete) {
+                fetch(`/users/${userToDelete}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': '<%= csrfToken %>'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                        document.getElementById(`user-row-${userToDelete}`).remove();
+                        selectedUsers.delete(userToDelete.toString());
+                        updateBulkActions();
+                    } else {
+                        showAlert(data.error, 'danger');
+                    }
+                    bootstrap.Modal.getInstance(document.getElementById('deleteUserModal')).hide();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while deleting the user', 'danger');
+                    bootstrap.Modal.getInstance(document.getElementById('deleteUserModal')).hide();
+                });
+            }
+        });
+
+        function toggleUserStatus(userId, fullName, currentStatus) {
+            const action = currentStatus ? 'deactivate' : 'activate';
+            const confirmMessage = `Are you sure you want to ${action} user "${fullName}"?`;
+            
+            if (confirm(confirmMessage)) {
+                fetch(`/users/${userId}/toggle-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': '<%= csrfToken %>'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert(data.error, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while updating user status', 'danger');
+                });
+            }
+        }
+
+        function resetFailedAttempts(userId, fullName) {
+            if (confirm(`Reset failed login attempts for "${fullName}"?`)) {
+                fetch(`/users/${userId}/reset-failed-attempts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': '<%= csrfToken %>'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert(data.error, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while resetting failed attempts', 'danger');
+                });
+            }
+        }
+
+        function bulkAction(action) {
+            if (selectedUsers.size === 0) return;
+            
+            const actionNames = {
+                activate: 'activate',
+                deactivate: 'deactivate',
+                unlock: 'unlock'
+            };
+            
+            if (confirm(`Are you sure you want to ${actionNames[action]} ${selectedUsers.size} user(s)?`)) {
+                fetch('/users/bulk-action', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': '<%= csrfToken %>'
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        userIds: Array.from(selectedUsers)
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert(data.error, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while performing bulk action', 'danger');
+                });
+            }
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const container = document.querySelector('.container-fluid');
+            container.insertBefore(alertDiv, container.children[1]);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    </script>
+
+    <%- include('../partials/footer') %>
+</body>
+</html>

@@ -48,7 +48,9 @@ class SecurityLogger {
             ip_address: details.ipAddress || null,
             user_agent: details.userAgent || null,
             session_id: details.sessionId || null,
-            details: JSON.stringify(details.additionalData || {}),
+            details: JSON.stringify(details.additionalData || {}, (key, value) =>
+                typeof value === 'bigint' ? Number(value) : value
+            ),
             risk_level: this.calculateRiskLevel(cleanEventType, details),
             timestamp: Date.now()
         };

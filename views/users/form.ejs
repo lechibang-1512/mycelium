@@ -1,0 +1,516 @@
+<%- include('../partials/head', {title: title}) %>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1><i class="fas fa-<%= user ? 'edit' : 'user-plus' %>"></i> <%= user ? 'Edit User' : 'Create New User' %></h1>
+                        <p class="text-muted"><%= user ? 'Update user information and settings' : 'Add a new user to the system' %></p>
+                    </div>
+                    <div>
+                        <a href="/users" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Users
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Flash Messages -->
+                <% if (messages.success && messages.success.length > 0) { %>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <%= messages.success[0] %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+                
+                <% if (messages.error && messages.error.length > 0) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <%= messages.error[0] %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <% if (messages.warning && messages.warning.length > 0) { %>
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <%= messages.warning[0] %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">User Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <form action="<%= user ? `/users/${user.id}/update` : '/users' %>" method="POST" id="userForm">
+                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                    
+                                    <div class="mb-3">
+                                        <label for="fullName" class="form-label">Full Name *</label>
+                                        <input type="text" class="form-control" id="fullName" name="fullName" 
+                                               value="<%= user ? user.fullName : '' %>" required maxlength="100">
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Email Address *</label>
+                                        <input type="email" class="form-control" id="email" name="email" 
+                                               value="<%= user ? user.email : '' %>" required maxlength="255">
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="username" class="form-label">Username *</label>
+                                            <input type="text" class="form-control" id="username" name="username" 
+                                                   value="<%= user ? user.username : '' %>" required maxlength="50"
+                                                   pattern="[a-zA-Z0-9_]+" title="Username can only contain letters, numbers, and underscores">
+                                            <div class="invalid-feedback"></div>
+                                            <small class="form-text text-muted">Username can only contain letters, numbers, and underscores</small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="role" class="form-label">Role *</label>
+                                            <select class="form-select" id="role" name="role" required>
+                                                <option value="">Select a role</option>
+                                                <option value="admin" <%= user && user.role === 'admin' ? 'selected' : '' %>>Administrator</option>
+                                                <option value="staff" <%= user && user.role === 'staff' ? 'selected' : '' %>>Staff</option>
+                                            </select>
+                                            <div class="invalid-feedback"></div>
+                                        </div>
+                                    </div>
+
+                                    <% if (!user) { %>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label for="password" class="form-label">Password *</label>
+                                                <input type="password" class="form-control" id="password" name="password" required>
+                                                <div class="invalid-feedback"></div>
+                                                <small class="form-text text-muted">Minimum 8 characters with at least one uppercase, lowercase, number, and special character</small>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="confirmPassword" class="form-label">Confirm Password *</label>
+                                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                                <div class="invalid-feedback"></div>
+                                            </div>
+                                        </div>
+                                    <% } %>
+
+                                    <div class="mb-3">
+                                        <label for="phoneNumber" class="form-label">Phone Number</label>
+                                        <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" 
+                                               value="<%= user ? (user.phoneNumber || '') : '' %>" maxlength="20">
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="isActive" name="isActive" 
+                                                       <%= user ? (user.is_active ? 'checked' : '') : 'checked' %>>
+                                                <label class="form-check-label" for="isActive">
+                                                    Active Account
+                                                </label>
+                                            </div>
+                                            <small class="form-text text-muted">Inactive users cannot log in</small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="requirePasswordChange" name="requirePasswordChange"
+                                                       <%= user && user.require_password_change ? 'checked' : '' %>>
+                                                <label class="form-check-label" for="requirePasswordChange">
+                                                    Require Password Change on Next Login
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Form Submit Button -->
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-success btn-lg">
+                                            <i class="fas fa-<%= user ? 'save' : 'user-plus' %>"></i> 
+                                            <%= user ? 'Update User' : 'Create User' %>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <% if (user) { %>
+                            <!-- User Status Card -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Account Status</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <strong>Status:</strong> 
+                                        <span class="badge bg-<%= user.is_active ? 'success' : 'danger' %>">
+                                            <%= user.is_active ? 'Active' : 'Inactive' %>
+                                        </span>
+                                    </div>
+                                    <div class="mb-3">
+                                        <strong>Failed Login Attempts:</strong> 
+                                        <span class="badge bg-<%= user.failed_login_attempts > 0 ? 'warning' : 'success' %>">
+                                            <%= user.failed_login_attempts %>
+                                        </span>
+                                    </div>
+                                    <div class="mb-3">
+                                        <strong>Account Locked:</strong> 
+                                        <span class="badge bg-<%= user.is_locked ? 'danger' : 'success' %>">
+                                            <%= user.is_locked ? 'Yes' : 'No' %>
+                                        </span>
+                                    </div>
+                                    <div class="mb-3">
+                                        <strong>Created:</strong><br>
+                                        <small class="text-muted"><%= new Date(user.created_at).toLocaleString() %></small>
+                                    </div>
+                                    <% if (user.last_login) { %>
+                                        <div class="mb-3">
+                                            <strong>Last Login:</strong><br>
+                                            <small class="text-muted"><%= new Date(user.last_login).toLocaleString() %></small>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+
+                            <!-- Quick Actions Card -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Quick Actions</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="resetPassword()">
+                                            <i class="fas fa-key"></i> Reset Password
+                                        </button>
+                                        <% if (user.failed_login_attempts > 0 || user.is_locked) { %>
+                                            <button type="button" class="btn btn-outline-warning btn-sm" onclick="unlockAccount()">
+                                                <i class="fas fa-unlock"></i> Unlock Account
+                                            </button>
+                                        <% } %>
+                                        <button type="button" class="btn btn-outline-info btn-sm" onclick="viewSessions()">
+                                            <i class="fas fa-clock"></i> View Sessions
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        <% } %>
+
+                        <!-- Help Card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Help</h5>
+                            </div>
+                            <div class="card-body">
+                                <h6>User Roles:</h6>
+                                <ul class="small">
+                                    <li><strong>Administrator:</strong> Full system access</li>
+                                    <li><strong>Staff:</strong> Limited access to core functions</li>
+                                </ul>
+                                <h6>Password Requirements:</h6>
+                                <ul class="small">
+                                    <li>Minimum 8 characters</li>
+                                    <li>At least one uppercase letter</li>
+                                    <li>At least one lowercase letter</li>
+                                    <li>At least one number</li>
+                                    <li>At least one special character</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between">
+                            <a href="/users" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <div>
+                                <% if (user) { %>
+                                    <button type="button" class="btn btn-danger me-2" onclick="deleteUser()">
+                                        <i class="fas fa-trash"></i> Delete User
+                                    </button>
+                                <% } %>
+                                <button type="submit" form="userForm" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> <%= user ? 'Update User' : 'Create User' %>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('userForm');
+            const passwordField = document.getElementById('password');
+            const confirmPasswordField = document.getElementById('confirmPassword');
+
+            // Real-time validation
+            form.addEventListener('input', function(e) {
+                validateField(e.target);
+            });
+
+            // Password confirmation validation
+            if (confirmPasswordField) {
+                confirmPasswordField.addEventListener('input', function() {
+                    validatePasswordMatch();
+                });
+                passwordField.addEventListener('input', function() {
+                    validatePasswordMatch();
+                });
+            }
+
+            // Form submission
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                if (validateForm()) {
+                    this.submit();
+                }
+            });
+        });
+
+        function validateField(field) {
+            const fieldName = field.name;
+            const value = field.value.trim();
+            let isValid = true;
+            let message = '';
+
+            // Clear previous validation
+            field.classList.remove('is-invalid', 'is-valid');
+
+            switch (fieldName) {
+                case 'firstName':
+                case 'lastName':
+                    if (!value) {
+                        isValid = false;
+                        message = 'This field is required';
+                    } else if (value.length > 50) {
+                        isValid = false;
+                        message = 'Maximum 50 characters allowed';
+                    }
+                    break;
+
+                case 'email':
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!value) {
+                        isValid = false;
+                        message = 'Email is required';
+                    } else if (!emailRegex.test(value)) {
+                        isValid = false;
+                        message = 'Please enter a valid email address';
+                    } else if (value.length > 255) {
+                        isValid = false;
+                        message = 'Email too long';
+                    }
+                    break;
+
+                case 'username':
+                    const usernameRegex = /^[a-zA-Z0-9_]+$/;
+                    if (!value) {
+                        isValid = false;
+                        message = 'Username is required';
+                    } else if (!usernameRegex.test(value)) {
+                        isValid = false;
+                        message = 'Username can only contain letters, numbers, and underscores';
+                    } else if (value.length > 50) {
+                        isValid = false;
+                        message = 'Username too long';
+                    }
+                    break;
+
+                case 'password':
+                    if (field.required && !value) {
+                        isValid = false;
+                        message = 'Password is required';
+                    } else if (value && !validatePassword(value)) {
+                        isValid = false;
+                        message = 'Password does not meet requirements';
+                    }
+                    break;
+
+                case 'phoneNumber':
+                    if (value && value.length > 20) {
+                        isValid = false;
+                        message = 'Phone number too long';
+                    }
+                    break;
+            }
+
+            // Apply validation styling
+            if (field.required || value) {
+                field.classList.add(isValid ? 'is-valid' : 'is-invalid');
+                const feedbackElement = field.nextElementSibling;
+                if (feedbackElement && feedbackElement.classList.contains('invalid-feedback')) {
+                    feedbackElement.textContent = message;
+                }
+            }
+
+            return isValid;
+        }
+
+        function validatePassword(password) {
+            // At least 8 characters, one uppercase, one lowercase, one number, one special character
+            const minLength = 8;
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasNumber = /\d/.test(password);
+            const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+            return password.length >= minLength && hasUppercase && hasLowercase && hasNumber && hasSpecialChar;
+        }
+
+        function validatePasswordMatch() {
+            const password = document.getElementById('password');
+            const confirmPassword = document.getElementById('confirmPassword');
+            
+            if (password && confirmPassword) {
+                const match = password.value === confirmPassword.value;
+                
+                confirmPassword.classList.remove('is-invalid', 'is-valid');
+                
+                if (confirmPassword.value) {
+                    confirmPassword.classList.add(match ? 'is-valid' : 'is-invalid');
+                    const feedbackElement = confirmPassword.nextElementSibling;
+                    if (feedbackElement && feedbackElement.classList.contains('invalid-feedback')) {
+                        feedbackElement.textContent = match ? '' : 'Passwords do not match';
+                    }
+                }
+            }
+        }
+
+        function validateForm() {
+            const form = document.getElementById('userForm');
+            const inputs = form.querySelectorAll('input[required], select[required]');
+            let isValid = true;
+
+            inputs.forEach(input => {
+                if (!validateField(input)) {
+                    isValid = false;
+                }
+            });
+
+            // Check password match if creating new user
+            const confirmPassword = document.getElementById('confirmPassword');
+            if (confirmPassword && confirmPassword.value) {
+                validatePasswordMatch();
+                if (confirmPassword.classList.contains('is-invalid')) {
+                    isValid = false;
+                }
+            }
+
+            return isValid;
+        }
+
+        <% if (user) { %>
+            function resetPassword() {
+                if (confirm('Send password reset instructions to <%- user.email %>?')) {
+                    fetch('/users/<%= user.id %>/reset-password', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-Token': '<%= csrfToken %>'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showAlert(data.message, 'success');
+                        } else {
+                            showAlert(data.error, 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showAlert('An error occurred while resetting password', 'danger');
+                    });
+                }
+            }
+
+            function unlockAccount() {
+                if (confirm('Unlock account for <%- user.fullName %>?')) {
+                    fetch('/users/<%= user.id %>/reset-failed-attempts', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-Token': '<%= csrfToken %>'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showAlert(data.message, 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            showAlert(data.error, 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showAlert('An error occurred while unlocking account', 'danger');
+                    });
+                }
+            }
+
+            function viewSessions() {
+                window.location.href = '/users/<%= user.id %>/sessions';
+            }
+
+            function deleteUser() {
+                if (confirm('Are you sure you want to delete user "<%- user.fullName %>"? This action cannot be undone.')) {
+                    fetch('/users/<%= user.id %>', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-Token': '<%= csrfToken %>'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showAlert(data.message, 'success');
+                            setTimeout(() => window.location.href = '/users', 1000);
+                        } else {
+                            showAlert(data.error, 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showAlert('An error occurred while deleting user', 'danger');
+                    });
+                }
+            }
+        <% } %>
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const container = document.querySelector('.container-fluid');
+            container.insertBefore(alertDiv, container.children[1]);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    </script>
+
+    <%- include('../partials/footer') %>
+</body>
+</html>

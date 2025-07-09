@@ -41,6 +41,11 @@ class InputValidator {
             errors.push('Email address is too long');
         }
 
+        // Password validation
+        if (!password || !validator.isLength(password, { min: 8, max: 128 })) {
+            errors.push('Password must be between 8 and 128 characters');
+        }
+
         // Role validation
         const validRoles = ['admin', 'staff'];
         if (!role || !validRoles.includes(role)) {

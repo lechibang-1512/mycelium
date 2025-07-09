@@ -244,6 +244,7 @@ async function startServer() {
 
         // Import modular routes
         const authRoutes = require('./routes/auth')(authPool, convertBigIntToNumber);
+        const usersRoutes = require('./routes/users')(authPool, convertBigIntToNumber);
         const dashboardRoutes = require('./routes/dashboard')(pool, suppliersPool, convertBigIntToNumber);
         const suppliersRoutes = require('./routes/suppliers')(suppliersPool, convertBigIntToNumber);
         const inventoryRoutes = require('./routes/inventory')(pool, suppliersPool, convertBigIntToNumber);
@@ -254,8 +255,8 @@ async function startServer() {
         const qrcodeRoutes = require('./routes/qrcode')(pool, suppliersPool, convertBigIntToNumber);
 
         // Apply rate limiting to specific routes
-        app.use('/auth/login', authLimiter);
-        app.use('/auth/forgot-password', passwordResetLimiter);
+        app.use('/login', authLimiter);
+        app.use('/forgot-password', passwordResetLimiter);
         app.use('/admin', adminLimiter);
         app.use((req, res, next) => {
             if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
@@ -266,6 +267,7 @@ async function startServer() {
         
         // Use modular routes
         app.use('/', authRoutes);
+        app.use('/', usersRoutes);
         app.use('/', dashboardRoutes);
         app.use('/', suppliersRoutes);
         app.use('/', inventoryRoutes);

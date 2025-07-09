@@ -1,0 +1,424 @@
+<%- include('../partials/head', {title: title}) %>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1><i class="fas fa-user"></i> <%= user.fullName %></h1>
+                        <p class="text-muted">User details and activity information</p>
+                    </div>
+                    <div>
+                        <a href="/users/<%= user.id %>/edit" class="btn btn-primary me-2">
+                            <i class="fas fa-edit"></i> Edit User
+                        </a>
+                        <a href="/users" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Users
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Flash Messages -->
+                <% if (messages.success.length > 0) { %>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <%= messages.success[0] %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+                
+                <% if (messages.error.length > 0) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <%= messages.error[0] %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <div class="row">
+                    <!-- User Information -->
+                    <div class="col-lg-8">
+                        <div class="card mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">User Information</h5>
+                                <span class="badge bg-<%= user.is_active ? 'success' : 'danger' %>">
+                                    <%= user.is_active ? 'Active' : 'Inactive' %>
+                                </span>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <strong>Full Name:</strong><br>
+                                            <%= user.fullName %>
+                                        </div>
+                                        <div class="mb-3">
+                                            <strong>Username:</strong><br>
+                                            <%= user.username %>
+                                        </div>
+                                        <div class="mb-3">
+                                            <strong>Email:</strong><br>
+                                            <a href="mailto:<%= user.email %>"><%= user.email %></a>
+                                        </div>
+                                        <% if (user.phoneNumber) { %>
+                                            <div class="mb-3">
+                                                <strong>Phone:</strong><br>
+                                                <a href="tel:<%= user.phoneNumber %>"><%= user.phoneNumber %></a>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <strong>Role:</strong><br>
+                                            <span class="badge bg-<%= user.role === 'admin' ? 'danger' : 'primary' %>">
+                                                <%= user.role === 'admin' ? 'Administrator' : 'Staff' %>
+                                            </span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <strong>Account Created:</strong><br>
+                                            <%= new Date(user.created_at).toLocaleString() %>
+                                        </div>
+                                        <% if (user.last_login) { %>
+                                            <div class="mb-3">
+                                                <strong>Last Login:</strong><br>
+                                                <%= new Date(user.last_login).toLocaleString() %>
+                                            </div>
+                                        <% } %>
+                                        <% if (user.last_password_change) { %>
+                                            <div class="mb-3">
+                                                <strong>Last Password Change:</strong><br>
+                                                <%= new Date(user.last_password_change).toLocaleString() %>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security Information -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Security Status</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="text-center">
+                                            <div class="display-6 text-<%= user.failed_login_attempts === 0 ? 'success' : 'warning' %>">
+                                                <%= user.failed_login_attempts %>
+                                            </div>
+                                            <small class="text-muted">Failed Login Attempts</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center">
+                                            <div class="display-6 text-<%= user.is_locked ? 'danger' : 'success' %>">
+                                                <i class="fas fa-<%= user.is_locked ? 'lock' : 'unlock' %>"></i>
+                                            </div>
+                                            <small class="text-muted">Account <%= user.is_locked ? 'Locked' : 'Unlocked' %></small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center">
+                                            <div class="display-6 text-<%= user.require_password_change ? 'warning' : 'success' %>">
+                                                <i class="fas fa-<%= user.require_password_change ? 'exclamation-triangle' : 'check' %>"></i>
+                                            </div>
+                                            <small class="text-muted">Password <%= user.require_password_change ? 'Change Required' : 'OK' %></small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Recent Activity</h5>
+                            </div>
+                            <div class="card-body">
+                                <% if (recentActivity && recentActivity.length > 0) { %>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date & Time</th>
+                                                    <th>Action</th>
+                                                    <th>IP Address</th>
+                                                    <th>User Agent</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% recentActivity.forEach(activity => { %>
+                                                    <tr>
+                                                        <td><%= new Date(activity.timestamp).toLocaleString() %></td>
+                                                        <td>
+                                                            <span class="badge bg-<%= activity.action.includes('success') ? 'success' : activity.action.includes('failed') ? 'danger' : 'info' %>">
+                                                                <%= activity.action %>
+                                                            </span>
+                                                        </td>
+                                                        <td><%= activity.ip_address %></td>
+                                                        <td class="text-truncate" style="max-width: 200px;" title="<%= activity.user_agent %>">
+                                                            <%= activity.user_agent %>
+                                                        </td>
+                                                    </tr>
+                                                <% }); %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <% } else { %>
+                                    <p class="text-muted text-center py-4">No recent activity found</p>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <div class="col-lg-4">
+                        <!-- Quick Actions -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Quick Actions</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-primary" 
+                                            data-user-id="<%= user.id %>"
+                                            data-full-name="<%= user.fullName %>"
+                                            data-is-active="<%= user.is_active %>"
+                                            onclick="toggleStatus(this)">
+                                        <i class="fas fa-<%= user.is_active ? 'ban' : 'check' %>"></i> 
+                                        <%= user.is_active ? 'Deactivate' : 'Activate' %> User
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary" 
+                                            data-user-id="<%= user.id %>"
+                                            data-email="<%= user.email %>"
+                                            onclick="resetPassword(this)">
+                                        <i class="fas fa-key"></i> Reset Password
+                                    </button>
+                                    <% if (user.failed_login_attempts > 0 || user.is_locked) { %>
+                                        <button type="button" class="btn btn-outline-warning" 
+                                                data-user-id="<%= user.id %>"
+                                                data-full-name="<%= user.fullName %>"
+                                                onclick="unlockAccount(this)">
+                                            <i class="fas fa-unlock"></i> Unlock Account
+                                        </button>
+                                    <% } %>
+                                    <div class="dropdown">
+                                        <button type="button" class="btn btn-outline-secondary dropdown-toggle w-100" data-bs-toggle="dropdown">
+                                            <i class="fas fa-cog"></i> More Actions
+                                        </button>
+                                        <ul class="dropdown-menu w-100">
+                                            <li><a class="dropdown-item" href="/users/<%= user.id %>/sessions">
+                                                <i class="fas fa-clock"></i> View Sessions
+                                            </a></li>
+                                            <li><a class="dropdown-item" href="/users/<%= user.id %>/audit-log">
+                                                <i class="fas fa-history"></i> Audit Log
+                                            </a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><button class="dropdown-item text-danger" 
+                                                        data-user-id="<%= user.id %>"
+                                                        data-full-name="<%= user.fullName %>"
+                                                        onclick="deleteUser(this)">
+                                                <i class="fas fa-trash"></i> Delete User
+                                            </button></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Statistics -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Statistics</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <div class="border-end">
+                                            <div class="h4 mb-1"><%= stats.totalLogins || 0 %></div>
+                                            <small class="text-muted">Total Logins</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="h4 mb-1"><%= stats.activeSessions || 0 %></div>
+                                        <small class="text-muted">Active Sessions</small>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <div class="border-end">
+                                            <div class="h4 mb-1"><%= stats.failedLogins || 0 %></div>
+                                            <small class="text-muted">Failed Logins (30d)</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="h4 mb-1"><%= stats.passwordChanges || 0 %></div>
+                                        <small class="text-muted">Password Changes</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Help -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">User Management</h5>
+                            </div>
+                            <div class="card-body">
+                                <h6>Actions Available:</h6>
+                                <ul class="small">
+                                    <li>Activate/Deactivate user accounts</li>
+                                    <li>Reset user passwords</li>
+                                    <li>Unlock locked accounts</li>
+                                    <li>View session history</li>
+                                    <li>Monitor login attempts</li>
+                                </ul>
+                                <h6>Security Notes:</h6>
+                                <ul class="small">
+                                    <li>Accounts lock after 5 failed attempts</li>
+                                    <li>Password changes are logged</li>
+                                    <li>All actions are audited</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleStatus(btn) {
+            const userId = btn.dataset.userId;
+            const fullName = btn.dataset.fullName;
+            const isActive = btn.dataset.isActive === 'true';
+            const action = isActive ? 'deactivate' : 'activate';
+            const confirmMessage = 'Are you sure you want to ' + action + ' user "' + fullName + '"?';
+            
+            if (confirm(confirmMessage)) {
+                fetch('/users/' + userId + '/toggle-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': '<%= csrfToken %>'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert(data.error, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while updating user status', 'danger');
+                });
+            }
+        }
+
+        function resetPassword(btn) {
+            const userId = btn.dataset.userId;
+            const email = btn.dataset.email;
+            
+            if (confirm('Send password reset instructions to ' + email + '?')) {
+                fetch('/users/' + userId + '/reset-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': '<%= csrfToken %>'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                    } else {
+                        showAlert(data.error, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while resetting password', 'danger');
+                });
+            }
+        }
+
+        function unlockAccount(btn) {
+            const userId = btn.dataset.userId;
+            const fullName = btn.dataset.fullName;
+            
+            if (confirm('Unlock account for ' + fullName + '?')) {
+                fetch('/users/' + userId + '/reset-failed-attempts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': '<%= csrfToken %>'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert(data.error, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while unlocking account', 'danger');
+                });
+            }
+        }
+
+        function deleteUser(btn) {
+            const userId = btn.dataset.userId;
+            const fullName = btn.dataset.fullName;
+            
+            if (confirm('Are you sure you want to delete user "' + fullName + '"? This action cannot be undone.')) {
+                fetch('/users/' + userId, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': '<%= csrfToken %>'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                        setTimeout(() => window.location.href = '/users', 1000);
+                    } else {
+                        showAlert(data.error, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while deleting user', 'danger');
+                });
+            }
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-' + type + ' alert-dismissible fade show';
+            alertDiv.innerHTML = message + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+            
+            const container = document.querySelector('.container-fluid');
+            container.insertBefore(alertDiv, container.children[1]);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    </script>
+
+    <%- include('../partials/footer') %>
+</body>
+</html>
