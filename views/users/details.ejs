@@ -131,35 +131,45 @@
                             </div>
                         </div>
 
-                        <!-- Recent Activity -->
+                        <!-- Recent Security Events -->
                         <div class="card">
                             <div class="card-header">
-                                <h5 class="card-title mb-0">Recent Activity</h5>
+                                <h5 class="card-title mb-0">Recent Security Events</h5>
                             </div>
                             <div class="card-body">
-                                <% if (recentActivity && recentActivity.length > 0) { %>
+                                <% if (securityEvents && securityEvents.length > 0) { %>
                                     <div class="table-responsive">
                                         <table class="table table-sm">
                                             <thead>
                                                 <tr>
-                                                    <th>Date & Time</th>
-                                                    <th>Action</th>
+                                                    <th>Event</th>
+                                                    <th>Risk Level</th>
+                                                    <th>Date/Time</th>
                                                     <th>IP Address</th>
-                                                    <th>User Agent</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <% recentActivity.forEach(activity => { %>
+                                                <% securityEvents.forEach(event => { %>
                                                     <tr>
-                                                        <td><%= new Date(activity.timestamp).toLocaleString() %></td>
                                                         <td>
-                                                            <span class="badge bg-<%= activity.action.includes('success') ? 'success' : activity.action.includes('failed') ? 'danger' : 'info' %>">
-                                                                <%= activity.action %>
+                                                            <span class="badge bg-secondary">
+                                                                <%= event.event_type.replace('_', ' ').toUpperCase() %>
                                                             </span>
                                                         </td>
-                                                        <td><%= activity.ip_address %></td>
-                                                        <td class="text-truncate" style="max-width: 200px;" title="<%= activity.user_agent %>">
-                                                            <%= activity.user_agent %>
+                                                        <td>
+                                                            <span class="badge bg-<%= 
+                                                                event.risk_level === 'critical' ? 'danger' :
+                                                                event.risk_level === 'high' ? 'warning' :
+                                                                event.risk_level === 'medium' ? 'info' : 'success'
+                                                            %>">
+                                                                <%= event.risk_level.toUpperCase() %>
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <small><%= new Date(event.created_at).toLocaleString() %></small>
+                                                        </td>
+                                                        <td>
+                                                            <small class="text-muted"><%= event.ip_address || 'N/A' %></small>
                                                         </td>
                                                     </tr>
                                                 <% }); %>
@@ -167,7 +177,7 @@
                                         </table>
                                     </div>
                                 <% } else { %>
-                                    <p class="text-muted text-center py-4">No recent activity found</p>
+                                    <p class="text-muted text-center py-4">No recent security events found</p>
                                 <% } %>
                             </div>
                         </div>
@@ -250,13 +260,13 @@
                                 <div class="row text-center">
                                     <div class="col-6">
                                         <div class="border-end">
-                                            <div class="h4 mb-1"><%= stats.failedLogins || 0 %></div>
-                                            <small class="text-muted">Failed Logins (30d)</small>
+                                            <div class="h4 mb-1"><%= stats.recentLogins || 0 %></div>
+                                            <small class="text-muted">Recent Logins (30d)</small>
                                         </div>
                                     </div>
                                     <div class="col-6">
-                                        <div class="h4 mb-1"><%= stats.passwordChanges || 0 %></div>
-                                        <small class="text-muted">Password Changes</small>
+                                        <div class="h4 mb-1"><%= stats.failedLogins || 0 %></div>
+                                        <small class="text-muted">Failed Logins</small>
                                     </div>
                                 </div>
                             </div>

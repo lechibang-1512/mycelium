@@ -129,9 +129,12 @@
                                         </div>
                                     </div>
 
-                                    <!-- Form Submit Button -->
-                                    <div class="d-grid">
-                                        <button type="submit" class="btn btn-success btn-lg">
+                                    <!-- Main Submit Button Only -->
+                                    <div class="d-flex justify-content-end gap-2 mt-4">
+                                        <a href="/users" class="btn btn-outline-secondary">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </a>
+                                        <button type="submit" class="btn btn-<%= user ? 'primary' : 'success' %>">
                                             <i class="fas fa-<%= user ? 'save' : 'user-plus' %>"></i> 
                                             <%= user ? 'Update User' : 'Create User' %>
                                         </button>
@@ -222,27 +225,6 @@
                                     <li>At least one number</li>
                                     <li>At least one special character</li>
                                 </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Form Actions -->
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <div class="d-flex justify-content-between">
-                            <a href="/users" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Cancel
-                            </a>
-                            <div>
-                                <% if (user) { %>
-                                    <button type="button" class="btn btn-danger me-2" onclick="deleteUser()">
-                                        <i class="fas fa-trash"></i> Delete User
-                                    </button>
-                                <% } %>
-                                <button type="submit" form="userForm" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> <%= user ? 'Update User' : 'Create User' %>
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -414,86 +396,6 @@
             return isValid;
         }
 
-        <% if (user) { %>
-            function resetPassword() {
-                if (confirm('Send password reset instructions to <%- user.email %>?')) {
-                    fetch('/users/<%= user.id %>/reset-password', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-Token': '<%= csrfToken %>'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            showAlert(data.message, 'success');
-                        } else {
-                            showAlert(data.error, 'danger');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showAlert('An error occurred while resetting password', 'danger');
-                    });
-                }
-            }
-
-            function unlockAccount() {
-                if (confirm('Unlock account for <%- user.fullName %>?')) {
-                    fetch('/users/<%= user.id %>/reset-failed-attempts', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-Token': '<%= csrfToken %>'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            showAlert(data.message, 'success');
-                            setTimeout(() => location.reload(), 1000);
-                        } else {
-                            showAlert(data.error, 'danger');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showAlert('An error occurred while unlocking account', 'danger');
-                    });
-                }
-            }
-
-            function viewSessions() {
-                window.location.href = '/users/<%= user.id %>/sessions';
-            }
-
-            function deleteUser() {
-                if (confirm('Are you sure you want to delete user "<%- user.fullName %>"? This action cannot be undone.')) {
-                    fetch('/users/<%= user.id %>', {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-Token': '<%= csrfToken %>'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            showAlert(data.message, 'success');
-                            setTimeout(() => window.location.href = '/users', 1000);
-                        } else {
-                            showAlert(data.error, 'danger');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showAlert('An error occurred while deleting user', 'danger');
-                    });
-                }
-            }
-        <% } %>
-
         function showAlert(message, type) {
             const alertDiv = document.createElement('div');
             alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
@@ -508,8 +410,89 @@
             setTimeout(() => {
                 alertDiv.remove();
             }, 5000);
+    </script>
+
+    <% if (user) { %>
+    <script>
+        function resetPassword() {
+            if (confirm('Send password reset instructions to <%- user.email %>?')) {
+                fetch('/users/<%= user.id %>/reset-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': '<%= csrfToken %>'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                    } else {
+                        showAlert(data.error, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while resetting password', 'danger');
+                });
+            }
+        }
+
+        function unlockAccount() {
+            if (confirm('Unlock account for <%- user.fullName %>?')) {
+                fetch('/users/<%= user.id %>/reset-failed-attempts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': '<%= csrfToken %>'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert(data.error, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while unlocking account', 'danger');
+                });
+            }
+        }
+
+        function viewSessions() {
+            window.location.href = '/users/<%= user.id %>/sessions';
+        }
+
+        function deleteUser() {
+            if (confirm('Are you sure you want to delete user "<%- user.fullName %>"? This action cannot be undone.')) {
+                fetch('/users/<%= user.id %>', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': '<%= csrfToken %>'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                        setTimeout(() => window.location.href = '/users', 1000);
+                    } else {
+                        showAlert(data.error, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while deleting user', 'danger');
+                });
+            }
         }
     </script>
+    <% } %>
 
     <%- include('../partials/footer') %>
 </body>

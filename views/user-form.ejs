@@ -3,56 +3,173 @@
 
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
+        <div class="col-md-8">
             <div class="card shadow">
-                <div class="card-header bg-success text-white">
-                    <h3 class="mb-0"><%= title %></h3>
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">
+                            <i class="fas fa-<%= user ? 'edit' : 'user-plus' %>"></i>
+                            <%= title %>
+                        </h3>
+                        <a href="/users" class="btn btn-light btn-sm">
+                            <i class="fas fa-arrow-left"></i> Back to Users
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     <% if (messages && messages.error) { %>
-                        <div class="alert alert-danger" role="alert">
-                            <%= messages.error %>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i> <%= messages.error %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     <% } %>
                     
-                    <form action="/users/<%= user ? user.id : '' %>" method="POST">
+                    <% if (messages && messages.warning) { %>
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i> <%= messages.warning %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <% } %>
+                    
+                    <form action="<%= user ? `/users/${user.id}/update` : '/users' %>" method="POST" id="userForm">
                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="username" name="username" value="<%= user ? user.username : '' %>" <%= user ? 'readonly' : 'required' %>>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">
+                                        <i class="fas fa-user"></i> Username <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="username" 
+                                           name="username" 
+                                           value="<%= user ? user.username : '' %>" 
+                                           <%= user ? 'readonly' : 'required' %>
+                                           placeholder="Enter username">
+                                    <% if (user) { %>
+                                        <div class="form-text">
+                                            <i class="fas fa-info-circle"></i> Username cannot be changed after creation
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">
+                                        <i class="fas fa-envelope"></i> Email Address <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="email" 
+                                           class="form-control" 
+                                           id="email" 
+                                           name="email" 
+                                           value="<%= user ? user.email : '' %>" 
+                                           required
+                                           placeholder="user@example.com">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="fullName" class="form-label">
+                                        <i class="fas fa-id-card"></i> Full Name <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="fullName" 
+                                           name="fullName" 
+                                           value="<%= user ? user.fullName : '' %>" 
+                                           required
+                                           placeholder="John Doe">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="role" class="form-label">
+                                        <i class="fas fa-user-tag"></i> Role <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" id="role" name="role" required>
+                                        <option value="">Select Role</option>
+                                        <option value="staff" <%= user && user.role === 'staff' ? 'selected' : '' %>>
+                                            Staff Member
+                                        </option>
+                                        <option value="admin" <%= user && user.role === 'admin' ? 'selected' : '' %>>
+                                            Administrator
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">
+                                        <i class="fas fa-lock"></i> Password 
+                                        <% if (!user) { %><span class="text-danger">*</span><% } %>
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="password" 
+                                               class="form-control" 
+                                               id="password" 
+                                               name="password" 
+                                               <%= user ? '' : 'required' %>
+                                               placeholder="<%= user ? 'Leave blank to keep current password' : 'Enter secure password' %>">
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div id="password-strength-indicator" class="mt-2"></div>
+                                    <% if (user) { %>
+                                        <div class="form-text">
+                                            <i class="fas fa-info-circle"></i> Leave blank to keep current password
+                                        </div>
+                                    <% } else { %>
+                                        <div class="form-text">
+                                            <i class="fas fa-shield-alt"></i> Password must be at least 8 characters with uppercase, lowercase, number, and special character
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                            
                             <% if (user) { %>
-                                <small class="text-muted">Username cannot be changed</small>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-toggle-on"></i> Account Status
+                                    </label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="isActive" 
+                                               name="isActive" 
+                                               <%= user && user.is_active ? 'checked' : '' %>>
+                                        <label class="form-check-label" for="isActive">
+                                            Active Account
+                                        </label>
+                                    </div>
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle"></i> Inactive users cannot log in
+                                    </div>
+                                </div>
+                            </div>
                             <% } %>
-                        </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" <%= user ? '' : 'required' %>>
-                            <div id="password-strength-indicator"></div>
-                            <% if (user) { %>
-                                <small class="text-muted">Leave blank to keep current password</small>
-                            <% } else { %>
-                                <small class="text-muted">Password must be at least 8 characters with uppercase, lowercase, number, and special character</small>
-                            <% } %>
-                        </div>
-                        <div class="mb-3">
-                            <label for="fullName" class="form-label">Full Name</label>
-                            <input type="text" class="form-control" id="fullName" name="fullName" value="<%= user ? user.fullName : '' %>" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" value="<%= user ? user.email : '' %>" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="role" class="form-label">Role</label>
-                            <select class="form-select" id="role" name="role" required>
-                                <option value="staff" <%= user && user.role === 'staff' ? 'selected' : '' %>>Staff</option>
-                                <option value="admin" <%= user && user.role === 'admin' ? 'selected' : '' %>>Admin</option>
-                            </select>
                         </div>
                         
-                        <div class="d-flex justify-content-between">
-                            <a href="/users" class="btn btn-outline-secondary">Cancel</a>
-                            <button type="submit" class="btn btn-success">Save</button>
+                        <hr class="my-4">
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='/users'">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                            <button type="submit" class="btn btn-<%= user ? 'primary' : 'success' %>" id="submitBtn">
+                                <i class="fas fa-<%= user ? 'save' : 'user-plus' %>"></i> 
+                                <%= user ? 'Update User' : 'Create User' %>
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -71,6 +188,58 @@ document.addEventListener('DOMContentLoaded', function() {
             minLength: 8,
             showSuggestions: true,
             showStrengthBar: true
+        });
+    }
+
+    // Toggle password visibility
+    const togglePassword = document.getElementById('togglePassword');
+    if (togglePassword) {
+        togglePassword.addEventListener('click', function() {
+            const password = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (password.type === 'password') {
+                password.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                password.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    }
+
+    // Form validation
+    const form = document.getElementById('userForm');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    form.addEventListener('submit', function(e) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        
+        // Re-enable button after 3 seconds in case of errors
+        setTimeout(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<%= user ? "<i class=\"fas fa-save\"></i> Update User" : "<i class=\"fas fa-user-plus\"></i> Create User" %>';
+        }, 3000);
+    });
+
+    // Enhanced form validation
+    const username = document.getElementById('username');
+    const email = document.getElementById('email');
+    const fullName = document.getElementById('fullName');
+    
+    if (username && !username.readOnly) {
+        username.addEventListener('input', function() {
+            this.value = this.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+        });
+    }
+
+    if (fullName) {
+        fullName.addEventListener('input', function() {
+            // Capitalize first letter of each word
+            this.value = this.value.replace(/\b\w/g, l => l.toUpperCase());
         });
     }
 });

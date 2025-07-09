@@ -4,7 +4,12 @@ require('dotenv').config();
 // Safe formatter for device information - add to prevent template literal syntax errors
 function formatDeviceInfo(maker, name) {
     // Ensure both inputs are strings
-    const deviceMaker = (maker || '').toString();
+    con        // Set view engine
+        app.set('view engine', 'ejs');
+        app.set('views', path.join(__dirname, 'views'));
+
+        // Import modular routes
+        const authRoutes = require('./routes/auth')(authPool, convertBigIntToNumber);ceMaker = (maker || '').toString();
     const deviceName = (name || '').toString();
     // Combine and trim, providing a default if empty
     return (deviceMaker + ' ' + deviceName).trim() || 'N/A';

@@ -5,8 +5,11 @@
  * to help detect and respond to security incidents.
  */
 
-class SecurityLogger {
+const CleanupServiceInterface = require('./interfaces/CleanupServiceInterface');
+
+class SecurityLogger extends CleanupServiceInterface {
     constructor(authPool = null, convertBigIntToNumber = null, securityDbPool = null) {
+        super(); // Call parent constructor
         this.authPool = authPool;
         this.securityDbPool = securityDbPool || authPool; // Use separate security db pool if provided, otherwise use auth pool
         this.convertBigIntToNumber = convertBigIntToNumber;
@@ -15,19 +18,134 @@ class SecurityLogger {
         this.maxBufferSize = 100;
         this.flushIntervalMs = 30000; // 30 seconds
         
-        // Initialize buffer flushing
-        this.initializeBufferFlushing();
+        // Note: initialization is now managed by CleanupManager
+        // this.initializeBufferFlushing(); // Remove auto-initialization
     }
 
     /**
-     * Initialize automatic buffer flushing
+     * Initialize the service and ensure database tables exist
+     * Implementation of CleanupServiceInterface
      */
-    initializeBufferFlushing() {
+    async initialize() {
+        try {
+            await this.createDatabaseTables();
+            this.startCleanup();
+            console.log('✅ Security logging service initialized');
+            return true;
+        } catch (error) {
+            console.error('❌ Failed to initialize security logging service:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Start automatic cleanup operations (buffer flushing)
+     * Implementation of CleanupServiceInterface
+     */
+    startCleanup() {
+        if (this.bufferFlushInterval) {
+            clearInterval(this.bufferFlushInterval);
+        }
+        
         this.bufferFlushInterval = setInterval(() => {
-            this.flushEventBuffer();
+            this.performCleanup();
         }, this.flushIntervalMs);
         
-        console.log('✅ Security logging buffer flushing initialized');
+        console.log('✅ Security logging buffer flushing started');
+    }
+
+    /**
+     * Stop automatic cleanup operations
+     * Implementation of CleanupServiceInterface
+     */
+    stopCleanup() {
+        if (this.bufferFlushInterval) {
+            clearInterval(this.bufferFlushInterval);
+            this.bufferFlushInterval = null;
+            console.log('🛑 Security logging buffer flushing stopped');
+        }
+    }
+
+    /**
+     * Perform manual cleanup operation (flush buffer)
+     * Implementation of CleanupServiceInterface
+     */
+    async performCleanup() {
+        return await this.flushEventBuffer();
+    }
+
+    /**
+     * Get service status and statistics
+     * Implementation of CleanupServiceInterface
+     */
+    getStatus() {
+        return {
+            name: 'SecurityLogger',
+            isActive: !!this.bufferFlushInterval,
+            bufferedEvents: this.eventBuffer.length,
+            maxBufferSize: this.maxBufferSize,
+            flushInterval: this.flushIntervalMs,
+            hasDatabaseConnection: !!this.securityDbPool
+        };
+    }
+
+    /**
+     * Create database tables if they don't exist
+     */
+    async createDatabaseTables() {
+        try {
+            if (this.securityDbPool) {
+                const conn = await this.securityDbPool.getConnection();
+                
+                // Ensure the security_events table exists
+                await conn.query(`
+                    CREATE TABLE IF NOT EXISTS security_events (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        event_type ENUM('login', 'logout', 'failed_login', 'login_success', 'session_hijack', 'token_invalidation', 'password_change', 'account_lockout') NOT NULL,
+                        user_id INT,
+                        username VARCHAR(50),
+                        ip_address VARCHAR(45),
+                        user_agent TEXT,
+                        session_id VARCHAR(32),
+                        details JSON,
+                        risk_level ENUM('low', 'medium', 'high', 'critical') DEFAULT 'low',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        INDEX idx_event_type (event_type),
+                        INDEX idx_user_id (user_id),
+                        INDEX idx_created_at (created_at),
+                        INDEX idx_risk_level (risk_level),
+                        INDEX idx_ip_address (ip_address)
+                    )
+                `);
+                
+                conn.end();
+            }
+            
+            // Initialize failed login attempts table in the auth database
+            if (this.authPool) {
+                const authConn = await this.authPool.getConnection();
+                
+                // Ensure the failed_login_attempts table exists
+                await authConn.query(`
+                    CREATE TABLE IF NOT EXISTS failed_login_attempts (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        identifier VARCHAR(100) NOT NULL,
+                        identifier_type ENUM('username', 'email', 'ip') NOT NULL,
+                        ip_address VARCHAR(45),
+                        user_agent TEXT,
+                        attempt_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        INDEX idx_identifier (identifier, identifier_type),
+                        INDEX idx_ip_address (ip_address),
+                        INDEX idx_attempt_time (attempt_time)
+                    )
+                `);
+                
+                authConn.end();
+            }
+        } catch (error) {
+            console.error('Failed to create security logging tables:', error);
+            throw error;
+        }
     }
 
     /**
@@ -297,6 +415,8 @@ class SecurityLogger {
                 return details.additionalData?.consecutiveFailures >= 3 ? 'high' : 'medium';
             case 'session_hijack':
                 return 'critical';
+            case 'account_lockout':
+                return 'high';
             case 'token_invalidation':
                 return details.additionalData?.reason === 'security_violation' ? 'high' : 'low';
             case 'password_change':

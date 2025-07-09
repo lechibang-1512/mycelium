@@ -60,6 +60,26 @@ module.exports = (authPool, convertBigIntToNumber) => {
             
             const user = convertBigIntToNumber(result[0]);
             
+            // Check if user account is active
+            if (!user.is_active) {
+                // Log account lockout attempt
+                if (SessionSecurity.securityLogger) {
+                    await SessionSecurity.securityLogger.logSecurityEvent('account_lockout', {
+                        userId: user.id,
+                        username: username,
+                        ipAddress: req.ip,
+                        userAgent: req.get('User-Agent'),
+                        additionalData: { 
+                            reason: 'inactive_account',
+                            riskScore: 70
+                        }
+                    });
+                }
+                
+                req.flash('error', 'Your account has been deactivated. Please contact an administrator.');
+                return res.redirect('/login');
+            }
+            
             // Check password
             const passwordMatch = await bcrypt.compare(password, user.password);
             

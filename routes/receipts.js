@@ -104,9 +104,26 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             // Parse receipt data JSON
             let receiptData = {};
             try {
-                receiptData = JSON.parse(receipt.receipt_data || '{}');
+                // Handle different types of receipt_data
+                if (typeof receipt.receipt_data === 'string') {
+                    // If it's "[object Object]", it means an object was toString()'d incorrectly
+                    if (receipt.receipt_data === '[object Object]') {
+                        console.warn('Receipt data was incorrectly converted to string. Using empty object.');
+                        receiptData = {};
+                    } else {
+                        receiptData = JSON.parse(receipt.receipt_data || '{}');
+                    }
+                } else if (typeof receipt.receipt_data === 'object' && receipt.receipt_data !== null) {
+                    // If it's already an object, use it directly
+                    receiptData = receipt.receipt_data;
+                } else {
+                    // Fallback to empty object
+                    receiptData = {};
+                }
             } catch (e) {
-                console.warn('Failed to parse receipt data:', e);
+                console.error('Failed to parse receipt data:', e);
+                console.error('Receipt data value:', receipt.receipt_data);
+                console.error('Receipt data type:', typeof receipt.receipt_data);
                 receiptData = {};
             }
 

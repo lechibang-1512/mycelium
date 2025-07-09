@@ -201,6 +201,24 @@ module.exports = (authPool, convertBigIntToNumber) => {
                 userSessions = sessionService.getUserSessions(parseInt(userId)) || [];
             }
 
+            // Get user statistics
+            const statsResult = await conn.query(`
+                SELECT 
+                    COUNT(DISTINCT se.id) as totalLogins,
+                    COUNT(DISTINCT CASE WHEN se.event_type = 'LOGIN_SUCCESS' 
+                          AND se.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN se.id END) as recentLogins,
+                    (SELECT COUNT(*) FROM security_events WHERE user_id = ? AND event_type = 'LOGIN_FAILURE') as failedLogins
+                FROM security_events se 
+                WHERE se.user_id = ? AND se.event_type = 'LOGIN_SUCCESS'
+            `, [userId, userId]);
+
+            const stats = {
+                totalLogins: statsResult[0]?.totalLogins || 0,
+                activeSessions: userSessions.length || 0,
+                recentLogins: statsResult[0]?.recentLogins || 0,
+                failedLogins: statsResult[0]?.failedLogins || 0
+            };
+
             conn.end();
 
             res.render('users/details', {
@@ -208,6 +226,7 @@ module.exports = (authPool, convertBigIntToNumber) => {
                 user,
                 securityEvents: convertBigIntToNumber(securityEvents),
                 userSessions,
+                stats: convertBigIntToNumber(stats),
                 messages: {
                     success: req.flash('success'),
                     error: req.flash('error'),

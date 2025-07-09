@@ -1,236 +1,43 @@
 /**
- * Enhanced Input Validation Middleware
+ * Input validation middleware for request data - Refactored to use validation services
  * 
- * Provides comprehensive input validation and sanitization
- * to prevent various types of attacks including XSS, SQL injection,
- * and other malicious input.
+ * Provides comprehensive input validation and sanitization using composition pattern
+ * to reduce code duplication and improve maintainability.
  */
 
 const validator = require('validator');
 const xss = require('xss');
+const UserValidationService = require('../services/UserValidationService');
 
 class InputValidator {
+    static userValidationService = new UserValidationService();
+
     /**
      * Validate and sanitize user registration data
      */
     static validateUserRegistration(req, res, next) {
-        const errors = [];
-        const { username, password, fullName, email, role } = req.body;
-
-        // Username validation
-        if (!username || !validator.isLength(username, { min: 3, max: 30 })) {
-            errors.push('Username must be between 3 and 30 characters');
-        }
-        if (username && !validator.isAlphanumeric(username, 'en-US', { ignore: '_-' })) {
-            errors.push('Username can only contain letters, numbers, hyphens, and underscores');
-        }
-
-        // Full name validation
-        if (!fullName || !validator.isLength(fullName, { min: 2, max: 100 })) {
-            errors.push('Full name must be between 2 and 100 characters');
-        }
-        if (fullName && !validator.matches(fullName, /^[a-zA-Z\s\-'.]+$/)) {
-            errors.push('Full name contains invalid characters');
-        }
-
-        // Email validation
-        if (!email || !validator.isEmail(email)) {
-            errors.push('Please provide a valid email address');
-        }
-        if (email && !validator.isLength(email, { max: 100 })) {
-            errors.push('Email address is too long');
-        }
-
-        // Password validation
-        if (!password || !validator.isLength(password, { min: 8, max: 128 })) {
-            errors.push('Password must be between 8 and 128 characters');
-        }
-
-        // Role validation
-        const validRoles = ['admin', 'staff'];
-        if (!role || !validRoles.includes(role)) {
-            errors.push('Invalid role specified');
-        }
-
-        // Sanitize inputs
-        if (username) req.body.username = validator.escape(username.trim());
-        if (fullName) req.body.fullName = xss(fullName.trim());
-        if (email) req.body.email = validator.normalizeEmail(email.trim());
-
-        if (errors.length > 0) {
-            req.flash('error', errors.join('. '));
-            return res.redirect('back');
-        }
-
-        next();
+        return InputValidator.userValidationService.createUserRegistrationMiddleware()(req, res, next);
     }
 
     /**
      * Validate phone/product data
      */
     static validatePhoneData(req, res, next) {
-        const errors = [];
-        const {
-            device_name, device_maker, device_price, device_inventory, 
-            sm_name, sm_maker, sm_price, sm_inventory, // backward compatibility
-            color, processor, memory_type, ram, storage_type, storage_capacity
-        } = req.body;
-
-        // Use new field names if available, otherwise use old ones for backward compatibility
-        const name = device_name || sm_name;
-        const maker = device_maker || sm_maker;
-        const price = device_price || sm_price;
-        const inventory = device_inventory || sm_inventory;
-
-        // Required fields validation
-        if (!name || !validator.isLength(name, { min: 1, max: 200 })) {
-            errors.push('Product name is required and must not exceed 200 characters');
-        }
-
-        if (!maker || !validator.isLength(maker, { min: 1, max: 100 })) {
-            errors.push('Manufacturer is required and must not exceed 100 characters');
-        }
-
-        // Price validation
-        if (price && !validator.isFloat(price.toString(), { min: 0 })) {
-            errors.push('Price must be a valid positive number');
-        }
-
-        // Inventory validation
-        if (inventory && !validator.isInt(inventory.toString(), { min: 0 })) {
-            errors.push('Inventory must be a valid non-negative integer');
-        }
-
-        // Sanitize text inputs (set both old and new field names for compatibility)
-        if (name) {
-            req.body.device_name = xss(name.trim());
-            req.body.sm_name = xss(name.trim()); // backward compatibility
-        }
-        if (maker) {
-            req.body.device_maker = xss(maker.trim());
-            req.body.sm_maker = xss(maker.trim()); // backward compatibility
-        }
-        if (color) req.body.color = xss(color.trim());
-        if (processor) req.body.processor = xss(processor.trim());
-        if (memory_type) req.body.memory_type = xss(memory_type.trim());
-        if (ram) req.body.ram = xss(ram.trim());
-        if (storage_type) req.body.storage_type = xss(storage_type.trim());
-        if (storage_capacity) req.body.storage_capacity = xss(storage_capacity.trim());
-
-        if (errors.length > 0) {
-            req.flash('error', errors.join('. '));
-            return res.redirect('back');
-        }
-
-        next();
+        return InputValidator.userValidationService.createProductValidationMiddleware()(req, res, next);
     }
 
     /**
      * Validate supplier data
      */
     static validateSupplierData(req, res, next) {
-        const errors = [];
-        const {
-            name, category, contact_person, contact_email, email,
-            phone, website, supplier_id
-        } = req.body;
-
-        // Required fields
-        if (!name || !validator.isLength(name, { min: 1, max: 200 })) {
-            errors.push('Supplier name is required and must not exceed 200 characters');
-        }
-
-        if (!supplier_id || !validator.isLength(supplier_id, { min: 1, max: 50 })) {
-            errors.push('Supplier ID is required and must not exceed 50 characters');
-        }
-
-        // Email validation
-        if (contact_email && !validator.isEmail(contact_email)) {
-            errors.push('Contact email must be a valid email address');
-        }
-
-        if (email && !validator.isEmail(email)) {
-            errors.push('Email must be a valid email address');
-        }
-
-        // Phone validation
-        if (phone && !validator.matches(phone, /^[\+\-\(\)\s\d]+$/)) {
-            errors.push('Phone number contains invalid characters');
-        }
-
-        // Website validation
-        if (website && !validator.isURL(website, { require_protocol: true })) {
-            errors.push('Website must be a valid URL with protocol (http:// or https://)');
-        }
-
-        // Sanitize inputs
-        if (name) req.body.name = xss(name.trim());
-        if (category) req.body.category = xss(category.trim());
-        if (contact_person) req.body.contact_person = xss(contact_person.trim());
-        if (contact_email) req.body.contact_email = validator.normalizeEmail(contact_email.trim());
-        if (email) req.body.email = validator.normalizeEmail(email.trim());
-        if (supplier_id) req.body.supplier_id = validator.escape(supplier_id.trim());
-
-        if (errors.length > 0) {
-            req.flash('error', errors.join('. '));
-            return res.redirect('back');
-        }
-
-        next();
+        return InputValidator.userValidationService.createSupplierValidationMiddleware()(req, res, next);
     }
 
     /**
      * Validate transaction data (buy/sell)
      */
     static validateTransactionData(req, res, next) {
-        const errors = [];
-        const {
-            phone_id, quantity, unit_cost, vat_rate, tax_rate,
-            customer_name, customer_email, customer_phone, supplier_id
-        } = req.body;
-
-        // Required fields
-        if (!phone_id || !validator.isInt(phone_id.toString(), { min: 1 })) {
-            errors.push('Valid product ID is required');
-        }
-
-        if (!quantity || !validator.isInt(quantity.toString(), { min: 1, max: 10000 })) {
-            errors.push('Quantity must be a valid integer between 1 and 10,000');
-        }
-
-        // Cost validation
-        if (unit_cost && !validator.isFloat(unit_cost.toString(), { min: 0 })) {
-            errors.push('Unit cost must be a valid positive number');
-        }
-
-        // Rate validation
-        if (vat_rate && !validator.isFloat(vat_rate.toString(), { min: 0, max: 100 })) {
-            errors.push('VAT rate must be between 0 and 100');
-        }
-
-        if (tax_rate && !validator.isFloat(tax_rate.toString(), { min: 0, max: 100 })) {
-            errors.push('Tax rate must be between 0 and 100');
-        }
-
-        // Customer info validation
-        if (customer_email && !validator.isEmail(customer_email)) {
-            errors.push('Customer email must be a valid email address');
-        }
-
-        if (customer_phone && !validator.matches(customer_phone, /^[\+\-\(\)\s\d]+$/)) {
-            errors.push('Customer phone number contains invalid characters');
-        }
-
-        // Sanitize inputs
-        if (customer_name) req.body.customer_name = xss(customer_name.trim());
-        if (customer_email) req.body.customer_email = validator.normalizeEmail(customer_email.trim());
-
-        if (errors.length > 0) {
-            req.flash('error', errors.join('. '));
-            return res.redirect('back');
-        }
-
-        next();
+        return InputValidator.userValidationService.createTransactionValidationMiddleware()(req, res, next);
     }
 
     /**

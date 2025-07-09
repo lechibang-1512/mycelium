@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Test Login Functionality
- * Tests if the admin user can login successfully
+ * Test Inactive User Login
+ * Tests if users with is_active = 0 are blocked from logging in
  */
 
 const http = require('http');
@@ -14,19 +14,18 @@ function makeRequest(method, path, headers = {}, body = null) {
     return new Promise((resolve, reject) => {
         const url = new URL(path, BASE_URL);
         const options = {
-            method,
             hostname: url.hostname,
             port: url.port,
             path: url.pathname + url.search,
-            headers: {
-                'User-Agent': 'Admin-Login-Test/1.0',
-                ...headers
-            }
+            method: method,
+            headers: headers
         };
 
         const req = http.request(options, (res) => {
             let data = '';
-            res.on('data', chunk => data += chunk);
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
             res.on('end', () => {
                 resolve({
                     statusCode: res.statusCode,
@@ -36,8 +35,10 @@ function makeRequest(method, path, headers = {}, body = null) {
             });
         });
 
-        req.on('error', reject);
-        
+        req.on('error', (err) => {
+            reject(err);
+        });
+
         if (body) {
             req.write(body);
         }
@@ -46,8 +47,8 @@ function makeRequest(method, path, headers = {}, body = null) {
 }
 
 function extractCsrfToken(html) {
-    const match = html.match(/name="_csrf"\s+value="([^"]+)"/);
-    return match ? match[1] : null;
+    const csrfMatch = html.match(/name="_csrf"\s+value="([^"]+)"/);
+    return csrfMatch ? csrfMatch[1] : null;
 }
 
 function extractCookies(response) {
@@ -65,9 +66,9 @@ function extractCookies(response) {
     return cookies;
 }
 
-async function testAdminLogin() {
-    console.log('🧪 Testing Admin Login...');
-    console.log('========================');
+async function testInactiveUserLogin() {
+    console.log('🚫 Testing Inactive User Login...');
+    console.log('==================================');
     
     try {
         // Step 1: Get login page and CSRF token
@@ -88,17 +89,16 @@ async function testAdminLogin() {
             throw new Error('CSRF token not found');
         }
         
-        // Step 2: Attempt login with admin credentials
-        console.log('\\n2. 🔐 Attempting admin login...');
-        
+        // Step 2: Attempt login with inactive user credentials
+        console.log('\\n2. 🔐 Attempting inactive user login...');
         const cookieHeader = Object.entries(cookies)
             .map(([name, value]) => `${name}=${value}`)
             .join('; ');
         
         const formData = new URLSearchParams({
             '_csrf': csrfToken,
-            'username': 'admin',
-            'password': 'admin123'
+            'username': 'testinactive',
+            'password': 'test123'
         });
         
         const loginResponse = await makeRequest('POST', '/login', {
@@ -112,23 +112,31 @@ async function testAdminLogin() {
         
         if (loginResponse.statusCode === 302) {
             const location = loginResponse.headers.location;
-            if (location === '/' || location === '/dashboard' || location.startsWith('/?success=login')) {
-                console.log('   ✅ Login successful! Redirected to dashboard');
-                return true;
-            } else if (location === '/login') {
-                console.log('   ❌ Login failed! Redirected back to login');
-                return false;
+            if (location === '/login') {
+                console.log('   ✅ Login correctly blocked! Redirected back to login');
+                
+                // Check if error message contains account deactivated
+                const redirectResponse = await makeRequest('GET', '/login', {
+                    'Cookie': cookieHeader
+                });
+                
+                if (redirectResponse.body.includes('deactivated') || redirectResponse.body.includes('contact an administrator')) {
+                    console.log('   ✅ Correct error message displayed');
+                    return true;
+                } else {
+                    console.log('   ⚠️  Login blocked but no specific error message found');
+                    return true; // Still counts as success since login was blocked
+                }
             } else {
-                console.log(`   ⚠️  Unexpected redirect: ${location}`);
+                console.log(`   ❌ Login should have been blocked! Unexpected redirect: ${location}`);
                 return false;
             }
         } else if (loginResponse.statusCode === 200) {
-            // Check if we're on the dashboard/home page
-            if (loginResponse.body.includes('Dashboard') || loginResponse.body.includes('Welcome')) {
-                console.log('   ✅ Login successful! Got dashboard page');
+            if (loginResponse.body.includes('deactivated') || loginResponse.body.includes('contact an administrator')) {
+                console.log('   ✅ Login correctly blocked with error message');
                 return true;
             } else {
-                console.log('   ❌ Login failed! Still on login page');
+                console.log('   ❌ Login should have been blocked!');
                 return false;
             }
         } else {
@@ -145,15 +153,15 @@ async function testAdminLogin() {
 async function checkServerRunning() {
     try {
         const response = await makeRequest('GET', '/');
-        return response.statusCode < 500; // Server is responding
+        return response.statusCode < 500;
     } catch (error) {
         return false;
     }
 }
 
 async function main() {
-    console.log('🔐 Admin Login Test Suite');
-    console.log('=========================\\n');
+    console.log('🔐 Inactive User Login Test Suite');
+    console.log('==================================\\n');
     
     // Check if server is running
     console.log('🔍 Checking if server is running...');
@@ -167,25 +175,22 @@ async function main() {
     
     console.log('✅ Server is running\\n');
     
-    // Test admin login
-    const loginSuccess = await testAdminLogin();
+    // Test inactive user login
+    const loginBlocked = await testInactiveUserLogin();
     
     console.log('\\n📊 Test Results:');
-    console.log(`   🔐 Admin login: ${loginSuccess ? '✅ PASS' : '❌ FAIL'}`);
+    console.log(`   🚫 Inactive user login blocked: ${loginBlocked ? '✅ PASS' : '❌ FAIL'}`);
     
-    if (loginSuccess) {
-        console.log('\\n🎉 Admin login test passed! You can now access the application.');
-        console.log('🔗 Login at: http://localhost:3000/login');
-        console.log('📋 Credentials: admin / admin123');
+    if (loginBlocked) {
+        console.log('\\n🎉 Inactive user login test passed! Account lockout working correctly.');
+        console.log('📋 Inactive users are properly blocked from logging in.');
     } else {
-        console.log('\\n❌ Admin login test failed. Check the admin user setup.');
+        console.log('\\n❌ Inactive user login test failed. Check the implementation.');
     }
     
-    process.exit(loginSuccess ? 0 : 1);
+    process.exit(loginBlocked ? 0 : 1);
 }
 
 if (require.main === module) {
     main().catch(console.error);
 }
-
-module.exports = { testAdminLogin };

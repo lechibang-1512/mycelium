@@ -7,27 +7,130 @@
  */
 
 const crypto = require('crypto');
+const CleanupServiceInterface = require('./interfaces/CleanupServiceInterface');
 
-class TokenInvalidationService {
+class TokenInvalidationService extends CleanupServiceInterface {
     constructor(authPool = null) {
+        super(); // Call parent constructor
         this.authPool = authPool;
         this.invalidatedTokens = new Set(); // In-memory blacklist for immediate checking
         this.cleanupInterval = null;
         
-        // Initialize cleanup scheduler
-        this.initializeCleanup();
+        // Note: cleanup is now managed by CleanupManager
+        // this.initializeCleanup(); // Remove auto-initialization
     }
 
     /**
-     * Initialize automatic cleanup of expired invalidated tokens
+     * Initialize the service and ensure database tables exist
+     * Implementation of CleanupServiceInterface
      */
-    initializeCleanup() {
+    async initialize() {
+        try {
+            await this.createDatabaseTables();
+            this.startCleanup();
+            console.log('✅ Token invalidation service initialized');
+            return true;
+        } catch (error) {
+            console.error('❌ Failed to initialize token invalidation service:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Start automatic cleanup operations
+     * Implementation of CleanupServiceInterface
+     */
+    startCleanup() {
+        if (this.cleanupInterval) {
+            clearInterval(this.cleanupInterval);
+        }
+        
         // Clean up expired tokens every hour
         this.cleanupInterval = setInterval(() => {
-            this.cleanupExpiredTokens();
+            this.performCleanup();
         }, 60 * 60 * 1000);
         
-        console.log('✅ Token invalidation cleanup service initialized');
+        console.log('✅ Token invalidation cleanup service started');
+    }
+
+    /**
+     * Stop automatic cleanup operations
+     * Implementation of CleanupServiceInterface
+     */
+    stopCleanup() {
+        if (this.cleanupInterval) {
+            clearInterval(this.cleanupInterval);
+            this.cleanupInterval = null;
+            console.log('🛑 Token invalidation cleanup service stopped');
+        }
+    }
+
+    /**
+     * Perform manual cleanup operation
+     * Implementation of CleanupServiceInterface
+     */
+    async performCleanup() {
+        return await this.cleanupExpiredTokens();
+    }
+
+    /**
+     * Get service status and statistics
+     * Implementation of CleanupServiceInterface
+     */
+    getStatus() {
+        return {
+            name: 'TokenInvalidationService',
+            isActive: !!this.cleanupInterval,
+            inMemoryTokenCount: this.invalidatedTokens.size,
+            hasDatabaseConnection: !!this.authPool
+        };
+    }
+
+    /**
+     * Create database tables if they don't exist
+     */
+    async createDatabaseTables() {
+        if (!this.authPool) return;
+
+        try {
+            const conn = await this.authPool.getConnection();
+            
+            // Ensure the invalidated_tokens table exists
+            await conn.query(`
+                CREATE TABLE IF NOT EXISTS invalidated_tokens (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    token_hash VARCHAR(64) NOT NULL UNIQUE,
+                    token_type ENUM('session', 'remember', 'reset', 'api') NOT NULL DEFAULT 'session',
+                    user_id INT,
+                    invalidated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    expires_at TIMESTAMP NOT NULL,
+                    reason VARCHAR(100) DEFAULT 'logout',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    INDEX idx_token_hash (token_hash),
+                    INDEX idx_expires_at (expires_at),
+                    INDEX idx_user_id (user_id),
+                    INDEX idx_invalidated_at (invalidated_at)
+                )
+            `);
+            
+            // Ensure the user_token_invalidation table exists
+            await conn.query(`
+                CREATE TABLE IF NOT EXISTS user_token_invalidation (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id INT NOT NULL,
+                    invalidated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    reason VARCHAR(255) DEFAULT 'user_action',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    INDEX idx_user_id (user_id),
+                    INDEX idx_invalidated_at (invalidated_at)
+                )
+            `);
+            
+            conn.end();
+        } catch (error) {
+            console.error('Failed to create token invalidation tables:', error);
+            throw error;
+        }
     }
 
     /**
@@ -245,70 +348,6 @@ class TokenInvalidationService {
                 error: error.message
             };
         }
-    }
-
-    /**
-     * Initialize the service and ensure database tables exist
-     */
-    async initialize() {
-        try {
-            if (this.authPool) {
-                const conn = await this.authPool.getConnection();
-                
-                // Ensure the invalidated_tokens table exists
-                await conn.query(`
-                    CREATE TABLE IF NOT EXISTS invalidated_tokens (
-                        id INT AUTO_INCREMENT PRIMARY KEY,
-                        token_hash VARCHAR(64) NOT NULL UNIQUE,
-                        token_type ENUM('session', 'remember', 'reset', 'api') NOT NULL DEFAULT 'session',
-                        user_id INT,
-                        invalidated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        expires_at TIMESTAMP NOT NULL,
-                        reason VARCHAR(100) DEFAULT 'logout',
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        INDEX idx_token_hash (token_hash),
-                        INDEX idx_expires_at (expires_at),
-                        INDEX idx_user_id (user_id),
-                        INDEX idx_invalidated_at (invalidated_at)
-                    )
-                `);
-                
-                // Ensure the user_token_invalidation table exists
-                await conn.query(`
-                    CREATE TABLE IF NOT EXISTS user_token_invalidation (
-                        user_id INT PRIMARY KEY,
-                        invalidated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        reason VARCHAR(100) DEFAULT 'security_action',
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                        INDEX idx_invalidated_at (invalidated_at)
-                    )
-                `);
-                
-                conn.end();
-                console.log('✅ Token invalidation service initialized with database tables');
-            } else {
-                console.log('✅ Token invalidation service initialized (memory-only mode)');
-            }
-            
-            return true;
-        } catch (error) {
-            console.error('❌ Failed to initialize token invalidation service:', error);
-            return false;
-        }
-    }
-
-    /**
-     * Shutdown the service
-     */
-    shutdown() {
-        if (this.cleanupInterval) {
-            clearInterval(this.cleanupInterval);
-            this.cleanupInterval = null;
-        }
-        
-        this.invalidatedTokens.clear();
-        console.log('🛑 Token invalidation service shutdown');
     }
 }
 

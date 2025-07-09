@@ -9,28 +9,85 @@
  */
 
 const crypto = require('crypto');
+const CleanupServiceInterface = require('./interfaces/CleanupServiceInterface');
 
-class SessionManagementService {
+class SessionManagementService extends CleanupServiceInterface {
     constructor(authPool, convertBigIntToNumber) {
+        super(); // Call parent constructor
         this.authPool = authPool;
         this.convertBigIntToNumber = convertBigIntToNumber;
         this.activeSessions = new Map(); // In-memory session tracking
         this.sessionCleanupInterval = null;
         
-        // Initialize session cleanup scheduler
-        this.initializeSessionCleanup();
+        // Note: cleanup is now managed by CleanupManager
+        // this.initializeSessionCleanup(); // Remove auto-initialization
     }
 
     /**
-     * Initialize automatic session cleanup
+     * Initialize the service
+     * Implementation of CleanupServiceInterface
      */
-    initializeSessionCleanup() {
+    async initialize() {
+        try {
+            this.startCleanup();
+            console.log('✅ Session management service initialized');
+            return true;
+        } catch (error) {
+            console.error('❌ Failed to initialize session management service:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Start automatic cleanup operations
+     * Implementation of CleanupServiceInterface
+     */
+    startCleanup() {
+        if (this.sessionCleanupInterval) {
+            clearInterval(this.sessionCleanupInterval);
+        }
+        
         // Clean up expired sessions every 15 minutes
         this.sessionCleanupInterval = setInterval(() => {
-            this.cleanupExpiredSessions();
+            this.performCleanup();
         }, 15 * 60 * 1000);
         
-        console.log('✅ Session cleanup service initialized');
+        console.log('✅ Session cleanup service started');
+    }
+
+    /**
+     * Stop automatic cleanup operations
+     * Implementation of CleanupServiceInterface
+     */
+    stopCleanup() {
+        if (this.sessionCleanupInterval) {
+            clearInterval(this.sessionCleanupInterval);
+            this.sessionCleanupInterval = null;
+            console.log('🛑 Session cleanup service stopped');
+        }
+    }
+
+    /**
+     * Perform manual cleanup operation
+     * Implementation of CleanupServiceInterface
+     */
+    async performCleanup() {
+        return this.cleanupExpiredSessions();
+    }
+
+    /**
+     * Get service status and statistics
+     * Implementation of CleanupServiceInterface
+     */
+    getStatus() {
+        const stats = this.getSessionStats();
+        return {
+            name: 'SessionManagementService',
+            isActive: !!this.sessionCleanupInterval,
+            activeSessions: stats.totalActiveSessions,
+            uniqueUsers: stats.sessionsByUser.size,
+            averageSessionDuration: stats.averageSessionDuration
+        };
     }
 
     /**
@@ -94,6 +151,11 @@ class SessionManagementService {
         if (cleanedCount > 0) {
             console.log(`🧹 Cleaned up ${cleanedCount} expired sessions. Active sessions: ${this.activeSessions.size}`);
         }
+
+        return {
+            cleanedCount,
+            remainingCount: this.activeSessions.size
+        };
     }
 
     /**
@@ -236,12 +298,10 @@ class SessionManagementService {
 
     /**
      * Shutdown session management service
+     * Implementation of CleanupServiceInterface
      */
-    shutdown() {
-        if (this.sessionCleanupInterval) {
-            clearInterval(this.sessionCleanupInterval);
-            console.log('🛑 Session cleanup service stopped');
-        }
+    async shutdown() {
+        this.stopCleanup();
         
         console.log(`📊 Final session stats: ${this.activeSessions.size} active sessions cleared`);
         this.activeSessions.clear();
