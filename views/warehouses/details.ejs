@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+    <title><%= title %> - Inventory Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="display-4">
+                        <i class="fas fa-warehouse me-3"></i>
+                        <%= warehouse.name %>
+                    </h1>
+                    <div>
+                        <a href="/warehouses" class="btn btn-secondary me-2">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Back to Warehouses
+                        </a>
+                        <a href="/warehouses/analytics" class="btn btn-info">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Analytics
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Warehouse Information -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Warehouse Information
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Name:</strong> <%= warehouse.name %></p>
+                                        <p><strong>Location:</strong> <%= warehouse.location || 'Not specified' %></p>
+                                        <p><strong>Status:</strong> 
+                                            <span class="badge bg-<%= warehouse.is_active ? 'success' : 'danger' %>">
+                                                <%= warehouse.is_active ? 'Active' : 'Inactive' %>
+                                            </span>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Warehouse ID:</strong> #<%= warehouse.warehouse_id %></p>
+                                        <p><strong>Created:</strong> <%= warehouse.created_at ? new Date(warehouse.created_at).toLocaleDateString() : 'N/A' %></p>
+                                        <p><strong>Updated:</strong> <%= warehouse.updated_at ? new Date(warehouse.updated_at).toLocaleDateString() : 'N/A' %></p>
+                                    </div>
+                                </div>
+                                <% if (warehouse.description) { %>
+                                    <div class="row mt-3">
+                                        <div class="col-12">
+                                            <p><strong>Description:</strong></p>
+                                            <p class="text-muted"><%= warehouse.description %></p>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-pie me-2"></i>
+                                    Quick Stats
+                                </h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <h4 class="text-primary"><%= zones ? zones.length : 0 %></h4>
+                                        <p class="text-muted small">Zones</p>
+                                    </div>
+                                    <div class="col-6">
+                                        <h4 class="text-success"><%= inventory ? inventory.length : 0 %></h4>
+                                        <p class="text-muted small">Products</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Zones -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-layer-group me-2"></i>
+                                    Zones (<%= zones ? zones.length : 0 %>)
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <% if (zones && zones.length > 0) { %>
+                                    <div class="row">
+                                        <% zones.forEach(zone => { %>
+                                            <div class="col-md-6 col-lg-4 mb-3">
+                                                <div class="card border-light h-100">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">
+                                                            <%= zone.name %>
+                                                            <span class="badge bg-<%= zone.zone_type === 'storage' ? 'primary' : zone.zone_type === 'receiving' ? 'success' : zone.zone_type === 'shipping' ? 'warning' : 'secondary' %>">
+                                                                <%= zone.zone_type %>
+                                                            </span>
+                                                        </h6>
+                                                        <% if (zone.description) { %>
+                                                            <p class="card-text text-muted small"><%= zone.description %></p>
+                                                        <% } %>
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <small class="text-muted">ID: <%= zone.zone_id %></small>
+                                                            <span class="badge bg-<%= zone.is_active ? 'success' : 'danger' %>">
+                                                                <%= zone.is_active ? 'Active' : 'Inactive' %>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% }) %>
+                                    </div>
+                                <% } else { %>
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-layer-group fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">No zones configured for this warehouse</p>
+                                        <button class="btn btn-primary">
+                                            <i class="fas fa-plus me-2"></i>
+                                            Add Zone
+                                        </button>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Zone Utilization -->
+                <% if (zoneUtilization && zoneUtilization.length > 0) { %>
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-chart-bar me-2"></i>
+                                        Zone Utilization
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <% zoneUtilization.forEach(zone => { %>
+                                            <div class="col-md-6 col-lg-4 mb-3">
+                                                <div class="card border-light">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">
+                                                            <%= zone.zone_name %>
+                                                            <span class="badge bg-secondary"><%= zone.zone_type %></span>
+                                                        </h6>
+                                                        <div class="row">
+                                                            <div class="col-6">
+                                                                <p class="mb-1"><strong><%= zone.unique_products || 0 %></strong></p>
+                                                                <p class="text-muted small mb-0">Products</p>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <p class="mb-1"><strong><%= zone.total_inventory || 0 %></strong></p>
+                                                                <p class="text-muted small mb-0">Items</p>
+                                                            </div>
+                                                        </div>
+                                                        <% if (zone.reserved_inventory > 0) { %>
+                                                            <div class="mt-2">
+                                                                <p class="text-warning small mb-0">
+                                                                    <i class="fas fa-lock me-1"></i>
+                                                                    <%= zone.reserved_inventory %> reserved
+                                                                </p>
+                                                            </div>
+                                                        <% } %>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% }) %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+
+                <!-- Inventory in this Warehouse -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-boxes me-2"></i>
+                                    Inventory in this Warehouse
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <% if (inventory && inventory.length > 0) { %>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Product</th>
+                                                    <th>Zone</th>
+                                                    <th>Available</th>
+                                                    <th>Reserved</th>
+                                                    <th>Total</th>
+                                                    <th>Price</th>
+                                                    <th>Value</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% inventory.forEach(item => { %>
+                                                    <tr>
+                                                        <td>
+                                                            <strong><%= item.device_maker %></strong><br>
+                                                            <small class="text-muted"><%= item.device_name %></small>
+                                                        </td>
+                                                        <td>
+                                                            <% if (item.zone_name) { %>
+                                                                <span class="badge bg-light text-dark"><%= item.zone_name %></span>
+                                                            <% } else { %>
+                                                                <span class="text-muted">Unassigned</span>
+                                                            <% } %>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-<%= item.available_quantity > 0 ? 'success' : 'danger' %>">
+                                                                <%= item.available_quantity || 0 %>
+                                                            </span>
+                                                        </td>
+                                                        <td><%= item.reserved_quantity || 0 %></td>
+                                                        <td><%= item.warehouse_quantity || 0 %></td>
+                                                        <td>$<%= item.device_price || 0 %></td>
+                                                        <td>$<%= ((item.warehouse_quantity || 0) * (item.device_price || 0)).toFixed(2) %></td>
+                                                    </tr>
+                                                <% }) %>
+                                            </tbody>
+                                            <tfoot>
+                                                <tr class="table-info">
+                                                    <th colspan="6">Total Value</th>
+                                                    <th>
+                                                        $<%= inventory.reduce((sum, item) => sum + ((item.warehouse_quantity || 0) * (item.device_price || 0)), 0).toFixed(2) %>
+                                                    </th>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                <% } else { %>
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">No inventory in this warehouse</p>
+                                        <a href="/inventory/receive" class="btn btn-primary">
+                                            <i class="fas fa-plus me-2"></i>
+                                            Add Inventory
+                                        </a>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-tools me-2"></i>
+                                    Quick Actions
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <button class="btn btn-success w-100" onclick="showTransferModal()">
+                                            <i class="fas fa-exchange-alt me-2"></i>
+                                            Transfer Inventory
+                                        </button>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <button class="btn btn-info w-100" onclick="showBatchModal()">
+                                            <i class="fas fa-boxes me-2"></i>
+                                            Create Batch
+                                        </button>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <button class="btn btn-warning w-100" onclick="showSerialModal()">
+                                            <i class="fas fa-barcode me-2"></i>
+                                            Add Serial Item
+                                        </button>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <a href="/warehouses/<%= warehouse.warehouse_id %>/report" class="btn btn-secondary w-100">
+                                            <i class="fas fa-file-alt me-2"></i>
+                                            Generate Report
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTransferModal() {
+            alert('Transfer inventory feature - would open modal here');
+        }
+
+        function showBatchModal() {
+            alert('Create batch feature - would open modal here');
+        }
+
+        function showSerialModal() {
+            alert('Add serial item feature - would open modal here');
+        }
+    </script>
+</body>
+</html>

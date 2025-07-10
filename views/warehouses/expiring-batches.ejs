@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+    <title><%= title %> - Inventory Management</title>
+</head>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="display-4">
+                        <i class="fas fa-clock me-3 text-warning"></i>
+                        Expiring Batches
+                    </h1>
+                    <div>
+                        <a href="/warehouses" class="btn btn-secondary me-2">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Back to Warehouses
+                        </a>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-warning <%= daysAhead === 7 ? 'active' : '' %>" 
+                                    onclick="changeDaysAhead(7)">7 Days</button>
+                            <button class="btn btn-outline-warning <%= daysAhead === 30 ? 'active' : '' %>" 
+                                    onclick="changeDaysAhead(30)">30 Days</button>
+                            <button class="btn btn-outline-warning <%= daysAhead === 90 ? 'active' : '' %>" 
+                                    onclick="changeDaysAhead(90)">90 Days</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <% if (expiringBatches && expiringBatches.length > 0) { %>
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card border-danger">
+                                <div class="card-body text-center">
+                                    <h3 class="text-danger">
+                                        <%= expiringBatches.filter(b => b.urgency_level === 'critical').length %>
+                                    </h3>
+                                    <p class="text-muted mb-0">Critical (≤7 days)</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-warning">
+                                <div class="card-body text-center">
+                                    <h3 class="text-warning">
+                                        <%= expiringBatches.filter(b => b.urgency_level === 'warning').length %>
+                                    </h3>
+                                    <p class="text-muted mb-0">Warning (≤30 days)</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-info">
+                                <div class="card-body text-center">
+                                    <h3 class="text-info">
+                                        <%= expiringBatches.filter(b => b.urgency_level === 'notice').length %>
+                                    </h3>
+                                    <p class="text-muted mb-0">Notice (≤90 days)</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-primary">
+                                <div class="card-body text-center">
+                                    <h3 class="text-primary"><%= expiringBatches.length %></h3>
+                                    <p class="text-muted mb-0">Total Batches</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+
+                <!-- Expiring Batches Table -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-list me-2"></i>
+                                    Batches Expiring in Next <%= daysAhead %> Days
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <% if (expiringBatches && expiringBatches.length > 0) { %>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Batch #</th>
+                                                    <th>Product</th>
+                                                    <th>Warehouse</th>
+                                                    <th>Zone</th>
+                                                    <th>Quantity</th>
+                                                    <th>Expiry Date</th>
+                                                    <th>Days Left</th>
+                                                    <th>Priority</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% expiringBatches.forEach(batch => { %>
+                                                    <tr class="<%= batch.urgency_level === 'critical' ? 'table-danger' : batch.urgency_level === 'warning' ? 'table-warning' : '' %>">
+                                                        <td>
+                                                            <strong><%= batch.batch_no %></strong>
+                                                            <% if (batch.lot_no) { %>
+                                                                <br><small class="text-muted">Lot: <%= batch.lot_no %></small>
+                                                            <% } %>
+                                                        </td>
+                                                        <td>
+                                                            <strong><%= batch.device_maker %></strong><br>
+                                                            <small class="text-muted"><%= batch.device_name %></small>
+                                                        </td>
+                                                        <td><%= batch.warehouse_name %></td>
+                                                        <td>
+                                                            <% if (batch.zone_name) { %>
+                                                                <span class="badge bg-light text-dark"><%= batch.zone_name %></span>
+                                                            <% } else { %>
+                                                                <span class="text-muted">Unassigned</span>
+                                                            <% } %>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-<%= batch.quantity_remaining > 10 ? 'success' : batch.quantity_remaining > 0 ? 'warning' : 'danger' %>">
+                                                                <%= batch.quantity_remaining %>
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <%= batch.expiry_date ? new Date(batch.expiry_date).toLocaleDateString() : 'N/A' %>
+                                                        </td>
+                                                        <td>
+                                                            <% if (batch.days_until_expiry !== undefined && batch.days_until_expiry !== null) { %>
+                                                                <span class="badge bg-<%= batch.days_until_expiry <= 7 ? 'danger' : batch.days_until_expiry <= 30 ? 'warning' : 'info' %>">
+                                                                    <%= batch.days_until_expiry %> days
+                                                                </span>
+                                                            <% } else { %>
+                                                                <span class="text-muted">N/A</span>
+                                                            <% } %>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-<%= batch.urgency_level === 'critical' ? 'danger' : batch.urgency_level === 'warning' ? 'warning' : batch.urgency_level === 'notice' ? 'info' : 'secondary' %>">
+                                                                <%= batch.urgency_level || 'unknown' %>
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <div class="btn-group btn-group-sm">
+                                                                <button class="btn btn-outline-primary btn-sm" 
+                                                                        onclick="viewBatch('<%= batch.batch_id %>')">
+                                                                    <i class="fas fa-eye"></i>
+                                                                </button>
+                                                                <button class="btn btn-outline-warning btn-sm" 
+                                                                        onclick="manageBatch('<%= batch.batch_id %>')">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </button>
+                                                                <% if (batch.urgency_level === 'critical') { %>
+                                                                    <button class="btn btn-outline-danger btn-sm" 
+                                                                            onclick="markExpired('<%= batch.batch_id %>')">
+                                                                        <i class="fas fa-times"></i>
+                                                                    </button>
+                                                                <% } %>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                <% }) %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Actions Panel -->
+                                    <div class="row mt-4">
+                                        <div class="col-12">
+                                            <div class="card bg-light">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">
+                                                        <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
+                                                        Recommended Actions
+                                                    </h6>
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <h6 class="text-danger">Critical Priority:</h6>
+                                                            <ul class="small">
+                                                                <li>Review and dispose of expired items</li>
+                                                                <li>Offer discounts for quick sale</li>
+                                                                <li>Contact customers for urgent orders</li>
+                                                            </ul>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <h6 class="text-warning">General Actions:</h6>
+                                                            <ul class="small">
+                                                                <li>Update inventory forecasting</li>
+                                                                <li>Review supplier delivery schedules</li>
+                                                                <li>Implement FIFO rotation policy</li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% } else { %>
+                                    <div class="text-center py-5">
+                                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                        <h4 class="text-success">Great News!</h4>
+                                        <p class="text-muted">
+                                            No batches are expiring in the next <%= daysAhead %> days.
+                                        </p>
+                                        <a href="/warehouses/analytics" class="btn btn-primary">
+                                            <i class="fas fa-chart-line me-2"></i>
+                                            View Analytics
+                                        </a>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function changeDaysAhead(days) {
+            window.location.href = `/warehouses/batches/expiring?days=${days}`;
+        }
+
+        function viewBatch(batchId) {
+            alert(`View batch ${batchId} - feature to be implemented`);
+        }
+
+        function manageBatch(batchId) {
+            alert(`Manage batch ${batchId} - feature to be implemented`);
+        }
+
+        function markExpired(batchId) {
+            if (confirm('Are you sure you want to mark this batch as expired?')) {
+                alert(`Mark batch ${batchId} as expired - feature to be implemented`);
+            }
+        }
+    </script>
+</body>
+</html>
