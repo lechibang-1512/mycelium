@@ -20,10 +20,13 @@ module.exports = (authPool, convertBigIntToNumber) => {
         }
         
         res.render('login', {
+            title: 'Login',
             messages: {
                 error: req.flash('error'),
                 success: req.flash('success')
-            }
+            },
+            isAuthenticated: false,
+            csrfToken: req.csrfToken()
         });
     });
 
@@ -216,10 +219,13 @@ module.exports = (authPool, convertBigIntToNumber) => {
     // Forgot password route
     router.get('/forgot-password', (req, res) => {
         res.render('forgot-password', {
+            title: 'Forgot Password',
             messages: {
                 error: req.flash('error'),
                 success: req.flash('success')
-            }
+            },
+            isAuthenticated: false,
+            csrfToken: req.csrfToken()
         });
     });
 
@@ -255,6 +261,7 @@ module.exports = (authPool, convertBigIntToNumber) => {
     // User profile page
     router.get('/profile', isAuthenticated, (req, res) => {
         res.render('profile', {
+            title: 'Profile',
             user: req.session.user,
             messages: {
                 success: req.flash('success'),
