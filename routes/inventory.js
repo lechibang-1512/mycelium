@@ -474,6 +474,14 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
     router.get('/api/warehouse/:warehouseId/zones', isAuthenticated, async (req, res) => {
         try {
             const warehouseId = parseInt(req.params.warehouseId);
+            
+            if (isNaN(warehouseId)) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Invalid warehouse ID' 
+                });
+            }
+            
             const zones = await warehouseService.getWarehouseZones(warehouseId);
             res.json({ success: true, zones: convertBigIntToNumber(zones) });
         } catch (error) {
@@ -486,6 +494,18 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
     router.get('/api/warehouse/:warehouseId/zone/:zoneId/product/:productId/stock', isAuthenticated, async (req, res) => {
         try {
             const { warehouseId, zoneId, productId } = req.params;
+            
+            const warehouseIdNum = parseInt(warehouseId);
+            const zoneIdNum = parseInt(zoneId);
+            const productIdNum = parseInt(productId);
+            
+            if (isNaN(warehouseIdNum) || isNaN(zoneIdNum) || isNaN(productIdNum)) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Invalid warehouse ID, zone ID, or product ID' 
+                });
+            }
+            
             let conn;
             try {
                 conn = await pool.getConnection();
@@ -494,7 +514,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                            (quantity - COALESCE(reserved_quantity, 0)) as available_quantity
                     FROM warehouse_product_locations 
                     WHERE warehouse_id = ? AND zone_id = ? AND phone_id = ?
-                `, [warehouseId, zoneId, productId]);
+                `, [warehouseIdNum, zoneIdNum, productIdNum]);
                 
                 res.json({ 
                     success: true, 
@@ -513,6 +533,17 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
     router.get('/api/warehouse/:warehouseId/product/:productId', isAuthenticated, async (req, res) => {
         try {
             const { warehouseId, productId } = req.params;
+            
+            const warehouseIdNum = parseInt(warehouseId);
+            const productIdNum = parseInt(productId);
+            
+            if (isNaN(warehouseIdNum) || isNaN(productIdNum)) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Invalid warehouse ID or product ID' 
+                });
+            }
+            
             let conn;
             try {
                 conn = await pool.getConnection();
@@ -532,7 +563,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                     ORDER BY wz.zone_type, wz.name
                 `;
                 
-                const stockData = await conn.query(stockQuery, [productId, warehouseId, warehouseId]);
+                const stockData = await conn.query(stockQuery, [productIdNum, warehouseIdNum, warehouseIdNum]);
                 
                 res.json({ 
                     success: true, 

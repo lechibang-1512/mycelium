@@ -104,6 +104,12 @@ router.get('/:id', async (req, res) => {
     try {
         const warehouseId = parseInt(req.params.id);
         
+        if (isNaN(warehouseId)) {
+            return res.status(400).render('error', { 
+                message: 'Invalid warehouse ID' 
+            });
+        }
+        
         const [warehouses, zones, inventory, zoneUtilization] = await Promise.all([
             warehouseService.getWarehouses(false),
             warehouseService.getWarehouseZones(warehouseId),
@@ -141,6 +147,14 @@ router.get('/:id', async (req, res) => {
 router.get('/:id/zones', async (req, res) => {
     try {
         const warehouseId = parseInt(req.params.id);
+        
+        if (isNaN(warehouseId)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid warehouse ID' 
+            });
+        }
+        
         const zones = await warehouseService.getWarehouseZones(warehouseId);
         
         res.json({ success: true, zones });
@@ -377,6 +391,14 @@ router.get('/distribution/overview', async (req, res) => {
 router.get('/:id/zones/efficiency', async (req, res) => {
     try {
         const warehouseId = parseInt(req.params.id);
+        
+        if (isNaN(warehouseId)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid warehouse ID' 
+            });
+        }
+        
         const efficiency = await warehouseService.getZoneDistributionEfficiency(warehouseId);
         res.json({ success: true, efficiency });
     } catch (error) {
@@ -394,6 +416,13 @@ router.get('/:id/zones/efficiency', async (req, res) => {
 router.post('/:id/distribute', async (req, res) => {
     try {
         const warehouseId = parseInt(req.params.id);
+        
+        if (isNaN(warehouseId)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid warehouse ID' 
+            });
+        }
         const { productId, totalQuantity, distributionStrategy = 'even' } = req.body;
 
         if (!productId || !totalQuantity) {
@@ -431,6 +460,13 @@ router.get('/:id/products/:productId/optimize', async (req, res) => {
     try {
         const warehouseId = parseInt(req.params.id);
         const productId = parseInt(req.params.productId);
+
+        if (isNaN(warehouseId) || isNaN(productId)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid warehouse ID or product ID' 
+            });
+        }
 
         const suggestions = await warehouseService.optimizeZoneAllocation(productId, warehouseId);
 
@@ -557,6 +593,14 @@ router.post('/', isStaffOrAdmin, async (req, res) => {
 router.put('/:id', isStaffOrAdmin, async (req, res) => {
     try {
         const warehouseId = parseInt(req.params.id);
+        
+        if (isNaN(warehouseId)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid warehouse ID' 
+            });
+        }
+        
         const warehouseData = req.body;
         
         await warehouseService.createOrUpdateWarehouse(warehouseData, warehouseId);
@@ -580,6 +624,14 @@ router.put('/:id', isStaffOrAdmin, async (req, res) => {
 router.post('/:id/zones', isStaffOrAdmin, async (req, res) => {
     try {
         const warehouseId = parseInt(req.params.id);
+        
+        if (isNaN(warehouseId)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid warehouse ID' 
+            });
+        }
+        
         const zoneData = { ...req.body, warehouseId };
         const zoneId = await warehouseService.createOrUpdateZone(zoneData);
 
@@ -602,11 +654,19 @@ router.post('/:id/zones', isStaffOrAdmin, async (req, res) => {
  */
 router.put('/:warehouseId/zones/:zoneId', isStaffOrAdmin, async (req, res) => {
     try {
-        const warehouseId = parseInt(req.params.warehouseId);
-        const zoneId = parseInt(req.params.zoneId);
-        const zoneData = { ...req.body, warehouseId };
+        const warehouseIdNum = parseInt(req.params.warehouseId);
+        const zoneIdNum = parseInt(req.params.zoneId);
         
-        await warehouseService.createOrUpdateZone(zoneData, zoneId);
+        if (isNaN(warehouseIdNum) || isNaN(zoneIdNum)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid warehouse ID or zone ID' 
+            });
+        }
+        
+        const zoneData = { ...req.body, warehouseId: warehouseIdNum };
+        
+        await warehouseService.createOrUpdateZone(zoneData, zoneIdNum);
 
         res.json({ 
             success: true, 
@@ -628,16 +688,26 @@ router.get('/api/warehouse/:warehouseId/product/:productId', isAuthenticated, as
     try {
         const { warehouseId, productId } = req.params;
         
+        const warehouseIdNum = parseInt(warehouseId);
+        const productIdNum = parseInt(productId);
+        
+        if (isNaN(warehouseIdNum) || isNaN(productIdNum)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid warehouse ID or product ID' 
+            });
+        }
+        
         const zoneDistribution = await warehouseService.getProductZoneDistribution(
-            parseInt(productId), 
-            parseInt(warehouseId)
+            productIdNum, 
+            warehouseIdNum
         );
 
         res.json({ 
             success: true, 
             zones: convertBigIntToNumber(zoneDistribution),
-            warehouseId: parseInt(warehouseId),
-            productId: parseInt(productId)
+            warehouseId: warehouseIdNum,
+            productId: productIdNum
         });
     } catch (error) {
         console.error('Error fetching zone distribution:', error);
@@ -655,17 +725,27 @@ router.get('/api/warehouse/:warehouseId/product/:productId/current-distribution'
     try {
         const { warehouseId, productId } = req.params;
         
+        const warehouseIdNum = parseInt(warehouseId);
+        const productIdNum = parseInt(productId);
+        
+        if (isNaN(warehouseIdNum) || isNaN(productIdNum)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid warehouse ID or product ID' 
+            });
+        }
+        
         const [distribution, zones] = await Promise.all([
-            warehouseService.getCurrentZoneDistribution(parseInt(productId), parseInt(warehouseId)),
-            warehouseService.getWarehouseZones(parseInt(warehouseId))
+            warehouseService.getCurrentZoneDistribution(productIdNum, warehouseIdNum),
+            warehouseService.getWarehouseZones(warehouseIdNum)
         ]);
 
         res.json({ 
             success: true, 
             distribution: convertBigIntToNumber(distribution),
             zones: convertBigIntToNumber(zones),
-            warehouseId: parseInt(warehouseId),
-            productId: parseInt(productId)
+            warehouseId: warehouseIdNum,
+            productId: productIdNum
         });
     } catch (error) {
         console.error('Error fetching current distribution:', error);
@@ -698,7 +778,20 @@ router.post('/zones/replace/single', isStaffOrAdmin, async (req, res) => {
             });
         }
 
-        if (fromZoneId === toZoneId) {
+        const productIdNum = parseInt(productId);
+        const warehouseIdNum = parseInt(warehouseId);
+        const fromZoneIdNum = parseInt(fromZoneId);
+        const toZoneIdNum = parseInt(toZoneId);
+        const quantityNum = parseInt(quantity);
+
+        if (isNaN(productIdNum) || isNaN(warehouseIdNum) || isNaN(fromZoneIdNum) || isNaN(toZoneIdNum) || isNaN(quantityNum)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid numeric values for productId, warehouseId, fromZoneId, toZoneId, or quantity' 
+            });
+        }
+
+        if (fromZoneIdNum === toZoneIdNum) {
             return res.status(400).json({ 
                 success: false, 
                 message: 'Source and destination zones cannot be the same' 
@@ -706,11 +799,11 @@ router.post('/zones/replace/single', isStaffOrAdmin, async (req, res) => {
         }
 
         const result = await warehouseService.singleZoneReplacement(
-            parseInt(productId), 
-            parseInt(warehouseId), 
-            parseInt(fromZoneId), 
-            parseInt(toZoneId), 
-            parseInt(quantity), 
+            productIdNum, 
+            warehouseIdNum, 
+            fromZoneIdNum, 
+            toZoneIdNum, 
+            quantityNum, 
             reason
         );
 
@@ -748,6 +841,16 @@ router.post('/zones/replace/multi', isStaffOrAdmin, async (req, res) => {
             });
         }
 
+        const productIdNum = parseInt(productId);
+        const warehouseIdNum = parseInt(warehouseId);
+
+        if (isNaN(productIdNum) || isNaN(warehouseIdNum)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid numeric values for productId or warehouseId' 
+            });
+        }
+
         if (typeof targetZoneDistribution !== 'object' || Object.keys(targetZoneDistribution).length === 0) {
             return res.status(400).json({ 
                 success: false, 
@@ -756,8 +859,8 @@ router.post('/zones/replace/multi', isStaffOrAdmin, async (req, res) => {
         }
 
         const result = await warehouseService.multiZoneReplacement(
-            parseInt(productId), 
-            parseInt(warehouseId), 
+            productIdNum, 
+            warehouseIdNum, 
             targetZoneDistribution, 
             strategy || 'optimize'
         );
@@ -784,9 +887,19 @@ router.get('/:warehouseId/zones/:zoneId/bins/available', isAuthenticated, async 
         const { warehouseId, zoneId } = req.params;
         const limit = parseInt(req.query.limit) || 10;
 
+        const warehouseIdNum = parseInt(warehouseId);
+        const zoneIdNum = parseInt(zoneId);
+        
+        if (isNaN(warehouseIdNum) || isNaN(zoneIdNum)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid warehouse ID or zone ID' 
+            });
+        }
+
         const bins = await warehouseService.findAvailableBinLocations(
-            parseInt(warehouseId), 
-            parseInt(zoneId), 
+            warehouseIdNum, 
+            zoneIdNum, 
             limit
         );
 
@@ -811,10 +924,21 @@ router.get('/:warehouseId/product/:productId/bins', isAuthenticated, async (req,
         const { warehouseId, productId } = req.params;
         const { zoneId } = req.query;
 
+        const warehouseIdNum = parseInt(warehouseId);
+        const productIdNum = parseInt(productId);
+        const zoneIdNum = zoneId ? parseInt(zoneId) : null;
+        
+        if (isNaN(warehouseIdNum) || isNaN(productIdNum) || (zoneId && isNaN(zoneIdNum))) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid warehouse ID, product ID, or zone ID' 
+            });
+        }
+
         const binDetails = await warehouseService.getBinLocationDetails(
-            parseInt(productId), 
-            parseInt(warehouseId), 
-            zoneId ? parseInt(zoneId) : null
+            productIdNum, 
+            warehouseIdNum, 
+            zoneIdNum
         );
 
         res.json({ 
@@ -838,10 +962,21 @@ router.put('/:warehouseId/zones/:zoneId/product/:productId/bin', isStaffOrAdmin,
         const { warehouseId, zoneId, productId } = req.params;
         const { aisle, shelf, bin } = req.body;
 
+        const warehouseIdNum = parseInt(warehouseId);
+        const zoneIdNum = parseInt(zoneId);
+        const productIdNum = parseInt(productId);
+        
+        if (isNaN(warehouseIdNum) || isNaN(zoneIdNum) || isNaN(productIdNum)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid warehouse ID, zone ID, or product ID' 
+            });
+        }
+
         const success = await warehouseService.updateBinLocation(
-            parseInt(productId), 
-            parseInt(warehouseId), 
-            parseInt(zoneId), 
+            productIdNum, 
+            warehouseIdNum, 
+            zoneIdNum, 
             aisle, 
             shelf, 
             bin
