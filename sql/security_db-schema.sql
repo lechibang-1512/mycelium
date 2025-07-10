@@ -1,5 +1,5 @@
 -- Schema for security_db
--- Generated on 2025-07-10T16:55:56.243Z
+-- Generated on 2025-07-10T18:53:08.743Z
 
 -- Table: failed_login_attempts
 CREATE TABLE `failed_login_attempts` (

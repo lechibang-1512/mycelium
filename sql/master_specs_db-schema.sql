@@ -1,5 +1,5 @@
 -- Schema for master_specs_db
--- Generated on 2025-07-10T16:55:56.231Z
+-- Generated on 2025-07-10T18:53:08.728Z
 
 -- Table: batch_tracking
 CREATE TABLE `batch_tracking` (
