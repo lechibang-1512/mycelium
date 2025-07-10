@@ -622,6 +622,61 @@ router.put('/:warehouseId/zones/:zoneId', isStaffOrAdmin, async (req, res) => {
 });
 
 /**
+ * GET /warehouses/api/warehouse/:warehouseId/product/:productId - Get zone distribution for a specific product in a warehouse
+ */
+router.get('/api/warehouse/:warehouseId/product/:productId', isAuthenticated, async (req, res) => {
+    try {
+        const { warehouseId, productId } = req.params;
+        
+        const zoneDistribution = await warehouseService.getProductZoneDistribution(
+            parseInt(productId), 
+            parseInt(warehouseId)
+        );
+
+        res.json({ 
+            success: true, 
+            zones: convertBigIntToNumber(zoneDistribution),
+            warehouseId: parseInt(warehouseId),
+            productId: parseInt(productId)
+        });
+    } catch (error) {
+        console.error('Error fetching zone distribution:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch zone distribution: ' + error.message 
+        });
+    }
+});
+
+/**
+ * GET /warehouses/api/warehouse/:warehouseId/product/:productId/current-distribution - Get current distribution across zones
+ */
+router.get('/api/warehouse/:warehouseId/product/:productId/current-distribution', isAuthenticated, async (req, res) => {
+    try {
+        const { warehouseId, productId } = req.params;
+        
+        const [distribution, zones] = await Promise.all([
+            warehouseService.getCurrentZoneDistribution(parseInt(productId), parseInt(warehouseId)),
+            warehouseService.getWarehouseZones(parseInt(warehouseId))
+        ]);
+
+        res.json({ 
+            success: true, 
+            distribution: convertBigIntToNumber(distribution),
+            zones: convertBigIntToNumber(zones),
+            warehouseId: parseInt(warehouseId),
+            productId: parseInt(productId)
+        });
+    } catch (error) {
+        console.error('Error fetching current distribution:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch current distribution: ' + error.message 
+        });
+    }
+});
+
+/**
  * POST /warehouses/zones/replace/single - Single zone replacement
  */
 router.post('/zones/replace/single', isStaffOrAdmin, async (req, res) => {

@@ -277,7 +277,7 @@
             if (!warehouseId) return;
 
             try {
-                const response = await fetch(`/api/warehouse/${warehouseId}/zones`);
+                const response = await fetch(`/warehouses/${warehouseId}/zones`);
                 const data = await response.json();
 
                 if (data.success && data.zones) {
@@ -322,7 +322,7 @@
             if (!warehouseId || !productId) return;
 
             try {
-                const response = await fetch(`/api/warehouse/${warehouseId}/product/${productId}`);
+                const response = await fetch(`/warehouses/api/warehouse/${warehouseId}/product/${productId}`);
                 const data = await response.json();
 
                 if (data.success && data.zones) {
@@ -382,7 +382,7 @@
             `;
 
             try {
-                const response = await fetch(`/api/warehouse/${warehouseId}/product/${productId}`);
+                const response = await fetch(`/warehouses/api/warehouse/${warehouseId}/product/${productId}`);
                 const data = await response.json();
 
                 if (data.success && data.zones && data.zones.length > 0) {

@@ -602,16 +602,23 @@ class WarehouseService {
     async createOrUpdateZone(zoneData, zoneId = null) {
         const conn = await this.pool.getConnection();
         try {
-            const { warehouseId, name, description, zoneType, capacityLimit, isActive } = zoneData;
-
             if (zoneId) {
                 // Update existing zone
                 const query = `
                     UPDATE warehouse_zones 
-                    SET warehouse_id = ?, name = ?, description = ?, zone_type = ?, capacity_limit = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
-                    WHERE zone_id = ?
+                    SET name = ?, description = ?, zone_type = ?, capacity_limit = ?, 
+                        is_active = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE zone_id = ? AND warehouse_id = ?
                 `;
-                await conn.query(query, [warehouseId, name, description, zoneType, capacityLimit, isActive, zoneId]);
+                await conn.query(query, [
+                    zoneData.name,
+                    zoneData.description || null,
+                    zoneData.zone_type || 'storage',
+                    zoneData.capacity_limit || null,
+                    zoneData.is_active !== undefined ? zoneData.is_active : true,
+                    zoneId,
+                    zoneData.warehouseId
+                ]);
                 return zoneId;
             } else {
                 // Create new zone
@@ -619,9 +626,119 @@ class WarehouseService {
                     INSERT INTO warehouse_zones (warehouse_id, name, description, zone_type, capacity_limit, is_active)
                     VALUES (?, ?, ?, ?, ?, ?)
                 `;
-                const result = await conn.query(query, [warehouseId, name, description, zoneType, capacityLimit, isActive]);
+                const result = await conn.query(query, [
+                    zoneData.warehouseId,
+                    zoneData.name,
+                    zoneData.description || null,
+                    zoneData.zone_type || 'storage',
+                    zoneData.capacity_limit || null,
+                    zoneData.is_active !== undefined ? zoneData.is_active : true
+                ]);
                 return result.insertId;
             }
+        } finally {
+            conn.end();
+        }
+    }
+
+    /**
+     * Find available bin locations in a zone
+     */
+    async findAvailableBinLocations(warehouseId, zoneId, limit = 10) {
+        const conn = await this.pool.getConnection();
+        try {
+            // This is a simplified approach - in a real system, you'd have a dedicated bin locations table
+            const query = `
+                SELECT DISTINCT 
+                    wpl.aisle,
+                    wpl.shelf,
+                    wpl.bin,
+                    COUNT(*) as products_in_bin,
+                    SUM(wpl.quantity) as total_quantity,
+                    wz.capacity_limit
+                FROM warehouse_product_locations wpl
+                JOIN warehouse_zones wz ON wpl.zone_id = wz.zone_id
+                WHERE wpl.warehouse_id = ? AND wpl.zone_id = ?
+                    AND wpl.aisle IS NOT NULL 
+                    AND wpl.shelf IS NOT NULL 
+                    AND wpl.bin IS NOT NULL
+                GROUP BY wpl.aisle, wpl.shelf, wpl.bin
+                HAVING total_quantity < COALESCE(wz.capacity_limit / 100, 50) -- Assume 1% of zone capacity per bin
+                ORDER BY total_quantity ASC
+                LIMIT ?
+            `;
+            
+            const result = await conn.query(query, [warehouseId, zoneId, limit]);
+            return result;
+        } finally {
+            conn.end();
+        }
+    }
+
+    /**
+     * Get product zone distribution for a specific product in a warehouse
+     */
+    async getProductZoneDistribution(productId, warehouseId) {
+        const conn = await this.pool.getConnection();
+        try {
+            const query = `
+                SELECT 
+                    wz.zone_id,
+                    wz.name as zone_name,
+                    wz.zone_type,
+                    wz.capacity_limit,
+                    COALESCE(wpl.quantity, 0) as quantity,
+                    COALESCE(wpl.reserved_quantity, 0) as reserved_quantity,
+                    COALESCE(wpl.quantity - wpl.reserved_quantity, 0) as available_quantity,
+                    COALESCE(wpl.min_stock_level, 0) as min_stock_level,
+                    COALESCE(wpl.max_stock_level, 0) as max_stock_level,
+                    wpl.aisle,
+                    wpl.shelf,
+                    wpl.bin,
+                    wpl.last_counted
+                FROM warehouse_zones wz
+                LEFT JOIN warehouse_product_locations wpl ON wz.zone_id = wpl.zone_id 
+                    AND wpl.phone_id = ? AND wpl.warehouse_id = ?
+                WHERE wz.warehouse_id = ? AND wz.is_active = TRUE
+                ORDER BY wz.zone_type, wz.name
+            `;
+            
+            const result = await conn.query(query, [productId, warehouseId, warehouseId]);
+            return result;
+        } finally {
+            conn.end();
+        }
+    }
+
+    /**
+     * Get current zone distribution for a product in a warehouse
+     */
+    async getCurrentZoneDistribution(productId, warehouseId) {
+        const conn = await this.pool.getConnection();
+        try {
+            const query = `
+                SELECT 
+                    wz.zone_id,
+                    wz.name as zone_name,
+                    wz.zone_type,
+                    wz.capacity_limit,
+                    COALESCE(wpl.quantity, 0) as current_quantity,
+                    COALESCE(wpl.reserved_quantity, 0) as reserved_quantity,
+                    COALESCE(wpl.quantity - wpl.reserved_quantity, 0) as available_quantity,
+                    CASE 
+                        WHEN wz.capacity_limit > 0 THEN 
+                            ROUND((COALESCE(wpl.quantity, 0) / wz.capacity_limit) * 100, 2)
+                        ELSE 0 
+                    END as utilization_percentage
+                FROM warehouse_zones wz
+                LEFT JOIN warehouse_product_locations wpl ON wz.zone_id = wpl.zone_id 
+                    AND wpl.phone_id = ? AND wpl.warehouse_id = ?
+                WHERE wz.warehouse_id = ? AND wz.is_active = TRUE
+                ORDER BY wz.zone_type, wz.name
+            `;
+            
+            const result = await conn.query(query, [productId, warehouseId, warehouseId]);
+            return result;
         } finally {
             conn.end();
         }
@@ -1133,6 +1250,75 @@ class WarehouseService {
             `;
             
             const result = await conn.query(query, [warehouseId, zoneId, limit]);
+            return result;
+        } finally {
+            conn.end();
+        }
+    }
+
+    /**
+     * Get product zone distribution for a specific product in a warehouse
+     */
+    async getProductZoneDistribution(productId, warehouseId) {
+        const conn = await this.pool.getConnection();
+        try {
+            const query = `
+                SELECT 
+                    wz.zone_id,
+                    wz.name as zone_name,
+                    wz.zone_type,
+                    wz.capacity_limit,
+                    COALESCE(wpl.quantity, 0) as quantity,
+                    COALESCE(wpl.reserved_quantity, 0) as reserved_quantity,
+                    COALESCE(wpl.quantity - wpl.reserved_quantity, 0) as available_quantity,
+                    COALESCE(wpl.min_stock_level, 0) as min_stock_level,
+                    COALESCE(wpl.max_stock_level, 0) as max_stock_level,
+                    wpl.aisle,
+                    wpl.shelf,
+                    wpl.bin,
+                    wpl.last_counted
+                FROM warehouse_zones wz
+                LEFT JOIN warehouse_product_locations wpl ON wz.zone_id = wpl.zone_id 
+                    AND wpl.phone_id = ? AND wpl.warehouse_id = ?
+                WHERE wz.warehouse_id = ? AND wz.is_active = TRUE
+                ORDER BY wz.zone_type, wz.name
+            `;
+            
+            const result = await conn.query(query, [productId, warehouseId, warehouseId]);
+            return result;
+        } finally {
+            conn.end();
+        }
+    }
+
+    /**
+     * Get current zone distribution for a product in a warehouse
+     */
+    async getCurrentZoneDistribution(productId, warehouseId) {
+        const conn = await this.pool.getConnection();
+        try {
+            const query = `
+                SELECT 
+                    wz.zone_id,
+                    wz.name as zone_name,
+                    wz.zone_type,
+                    wz.capacity_limit,
+                    COALESCE(wpl.quantity, 0) as current_quantity,
+                    COALESCE(wpl.reserved_quantity, 0) as reserved_quantity,
+                    COALESCE(wpl.quantity - wpl.reserved_quantity, 0) as available_quantity,
+                    CASE 
+                        WHEN wz.capacity_limit > 0 THEN 
+                            ROUND((COALESCE(wpl.quantity, 0) / wz.capacity_limit) * 100, 2)
+                        ELSE 0 
+                    END as utilization_percentage
+                FROM warehouse_zones wz
+                LEFT JOIN warehouse_product_locations wpl ON wz.zone_id = wpl.zone_id 
+                    AND wpl.phone_id = ? AND wpl.warehouse_id = ?
+                WHERE wz.warehouse_id = ? AND wz.is_active = TRUE
+                ORDER BY wz.zone_type, wz.name
+            `;
+            
+            const result = await conn.query(query, [productId, warehouseId, warehouseId]);
             return result;
         } finally {
             conn.end();
