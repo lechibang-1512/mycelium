@@ -134,6 +134,93 @@
                             <div class="form-text">Enter the number of units received</div>
                         </div>
 
+                        <!-- Warehouse & Location Information -->
+                        <div class="form-section mb-4">
+                            <h5 class="mb-3">
+                                <i class="fas fa-warehouse me-2 text-info"></i>
+                                Warehouse & Location (Optional)
+                            </h5>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="warehouse_id" class="form-label">Warehouse</label>
+                                    <select class="form-select" id="warehouse_id" name="warehouse_id">
+                                        <option value="">Select warehouse...</option>
+                                        <% warehouses.forEach(warehouse => { %>
+                                            <option value="<%= warehouse.warehouse_id %>"><%= warehouse.name %></option>
+                                        <% }); %>
+                                    </select>
+                                    <div class="form-text">Choose warehouse for inventory placement</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="zone_id" class="form-label">Zone</label>
+                                    <select class="form-select" id="zone_id" name="zone_id" disabled>
+                                        <option value="">Select zone...</option>
+                                    </select>
+                                    <div class="form-text">Select zone within warehouse</div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="aisle" class="form-label">Aisle</label>
+                                    <input type="text" class="form-control" id="aisle" name="aisle" placeholder="A1">
+                                    <div class="form-text">Aisle identifier</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="shelf" class="form-label">Shelf</label>
+                                    <input type="text" class="form-control" id="shelf" name="shelf" placeholder="S3">
+                                    <div class="form-text">Shelf identifier</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="bin" class="form-label">Bin</label>
+                                    <input type="text" class="form-control" id="bin" name="bin" placeholder="B12">
+                                    <div class="form-text">Bin location</div>
+                                </div>
+                            </div>
+
+                            <!-- Bin Location Helper -->
+                            <div class="row mb-3" id="bin-location-helper" style="display: none;">
+                                <div class="col-12">
+                                    <div class="card border-info">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-map-marker-alt me-2 text-info"></i>
+                                                Available Bin Locations
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row" id="available-bins-list">
+                                                <!-- Available bins will be populated here -->
+                                            </div>
+                                            <div class="text-center" id="bin-loading" style="display: none;">
+                                                <i class="fas fa-spinner fa-spin me-2"></i>Loading available bins...
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Batch & Tracking Information -->
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="batch_no" class="form-label">Batch Number</label>
+                                    <input type="text" class="form-control" id="batch_no" name="batch_no" placeholder="BT-2025-001">
+                                    <div class="form-text">Batch tracking number</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="lot_no" class="form-label">Lot Number</label>
+                                    <input type="text" class="form-control" id="lot_no" name="lot_no" placeholder="LOT-001">
+                                    <div class="form-text">Lot identification</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="expiry_date" class="form-label">Expiry Date</label>
+                                    <input type="date" class="form-control" id="expiry_date" name="expiry_date">
+                                    <div class="form-text">Product expiration date</div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Financial Information -->
                         <div class="row mb-3">
                             <div class="col-md-6">
@@ -437,6 +524,8 @@
             const supplierId = document.getElementById('supplier_id').value;
             const quantity = document.getElementById('quantity').value;
             const unitCost = document.getElementById('unit_cost').value;
+            const warehouseId = document.getElementById('warehouse_id').value;
+            const zoneId = document.getElementById('zone_id').value;
             
             if (!phoneId) {
                 e.preventDefault();
@@ -466,8 +555,108 @@
                 return;
             }
 
+            // Validate warehouse selection
+            if (warehouseId && !zoneId) {
+                e.preventDefault();
+                showWarning('Please select a zone when warehouse is specified.');
+                document.getElementById('zone_id').focus();
+                return;
+            }
+
             // Show success message on successful submission
             showInfo('Processing stock receipt...');
+        });
+
+        // Handle warehouse selection to load zones
+        document.getElementById('warehouse_id').addEventListener('change', async function() {
+            const warehouseId = this.value;
+            const zoneSelect = document.getElementById('zone_id');
+            const binHelper = document.getElementById('bin-location-helper');
+            
+            // Clear and disable zone select
+            zoneSelect.innerHTML = '<option value="">Select zone...</option>';
+            zoneSelect.disabled = !warehouseId;
+            binHelper.style.display = 'none';
+            
+            if (warehouseId) {
+                try {
+                    const response = await fetch(`/api/warehouse/${warehouseId}/zones`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.zones) {
+                        data.zones.forEach(zone => {
+                            const option = document.createElement('option');
+                            option.value = zone.zone_id;
+                            option.textContent = `${zone.name} (${zone.zone_type})`;
+                            zoneSelect.appendChild(option);
+                        });
+                        zoneSelect.disabled = false;
+                    }
+                } catch (error) {
+                    console.error('Error loading zones:', error);
+                    showError('Failed to load zones for selected warehouse');
+                }
+            }
+        });
+
+        // Handle zone selection to show available bins
+        document.getElementById('zone_id').addEventListener('change', async function() {
+            const warehouseId = document.getElementById('warehouse_id').value;
+            const zoneId = this.value;
+            const binHelper = document.getElementById('bin-location-helper');
+            const binsList = document.getElementById('available-bins-list');
+            const binLoading = document.getElementById('bin-loading');
+
+            if (warehouseId && zoneId) {
+                binHelper.style.display = 'block';
+                binLoading.style.display = 'block';
+                binsList.innerHTML = '';
+
+                try {
+                    const response = await fetch(`/warehouses/${warehouseId}/zones/${zoneId}/bins/available`);
+                    const data = await response.json();
+
+                    binLoading.style.display = 'none';
+
+                    if (data.success && data.bins && data.bins.length > 0) {
+                        data.bins.forEach(bin => {
+                            const binOption = document.createElement('div');
+                            binOption.className = 'col-md-3 mb-2';
+                            binOption.innerHTML = `
+                                <button type="button" class="btn btn-outline-primary btn-sm w-100 bin-option" 
+                                        data-aisle="${bin.aisle}" data-shelf="${bin.shelf}" data-bin="${bin.bin}">
+                                    ${bin.aisle}-${bin.shelf}-${bin.bin}
+                                    <br><small class="text-muted">${bin.products_in_bin} items</small>
+                                </button>
+                            `;
+                            binsList.appendChild(binOption);
+                        });
+
+                        // Add click handlers for bin selection
+                        document.querySelectorAll('.bin-option').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                document.getElementById('aisle').value = this.dataset.aisle;
+                                document.getElementById('shelf').value = this.dataset.shelf;
+                                document.getElementById('bin').value = this.dataset.bin;
+                                
+                                // Visual feedback
+                                document.querySelectorAll('.bin-option').forEach(b => b.classList.remove('btn-primary'));
+                                document.querySelectorAll('.bin-option').forEach(b => b.classList.add('btn-outline-primary'));
+                                this.classList.remove('btn-outline-primary');
+                                this.classList.add('btn-primary');
+                            });
+                        });
+                    } else {
+                        binsList.innerHTML = '<div class="col-12"><p class="text-muted text-center">No available bins found. You can manually enter a bin location.</p></div>';
+                    }
+                } catch (error) {
+                    binLoading.style.display = 'none';
+                    console.error('Error loading available bins:', error);
+                    binsList.innerHTML = '<div class="col-12"><p class="text-warning text-center">Failed to load available bins. You can manually enter a bin location.</p></div>';
+                }
+            } else {
+                binHelper.style.display = 'none';
+            }
         });
     </script>
 </body>

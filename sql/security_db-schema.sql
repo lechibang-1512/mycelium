@@ -1,5 +1,5 @@
 -- Schema for security_db
--- Generated on 2025-07-08T17:18:31.531Z
+-- Generated on 2025-07-10T16:55:56.243Z
 
 -- Table: failed_login_attempts
 CREATE TABLE `failed_login_attempts` (
@@ -31,7 +31,7 @@ CREATE TABLE `invalidated_tokens` (
   KEY `idx_expires_at` (`expires_at`),
   KEY `idx_user_id` (`user_id`),
   KEY `idx_invalidated_at` (`invalidated_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Table: security_events
 CREATE TABLE `security_events` (
@@ -86,5 +86,36 @@ CREATE TABLE `users` (
   KEY `idx_role` (`role`),
   KEY `idx_is_active` (`is_active`),
   KEY `idx_last_login` (`last_login`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table: warehouse_zones
+CREATE TABLE `warehouse_zones` (
+  `zone_id` int(11) NOT NULL AUTO_INCREMENT,
+  `warehouse_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `zone_type` enum('storage','picking','staging','shipping','receiving') DEFAULT 'storage',
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`zone_id`),
+  KEY `idx_zone_warehouse` (`warehouse_id`),
+  KEY `idx_zone_name` (`name`),
+  KEY `idx_zone_type` (`zone_type`),
+  KEY `idx_zone_active` (`is_active`),
+  CONSTRAINT `warehouse_zones_ibfk_1` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`warehouse_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table: warehouses
+CREATE TABLE `warehouses` (
+  `warehouse_id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `location` text DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`warehouse_id`),
+  KEY `idx_warehouse_name` (`name`),
+  KEY `idx_warehouse_active` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

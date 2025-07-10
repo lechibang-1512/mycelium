@@ -1,9 +1,50 @@
-// Load environment variables
-require('dotenv').config();
-
+// Auto-detect and load environment variables from multiple possible locations
 const { exec, spawn } = require('child_process');
 const fs = require('fs').promises;
 const path = require('path');
+
+/**
+ * Auto-detect .env file location and load it
+ */
+function loadEnvironmentVariables() {
+  const possiblePaths = [
+    // Current working directory
+    path.join(process.cwd(), '.env'),
+    // Script directory
+    path.join(__dirname, '.env'),
+    // Parent directory of script
+    path.join(__dirname, '..', '.env'),
+    // Grandparent directory of script (in case script is in subdirectory)
+    path.join(__dirname, '..', '..', '.env'),
+    // Common project root patterns
+    path.join(process.cwd(), '..', '.env'),
+  ];
+
+  let envFound = false;
+  for (const envPath of possiblePaths) {
+    try {
+      if (require('fs').existsSync(envPath)) {
+        console.log(`🔍 Found .env file at: ${envPath}`);
+        require('dotenv').config({ path: envPath });
+        envFound = true;
+        break;
+      }
+    } catch (error) {
+      // Continue searching
+    }
+  }
+
+  if (!envFound) {
+    console.warn('⚠️  No .env file found. Using system environment variables only.');
+    console.warn('   Searched locations:');
+    possiblePaths.forEach(p => console.warn(`   - ${p}`));
+  }
+
+  return envFound;
+}
+
+// Load environment variables
+loadEnvironmentVariables();
 
 // --- CONFIGURATION ---
 const dbs = [
@@ -42,7 +83,38 @@ const dbs = [
   }
 ];
 
-const SQL_DIR = path.join(__dirname, '..', 'sql');
+// --- CONFIGURATION ---
+// Auto-detect SQL directory location
+function getProjectRoot() {
+  let currentDir = __dirname;
+  let attempts = 0;
+  const maxAttempts = 5;
+
+  while (attempts < maxAttempts) {
+    // Check if this looks like project root (has package.json)
+    const packageJsonPath = path.join(currentDir, 'package.json');
+    try {
+      if (require('fs').existsSync(packageJsonPath)) {
+        console.log(`📁 Detected project root: ${currentDir}`);
+        return currentDir;
+      }
+    } catch (error) {
+      // Continue searching
+    }
+    
+    const parentDir = path.dirname(currentDir);
+    if (parentDir === currentDir) break; // Reached filesystem root
+    currentDir = parentDir;
+    attempts++;
+  }
+
+  // Fallback to script's parent directory
+  console.log(`📁 Using fallback directory: ${path.dirname(__dirname)}`);
+  return path.dirname(__dirname);
+}
+
+const PROJECT_ROOT = getProjectRoot();
+const SQL_DIR = path.join(PROJECT_ROOT, 'sql');
 
 /**
  * Ensures required packages are installed.
@@ -51,23 +123,37 @@ async function checkAndInstallDependencies() {
   const requiredPackages = ['inquirer', 'node-sql-parser', 'mariadb'];
   const missingPackages = [];
 
+  console.log('🔍 Checking dependencies...');
+
   for (const pkg of requiredPackages) {
     try {
       require.resolve(pkg);
+      console.log(`  ✅ ${pkg} - found`);
     } catch {
+      console.log(`  ❌ ${pkg} - missing`);
       missingPackages.push(pkg);
     }
   }
 
   if (missingPackages.length > 0) {
+    console.log(`\n📦 Installing missing packages: ${missingPackages.join(', ')}`);
     const command = process.platform === 'win32' ? 'npm.cmd' : 'npm';
     const args = ['install', ...missingPackages];
-    const child = spawn(command, args, { stdio: 'inherit' });
+    const child = spawn(command, args, { stdio: 'inherit', cwd: PROJECT_ROOT });
 
     return new Promise((resolve, reject) => {
-      child.on('close', code => code === 0 ? resolve() : reject(new Error(`npm install failed.`)));
+      child.on('close', code => {
+        if (code === 0) {
+          console.log('✅ Dependencies installed successfully\n');
+          resolve();
+        } else {
+          reject(new Error(`npm install failed with exit code ${code}`));
+        }
+      });
       child.on('error', reject);
     });
+  } else {
+    console.log('✅ All dependencies are already installed\n');
   }
 }
 
@@ -75,6 +161,33 @@ async function checkAndInstallDependencies() {
  * Main application logic
  */
 async function run() {
+  console.log('🔧 Database Schema Extract Tool');
+  console.log('================================');
+  console.log(`📁 Current Working Directory: ${process.cwd()}`);
+  console.log(`📁 Script Location: ${__dirname}`);
+  console.log(`📁 Project Root: ${PROJECT_ROOT}`);
+  console.log(`📂 SQL Directory: ${SQL_DIR}`);
+  console.log('');
+
+  // Validate environment variables
+  const requiredVars = [
+    'DB_USER', 'DB_PASSWORD', 'DB_NAME',
+    'SUPPLIERS_DB_USER', 'SUPPLIERS_DB_PASSWORD', 'SUPPLIERS_DB_NAME',
+    'AUTH_DB_USER', 'AUTH_DB_PASSWORD', 'AUTH_DB_NAME'
+  ];
+
+  const missingVars = requiredVars.filter(varName => !process.env[varName]);
+  
+  if (missingVars.length > 0) {
+    console.warn('⚠️  Warning: Some environment variables are missing:');
+    missingVars.forEach(varName => console.warn(`   - ${varName}`));
+    console.warn('   Database operations may fail for missing configurations.');
+    console.warn('');
+  } else {
+    console.log('✅ All required environment variables are present');
+    console.log('');
+  }
+
   let inquirer, Parser;
   try {
     inquirer = (await import('inquirer')).default;
@@ -89,7 +202,9 @@ async function run() {
   async function ensureSqlDirExists() {
     try {
       await fs.access(SQL_DIR);
+      console.log(`📂 SQL directory exists: ${SQL_DIR}`);
     } catch {
+      console.log(`📂 Creating SQL directory: ${SQL_DIR}`);
       await fs.mkdir(SQL_DIR, { recursive: true });
     }
   }
@@ -99,6 +214,8 @@ async function run() {
     await ensureSqlDirExists();
 
     console.log('\n--- Database Schema Dumping ---');
+    console.log('Note: This will overwrite any existing schema files');
+    console.log('');
 
     for (const db of dbs) {
       console.log(`\nConnecting to ${db.name} at ${db.config.host}:${db.config.port}...`);
@@ -151,6 +268,16 @@ async function run() {
         }
 
         const outputFile = path.join(SQL_DIR, `${db.name}-schema.sql`);
+        
+        // Check if file exists and warn about overwrite
+        try {
+          await fs.access(outputFile);
+          console.log(`  📝 Overwriting existing file: ${outputFile}`);
+        } catch (error) {
+          // File doesn't exist, that's fine
+          console.log(`  📝 Creating new file: ${outputFile}`);
+        }
+        
         await fs.writeFile(outputFile, schemaSQL);
         console.log(`  ✓ Schema saved to ${outputFile}`);
 
@@ -307,6 +434,15 @@ async function run() {
 
     const outFile = path.join(SQL_DIR, `${schemaName}-schema.json`);
     try {
+      // Check if file exists and warn about overwrite
+      try {
+        await fs.access(outFile);
+        console.log(`📝 Overwriting existing JSON file: ${outFile}`);
+      } catch (error) {
+        // File doesn't exist, that's fine
+        console.log(`📝 Creating new JSON file: ${outFile}`);
+      }
+      
       await fs.writeFile(outFile, JSON.stringify(json, null, 2));
       console.log(`\n✓ JSON exported to: ${outFile}\n`);
     } catch (err) {
@@ -405,6 +541,13 @@ async function run() {
 checkAndInstallDependencies()
   .then(run)
   .catch(err => {
-    console.error('Initialization failed:', err.message);
+    console.error('❌ Initialization failed:', err.message);
+    console.error('');
+    console.error('Troubleshooting tips:');
+    console.error('1. Make sure you are running this from a directory with access to the project');
+    console.error('2. Ensure .env file exists in the project root or current directory');
+    console.error('3. Check that Node.js and npm are properly installed');
+    console.error('4. Try running: npm install');
+    console.error('');
     process.exit(1);
   });

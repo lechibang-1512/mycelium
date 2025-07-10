@@ -356,60 +356,483 @@ router.post('/serial', async (req, res) => {
 });
 
 /**
- * PUT /warehouses/serial/:id/status - Update serialized item status
+ * GET /warehouses/distribution/overview - Get distribution overview
  */
-router.put('/serial/:id/status', async (req, res) => {
+router.get('/distribution/overview', async (req, res) => {
     try {
-        const serialId = parseInt(req.params.id);
-        const { status, notes } = req.body;
-
-        if (!status) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Status is required' 
-            });
-        }
-
-        const success = await warehouseService.updateSerializedItemStatus(
-            serialId, 
-            status, 
-            notes
-        );
-
-        if (success) {
-            res.json({ 
-                success: true, 
-                message: 'Status updated successfully' 
-            });
-        } else {
-            res.status(400).json({ 
-                success: false, 
-                message: 'Failed to update status' 
-            });
-        }
+        const overview = await warehouseService.getWarehouseDistributionOverview();
+        res.json({ success: true, overview });
     } catch (error) {
-        console.error('Error updating serial status:', error);
+        console.error('Error fetching distribution overview:', error);
         res.status(500).json({ 
             success: false, 
-            message: 'Failed to update status: ' + error.message 
+            message: 'Failed to fetch distribution overview' 
         });
     }
 });
 
 /**
- * GET /warehouses/api/summary - Get warehouse summary (API endpoint)
+ * GET /warehouses/:id/zones/efficiency - Get zone efficiency for warehouse
  */
-router.get('/api/summary', async (req, res) => {
+router.get('/:id/zones/efficiency', async (req, res) => {
     try {
-        const warehouseId = req.query.warehouse_id ? parseInt(req.query.warehouse_id) : null;
-        const summary = await warehouseAnalyticsService.getWarehouseInventorySummary(warehouseId);
-        
-        res.json({ success: true, summary });
+        const warehouseId = parseInt(req.params.id);
+        const efficiency = await warehouseService.getZoneDistributionEfficiency(warehouseId);
+        res.json({ success: true, efficiency });
     } catch (error) {
-        console.error('Error fetching warehouse summary:', error);
+        console.error('Error fetching zone efficiency:', error);
         res.status(500).json({ 
             success: false, 
-            message: 'Failed to fetch summary' 
+            message: 'Failed to fetch zone efficiency' 
+        });
+    }
+});
+
+/**
+ * POST /warehouses/:id/distribute - Distribute inventory across zones
+ */
+router.post('/:id/distribute', async (req, res) => {
+    try {
+        const warehouseId = parseInt(req.params.id);
+        const { productId, totalQuantity, distributionStrategy = 'even' } = req.body;
+
+        if (!productId || !totalQuantity) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Missing required fields' 
+            });
+        }
+
+        const distributions = await warehouseService.distributeInventoryAcrossZones(
+            productId, 
+            warehouseId, 
+            parseInt(totalQuantity), 
+            distributionStrategy
+        );
+
+        res.json({ 
+            success: true, 
+            message: 'Inventory distributed successfully',
+            distributions
+        });
+    } catch (error) {
+        console.error('Error distributing inventory:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to distribute inventory: ' + error.message 
+        });
+    }
+});
+
+/**
+ * GET /warehouses/:id/products/:productId/optimize - Get optimization suggestions
+ */
+router.get('/:id/products/:productId/optimize', async (req, res) => {
+    try {
+        const warehouseId = parseInt(req.params.id);
+        const productId = parseInt(req.params.productId);
+
+        const suggestions = await warehouseService.optimizeZoneAllocation(productId, warehouseId);
+
+        res.json({ 
+            success: true, 
+            suggestions
+        });
+    } catch (error) {
+        console.error('Error generating optimization suggestions:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to generate suggestions' 
+        });
+    }
+});
+
+/**
+ * POST /warehouses/bulk-operations - Perform bulk inventory operations
+ */
+router.post('/bulk-operations', async (req, res) => {
+    try {
+        const { operations } = req.body;
+
+        if (!operations || !Array.isArray(operations)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Operations array is required' 
+            });
+        }
+
+        const results = await warehouseService.bulkInventoryOperation(operations);
+
+        res.json({ 
+            success: true, 
+            message: 'Bulk operations completed',
+            results
+        });
+    } catch (error) {
+        console.error('Error performing bulk operations:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to perform bulk operations: ' + error.message 
+        });
+    }
+});
+
+/**
+ * GET /warehouses/movement-tracking - Get inventory movement tracking
+ */
+router.get('/movement-tracking', async (req, res) => {
+    try {
+        const filters = {
+            productId: req.query.product_id ? parseInt(req.query.product_id) : null,
+            warehouseId: req.query.warehouse_id ? parseInt(req.query.warehouse_id) : null,
+            zoneId: req.query.zone_id ? parseInt(req.query.zone_id) : null,
+            transactionType: req.query.transaction_type,
+            fromDate: req.query.from_date,
+            toDate: req.query.to_date
+        };
+
+        const movements = await warehouseService.getInventoryMovementTracking(filters);
+
+        res.json({ 
+            success: true, 
+            movements
+        });
+    } catch (error) {
+        console.error('Error fetching movement tracking:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch movement tracking' 
+        });
+    }
+});
+
+/**
+ * GET /warehouses/low-stock-alerts - Get low stock alerts
+ */
+router.get('/low-stock-alerts', async (req, res) => {
+    try {
+        const warehouseId = req.query.warehouse_id ? parseInt(req.query.warehouse_id) : null;
+        const alertLevel = req.query.alert_level;
+
+        const alerts = await warehouseService.getLowStockAlerts(warehouseId, alertLevel);
+
+        res.json({ 
+            success: true, 
+            alerts
+        });
+    } catch (error) {
+        console.error('Error fetching low stock alerts:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch low stock alerts' 
+        });
+    }
+});
+
+/**
+ * POST /warehouses - Create new warehouse
+ */
+router.post('/', isStaffOrAdmin, async (req, res) => {
+    try {
+        const warehouseData = req.body;
+        const warehouseId = await warehouseService.createOrUpdateWarehouse(warehouseData);
+
+        res.json({ 
+            success: true, 
+            message: 'Warehouse created successfully',
+            warehouseId
+        });
+    } catch (error) {
+        console.error('Error creating warehouse:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to create warehouse: ' + error.message 
+        });
+    }
+});
+
+/**
+ * PUT /warehouses/:id - Update warehouse
+ */
+router.put('/:id', isStaffOrAdmin, async (req, res) => {
+    try {
+        const warehouseId = parseInt(req.params.id);
+        const warehouseData = req.body;
+        
+        await warehouseService.createOrUpdateWarehouse(warehouseData, warehouseId);
+
+        res.json({ 
+            success: true, 
+            message: 'Warehouse updated successfully'
+        });
+    } catch (error) {
+        console.error('Error updating warehouse:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to update warehouse: ' + error.message 
+        });
+    }
+});
+
+/**
+ * POST /warehouses/:id/zones - Create new zone
+ */
+router.post('/:id/zones', isStaffOrAdmin, async (req, res) => {
+    try {
+        const warehouseId = parseInt(req.params.id);
+        const zoneData = { ...req.body, warehouseId };
+        const zoneId = await warehouseService.createOrUpdateZone(zoneData);
+
+        res.json({ 
+            success: true, 
+            message: 'Zone created successfully',
+            zoneId
+        });
+    } catch (error) {
+        console.error('Error creating zone:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to create zone: ' + error.message 
+        });
+    }
+});
+
+/**
+ * PUT /warehouses/:warehouseId/zones/:zoneId - Update zone
+ */
+router.put('/:warehouseId/zones/:zoneId', isStaffOrAdmin, async (req, res) => {
+    try {
+        const warehouseId = parseInt(req.params.warehouseId);
+        const zoneId = parseInt(req.params.zoneId);
+        const zoneData = { ...req.body, warehouseId };
+        
+        await warehouseService.createOrUpdateZone(zoneData, zoneId);
+
+        res.json({ 
+            success: true, 
+            message: 'Zone updated successfully'
+        });
+    } catch (error) {
+        console.error('Error updating zone:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to update zone: ' + error.message 
+        });
+    }
+});
+
+/**
+ * POST /warehouses/zones/replace/single - Single zone replacement
+ */
+router.post('/zones/replace/single', isStaffOrAdmin, async (req, res) => {
+    try {
+        const { 
+            productId, 
+            warehouseId, 
+            fromZoneId, 
+            toZoneId, 
+            quantity, 
+            reason 
+        } = req.body;
+
+        // Validate inputs
+        if (!productId || !warehouseId || !fromZoneId || !toZoneId || !quantity) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Missing required fields: productId, warehouseId, fromZoneId, toZoneId, quantity' 
+            });
+        }
+
+        if (fromZoneId === toZoneId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Source and destination zones cannot be the same' 
+            });
+        }
+
+        const result = await warehouseService.singleZoneReplacement(
+            parseInt(productId), 
+            parseInt(warehouseId), 
+            parseInt(fromZoneId), 
+            parseInt(toZoneId), 
+            parseInt(quantity), 
+            reason
+        );
+
+        res.json({ 
+            success: true, 
+            message: result.message,
+            result 
+        });
+    } catch (error) {
+        console.error('Error in single zone replacement:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Single zone replacement failed: ' + error.message 
+        });
+    }
+});
+
+/**
+ * POST /warehouses/zones/replace/multi - Multi-zone replacement
+ */
+router.post('/zones/replace/multi', isStaffOrAdmin, async (req, res) => {
+    try {
+        const { 
+            productId, 
+            warehouseId, 
+            targetZoneDistribution, 
+            strategy 
+        } = req.body;
+
+        // Validate inputs
+        if (!productId || !warehouseId || !targetZoneDistribution) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Missing required fields: productId, warehouseId, targetZoneDistribution' 
+            });
+        }
+
+        if (typeof targetZoneDistribution !== 'object' || Object.keys(targetZoneDistribution).length === 0) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'targetZoneDistribution must be an object with zone IDs as keys and quantities as values' 
+            });
+        }
+
+        const result = await warehouseService.multiZoneReplacement(
+            parseInt(productId), 
+            parseInt(warehouseId), 
+            targetZoneDistribution, 
+            strategy || 'optimize'
+        );
+
+        res.json({ 
+            success: true, 
+            message: result.message,
+            result 
+        });
+    } catch (error) {
+        console.error('Error in multi-zone replacement:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Multi-zone replacement failed: ' + error.message 
+        });
+    }
+});
+
+/**
+ * GET /warehouses/:warehouseId/zones/:zoneId/bins/available - Get available bin locations
+ */
+router.get('/:warehouseId/zones/:zoneId/bins/available', isAuthenticated, async (req, res) => {
+    try {
+        const { warehouseId, zoneId } = req.params;
+        const limit = parseInt(req.query.limit) || 10;
+
+        const bins = await warehouseService.findAvailableBinLocations(
+            parseInt(warehouseId), 
+            parseInt(zoneId), 
+            limit
+        );
+
+        res.json({ 
+            success: true, 
+            bins: convertBigIntToNumber(bins) 
+        });
+    } catch (error) {
+        console.error('Error fetching available bins:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch available bins: ' + error.message 
+        });
+    }
+});
+
+/**
+ * GET /warehouses/:warehouseId/product/:productId/bins - Get bin locations for a product
+ */
+router.get('/:warehouseId/product/:productId/bins', isAuthenticated, async (req, res) => {
+    try {
+        const { warehouseId, productId } = req.params;
+        const { zoneId } = req.query;
+
+        const binDetails = await warehouseService.getBinLocationDetails(
+            parseInt(productId), 
+            parseInt(warehouseId), 
+            zoneId ? parseInt(zoneId) : null
+        );
+
+        res.json({ 
+            success: true, 
+            binDetails: convertBigIntToNumber(binDetails) 
+        });
+    } catch (error) {
+        console.error('Error fetching bin details:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch bin details: ' + error.message 
+        });
+    }
+});
+
+/**
+ * PUT /warehouses/:warehouseId/zones/:zoneId/product/:productId/bin - Update bin location
+ */
+router.put('/:warehouseId/zones/:zoneId/product/:productId/bin', isStaffOrAdmin, async (req, res) => {
+    try {
+        const { warehouseId, zoneId, productId } = req.params;
+        const { aisle, shelf, bin } = req.body;
+
+        const success = await warehouseService.updateBinLocation(
+            parseInt(productId), 
+            parseInt(warehouseId), 
+            parseInt(zoneId), 
+            aisle, 
+            shelf, 
+            bin
+        );
+
+        if (success) {
+            res.json({ 
+                success: true, 
+                message: 'Bin location updated successfully' 
+            });
+        } else {
+            res.status(404).json({ 
+                success: false, 
+                message: 'Product location not found' 
+            });
+        }
+    } catch (error) {
+        console.error('Error updating bin location:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to update bin location: ' + error.message 
+        });
+    }
+});
+
+/**
+ * GET /warehouses/zone-management - Zone management interface
+ */
+router.get('/zone-management', isStaffOrAdmin, async (req, res) => {
+    try {
+        const [warehouses, products] = await Promise.all([
+            warehouseService.getWarehouses(),
+            pool.query('SELECT product_id, device_name, device_inventory FROM specs_db ORDER BY device_name')
+        ]);
+
+        res.render('warehouses/zone-management', {
+            title: 'Zone Management',
+            warehouses: convertBigIntToNumber(warehouses),
+            products: convertBigIntToNumber(products),
+            csrfToken: req.csrfToken()
+        });
+    } catch (error) {
+        console.error('Error loading zone management page:', error);
+        res.status(500).render('error', { 
+            message: 'Failed to load zone management page',
+            error: error.message
         });
     }
 });

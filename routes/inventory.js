@@ -3,6 +3,9 @@ const router = express.Router();
 const { isAuthenticated, isStaffOrAdmin } = require('../middleware/auth');
 
 module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
+    // Initialize warehouse service
+    const WarehouseService = require('../services/WarehouseService');
+    const warehouseService = new WarehouseService(pool);
     
     // Receive Stock Route
     router.get('/inventory/receive', isStaffOrAdmin, async (req, res, next) => {
@@ -11,13 +14,17 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             conn = await pool.getConnection();
             suppliersConn = await suppliersPool.getConnection();
             
-            const phonesResult = await conn.query('SELECT product_id, device_name, device_maker, device_price, device_inventory, ram, rom, color FROM specs_db ORDER BY device_name');
-            const suppliersResult = await suppliersConn.query('SELECT id as supplier_id, name FROM suppliers WHERE is_active = 1');
+            const [phonesResult, suppliersResult, warehouses] = await Promise.all([
+                conn.query('SELECT product_id, device_name, device_maker, device_price, device_inventory, ram, rom, color FROM specs_db ORDER BY device_name'),
+                suppliersConn.query('SELECT id as supplier_id, name FROM suppliers WHERE is_active = 1'),
+                warehouseService.getWarehouses()
+            ]);
 
             res.render('receive-stock', {
                 title: 'Receive Stock',
                 phones: convertBigIntToNumber(phonesResult),
                 suppliers: convertBigIntToNumber(suppliersResult),
+                warehouses: convertBigIntToNumber(warehouses),
                 csrfToken: req.csrfToken()
             });
         } catch (err) {
@@ -46,12 +53,26 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 other_fees,
                 po_number,
                 notes,
-                generate_receipt
+                generate_receipt,
+                warehouse_id,
+                zone_id,
+                aisle,
+                shelf,
+                bin,
+                batch_no,
+                lot_no,
+                expiry_date
             } = req.body;
             
             // Validate inputs
             if (!phone_id || !supplier_id || !quantity || quantity <= 0) {
                 req.flash('error', 'Please provide all required fields with valid values');
+                return res.redirect('/inventory/receive');
+            }
+
+            // Validate warehouse and zone if provided
+            if (warehouse_id && !zone_id) {
+                req.flash('error', 'Please select a zone when warehouse is specified');
                 return res.redirect('/inventory/receive');
             }
             
@@ -74,18 +95,61 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             const importDutyAmount = (subtotal * importDutyValue) / 100;
             const totalCost = subtotal + vatAmount + importDutyAmount + otherFeesValue;
             
-            // Update inventory
+            // Update main inventory
             const newInventoryLevel = (phone.device_inventory || 0) + quantityValue;
             await conn.query(
                 'UPDATE specs_db SET device_inventory = ? WHERE product_id = ?',
                 [newInventoryLevel, phone_id]
             );
+
+            // Handle warehouse-specific operations
+            if (warehouse_id && zone_id) {
+                // Update or create warehouse product location
+                const locationQuery = `
+                    INSERT INTO warehouse_product_locations 
+                    (warehouse_id, zone_id, phone_id, aisle, shelf, bin, quantity, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                    ON DUPLICATE KEY UPDATE 
+                        quantity = quantity + VALUES(quantity),
+                        aisle = COALESCE(VALUES(aisle), aisle),
+                        shelf = COALESCE(VALUES(shelf), shelf),
+                        bin = COALESCE(VALUES(bin), bin),
+                        updated_at = NOW()
+                `;
+                await conn.query(locationQuery, [
+                    warehouse_id, zone_id, phone_id, 
+                    aisle || null, shelf || null, bin || null, 
+                    quantityValue
+                ]);
+
+                // Create batch tracking if batch info provided
+                if (batch_no) {
+                    const batchQuery = `
+                        INSERT INTO batch_tracking 
+                        (phone_id, warehouse_id, zone_id, batch_no, lot_no, supplier_id, 
+                         quantity_received, quantity_remaining, purchase_price, expiry_date, 
+                         received_date, status, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_DATE, 'active', NOW(), NOW())
+                    `;
+                    await conn.query(batchQuery, [
+                        phone_id, warehouse_id, zone_id, batch_no, lot_no || null, supplier_id,
+                        quantityValue, quantityValue, unitCostValue, expiry_date || null
+                    ]);
+                }
+            }
             
-            // Log the inventory transaction
-            await conn.query(
-                'INSERT INTO inventory_log (phone_id, transaction_type, quantity_changed, total_value, new_inventory_level, supplier_id, notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [phone_id, 'incoming', quantityValue, totalCost, newInventoryLevel, supplier_id, notes || null]
-            );
+            // Log the inventory transaction with warehouse info
+            const logQuery = `
+                INSERT INTO inventory_log 
+                (phone_id, transaction_type, quantity_changed, total_value, new_inventory_level, 
+                 supplier_id, warehouse_id, zone_id, batch_no, lot_no, expiry_date, notes, transaction_date) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            `;
+            await conn.query(logQuery, [
+                phone_id, 'incoming', quantityValue, totalCost, newInventoryLevel, 
+                supplier_id, warehouse_id || null, zone_id || null, 
+                batch_no || null, lot_no || null, expiry_date || null, notes || null
+            ]);
             
             // Generate receipt if requested
             if (generate_receipt === 'on') {
@@ -116,6 +180,15 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 );
             }
             
+            // Warehouse and stock location handling
+            if (warehouse_id && zone_id) {
+                // Assign stock to warehouse and zone
+                await conn.query(
+                    'INSERT INTO stock_assignments (product_id, warehouse_id, zone_id, aisle, shelf, bin, batch_no, lot_no, expiry_date, quantity) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    [phone_id, warehouse_id, zone_id, aisle || null, shelf || null, bin || null, batch_no || null, lot_no || null, expiry_date || null, quantityValue]
+                );
+            }
+            
             await conn.commit();
             
             req.flash('success', `Successfully received ${quantityValue} units of ${phone.device_name}. New inventory level: ${newInventoryLevel}`);
@@ -134,11 +207,15 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
         let conn;
         try {
             conn = await pool.getConnection();
-            const phonesResult = await conn.query('SELECT product_id, device_name, device_maker, device_price, device_inventory, ram, rom, color FROM specs_db WHERE device_inventory > 0 ORDER BY device_name');
+            const [phonesResult, warehouses] = await Promise.all([
+                conn.query('SELECT product_id, device_name, device_maker, device_price, device_inventory, ram, rom, color FROM specs_db WHERE device_inventory > 0 ORDER BY device_name'),
+                warehouseService.getWarehouses()
+            ]);
 
             res.render('sell-stock', {
                 title: 'Sell Stock',
                 phones: convertBigIntToNumber(phonesResult),
+                warehouses: convertBigIntToNumber(warehouses),
                 csrfToken: req.csrfToken()
             });
         } catch (err) {
@@ -167,7 +244,10 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 customer_phone,
                 generate_receipt,
                 email_receipt,
-                notes
+                notes,
+                warehouse_id,
+                zone_id,
+                bin_location
             } = req.body;
             
             // Validate inputs
@@ -185,8 +265,24 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             
             const quantityValue = parseInt(quantity);
             const currentInventory = phone.device_inventory || 0;
+
+            // Check warehouse-specific availability if specified
+            let warehouseQuantity = 0;
+            if (warehouse_id && zone_id) {
+                const [warehouseStock] = await conn.query(`
+                    SELECT quantity FROM warehouse_product_locations 
+                    WHERE phone_id = ? AND warehouse_id = ? AND zone_id = ?
+                `, [phone_id, warehouse_id, zone_id]);
+                
+                warehouseQuantity = warehouseStock?.quantity || 0;
+                
+                if (quantityValue > warehouseQuantity) {
+                    req.flash('error', `Insufficient stock in selected warehouse/zone. Available: ${warehouseQuantity}, Requested: ${quantityValue}`);
+                    return res.redirect('/inventory/sell');
+                }
+            }
             
-            // Check if sufficient stock is available
+            // Check if sufficient stock is available in main inventory
             if (quantityValue > currentInventory) {
                 req.flash('error', `Insufficient stock. Available: ${currentInventory}, Requested: ${quantityValue}`);
                 return res.redirect('/inventory/sell');
@@ -203,18 +299,64 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             const discountAmount = (subtotal * discountPercentValue) / 100;
             const totalAmount = subtotal + taxAmount - discountAmount + serviceFeeValue;
             
-            // Update inventory
+            // Update main inventory
             const newInventoryLevel = currentInventory - quantityValue;
             await conn.query(
                 'UPDATE specs_db SET device_inventory = ? WHERE product_id = ?',
                 [newInventoryLevel, phone_id]
             );
+
+            // Handle warehouse-specific operations
+            if (warehouse_id && zone_id) {
+                // Update warehouse product location quantity
+                await conn.query(`
+                    UPDATE warehouse_product_locations 
+                    SET quantity = quantity - ?, updated_at = NOW()
+                    WHERE phone_id = ? AND warehouse_id = ? AND zone_id = ?
+                `, [quantityValue, phone_id, warehouse_id, zone_id]);
+
+                // Handle FIFO batch tracking for sold items
+                const batchesQuery = `
+                    SELECT batch_id, quantity_remaining, batch_no, lot_no 
+                    FROM batch_tracking 
+                    WHERE phone_id = ? AND warehouse_id = ? AND zone_id = ? 
+                      AND status = 'active' AND quantity_remaining > 0
+                    ORDER BY received_date ASC, batch_id ASC
+                `;
+                const batches = await conn.query(batchesQuery, [phone_id, warehouse_id, zone_id]);
+
+                let remainingToSell = quantityValue;
+                for (const batch of batches) {
+                    if (remainingToSell <= 0) break;
+
+                    const quantityFromBatch = Math.min(remainingToSell, batch.quantity_remaining);
+                    const newBatchRemaining = batch.quantity_remaining - quantityFromBatch;
+
+                    await conn.query(`
+                        UPDATE batch_tracking 
+                        SET quantity_remaining = ?, 
+                            quantity_sold = quantity_sold + ?,
+                            status = CASE WHEN ? = 0 THEN 'depleted' ELSE status END,
+                            updated_at = NOW()
+                        WHERE batch_id = ?
+                    `, [newBatchRemaining, quantityFromBatch, newBatchRemaining, batch.batch_id]);
+
+                    remainingToSell -= quantityFromBatch;
+                }
+            }
             
-            // Log the inventory transaction
-            await conn.query(
-                'INSERT INTO inventory_log (phone_id, transaction_type, quantity_changed, total_value, new_inventory_level, notes) VALUES (?, ?, ?, ?, ?, ?)',
-                [phone_id, 'outgoing', -quantityValue, totalAmount, newInventoryLevel, notes || null]
-            );
+            // Log the inventory transaction with warehouse info
+            const logQuery = `
+                INSERT INTO inventory_log 
+                (phone_id, transaction_type, quantity_changed, total_value, new_inventory_level, 
+                 warehouse_id, zone_id, notes, transaction_date) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            `;
+            await conn.query(logQuery, [
+                phone_id, 'outgoing', -quantityValue, totalAmount, newInventoryLevel, 
+                warehouse_id || null, zone_id || null, 
+                `Sale${bin_location ? ` from bin: ${bin_location}` : ''}${notes ? ` - ${notes}` : ''}`
+            ]);
             
             // Generate receipt if requested
             if (generate_receipt === 'on') {
@@ -325,6 +467,83 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             next(err);
         } finally {
             if (conn) conn.release();
+        }
+    });
+
+    // API endpoint to get zones for a warehouse
+    router.get('/api/warehouse/:warehouseId/zones', isAuthenticated, async (req, res) => {
+        try {
+            const warehouseId = parseInt(req.params.warehouseId);
+            const zones = await warehouseService.getWarehouseZones(warehouseId);
+            res.json({ success: true, zones: convertBigIntToNumber(zones) });
+        } catch (error) {
+            console.error('Error fetching zones:', error);
+            res.status(500).json({ success: false, message: 'Failed to fetch zones' });
+        }
+    });
+
+    // API endpoint to get warehouse stock for a product
+    router.get('/api/warehouse/:warehouseId/zone/:zoneId/product/:productId/stock', isAuthenticated, async (req, res) => {
+        try {
+            const { warehouseId, zoneId, productId } = req.params;
+            let conn;
+            try {
+                conn = await pool.getConnection();
+                const [stock] = await conn.query(`
+                    SELECT quantity, reserved_quantity, aisle, shelf, bin,
+                           (quantity - COALESCE(reserved_quantity, 0)) as available_quantity
+                    FROM warehouse_product_locations 
+                    WHERE warehouse_id = ? AND zone_id = ? AND phone_id = ?
+                `, [warehouseId, zoneId, productId]);
+                
+                res.json({ 
+                    success: true, 
+                    stock: stock ? convertBigIntToNumber([stock])[0] : null 
+                });
+            } finally {
+                if (conn) conn.release();
+            }
+        } catch (error) {
+            console.error('Error fetching warehouse stock:', error);
+            res.status(500).json({ success: false, message: 'Failed to fetch stock information' });
+        }
+    });
+
+    // API endpoint to get warehouse zones and stock levels for a product
+    router.get('/api/warehouse/:warehouseId/product/:productId', isAuthenticated, async (req, res) => {
+        try {
+            const { warehouseId, productId } = req.params;
+            let conn;
+            try {
+                conn = await pool.getConnection();
+                
+                // Get zones and stock levels for this product in the warehouse
+                const stockQuery = `
+                    SELECT 
+                        wz.zone_id, wz.name as zone_name, wz.zone_type,
+                        COALESCE(wpl.quantity, 0) as quantity,
+                        COALESCE(wpl.reserved_quantity, 0) as reserved_quantity,
+                        COALESCE(wpl.quantity - wpl.reserved_quantity, 0) as available_quantity,
+                        wpl.aisle, wpl.shelf, wpl.bin
+                    FROM warehouse_zones wz
+                    LEFT JOIN warehouse_product_locations wpl ON wz.zone_id = wpl.zone_id 
+                        AND wpl.phone_id = ? AND wpl.warehouse_id = ?
+                    WHERE wz.warehouse_id = ? AND wz.is_active = TRUE
+                    ORDER BY wz.zone_type, wz.name
+                `;
+                
+                const stockData = await conn.query(stockQuery, [productId, warehouseId, warehouseId]);
+                
+                res.json({ 
+                    success: true, 
+                    zones: convertBigIntToNumber(stockData)
+                });
+            } finally {
+                if (conn) conn.release();
+            }
+        } catch (error) {
+            console.error('Error fetching warehouse product data:', error);
+            res.status(500).json({ success: false, message: 'Failed to fetch warehouse data' });
         }
     });
 

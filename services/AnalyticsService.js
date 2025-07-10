@@ -20,42 +20,7 @@ class AnalyticsService {
      */
     async getAnalyticsData(period = this.config.DEFAULTS.PERIOD, options = {}) {
         const conn = await this.pool.getConnection();
-        const suppliersConn = await this.suppliersPool.getConne    /**
-     * Get product analytics
-     */
-    async getProductAnalytics(productId, period) {
-        const conn = await this.pool.getConnection();
-        
-        try {
-            // Product details and sales history
-            const productQuery = `
-                SELECT ps.*, 
-                    COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END), 0) as total_sold,
-                    COALESCE(SUM(CASE WHEN il.transaction_type = 'incoming' THEN il.quantity_changed ELSE 0 END), 0) as total_received,
-                    COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as total_revenue
-                FROM specs_db ps
-                LEFT JOIN inventory_log il ON ps.product_id = il.phone_id 
-                    AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-                WHERE ps.product_id = ?
-                GROUP BY ps.product_id
-            `;
-            
-            const productResult = await conn.query(productQuery, [period, productId]);
-            const product = this.convertBigIntToNumber(productResult[0]);
-            
-            if (!product) {
-                return null;
-            }
-            
-            return product;
-            
-        } finally {
-            conn.end();
-        }
-    }
-}
-
-module.exports = AnalyticsService;
+        const suppliersConn = await this.suppliersPool.getConnection();
         try {
             // Get core analytics data in parallel for better performance
             const [
@@ -855,4 +820,28 @@ module.exports = AnalyticsService;
             const productQuery = `
                 SELECT ps.*, 
                     COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END), 0) as total_sold,
-                    COALESCE(SUM(CASE WHEN il.transaction_type = 'incoming' THEN il.quantity_changed ELSE 0 END)
+                    COALESCE(SUM(CASE WHEN il.transaction_type = 'incoming' THEN il.quantity_changed ELSE 0 END), 0) as total_received,
+                    COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as total_revenue
+                FROM specs_db ps
+                LEFT JOIN inventory_log il ON ps.product_id = il.phone_id 
+                    AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                WHERE ps.product_id = ?
+                GROUP BY ps.product_id
+            `;
+            
+            const productResult = await conn.query(productQuery, [period, productId]);
+            const product = this.convertBigIntToNumber(productResult[0]);
+            
+            if (!product) {
+                return null;
+            }
+            
+            return product;
+            
+        } finally {
+            conn.end();
+        }
+    }
+}
+
+module.exports = AnalyticsService;

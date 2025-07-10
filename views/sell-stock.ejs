@@ -130,6 +130,73 @@
                             </div>
                         </div>
 
+                        <!-- Warehouse & Location Information -->
+                        <div class="form-section mb-4">
+                            <h5 class="mb-3">
+                                <i class="fas fa-warehouse me-2 text-warning"></i>
+                                Stock Location (Optional)
+                            </h5>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="warehouse_id" class="form-label">Warehouse</label>
+                                    <select class="form-select" id="warehouse_id" name="warehouse_id">
+                                        <option value="">Any warehouse...</option>
+                                        <% warehouses.forEach(warehouse => { %>
+                                            <option value="<%= warehouse.warehouse_id %>"><%= warehouse.name %></option>
+                                        <% }); %>
+                                    </select>
+                                    <div class="form-text">Select specific warehouse to sell from</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="zone_id" class="form-label">Zone</label>
+                                    <select class="form-select" id="zone_id" name="zone_id" disabled>
+                                        <option value="">Any zone...</option>
+                                    </select>
+                                    <div class="form-text">Select specific zone within warehouse</div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label for="bin_location" class="form-label">Bin Location</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="bin_location" name="bin_location" placeholder="e.g., A1-S3-B12" readonly>
+                                        <button type="button" class="btn btn-outline-secondary" id="show-bins-btn" style="display: none;" onclick="toggleBinSelection()">
+                                            <i class="fas fa-search me-1"></i>Browse Bins
+                                        </button>
+                                    </div>
+                                    <div class="form-text">Specific bin location (Aisle-Shelf-Bin) - automatically populated when zone is selected</div>
+                                </div>
+                            </div>
+
+                            <!-- Bin Selection Modal-like Display -->
+                            <div id="bin-selection-display" class="mb-3" style="display: none;">
+                                <div class="card border-info">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-map-marker-alt me-2 text-info"></i>
+                                            Available Stock Locations
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row" id="stock-bins-list">
+                                            <!-- Stock locations will be populated here -->
+                                        </div>
+                                        <div class="text-center" id="stock-bins-loading" style="display: none;">
+                                            <i class="fas fa-spinner fa-spin me-2"></i>Loading stock locations...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Warehouse Stock Display -->
+                            <div id="warehouse-stock-info" class="alert alert-info" style="display: none;">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <span id="warehouse-stock-text">Available in selected location: Loading...</span>
+                            </div>
+                        </div>
+
                         <!-- Tax and Financial Information - Enhanced version -->
                         <div class="row mb-3">
                             <div class="col-md-6">
@@ -498,6 +565,8 @@
         document.querySelector('form').addEventListener('submit', function(e) {
             const phoneId = document.getElementById('phone_id').value;
             const quantity = document.getElementById('quantity').value;
+            const warehouseId = document.getElementById('warehouse_id').value;
+            const zoneId = document.getElementById('zone_id').value;
             
             if (!phoneId) {
                 e.preventDefault();
@@ -523,9 +592,169 @@
                 return;
             }
 
+            // Validate warehouse selection
+            if (warehouseId && !zoneId) {
+                e.preventDefault();
+                showWarning('Please select a zone when warehouse is specified.');
+                document.getElementById('zone_id').focus();
+                return;
+            }
+
             // Show processing message
             showInfo('Processing sale...');
         });
+
+        // Handle warehouse selection to load zones
+        document.getElementById('warehouse_id').addEventListener('change', async function() {
+            const warehouseId = this.value;
+            const zoneSelect = document.getElementById('zone_id');
+            const warehouseStockInfo = document.getElementById('warehouse-stock-info');
+            
+            // Clear and disable zone select
+            zoneSelect.innerHTML = '<option value="">Any zone...</option>';
+            zoneSelect.disabled = !warehouseId;
+            warehouseStockInfo.style.display = 'none';
+            
+            if (warehouseId) {
+                try {
+                    const response = await fetch(`/api/warehouse/${warehouseId}/zones`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.zones) {
+                        data.zones.forEach(zone => {
+                            const option = document.createElement('option');
+                            option.value = zone.zone_id;
+                            option.textContent = `${zone.name} (${zone.zone_type})`;
+                            zoneSelect.appendChild(option);
+                        });
+                        zoneSelect.disabled = false;
+                    }
+                } catch (error) {
+                    console.error('Error loading zones:', error);
+                    showError('Failed to load zones for selected warehouse');
+                }
+            }
+        });
+
+        // Handle zone selection to show warehouse stock
+        document.getElementById('zone_id').addEventListener('change', async function() {
+            const warehouseId = document.getElementById('warehouse_id').value;
+            const zoneId = this.value;
+            const phoneId = document.getElementById('phone_id').value;
+            const warehouseStockInfo = document.getElementById('warehouse-stock-info');
+            const warehouseStockText = document.getElementById('warehouse-stock-text');
+            const showBinsBtn = document.getElementById('show-bins-btn');
+            
+            if (warehouseId && zoneId && phoneId) {
+                try {
+                    const response = await fetch(`/api/warehouse/${warehouseId}/zone/${zoneId}/product/${phoneId}/stock`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.stock) {
+                        const stock = data.stock;
+                        warehouseStockText.textContent = `Available in selected location: ${stock.available_quantity} units`;
+                        if (stock.aisle || stock.shelf || stock.bin) {
+                            warehouseStockText.textContent += ` (Location: ${stock.aisle || ''}-${stock.shelf || ''}-${stock.bin || ''})`;
+                            document.getElementById('bin_location').value = `${stock.aisle || ''}-${stock.shelf || ''}-${stock.bin || ''}`;
+                        }
+                        warehouseStockInfo.style.display = 'block';
+                        showBinsBtn.style.display = stock.available_quantity > 0 ? 'inline-block' : 'none';
+                    } else {
+                        warehouseStockText.textContent = 'No stock available in selected location';
+                        warehouseStockInfo.style.display = 'block';
+                        showBinsBtn.style.display = 'none';
+                        document.getElementById('bin_location').value = '';
+                    }
+
+                    // Load additional bin locations for the product
+                    if (phoneId && warehouseId) {
+                        loadProductBinLocations(phoneId, warehouseId, zoneId);
+                    }
+                } catch (error) {
+                    console.error('Error loading warehouse stock:', error);
+                    warehouseStockText.textContent = 'Error loading stock information';
+                    warehouseStockInfo.style.display = 'block';
+                    showBinsBtn.style.display = 'none';
+                }
+            } else {
+                warehouseStockInfo.style.display = 'none';
+                showBinsBtn.style.display = 'none';
+                document.getElementById('bin_location').value = '';
+            }
+        });
+
+        // Function to load bin locations for a product
+        async function loadProductBinLocations(phoneId, warehouseId, selectedZoneId = null) {
+            const stockBinsList = document.getElementById('stock-bins-list');
+            const stockBinsLoading = document.getElementById('stock-bins-loading');
+
+            try {
+                const queryParams = selectedZoneId ? `?zoneId=${selectedZoneId}` : '';
+                const response = await fetch(`/warehouses/${warehouseId}/product/${phoneId}/bins${queryParams}`);
+                const data = await response.json();
+
+                if (data.success && data.binDetails && data.binDetails.length > 0) {
+                    stockBinsList.innerHTML = '';
+                    data.binDetails.forEach(binDetail => {
+                        if (binDetail.available_quantity > 0) {
+                            const binOption = document.createElement('div');
+                            binOption.className = 'col-md-4 mb-2';
+                            const binLocation = `${binDetail.aisle || 'N/A'}-${binDetail.shelf || 'N/A'}-${binDetail.bin || 'N/A'}`;
+                            binOption.innerHTML = `
+                                <button type="button" class="btn btn-outline-success btn-sm w-100 stock-bin-option" 
+                                        data-location="${binLocation}" data-quantity="${binDetail.available_quantity}"
+                                        data-zone="${binDetail.zone_name}">
+                                    <strong>${binLocation}</strong>
+                                    <br><small class="text-muted">${binDetail.zone_name}</small>
+                                    <br><span class="badge bg-success">${binDetail.available_quantity} available</span>
+                                </button>
+                            `;
+                            stockBinsList.appendChild(binOption);
+                        }
+                    });
+
+                    // Add click handlers for bin selection
+                    document.querySelectorAll('.stock-bin-option').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            document.getElementById('bin_location').value = this.dataset.location;
+                            
+                            // Visual feedback
+                            document.querySelectorAll('.stock-bin-option').forEach(b => {
+                                b.classList.remove('btn-success');
+                                b.classList.add('btn-outline-success');
+                            });
+                            this.classList.remove('btn-outline-success');
+                            this.classList.add('btn-success');
+                            
+                            // Update info
+                            showInfo(`Selected bin: ${this.dataset.location} with ${this.dataset.quantity} units available`);
+                        });
+                    });
+                } else {
+                    stockBinsList.innerHTML = '<div class="col-12"><p class="text-muted text-center">No stock found in any bins for this product.</p></div>';
+                }
+            } catch (error) {
+                console.error('Error loading product bin locations:', error);
+                stockBinsList.innerHTML = '<div class="col-12"><p class="text-warning text-center">Failed to load bin locations.</p></div>';
+            }
+        }
+
+        // Function to toggle bin selection display
+        function toggleBinSelection() {
+            const binDisplay = document.getElementById('bin-selection-display');
+            const isVisible = binDisplay.style.display !== 'none';
+            binDisplay.style.display = isVisible ? 'none' : 'block';
+            
+            const btn = document.getElementById('show-bins-btn');
+            const icon = btn.querySelector('i');
+            if (isVisible) {
+                icon.className = 'fas fa-search me-1';
+                btn.innerHTML = '<i class="fas fa-search me-1"></i>Browse Bins';
+            } else {
+                icon.className = 'fas fa-times me-1';
+                btn.innerHTML = '<i class="fas fa-times me-1"></i>Hide Bins';
+            }
+        }
     </script>
 </body>
 </html>

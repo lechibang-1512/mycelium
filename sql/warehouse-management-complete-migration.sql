@@ -201,26 +201,32 @@ ADD INDEX idx_inventory_serial (serial_id);
 CREATE VIEW inventory_overview AS
 SELECT 
     sd.product_id,
-    sd.brand,
-    sd.model,
+    sd.device_name,
+    sd.device_maker,
+    sd.device_price,
     w.warehouse_id,
     w.name as warehouse_name,
     wz.zone_id,
     wz.name as zone_name,
-    COALESCE(wpl.quantity, 0) as total_quantity,
+    wz.zone_type,
+    COALESCE(wpl.quantity, 0) as warehouse_quantity,
     COALESCE(wpl.reserved_quantity, 0) as reserved_quantity,
     COALESCE(wpl.quantity, 0) - COALESCE(wpl.reserved_quantity, 0) as available_quantity,
+    wpl.aisle,
+    wpl.shelf,
+    wpl.bin,
     wpl.min_stock_level,
     wpl.max_stock_level,
     wpl.last_counted,
     CASE 
-        WHEN wpl.quantity <= wpl.min_stock_level THEN 'low'
-        WHEN wpl.quantity >= wpl.max_stock_level THEN 'high'
+        WHEN wpl.quantity IS NULL OR wpl.quantity = 0 THEN 'out_of_stock'
+        WHEN wpl.min_stock_level IS NOT NULL AND wpl.quantity <= wpl.min_stock_level THEN 'low'
+        WHEN wpl.max_stock_level IS NOT NULL AND wpl.quantity >= wpl.max_stock_level THEN 'high'
         ELSE 'normal'
     END as stock_level_status
 FROM specs_db sd
 CROSS JOIN warehouses w
-LEFT JOIN warehouse_zones wz ON w.warehouse_id = wz.warehouse_id
+LEFT JOIN warehouse_zones wz ON w.warehouse_id = wz.warehouse_id AND wz.is_active = TRUE
 LEFT JOIN warehouse_product_locations wpl ON sd.product_id = wpl.phone_id 
     AND w.warehouse_id = wpl.warehouse_id 
     AND (wz.zone_id = wpl.zone_id OR wpl.zone_id IS NULL)
@@ -232,26 +238,35 @@ CREATE VIEW expiring_batches AS
 SELECT 
     bt.batch_id,
     bt.phone_id,
-    sd.brand,
-    sd.model,
+    sd.device_name,
+    sd.device_maker,
+    sd.device_price,
     bt.batch_no,
     bt.lot_no,
     bt.supplier_id,
+    bt.quantity_received,
     bt.quantity_remaining,
+    bt.quantity_sold,
+    bt.quantity_damaged,
+    bt.purchase_price,
     bt.expiry_date,
     bt.manufacture_date,
+    bt.received_date,
+    bt.status,
     DATEDIFF(bt.expiry_date, CURRENT_DATE) as days_until_expiry,
     w.warehouse_id,
     w.name as warehouse_name,
     wz.zone_id,
     wz.name as zone_name,
+    wz.zone_type,
     CASE 
         WHEN DATEDIFF(bt.expiry_date, CURRENT_DATE) < 0 THEN 'expired'
         WHEN DATEDIFF(bt.expiry_date, CURRENT_DATE) <= 7 THEN 'critical'
         WHEN DATEDIFF(bt.expiry_date, CURRENT_DATE) <= 30 THEN 'warning'
         WHEN DATEDIFF(bt.expiry_date, CURRENT_DATE) <= 90 THEN 'attention'
         ELSE 'good'
-    END as urgency_level
+    END as urgency_level,
+    bt.quantity_remaining * COALESCE(bt.purchase_price, sd.device_price) as value_at_risk
 FROM batch_tracking bt
 JOIN specs_db sd ON bt.phone_id = sd.product_id
 LEFT JOIN warehouses w ON bt.warehouse_id = w.warehouse_id
@@ -266,14 +281,17 @@ CREATE VIEW serial_inventory_status AS
 SELECT 
     si.serial_id,
     si.phone_id,
-    sd.brand,
-    sd.model,
+    sd.device_name,
+    sd.device_maker,
+    sd.device_price,
     si.serial_number,
     si.batch_no,
     si.lot_no,
     si.condition_status,
     si.status,
     si.expiry_date,
+    si.purchase_date,
+    si.purchase_price,
     CASE 
         WHEN si.expiry_date IS NULL THEN NULL
         WHEN DATEDIFF(si.expiry_date, CURRENT_DATE) < 0 THEN 'expired'
@@ -285,8 +303,8 @@ SELECT
     w.name as warehouse_name,
     wz.zone_id,
     wz.name as zone_name,
-    si.purchase_price,
-    si.purchase_date,
+    wz.zone_type,
+    si.supplier_id,
     si.created_at,
     si.updated_at
 FROM serialized_inventory si
@@ -345,7 +363,180 @@ INSERT INTO warehouse_zones (warehouse_id, name, description, zone_type, capacit
 (4, 'Returns Shipping', 'Area for shipping processed returns', 'shipping', 250, TRUE);
 
 -- ============================================================================
--- SECTION 5: VERIFICATION QUERIES
+-- SECTION 5: ADDITIONAL VIEWS FOR DISTRIBUTION MANAGEMENT
+-- ============================================================================
+
+-- Step 11: Create warehouse_distribution_overview view
+CREATE VIEW warehouse_distribution_overview AS
+SELECT 
+    w.warehouse_id,
+    w.name as warehouse_name,
+    w.location,
+    w.description,
+    COUNT(DISTINCT wz.zone_id) as total_zones,
+    COUNT(DISTINCT CASE WHEN wz.zone_type = 'receiving' THEN wz.zone_id END) as receiving_zones,
+    COUNT(DISTINCT CASE WHEN wz.zone_type = 'storage' THEN wz.zone_id END) as storage_zones,
+    COUNT(DISTINCT CASE WHEN wz.zone_type = 'picking' THEN wz.zone_id END) as picking_zones,
+    COUNT(DISTINCT CASE WHEN wz.zone_type = 'staging' THEN wz.zone_id END) as staging_zones,
+    COUNT(DISTINCT CASE WHEN wz.zone_type = 'shipping' THEN wz.zone_id END) as shipping_zones,
+    COUNT(DISTINCT wpl.phone_id) as unique_products,
+    COALESCE(SUM(wpl.quantity), 0) as total_inventory,
+    COALESCE(SUM(wpl.reserved_quantity), 0) as total_reserved,
+    COALESCE(SUM(wpl.quantity - wpl.reserved_quantity), 0) as total_available,
+    COALESCE(SUM(wz.capacity_limit), 0) as total_capacity,
+    CASE 
+        WHEN SUM(wz.capacity_limit) > 0 THEN 
+            ROUND((SUM(wpl.quantity) / SUM(wz.capacity_limit)) * 100, 2)
+        ELSE NULL 
+    END as capacity_utilization_percent,
+    COUNT(DISTINCT bt.batch_id) as active_batches,
+    COUNT(DISTINCT si.serial_id) as serialized_items
+FROM warehouses w
+LEFT JOIN warehouse_zones wz ON w.warehouse_id = wz.warehouse_id AND wz.is_active = TRUE
+LEFT JOIN warehouse_product_locations wpl ON w.warehouse_id = wpl.warehouse_id
+LEFT JOIN batch_tracking bt ON w.warehouse_id = bt.warehouse_id AND bt.status = 'active'
+LEFT JOIN serialized_inventory si ON w.warehouse_id = si.warehouse_id AND si.status = 'available'
+WHERE w.is_active = TRUE
+GROUP BY w.warehouse_id, w.name, w.location, w.description
+ORDER BY w.name;
+
+-- Step 12: Create zone_distribution_efficiency view
+CREATE VIEW zone_distribution_efficiency AS
+SELECT 
+    wz.zone_id,
+    wz.warehouse_id,
+    wz.name as zone_name,
+    wz.zone_type,
+    wz.capacity_limit,
+    w.name as warehouse_name,
+    COUNT(DISTINCT wpl.phone_id) as unique_products,
+    COALESCE(SUM(wpl.quantity), 0) as current_inventory,
+    COALESCE(SUM(wpl.reserved_quantity), 0) as reserved_inventory,
+    COALESCE(SUM(wpl.quantity - wpl.reserved_quantity), 0) as available_inventory,
+    CASE 
+        WHEN wz.capacity_limit > 0 THEN 
+            ROUND((SUM(wpl.quantity) / wz.capacity_limit) * 100, 2)
+        ELSE NULL 
+    END as utilization_percent,
+    CASE 
+        WHEN wz.capacity_limit > 0 AND SUM(wpl.quantity) > 0 THEN
+            CASE 
+                WHEN (SUM(wpl.quantity) / wz.capacity_limit) > 0.9 THEN 'over_capacity'
+                WHEN (SUM(wpl.quantity) / wz.capacity_limit) > 0.8 THEN 'high_utilization'
+                WHEN (SUM(wpl.quantity) / wz.capacity_limit) > 0.6 THEN 'moderate_utilization'
+                WHEN (SUM(wpl.quantity) / wz.capacity_limit) > 0.3 THEN 'low_utilization'
+                ELSE 'under_utilized'
+            END
+        ELSE 'empty'
+    END as efficiency_status,
+    -- Recent activity metrics (last 30 days)
+    (SELECT COUNT(*) FROM inventory_log il 
+     WHERE il.zone_id = wz.zone_id 
+     AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as recent_transactions,
+    (SELECT SUM(ABS(il.quantity_changed)) FROM inventory_log il 
+     WHERE il.zone_id = wz.zone_id 
+     AND il.transaction_type = 'incoming'
+     AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as items_received_30d,
+    (SELECT SUM(ABS(il.quantity_changed)) FROM inventory_log il 
+     WHERE il.zone_id = wz.zone_id 
+     AND il.transaction_type = 'outgoing'
+     AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as items_shipped_30d
+FROM warehouse_zones wz
+JOIN warehouses w ON wz.warehouse_id = w.warehouse_id
+LEFT JOIN warehouse_product_locations wpl ON wz.zone_id = wpl.zone_id
+WHERE wz.is_active = TRUE AND w.is_active = TRUE
+GROUP BY wz.zone_id, wz.warehouse_id, wz.name, wz.zone_type, wz.capacity_limit, w.name
+ORDER BY w.name, wz.zone_type, wz.name;
+
+-- Step 13: Create inventory_movement_tracking view
+CREATE VIEW inventory_movement_tracking AS
+SELECT 
+    il.log_id,
+    il.phone_id,
+    sd.device_name,
+    sd.device_maker,
+    il.transaction_type,
+    il.quantity_changed,
+    il.transaction_date,
+    il.warehouse_id,
+    w.name as warehouse_name,
+    il.zone_id,
+    wz.name as zone_name,
+    wz.zone_type,
+    il.batch_no,
+    il.lot_no,
+    il.serial_id,
+    si.serial_number,
+    il.notes,
+    -- Calculate running totals
+    SUM(il.quantity_changed) OVER (
+        PARTITION BY il.phone_id, il.warehouse_id, il.zone_id 
+        ORDER BY il.transaction_date, il.log_id
+    ) as running_total
+FROM inventory_log il
+JOIN specs_db sd ON il.phone_id = sd.product_id
+LEFT JOIN warehouses w ON il.warehouse_id = w.warehouse_id
+LEFT JOIN warehouse_zones wz ON il.zone_id = wz.zone_id
+LEFT JOIN serialized_inventory si ON il.serial_id = si.serial_id
+ORDER BY il.transaction_date DESC, il.log_id DESC;
+
+-- Step 14: Create low_stock_alerts view
+CREATE VIEW low_stock_alerts AS
+SELECT 
+    wpl.location_id,
+    wpl.phone_id,
+    sd.device_name,
+    sd.device_maker,
+    sd.device_price,
+    wpl.warehouse_id,
+    w.name as warehouse_name,
+    wpl.zone_id,
+    wz.name as zone_name,
+    wz.zone_type,
+    wpl.quantity as current_stock,
+    wpl.reserved_quantity,
+    wpl.quantity - wpl.reserved_quantity as available_stock,
+    wpl.min_stock_level,
+    wpl.max_stock_level,
+    wpl.aisle,
+    wpl.shelf,
+    wpl.bin,
+    wpl.last_counted,
+    CASE 
+        WHEN wpl.quantity = 0 THEN 'out_of_stock'
+        WHEN wpl.quantity <= (wpl.min_stock_level * 0.5) THEN 'critical'
+        WHEN wpl.quantity <= wpl.min_stock_level THEN 'low'
+        ELSE 'normal'
+    END as alert_level,
+    DATEDIFF(NOW(), wpl.last_counted) as days_since_count,
+    -- Suggest reorder quantity
+    CASE 
+        WHEN wpl.max_stock_level IS NOT NULL THEN 
+            wpl.max_stock_level - wpl.quantity
+        ELSE 
+            wpl.min_stock_level * 2
+    END as suggested_reorder_qty
+FROM warehouse_product_locations wpl
+JOIN specs_db sd ON wpl.phone_id = sd.product_id
+JOIN warehouses w ON wpl.warehouse_id = w.warehouse_id
+LEFT JOIN warehouse_zones wz ON wpl.zone_id = wz.zone_id
+WHERE w.is_active = TRUE
+AND (wpl.quantity <= wpl.min_stock_level OR wpl.quantity = 0)
+ORDER BY 
+    CASE 
+        WHEN wpl.quantity = 0 THEN 1
+        WHEN wpl.quantity <= (wpl.min_stock_level * 0.5) THEN 2
+        WHEN wpl.quantity <= wpl.min_stock_level THEN 3
+        ELSE 4
+    END,
+    wpl.quantity ASC;
+
+-- ============================================================================
+-- SECTION 6: VERIFICATION QUERIES
+-- ============================================================================
+
+-- ============================================================================
+-- SECTION 6: VERIFICATION QUERIES
 -- ============================================================================
 
 -- Verify tables created
@@ -358,11 +549,18 @@ AND TABLE_NAME IN ('warehouses', 'warehouse_zones', 'serialized_inventory', 'war
 SELECT 'Views Created' as verification_step, COUNT(*) as count
 FROM information_schema.VIEWS 
 WHERE TABLE_SCHEMA = DATABASE() 
-AND TABLE_NAME IN ('inventory_overview', 'expiring_batches', 'serial_inventory_status');
+AND TABLE_NAME IN ('inventory_overview', 'expiring_batches', 'serial_inventory_status', 'warehouse_distribution_overview', 'zone_distribution_efficiency', 'inventory_movement_tracking', 'low_stock_alerts');
 
 -- Verify sample data
 SELECT 'Sample Warehouses' as verification_step, COUNT(*) as count FROM warehouses;
 SELECT 'Sample Zones' as verification_step, COUNT(*) as count FROM warehouse_zones;
 
+-- Test distribution overview
+SELECT 'Distribution Overview Test' as verification_step, COUNT(*) as warehouse_count FROM warehouse_distribution_overview;
+
+-- Test zone efficiency
+SELECT 'Zone Efficiency Test' as verification_step, COUNT(*) as zone_count FROM zone_distribution_efficiency;
+
 -- Migration completion message
-SELECT 'Warehouse Management Migration Completed Successfully!' as status;
+SELECT 'Multi-Zone Warehouse Distribution Management Migration Completed Successfully!' as status,
+       'Features: Multi-warehouse, Zone management, Batch tracking, Serial inventory, Distribution analytics' as capabilities;
