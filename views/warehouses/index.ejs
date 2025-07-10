@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+    <title><%= title %> - Inventory Management</title>
+</head>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="display-4">
+                        <i class="fas fa-warehouse me-3"></i>
+                        Warehouse Management
+                    </h1>
+                    <div>
+                        <a href="/warehouses/analytics" class="btn btn-info me-2">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Analytics
+                        </a>
+                        <a href="/warehouses/batches/expiring" class="btn btn-warning">
+                            <i class="fas fa-clock me-2"></i>
+                            Expiring Batches
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Warehouse Cards -->
+                <div class="row">
+                    <% warehouses.forEach(warehouse => { %>
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-warehouse text-primary me-2"></i>
+                                        <%= warehouse.name %>
+                                    </h5>
+                                    <p class="card-text text-muted">
+                                        <i class="fas fa-map-marker-alt me-2"></i>
+                                        <%= warehouse.location || 'No location specified' %>
+                                    </p>
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            Status: <span class="badge bg-<%= warehouse.is_active ? 'success' : 'danger' %>">
+                                                <%= warehouse.is_active ? 'Active' : 'Inactive' %>
+                                            </span>
+                                        </small>
+                                    </p>
+                                </div>
+                                <div class="card-footer">
+                                    <a href="/warehouses/<%= warehouse.warehouse_id %>" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i>
+                                        View Details
+                                    </a>
+                                    <button class="btn btn-outline-secondary btn-sm ms-2" 
+                                            onclick="loadZones(<%= warehouse.warehouse_id %>)">
+                                        <i class="fas fa-layer-group me-1"></i>
+                                        Zones
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-tools me-2"></i>
+                                    Quick Actions
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <button class="btn btn-success w-100" onclick="showTransferModal()">
+                                            <i class="fas fa-exchange-alt me-2"></i>
+                                            Transfer Inventory
+                                        </button>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <button class="btn btn-info w-100" onclick="showBatchModal()">
+                                            <i class="fas fa-boxes me-2"></i>
+                                            Create Batch
+                                        </button>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <button class="btn btn-warning w-100" onclick="showSerialModal()">
+                                            <i class="fas fa-barcode me-2"></i>
+                                            Add Serial Item
+                                        </button>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <button class="btn btn-secondary w-100" onclick="showSerialSearchModal()">
+                                            <i class="fas fa-search me-2"></i>
+                                            Find Serial
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Modal -->
+    <div class="modal fade" id="transferModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Transfer Inventory</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="transferForm">
+                        <div class="mb-3">
+                            <label for="productId" class="form-label">Product ID</label>
+                            <input type="number" class="form-control" id="productId" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="fromWarehouseId" class="form-label">From Warehouse</label>
+                                    <select class="form-select" id="fromWarehouseId" required>
+                                        <option value="">Select warehouse...</option>
+                                        <% warehouses.forEach(w => { %>
+                                            <option value="<%= w.warehouse_id %>"><%= w.name %></option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="toWarehouseId" class="form-label">To Warehouse</label>
+                                    <select class="form-select" id="toWarehouseId" required>
+                                        <option value="">Select warehouse...</option>
+                                        <% warehouses.forEach(w => { %>
+                                            <option value="<%= w.warehouse_id %>"><%= w.name %></option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="quantity" class="form-label">Quantity</label>
+                            <input type="number" class="form-control" id="quantity" min="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitTransfer()">Transfer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Serial Search Modal -->
+    <div class="modal fade" id="serialSearchModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Find Serial Number</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="serialSearch" class="form-label">Serial Number</label>
+                        <input type="text" class="form-control" id="serialSearch" placeholder="Enter serial number">
+                    </div>
+                    <div id="serialResult"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="searchSerial()">Search</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function loadZones(warehouseId) {
+            fetch(`/warehouses/${warehouseId}/zones`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        let zoneList = data.zones.map(zone => 
+                            `<li class="list-group-item d-flex justify-content-between">
+                                <span>${zone.name} (${zone.zone_type})</span>
+                                <span class="badge bg-${zone.is_active ? 'success' : 'danger'}">${zone.is_active ? 'Active' : 'Inactive'}</span>
+                            </li>`
+                        ).join('');
+                        
+                        alert(`Zones:\n${data.zones.map(z => `${z.name} (${z.zone_type})`).join('\n')}`);
+                    }
+                })
+                .catch(error => console.error('Error loading zones:', error));
+        }
+
+        function showTransferModal() {
+            new bootstrap.Modal(document.getElementById('transferModal')).show();
+        }
+
+        function showSerialSearchModal() {
+            new bootstrap.Modal(document.getElementById('serialSearchModal')).show();
+        }
+
+        function submitTransfer() {
+            const form = document.getElementById('transferForm');
+            const formData = new FormData(form);
+            
+            const transferData = {
+                productId: document.getElementById('productId').value,
+                fromWarehouseId: document.getElementById('fromWarehouseId').value,
+                toWarehouseId: document.getElementById('toWarehouseId').value,
+                quantity: document.getElementById('quantity').value,
+                notes: document.getElementById('notes').value
+            };
+
+            fetch('/warehouses/transfer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(transferData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Transfer successful!');
+                    bootstrap.Modal.getInstance(document.getElementById('transferModal')).hide();
+                    form.reset();
+                } else {
+                    alert('Transfer failed: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Transfer failed');
+            });
+        }
+
+        function searchSerial() {
+            const serialNumber = document.getElementById('serialSearch').value;
+            if (!serialNumber) {
+                alert('Please enter a serial number');
+                return;
+            }
+
+            fetch(`/warehouses/serial/${serialNumber}`)
+                .then(response => response.json())
+                .then(data => {
+                    const resultDiv = document.getElementById('serialResult');
+                    if (data.success) {
+                        const item = data.item;
+                        resultDiv.innerHTML = `
+                            <div class="alert alert-success">
+                                <h6>Serial Number Found:</h6>
+                                <p><strong>Product:</strong> ${item.device_name} (${item.device_maker})</p>
+                                <p><strong>Status:</strong> <span class="badge bg-info">${item.status}</span></p>
+                                <p><strong>Location:</strong> ${item.warehouse_name || 'Unknown'} - ${item.zone_name || 'Unknown'}</p>
+                                <p><strong>Batch:</strong> ${item.batch_no || 'N/A'}</p>
+                                <p><strong>Expiry:</strong> ${item.expiry_date || 'N/A'}</p>
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('serialResult').innerHTML = '<div class="alert alert-danger">Search failed</div>';
+                });
+        }
+    </script>
+</body>
+</html>

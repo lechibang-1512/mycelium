@@ -20,8 +20,42 @@ class AnalyticsService {
      */
     async getAnalyticsData(period = this.config.DEFAULTS.PERIOD, options = {}) {
         const conn = await this.pool.getConnection();
-        const suppliersConn = await this.suppliersPool.getConnection();
+        const suppliersConn = await this.suppliersPool.getConne    /**
+     * Get product analytics
+     */
+    async getProductAnalytics(productId, period) {
+        const conn = await this.pool.getConnection();
         
+        try {
+            // Product details and sales history
+            const productQuery = `
+                SELECT ps.*, 
+                    COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END), 0) as total_sold,
+                    COALESCE(SUM(CASE WHEN il.transaction_type = 'incoming' THEN il.quantity_changed ELSE 0 END), 0) as total_received,
+                    COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as total_revenue
+                FROM specs_db ps
+                LEFT JOIN inventory_log il ON ps.product_id = il.phone_id 
+                    AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                WHERE ps.product_id = ?
+                GROUP BY ps.product_id
+            `;
+            
+            const productResult = await conn.query(productQuery, [period, productId]);
+            const product = this.convertBigIntToNumber(productResult[0]);
+            
+            if (!product) {
+                return null;
+            }
+            
+            return product;
+            
+        } finally {
+            conn.end();
+        }
+    }
+}
+
+module.exports = AnalyticsService;
         try {
             // Get core analytics data in parallel for better performance
             const [
@@ -821,432 +855,4 @@ class AnalyticsService {
             const productQuery = `
                 SELECT ps.*, 
                     COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END), 0) as total_sold,
-                    COALESCE(SUM(CASE WHEN il.transaction_type = 'incoming' THEN il.quantity_changed ELSE 0 END), 0) as total_received,
-                    COALESCE(AVG(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE NULL END), 0) as avg_sale_quantity,
-                    COUNT(CASE WHEN il.transaction_type = 'outgoing' THEN 1 END) as sale_transactions
-                FROM specs_db ps
-                LEFT JOIN inventory_log il ON ps.product_id = il.phone_id
-                    AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-                WHERE ps.product_id = ?
-                GROUP BY ps.product_id
-            `;
-            
-            const salesTrendQuery = `
-                SELECT 
-                    DATE(il.transaction_date) as sale_date,
-                    SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END) as units_sold,
-                    SUM(CASE WHEN il.transaction_type = 'incoming' THEN il.quantity_changed ELSE 0 END) as units_received
-                FROM inventory_log il
-                WHERE il.phone_id = ? 
-                AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-                GROUP BY DATE(il.transaction_date)
-                ORDER BY sale_date ASC
-            `;
-            
-            const [productResult, salesTrendResult] = await Promise.all([
-                conn.query(productQuery, [period, productId]),
-                conn.query(salesTrendQuery, [productId, period])
-            ]);
-            
-            const product = this.convertBigIntToNumber(productResult[0]);
-            const salesTrend = this.convertBigIntToNumber(salesTrendResult);
-            
-            // Calculate metrics
-            const revenue = product.total_sold * product.device_price;
-            const stockTurnover = product.device_inventory > 0 ? product.total_sold / product.device_inventory : 0;
-            const salesVelocity = salesTrend.length > 0 ? product.total_sold / salesTrend.length : 0;
-            
-            return {
-                product,
-                sales_trend: salesTrend,
-                metrics: {
-                    revenue: revenue.toFixed(2),
-                    stock_turnover: stockTurnover.toFixed(2),
-                    sales_velocity: salesVelocity.toFixed(2),
-                    days_of_stock: salesVelocity > 0 ? Math.floor(product.device_inventory / salesVelocity) : null
-                }
-            };
-            
-        } finally {
-            conn.end();
-        }
-    }
-
-    /**
-     * Generate sales forecast using simple linear regression
-     */
-    async generateForecast(days, productId = null) {
-        if (days < 1 || days > this.config.DEFAULTS.MAX_FORECAST_DAYS) {
-            throw new Error(`Invalid 'days' parameter. Must be between 1 and ${this.config.DEFAULTS.MAX_FORECAST_DAYS}.`);
-        }
-        const conn = await this.pool.getConnection();
-        
-        try {
-            let query;
-            let params;
-            
-            if (productId) {
-                query = `
-                    SELECT 
-                        DATE(il.transaction_date) as sale_date,
-                        SUM(ABS(il.quantity_changed)) as daily_units,
-                        SUM(ps.device_price * ABS(il.quantity_changed)) as daily_revenue
-                    FROM inventory_log il
-                    JOIN specs_db ps ON il.phone_id = ps.product_id
-                    WHERE il.transaction_type = 'outgoing' 
-                    AND il.phone_id = ?
-                    AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL 90 DAY)
-                    GROUP BY DATE(il.transaction_date)
-                    ORDER BY sale_date ASC
-                `;
-                params = [productId];
-            } else {
-                query = `
-                    SELECT 
-                        DATE(il.transaction_date) as sale_date,
-                        SUM(ABS(il.quantity_changed)) as daily_units,
-                        SUM(ps.device_price * ABS(il.quantity_changed)) as daily_revenue
-                    FROM inventory_log il
-                    JOIN specs_db ps ON il.phone_id = ps.product_id
-                    WHERE il.transaction_type = 'outgoing' 
-                    AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL 90 DAY)
-                    GROUP BY DATE(il.transaction_date)
-                    ORDER BY sale_date ASC
-                `;
-                params = [];
-            }
-            
-            const result = await conn.query(query, params);
-            const salesData = this.convertBigIntToNumber(result);
-            
-            // Simple linear regression for forecasting
-            const forecast = this.calculateLinearForecast(salesData, days);
-            
-            return {
-                historical_data: salesData,
-                forecast: forecast,
-                forecast_period: days,
-                confidence: 'Medium', // Simple confidence indicator
-                generated_at: new Date().toISOString()
-            };
-            
-        } finally {
-            conn.end();
-        }
-    }
-
-    /**
-     * Calculate linear forecast using least squares method
-     */
-    calculateLinearForecast(salesData, days) {
-        if (salesData.length < 2) {
-            return Array(days).fill(0).map((_, i) => ({
-                date: new Date(Date.now() + (i + 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                predicted_units: 0,
-                predicted_revenue: 0
-            }));
-        }
-
-        // Convert dates to numeric values for regression
-        const dataPoints = salesData.map((item, index) => ({
-            x: index,
-            y_units: item.daily_units,
-            y_revenue: item.daily_revenue
-        }));
-
-        // Calculate linear regression coefficients
-        const n = dataPoints.length;
-        const sumX = dataPoints.reduce((sum, point) => sum + point.x, 0);
-        const sumYUnits = dataPoints.reduce((sum, point) => sum + point.y_units, 0);
-        const sumYRevenue = dataPoints.reduce((sum, point) => sum + point.y_revenue, 0);
-        const sumXY_units = dataPoints.reduce((sum, point) => sum + point.x * point.y_units, 0);
-        const sumXY_revenue = dataPoints.reduce((sum, point) => sum + point.x * point.y_revenue, 0);
-        const sumXX = dataPoints.reduce((sum, point) => sum + point.x * point.x, 0);
-
-        // Units forecast coefficients
-        const slopeUnits = (n * sumXY_units - sumX * sumYUnits) / (n * sumXX - sumX * sumX);
-        const interceptUnits = (sumYUnits - slopeUnits * sumX) / n;
-
-        // Revenue forecast coefficients
-        const slopeRevenue = (n * sumXY_revenue - sumX * sumYRevenue) / (n * sumXX - sumX * sumX);
-        const interceptRevenue = (sumYRevenue - slopeRevenue * sumX) / n;
-
-        // Generate forecast
-        const forecast = [];
-        for (let i = 1; i <= days; i++) {
-            const futureX = n + i - 1;
-            const predictedUnits = Math.max(0, slopeUnits * futureX + interceptUnits);
-            const predictedRevenue = Math.max(0, slopeRevenue * futureX + interceptRevenue);
-            
-            forecast.push({
-                date: new Date(Date.now() + i * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                predicted_units: Math.round(predictedUnits),
-                predicted_revenue: parseFloat(predictedRevenue.toFixed(2))
-            });
-        }
-
-        return forecast;
-    }
-
-    /**
-     * Get comprehensive product specifications analytics
-     */
-    async getProductSpecAnalytics(conn) {
-        const query = `
-            SELECT 
-                device_maker as brand,
-                COUNT(*) as total_products,
-                AVG(device_price) as avg_price,
-                MIN(device_price) as min_price,
-                MAX(device_price) as max_price,
-                AVG(CAST(REPLACE(ram, 'GB', '') AS DECIMAL(5,2))) as avg_ram,
-                AVG(CAST(REPLACE(REPLACE(rom, 'GB', ''), 'TB', '000') AS DECIMAL(6,2))) as avg_storage,
-                AVG(display_size) as avg_display_size,
-                AVG(CAST(REPLACE(battery_capacity, 'mAh', '') AS DECIMAL(6,0))) as avg_battery,
-                COUNT(CASE WHEN nfc = 'Yes' THEN 1 END) as nfc_enabled_count,
-                COUNT(CASE WHEN fast_charging IS NOT NULL AND fast_charging != '' THEN 1 END) as fast_charging_count
-            FROM specs_db 
-            WHERE device_maker IS NOT NULL
-            GROUP BY device_maker
-            ORDER BY total_products DESC
-        `;
-        const result = await conn.query(query);
-        return this.convertBigIntToNumber(result);
-    }
-
-    /**
-     * Get technology trends analytics
-     */
-    async getTechnologyTrendsData(conn) {
-        const processorQuery = `
-            SELECT 
-                processor,
-                COUNT(*) as product_count,
-                AVG(device_price) as avg_price,
-                SUM(device_inventory) as total_inventory
-            FROM specs_db 
-            WHERE processor IS NOT NULL AND processor != ''
-            GROUP BY processor
-            ORDER BY product_count DESC
-            LIMIT 10
-        `;
-
-        const osQuery = `
-            SELECT 
-                operating_system,
-                COUNT(*) as product_count,
-                AVG(device_price) as avg_price,
-                SUM(device_inventory) as total_inventory
-            FROM specs_db 
-            WHERE operating_system IS NOT NULL AND operating_system != ''
-            GROUP BY operating_system
-            ORDER BY product_count DESC
-        `;
-
-        const ramQuery = `
-            SELECT 
-                ram,
-                COUNT(*) as product_count,
-                AVG(device_price) as avg_price,
-                SUM(device_inventory) as total_inventory
-            FROM specs_db 
-            WHERE ram IS NOT NULL AND ram != ''
-            GROUP BY ram
-            ORDER BY CAST(REPLACE(ram, 'GB', '') AS DECIMAL(5,2)) DESC
-        `;
-
-        const [processorResult, osResult, ramResult] = await Promise.all([
-            conn.query(processorQuery),
-            conn.query(osQuery),
-            conn.query(ramQuery)
-        ]);
-
-        return {
-            processors: this.convertBigIntToNumber(processorResult),
-            operating_systems: this.convertBigIntToNumber(osResult),
-            ram_distribution: this.convertBigIntToNumber(ramResult)
-        };
-    }
-
-    /**
-     * Get inventory efficiency metrics
-     */
-    async getInventoryEfficiencyData(conn, period) {
-        const query = `
-            SELECT 
-                ps.device_maker as brand,
-                ps.device_name as product_name,
-                ps.device_price,
-                ps.device_inventory as current_stock,
-                COALESCE(sold_data.units_sold, 0) as units_sold,
-                COALESCE(received_data.units_received, 0) as units_received,
-                CASE 
-                    WHEN ps.device_inventory > 0 AND sold_data.units_sold > 0 
-                    THEN ROUND(sold_data.units_sold / ps.device_inventory, 2)
-                    ELSE 0 
-                END as turnover_ratio,
-                CASE 
-                    WHEN sold_data.units_sold > 0 
-                    THEN ROUND(? / sold_data.units_sold, 1)
-                    ELSE NULL 
-                END as days_to_sell_current_stock,
-                (ps.device_inventory * ps.device_price) as inventory_value
-            FROM specs_db ps
-            LEFT JOIN (
-                SELECT 
-                    phone_id,
-                    SUM(ABS(quantity_changed)) as units_sold
-                FROM inventory_log 
-                WHERE transaction_type = 'outgoing' 
-                AND transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-                GROUP BY phone_id
-            ) sold_data ON ps.product_id = sold_data.phone_id
-            LEFT JOIN (
-                SELECT 
-                    phone_id,
-                    SUM(quantity_changed) as units_received
-                FROM inventory_log 
-                WHERE transaction_type = 'incoming' 
-                AND transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-                GROUP BY phone_id
-            ) received_data ON ps.product_id = received_data.phone_id
-            ORDER BY turnover_ratio DESC, inventory_value DESC
-        `;
-        const result = await conn.query(query, [period, period, period]);
-        return this.convertBigIntToNumber(result);
-    }
-
-    /**
-     * Get pricing analytics
-     */
-    async getPricingAnalyticsData(conn, period) {
-        const priceRangeQuery = `
-            SELECT 
-                CASE 
-                    WHEN device_price < 200 THEN 'Budget (<$200)'
-                    WHEN device_price BETWEEN 200 AND 500 THEN 'Mid-range ($200-$500)'
-                    WHEN device_price BETWEEN 500 AND 1000 THEN 'Premium ($500-$1000)'
-                    ELSE 'Flagship (>$1000)'
-                END as price_category,
-                COUNT(*) as product_count,
-                SUM(device_inventory) as total_inventory,
-                AVG(device_price) as avg_price,
-                COALESCE(SUM(sales_data.units_sold), 0) as total_sold,
-                COALESCE(SUM(sales_data.revenue), 0) as total_revenue
-            FROM specs_db ps
-            LEFT JOIN (
-                SELECT 
-                    il.phone_id,
-                    SUM(ABS(il.quantity_changed)) as units_sold,
-                    SUM(ps2.device_price * ABS(il.quantity_changed)) as revenue
-                FROM inventory_log il
-                JOIN specs_db ps2 ON il.phone_id = ps2.id
-                WHERE il.transaction_type = 'outgoing' 
-                AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-                GROUP BY il.phone_id
-            ) sales_data ON ps.product_id = sales_data.phone_id
-            GROUP BY price_category
-            ORDER BY avg_price ASC
-        `;
-
-        const profitabilityQuery = `
-            SELECT 
-                ps.device_maker as brand,
-                COUNT(*) as product_count,
-                AVG(ps.device_price) as avg_price,
-                COALESCE(SUM(sales_data.revenue), 0) as total_revenue,
-                COALESCE(SUM(sales_data.units_sold), 0) as total_units_sold,
-                CASE 
-                    WHEN SUM(sales_data.units_sold) > 0 
-                    THEN ROUND(SUM(sales_data.revenue) / SUM(sales_data.units_sold), 2)
-                    ELSE 0 
-                END as avg_selling_price
-            FROM specs_db ps
-            LEFT JOIN (
-                SELECT 
-                    il.phone_id,
-                    SUM(ABS(il.quantity_changed)) as units_sold,
-                    SUM(ps2.device_price * ABS(il.quantity_changed)) as revenue
-                FROM inventory_log il
-                JOIN specs_db ps2 ON il.phone_id = ps2.id
-                WHERE il.transaction_type = 'outgoing' 
-                AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-                GROUP BY il.phone_id
-            ) sales_data ON ps.product_id = sales_data.phone_id
-            GROUP BY ps.device_maker
-            HAVING total_revenue > 0
-            ORDER BY total_revenue DESC
-        `;
-
-        const [priceRangeResult, profitabilityResult] = await Promise.all([
-            conn.query(priceRangeQuery, [period]),
-            conn.query(profitabilityQuery, [period])
-        ]);
-
-        return {
-            price_ranges: this.convertBigIntToNumber(priceRangeResult),
-            brand_profitability: this.convertBigIntToNumber(profitabilityResult)
-        };
-    }
-
-    /**
-     * Get transaction patterns analytics
-     */
-    async getTransactionPatternsData(conn, period) {
-        const hourlyPatternQuery = `
-            SELECT 
-                HOUR(transaction_date) as hour_of_day,
-                COUNT(*) as transaction_count,
-                SUM(CASE WHEN transaction_type = 'outgoing' THEN ABS(quantity_changed) ELSE 0 END) as units_sold,
-                SUM(CASE WHEN transaction_type = 'incoming' THEN quantity_changed ELSE 0 END) as units_received
-            FROM inventory_log
-            WHERE transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-            GROUP BY HOUR(transaction_date)
-            ORDER BY hour_of_day
-        `;
-
-        const dailyPatternQuery = `
-            SELECT 
-                DAYNAME(transaction_date) as day_name,
-                DAYOFWEEK(transaction_date) as day_number,
-                COUNT(*) as transaction_count,
-                SUM(CASE WHEN transaction_type = 'outgoing' THEN ABS(quantity_changed) ELSE 0 END) as units_sold,
-                SUM(CASE WHEN transaction_type = 'incoming' THEN quantity_changed ELSE 0 END) as units_received
-            FROM inventory_log
-            WHERE transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-            GROUP BY DAYNAME(transaction_date), DAYOFWEEK(transaction_date)
-            ORDER BY day_number
-        `;
-
-        const transactionTypeQuery = `
-            SELECT 
-                transaction_type,
-                COUNT(*) as transaction_count,
-                SUM(ABS(quantity_changed)) as total_quantity,
-                AVG(ABS(quantity_changed)) as avg_quantity_per_transaction
-            FROM inventory_log
-            WHERE transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-            GROUP BY transaction_type
-        `;
-
-        const [hourlyResult, dailyResult, typeResult] = await Promise.all([
-            conn.query(hourlyPatternQuery, [period]),
-            conn.query(dailyPatternQuery, [period]),
-            conn.query(transactionTypeQuery, [period])
-        ]);
-
-        return {
-            hourly_patterns: this.convertBigIntToNumber(hourlyResult),
-            daily_patterns: this.convertBigIntToNumber(dailyResult),
-            transaction_types: this.convertBigIntToNumber(typeResult)
-        };
-    }
-
-
-
-
-
-
-}
-
-module.exports = AnalyticsService;
+                    COALESCE(SUM(CASE WHEN il.transaction_type = 'incoming' THEN il.quantity_changed ELSE 0 END)

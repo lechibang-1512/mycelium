@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+    <title><%= title %> - Inventory Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="display-4">
+                        <i class="fas fa-chart-line me-3"></i>
+                        Warehouse Analytics
+                    </h1>
+                    <div>
+                        <a href="/warehouses" class="btn btn-secondary me-2">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Back to Warehouses
+                        </a>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-primary <%= period === 7 ? 'active' : '' %>" 
+                                    onclick="changePeriod(7)">7 Days</button>
+                            <button class="btn btn-outline-primary <%= period === 30 ? 'active' : '' %>" 
+                                    onclick="changePeriod(30)">30 Days</button>
+                            <button class="btn btn-outline-primary <%= period === 90 ? 'active' : '' %>" 
+                                    onclick="changePeriod(90)">90 Days</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="row mb-4">
+                    <% if (warehouseSummary && warehouseSummary.length > 0) { %>
+                        <% warehouseSummary.forEach(summary => { %>
+                            <div class="col-md-4 mb-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title"><%= summary.warehouse_name %></h5>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <p class="mb-1"><strong><%= summary.unique_products || 0 %></strong></p>
+                                                <p class="text-muted small mb-0">Products</p>
+                                            </div>
+                                            <div class="col-6">
+                                                <p class="mb-1"><strong><%= summary.total_items || 0 %></strong></p>
+                                                <p class="text-muted small mb-0">Total Items</p>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-6">
+                                                <p class="mb-1"><strong><%= summary.total_zones || 0 %></strong></p>
+                                                <p class="text-muted small mb-0">Zones</p>
+                                            </div>
+                                            <div class="col-6">
+                                                <p class="mb-1"><strong>$<%= (summary.total_inventory_value || 0).toLocaleString() %></strong></p>
+                                                <p class="text-muted small mb-0">Value</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } %>
+                </div>
+
+                <!-- Warehouse Performance -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-warehouse me-2"></i>
+                                    Warehouse Performance
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <% if (warehousePerformance && warehousePerformance.length > 0) { %>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Warehouse</th>
+                                                    <th>Products</th>
+                                                    <th>Received</th>
+                                                    <th>Shipped</th>
+                                                    <th>Transactions</th>
+                                                    <th>Revenue</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% warehousePerformance.forEach(perf => { %>
+                                                    <tr>
+                                                        <td><%= perf.warehouse_name %></td>
+                                                        <td><%= perf.unique_products_moved || 0 %></td>
+                                                        <td class="text-success"><%= perf.total_received || 0 %></td>
+                                                        <td class="text-danger"><%= perf.total_shipped || 0 %></td>
+                                                        <td>
+                                                            <span class="badge bg-info me-1"><%= perf.receiving_transactions || 0 %></span>
+                                                            <span class="badge bg-warning"><%= perf.shipping_transactions || 0 %></span>
+                                                        </td>
+                                                        <td>$<%= (perf.revenue_generated || 0).toLocaleString() %></td>
+                                                    </tr>
+                                                <% }) %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <% } else { %>
+                                    <p class="text-muted">No performance data available for the selected period.</p>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Zone Utilization -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-layer-group me-2"></i>
+                                    Zone Utilization
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <% if (zoneUtilization && zoneUtilization.length > 0) { %>
+                                    <div class="row">
+                                        <% zoneUtilization.forEach(zone => { %>
+                                            <div class="col-md-6 col-lg-4 mb-3">
+                                                <div class="card border-light">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">
+                                                            <%= zone.zone_name %>
+                                                            <span class="badge bg-secondary"><%= zone.zone_type %></span>
+                                                        </h6>
+                                                        <p class="text-muted small"><%= zone.warehouse_name %></p>
+                                                        <div class="row">
+                                                            <div class="col-6">
+                                                                <p class="mb-1"><strong><%= zone.unique_products || 0 %></strong></p>
+                                                                <p class="text-muted small mb-0">Products</p>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <p class="mb-1"><strong><%= zone.total_inventory || 0 %></strong></p>
+                                                                <p class="text-muted small mb-0">Items</p>
+                                                            </div>
+                                                        </div>
+                                                        <% if (zone.reserved_inventory > 0) { %>
+                                                            <div class="mt-2">
+                                                                <p class="text-warning small mb-0">
+                                                                    <i class="fas fa-lock me-1"></i>
+                                                                    <%= zone.reserved_inventory %> reserved
+                                                                </p>
+                                                            </div>
+                                                        <% } %>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% }) %>
+                                    </div>
+                                <% } else { %>
+                                    <p class="text-muted">No zone utilization data available.</p>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Batch Expiry & Serialized Inventory -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-clock me-2"></i>
+                                    Batch Expiry Status
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <% if (batchExpiry) { %>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <p class="mb-1"><strong><%= batchExpiry.total_batches || 0 %></strong></p>
+                                            <p class="text-muted small mb-0">Total Batches</p>
+                                        </div>
+                                        <div class="col-6">
+                                            <p class="mb-1"><strong><%= batchExpiry.unique_products_at_risk || 0 %></strong></p>
+                                            <p class="text-muted small mb-0">Products at Risk</p>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-4">
+                                            <p class="mb-1 text-danger"><strong><%= batchExpiry.expiring_week || 0 %></strong></p>
+                                            <p class="text-muted small mb-0">This Week</p>
+                                        </div>
+                                        <div class="col-4">
+                                            <p class="mb-1 text-warning"><strong><%= batchExpiry.expiring_month || 0 %></strong></p>
+                                            <p class="text-muted small mb-0">This Month</p>
+                                        </div>
+                                        <div class="col-4">
+                                            <p class="mb-1 text-info"><strong><%= batchExpiry.expiring_quarter || 0 %></strong></p>
+                                            <p class="text-muted small mb-0">This Quarter</p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <a href="/warehouses/batches/expiring" class="btn btn-warning btn-sm">
+                                            <i class="fas fa-eye me-1"></i>
+                                            View Expiring Batches
+                                        </a>
+                                    </div>
+                                <% } else { %>
+                                    <p class="text-muted">No batch expiry data available.</p>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-barcode me-2"></i>
+                                    Serialized Inventory
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <% if (serializedInventory) { %>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <p class="mb-1"><strong><%= serializedInventory.total_serialized_items || 0 %></strong></p>
+                                            <p class="text-muted small mb-0">Total Items</p>
+                                        </div>
+                                        <div class="col-6">
+                                            <p class="mb-1"><strong><%= serializedInventory.unique_products_serialized || 0 %></strong></p>
+                                            <p class="text-muted small mb-0">Products</p>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-3">
+                                            <p class="mb-1 text-success"><strong><%= serializedInventory.in_stock || 0 %></strong></p>
+                                            <p class="text-muted small mb-0">In Stock</p>
+                                        </div>
+                                        <div class="col-3">
+                                            <p class="mb-1 text-info"><strong><%= serializedInventory.sold || 0 %></strong></p>
+                                            <p class="text-muted small mb-0">Sold</p>
+                                        </div>
+                                        <div class="col-3">
+                                            <p class="mb-1 text-warning"><strong><%= serializedInventory.reserved || 0 %></strong></p>
+                                            <p class="text-muted small mb-0">Reserved</p>
+                                        </div>
+                                        <div class="col-3">
+                                            <p class="mb-1 text-danger"><strong><%= serializedInventory.damaged || 0 %></strong></p>
+                                            <p class="text-muted small mb-0">Damaged</p>
+                                        </div>
+                                    </div>
+                                <% } else { %>
+                                    <p class="text-muted">No serialized inventory data available.</p>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Low Stock Alerts -->
+                <% if (lowStock && lowStock.length > 0) { %>
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        Low Stock Alerts by Warehouse
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Warehouse</th>
+                                                    <th>Zone</th>
+                                                    <th>Product</th>
+                                                    <th>Available</th>
+                                                    <th>Reserved</th>
+                                                    <th>Price</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% lowStock.slice(0, 10).forEach(item => { %>
+                                                    <tr>
+                                                        <td><%= item.warehouse_name %></td>
+                                                        <td><%= item.zone_name || 'N/A' %></td>
+                                                        <td>
+                                                            <strong><%= item.device_maker %></strong><br>
+                                                            <small class="text-muted"><%= item.device_name %></small>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-<%= item.available_stock === 0 ? 'danger' : 'warning' %>">
+                                                                <%= item.available_stock %>
+                                                            </span>
+                                                        </td>
+                                                        <td><%= item.reserved_stock || 0 %></td>
+                                                        <td>$<%= item.device_price %></td>
+                                                    </tr>
+                                                <% }) %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function changePeriod(days) {
+            window.location.href = `/warehouses/analytics?period=${days}`;
+        }
+    </script>
+</body>
+</html>

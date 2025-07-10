@@ -1,9 +1,4 @@
-#!/usr/bin/env node
 
-/**
- * Create Admin User Script
- * Creates the admin user in the security_db database if it doesn't exist
- */
 
 require('dotenv').config();
 const mariadb = require('mariadb');
@@ -19,11 +14,20 @@ async function createAdminUser() {
         user: process.env.AUTH_DB_USER,
         password: process.env.AUTH_DB_PASSWORD,
         database: process.env.AUTH_DB_NAME || 'security_db',
-        connectionLimit: 1
+        connectionLimit: 1,
+        acquireTimeout: 30000,
+        timeout: 30000
     });
     
     try {
+        console.log('📡 Attempting to connect to database...');
+        console.log(`   Host: ${process.env.AUTH_DB_HOST || '127.0.0.1'}`);
+        console.log(`   Port: ${process.env.AUTH_DB_PORT || 3306}`);
+        console.log(`   User: ${process.env.AUTH_DB_USER}`);
+        console.log(`   Database: ${process.env.AUTH_DB_NAME || 'security_db'}`);
+        
         const conn = await pool.getConnection();
+        console.log('✅ Database connection successful!');
         
         // Check if admin user already exists
         console.log('🔍 Checking if admin user exists...');

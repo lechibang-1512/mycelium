@@ -37,5 +37,5 @@
             ]
         }
     },
-    "zencoder.enableRepoIndexing": true
+    "zencoder.enableRepoIndexing": false
 }
