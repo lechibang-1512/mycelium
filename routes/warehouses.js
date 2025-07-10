@@ -43,8 +43,7 @@ router.get('/', isAuthenticated, async (req, res) => {
     } catch (error) {
         console.error('Error fetching warehouses:', error);
         res.status(500).render('error', { 
-            message: 'Failed to load warehouses',
-            error: error.message
+            error: 'Failed to load warehouses: ' + error.message
         });
     }
 });
@@ -91,8 +90,7 @@ router.get('/analytics', async (req, res) => {
     } catch (error) {
         console.error('Error fetching warehouse analytics:', error);
         res.status(500).render('error', { 
-            message: 'Failed to load warehouse analytics',
-            error: error.message
+            error: 'Failed to load warehouse analytics: ' + error.message
         });
     }
 });
@@ -106,7 +104,7 @@ router.get('/:id', async (req, res) => {
         
         if (isNaN(warehouseId)) {
             return res.status(400).render('error', { 
-                message: 'Invalid warehouse ID' 
+                error: 'Invalid warehouse ID' 
             });
         }
         
@@ -121,7 +119,7 @@ router.get('/:id', async (req, res) => {
         
         if (!warehouse) {
             return res.status(404).render('error', { 
-                message: 'Warehouse not found' 
+                error: 'Warehouse not found' 
             });
         }
 
@@ -135,8 +133,7 @@ router.get('/:id', async (req, res) => {
     } catch (error) {
         console.error('Error fetching warehouse details:', error);
         res.status(500).render('error', { 
-            message: 'Failed to load warehouse details',
-            error: error.message
+            error: 'Failed to load warehouse details: ' + error.message
         });
     }
 });
@@ -183,8 +180,7 @@ router.get('/batches/expiring', async (req, res) => {
     } catch (error) {
         console.error('Error fetching expiring batches:', error);
         res.status(500).render('error', { 
-            message: 'Failed to load expiring batches',
-            error: error.message
+            error: 'Failed to load expiring batches: ' + error.message
         });
     }
 });

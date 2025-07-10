@@ -16,7 +16,7 @@
             <div class="col-md-6 text-center">
                 <i class="fas fa-exclamation-triangle fa-5x text-warning mb-4"></i>
                 <h1 class="display-4 mb-3">Oops!</h1>
-                <p class="lead mb-4"><%= error %></p>
+                <p class="lead mb-4"><%= typeof error !== 'undefined' ? error : 'An error occurred' %></p>
                 <% if (typeof details !== 'undefined' && details) { %>
                     <div class="alert alert-secondary">
                         <small><strong>Details:</strong> <%= details %></small>
