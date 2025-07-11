@@ -43,6 +43,17 @@ module.exports = (pool, convertBigIntToNumber, formatDeviceInfo) => {
         }
     });
 
+    // Add Phone Route
+    router.get('/phones/add', isStaffOrAdmin, (req, res) => {
+        res.render('phone-form', {
+            phone: {},
+            action: 'add',
+            title: 'Add New Phone',
+            csrfToken: req.csrfToken()
+        });
+    });
+
+
     // Edit Phone Route
     router.get('/phones/:id/edit', isStaffOrAdmin, async (req, res, next) => {
         let conn;
