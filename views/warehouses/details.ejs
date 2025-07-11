@@ -312,6 +312,7 @@
                 <label for="zoneDescription" class="form-label">Description</label>
                 <textarea class="form-control" id="zoneDescription" name="description" rows="2" maxlength="200"></textarea>
               </div>
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

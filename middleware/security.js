@@ -4,6 +4,8 @@
  * Prevents sensitive information from being exposed in API responses
  */
 
+const SanitizationService = require('../services/SanitizationService');
+
 /**
  * Middleware to sanitize API responses and prevent secret exposure
  */
@@ -13,11 +15,12 @@ function sanitizeApiResponse(req, res, next) {
     
     // Override res.json to sanitize responses
     res.json = function(obj) {
-        // Sanitize the response object
-        const sanitized = sanitizeObject(obj);
-        
+        // Convert BigInt to Number recursively
+        const sanitized = SanitizationService.convertBigIntToNumber(obj);
+        // Further sanitize for secrets
+        const fullySanitized = sanitizeObject(sanitized);
         // Call original json method with sanitized data
-        return originalJson.call(this, sanitized);
+        return originalJson.call(this, fullySanitized);
     };
     
     next();

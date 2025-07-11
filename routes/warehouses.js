@@ -631,10 +631,13 @@ router.post('/:id/zones', isStaffOrAdmin, async (req, res) => {
         const zoneData = { ...req.body, warehouseId };
         const zoneId = await warehouseService.createOrUpdateZone(zoneData);
 
+        // Convert BigInt to Number for JSON serialization
+        const safeZoneId = typeof zoneId === 'bigint' ? Number(zoneId) : zoneId;
+
         res.json({ 
             success: true, 
             message: 'Zone created successfully',
-            zoneId
+            zoneId: safeZoneId
         });
     } catch (error) {
         console.error('Error creating zone:', error);
