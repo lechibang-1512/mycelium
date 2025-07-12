@@ -151,56 +151,66 @@
                 </div>
 
                 <!-- Zone Utilization -->
-                <% if (zoneUtilization && zoneUtilization.length > 0) { %>
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-chart-bar me-2"></i>
-                                        Zone Utilization
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <% zoneUtilization.forEach(zone => { %>
-                                            <div class="col-md-6 col-lg-4 mb-3">
-                                                <div class="card border-light">
-                                                    <div class="card-body">
-                                                        <h6 class="card-title">
-                                                            <%= zone.zone_name %>
-                                                            <span class="badge bg-secondary"><%= zone.zone_type %></span>
-                                                        </h6>
-                                                        <div class="row">
-                                                            <div class="col-6">
-                                                                <p class="mb-1"><strong><%= zone.unique_products || 0 %></strong></p>
-                                                                <p class="text-muted small mb-0">Products</p>
-                                                            </div>
-                                                            <div class="col-6">
-                                                                <p class="mb-1"><strong><%= zone.total_inventory || 0 %></strong></p>
-                                                                <p class="text-muted small mb-0">Items</p>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-6">
-                                                        <% if (zone.reserved_inventory > 0) { %>
-                                                            <p class="mb-1"><strong><%= zone.total_inventory || 0 %></strong></p>
-                                                            <div class="mt-2">
-                                                                <p class="text-warning small mb-0">
-                                                                    <i class="fas fa-lock me-1"></i>
-                                                                    <%= zone.reserved_inventory %> reserved
-                                                                </p>
-                                                            </div>
-                                                        <% } %>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        <% }) %>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+             <!-- Zone Utilization -->
+<% if (zoneUtilization && zoneUtilization.length > 0) { %>
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-chart-bar me-2"></i>
+            Zone Utilization
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <% zoneUtilization.forEach(zone => { %>
+              <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card border-light h-100">
+                  <div class="card-body">
+                    <h6 class="card-title">
+                      <%= zone.zone_name %>
+                      <span class="badge bg-secondary ms-2"><%= zone.zone_type %></span>
+                    </h6>
+
+                    <div class="row">
+                      <div class="col-6 text-center">
+                        <p class="mb-1">
+                          <strong><%= Number(zone.unique_products || 0).toFixed(0) %></strong>
+                        </p>
+                        <p class="text-muted small mb-0">Products</p>
+                      </div>
+                      <div class="col-6 text-center">
+                        <p class="mb-1">
+                          <strong><%= Number(zone.total_inventory || 0).toFixed(0) %></strong>
+                        </p>
+                        <p class="text-muted small mb-0">Items</p>
+                      </div>
                     </div>
-                <% } %>
+
+                    <% if (zone.reserved_inventory > 0) { %>
+                      <div class="row mt-2">
+                        <div class="col-12 text-center">
+                          <p class="text-warning small mb-0">
+                            <i class="fas fa-lock me-1"></i>
+                            <%= Number(zone.reserved_inventory).toFixed(0) %> reserved
+                          </p>
+                        </div>
+                      </div>
+                    <% } %>
+
+                  </div>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } %>
+
+
 
                 <!-- Inventory in this Warehouse -->
                 <div class="row mb-4">
