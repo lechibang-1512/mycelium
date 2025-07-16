@@ -14,6 +14,16 @@
                             <%= messages.success %>
                         </div>
                     <% } %>
+                    <% if (messages && messages.error) { %>
+                        <div class="alert alert-danger" role="alert">
+                            <%= messages.error %>
+                        </div>
+                    <% } %>
+                    <% if (messages && messages.warning) { %>
+                        <div class="alert alert-warning" role="alert">
+                            <%= messages.warning %>
+                        </div>
+                    <% } %>
                     
                     <div class="row">
                         <div class="col-md-4 text-center mb-4 mb-md-0">

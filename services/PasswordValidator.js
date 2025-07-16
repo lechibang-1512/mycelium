@@ -308,7 +308,7 @@ class PasswordValidator {
      */
     getSecureRandomIndex(max) {
         const maxValidRange = Math.floor(2**32 / max) * max;
-        let randomIndex;    
+        let randomInt;
         do {
             const buffer = crypto.randomBytes(4);
             randomInt = buffer.readUInt32BE(0);
