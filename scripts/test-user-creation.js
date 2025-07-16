@@ -175,7 +175,8 @@ async function testCompleteFlow() {
         // Step 5: Create a test user
         console.log('\n5. ➕ Creating test user...');
         
-        const randomId = Math.floor(Math.random() * 10000);
+        const crypto = require('crypto');
+        const randomId = crypto.randomBytes(2).readUInt16BE(0);
         const createUserData = new URLSearchParams({
             '_csrf': formCsrfToken,
             'username': `testuser${randomId}`,

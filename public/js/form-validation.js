@@ -72,6 +72,16 @@ const formValidator = {
         }
         // Check for pattern matching
         else if (field.hasAttribute('pattern') && value && !new RegExp(field.getAttribute('pattern')).test(value)) {
+            // Sanitize pattern to avoid regex injection
+            let pattern = field.getAttribute('pattern');
+            try {
+                // Only allow safe regex patterns
+                new RegExp(pattern);
+            } catch (e) {
+                this.showFieldError(field, 'Invalid pattern');
+                isValid = false;
+                return;
+            }
             this.showFieldError(field, field.getAttribute('title') || 'Invalid format');
             isValid = false;
         }

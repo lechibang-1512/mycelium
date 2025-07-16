@@ -171,8 +171,9 @@ class ReceiptService {
      * Generate receipt ID
      */
     generateReceiptId(type = 'REC') {
+        const crypto = require('crypto');
         const timestamp = Date.now().toString().slice(-6);
-        const random = Math.random().toString(36).substr(2, 4).toUpperCase();
+        const random = crypto.randomBytes(2).toString('hex').toUpperCase();
         return `${type}-${timestamp}-${random}`;
     }
 

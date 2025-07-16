@@ -56,6 +56,7 @@ async function testConnection() {
         host: process.env.DB_HOST || '127.0.0.1',
         port: process.env.DB_PORT || 3306,
         user: process.env.DB_USER,
+        // Do NOT log or expose the password in any logs
         password: process.env.DB_PASSWORD,
         connectionLimit: 1
     };

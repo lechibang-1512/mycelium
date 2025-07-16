@@ -45,86 +45,40 @@ class PasswordStrengthIndicator {
 
     update() {
         const password = this.passwordField.value;
-        const validation = this.validatePassword(password);
+        const result = zxcvbn(password);
 
         if (this.options.showStrengthBar) {
-            this.updateStrengthBar(validation.strength);
+            this.updateStrengthBar(result.score);
         }
 
         if (this.options.showSuggestions) {
-            this.updateSuggestions(validation.errors);
+            this.updateSuggestions(result.feedback.suggestions);
         }
     }
 
     validatePassword(password) {
-        const result = {
-            valid: true,
-            errors: [],
-            strength: 0
+        // This method is now simplified as zxcvbn handles the validation
+        const result = zxcvbn(password);
+        return {
+            valid: result.score >= 3,
+            errors: result.feedback.suggestions,
+            strength: result.score
         };
-
-        if (!password) {
-            result.valid = false;
-            return result;
-        }
-
-        // Length
-        if (password.length < this.options.minLength) {
-            result.valid = false;
-            result.errors.push(`At least ${this.options.minLength} characters`);
-        }
-
-        // Uppercase
-        if (this.options.requireUppercase && !/[A-Z]/.test(password)) {
-            result.valid = false;
-            result.errors.push('An uppercase letter');
-        }
-
-        // Lowercase
-        if (this.options.requireLowercase && !/[a-z]/.test(password)) {
-            result.valid = false;
-            result.errors.push('A lowercase letter');
-        }
-
-        // Numbers
-        if (this.options.requireNumbers && !/\d/.test(password)) {
-            result.valid = false;
-            result.errors.push('A number');
-        }
-
-        // Special characters
-        if (this.options.requireSpecialChars && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-            result.valid = false;
-            result.errors.push('A special character');
-        }
-
-        result.strength = this.calculateStrength(password, result.errors.length);
-        return result;
     }
 
     calculateStrength(password, errorCount) {
-        let strength = 100 - (errorCount * 20);
-
-        if (password.length > this.options.minLength) {
-            strength += 10;
-        }
-
-        // Bonus for complexity
-        const uniqueChars = new Set(password).size;
-        if (uniqueChars > password.length * 0.7) {
-            strength += 10;
-        }
-
-        return Math.max(0, Math.min(100, strength));
+        // This method is now simplified as zxcvbn handles the strength calculation
+        return zxcvbn(password).score;
     }
 
-    updateStrengthBar(strength) {
+    updateStrengthBar(score) {
+        let strength = (score / 4) * 100;
         let color = '#dc3545'; // Red
-        if (strength >= 80) {
+        if (score >= 4) {
             color = '#28a745'; // Green
-        } else if (strength >= 50) {
+        } else if (score >= 3) {
             color = '#ffc107'; // Yellow
-        } else if (strength >= 20) {
+        } else if (score >= 2) {
             color = '#fd7e14'; // Orange
         }
 
@@ -132,12 +86,12 @@ class PasswordStrengthIndicator {
         this.strengthBar.style.backgroundColor = color;
     }
 
-    updateSuggestions(errors) {
-        if (errors.length > 0) {
+    updateSuggestions(suggestions) {
+        if (suggestions.length > 0) {
             this.suggestionsContainer.innerHTML = `
-                <small class="text-muted">Password should contain:</small>
+                <small class="text-muted">Suggestions:</small>
                 <ul class="list-unstyled">
-                    ${errors.map(err => `<li><small>${err}</small></li>`).join('')}
+                    ${suggestions.map(suggestion => `<li><small>${suggestion}</small></li>`).join('')}
                 </ul>
             `;
         } else {

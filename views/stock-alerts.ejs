@@ -145,7 +145,8 @@
                                             <span class="badge bg-info"><%= product.recommended_reorder || 20 %></span>
                                         </td>
                                         <td>
-                                            <% const daysLeft = product.days_until_stockout || Math.floor(Math.random() * 10) + 5; %>
+                                            <% const crypto = require('crypto');
+                                               const daysLeft = product.days_until_stockout || (crypto.randomBytes(1)[0] % 10) + 5; %>
                                             <span class="<%= daysLeft <= 3 ? 'text-danger' : daysLeft <= 7 ? 'text-warning' : 'text-success' %>">
                                                 <%= daysLeft %> days
                                             </span>

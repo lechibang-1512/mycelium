@@ -6,6 +6,7 @@ module.exports = {
         host: process.env.AUTH_DB_HOST || 'localhost',
         port: process.env.AUTH_DB_PORT || 3306,
         user: process.env.AUTH_DB_USER,
+        // Do NOT log or expose the password in any logs
         password: process.env.AUTH_DB_PASSWORD,
         database: process.env.AUTH_DB_NAME || 'users_db',
         connectionLimit: 5,

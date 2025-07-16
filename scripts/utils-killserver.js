@@ -40,10 +40,13 @@ function killMatchingProcesses(stdout) {
 
     if (
       pid !== me &&
-      /node|nodemon/.test(cmd) &&
-      new RegExp(filter).test(cmd)
+      /node|nodemon/.test(cmd)
     ) {
-      victims.push({ pid, cmd });
+      // Sanitize filter input to avoid regex injection
+      const safeFilter = filter.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+      if (new RegExp(safeFilter).test(cmd)) {
+        victims.push({ pid, cmd });
+      }
     }
   });
 

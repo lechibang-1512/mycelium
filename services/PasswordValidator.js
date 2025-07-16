@@ -6,6 +6,7 @@
  */
 
 const crypto = require('crypto');
+const zxcvbn = require('zxcvbn');
 
 class PasswordValidator {
     constructor() {
@@ -47,6 +48,8 @@ class PasswordValidator {
             return result;
         }
 
+        const zxcvbnResult = zxcvbn(password, [username, email]);
+
         // Length validation
         if (password.length < this.minLength) {
             result.valid = false;
@@ -74,7 +77,7 @@ class PasswordValidator {
             result.errors.push('Password must contain at least one number');
         }
 
-        if (this.requireSpecialChars && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/.test(password)) {
+        if (this.requireSpecialChars && !/[-!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/.test(password)) {
             result.valid = false;
             result.errors.push('Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)');
         }
@@ -90,27 +93,18 @@ class PasswordValidator {
             result.errors.push('This password is too common. Please choose a more unique password');
         }
 
-        // Check for username/email similarity
-        if (username && this.isSimilarToIdentifier(password, username)) {
-            result.valid = false;
-            result.errors.push('Password should not be similar to your username');
+        // Add zxcvbn feedback
+        if (zxcvbnResult.feedback.warning) {
+            result.warnings.push(zxcvbnResult.feedback.warning);
         }
-
-        if (email && this.isSimilarToIdentifier(password, email.split('@')[0])) {
-            result.warnings.push('Consider using a password that is not similar to your email');
-        }
-
-        // Check for keyboard patterns
-        if (this.hasKeyboardPattern(password)) {
-            result.warnings.push('Avoid using keyboard patterns (like qwerty, asdf, 123456)');
-        }
+        result.errors.push(...zxcvbnResult.feedback.warnings);
 
         // Calculate password strength
-        result.strength = this.calculateStrength(password);
-        result.strengthText = this.getStrengthText(result.strength);
+        result.strength = zxcvbnResult.score;
+        result.strengthText = this.getStrengthText(zxcvbnResult.score);
 
         // Add strength warnings
-        if (result.strength < 60) {
+        if (zxcvbnResult.score < 3) {
             result.warnings.push('Consider using a stronger password for better security');
         }
 
@@ -183,38 +177,17 @@ class PasswordValidator {
      * Calculate password strength score (0-100)
      */
     calculateStrength(password) {
-        let score = 0;
-
-        // Length scoring
-        if (password.length >= 8) score += 20;
-        if (password.length >= 12) score += 10;
-        if (password.length >= 16) score += 10;
-
-        // Character diversity
-        if (/[a-z]/.test(password)) score += 10;
-        if (/[A-Z]/.test(password)) score += 10;
-        if (/\d/.test(password)) score += 10;
-        if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/.test(password)) score += 15;
-
-        // Bonus for variety
-        const uniqueChars = new Set(password).size;
-        if (uniqueChars >= password.length * 0.7) score += 10;
-
-        // Penalty for patterns
-        if (this.hasKeyboardPattern(password)) score -= 15;
-        if (this.hasConsecutiveChars(password, 2)) score -= 10;
-
-        return Math.max(0, Math.min(100, score));
+        return zxcvbn(password).score;
     }
 
     /**
      * Get strength text description
      */
     getStrengthText(score) {
-        if (score >= 80) return 'Very Strong';
-        if (score >= 60) return 'Strong';
-        if (score >= 40) return 'Moderate';
-        if (score >= 20) return 'Weak';
+        if (score >= 4) return 'Very Strong';
+        if (score >= 3) return 'Strong';
+        if (score >= 2) return 'Moderate';
+        if (score >= 1) return 'Weak';
         return 'Very Weak';
     }
 

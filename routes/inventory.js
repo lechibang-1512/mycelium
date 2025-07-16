@@ -172,7 +172,9 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                     notes: notes || null
                 };
                 
-                const receiptId = `PUR-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+                const crypto = require('crypto');
+                const randomId = crypto.randomBytes(4).toString('hex').toUpperCase();
+                const receiptId = `PUR-${Date.now()}-${randomId}`;
                 
                 await conn.query(
                     'INSERT INTO receipts (receipt_id, receipt_type, receipt_data, product_id, supplier_id, transaction_date, subtotal, tax_amount, total_amount, notes) VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?)',
