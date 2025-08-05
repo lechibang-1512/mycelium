@@ -1,6 +1,7 @@
 -- Schema for suppliers_db
 -- Generated on 2025-07-10T18:53:08.740Z
-
+CReate database IF NOT EXISTS `suppliers_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `suppliers_db`;
 -- Table: suppliers
 CREATE TABLE `suppliers` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
