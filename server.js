@@ -147,6 +147,12 @@ async function startServer() {
         }
 
         // Create dynamic session middleware
+        // Import rate limiting middleware
+        const { generalLimiter, authLimiter, passwordResetLimiter, speedLimiter, adminLimiter, apiWriteLimiter } = require('./middleware/rateLimiting');
+
+        // Apply global rate limiting first
+        app.use(generalLimiter);
+
         const dynamicSessionMiddleware = createDynamicSessionMiddleware(dynamicSecretService, {
             cookie: {
                 maxAge: 24 * 60 * 60 * 1000, // 24 hours
@@ -157,7 +163,7 @@ async function startServer() {
         });
 
         // Handle favicon and static assets FIRST - before any other middleware
-        app.get('/favicon.ico', (req, res) => {
+        app.get('/favicon.ico', generalLimiter, (req, res) => {
             res.sendFile(path.join(__dirname, 'public', 'favicon.ico'), {
                 headers: {
                     'Content-Type': 'image/x-icon',
@@ -176,8 +182,7 @@ async function startServer() {
         app.use(express.json({ limit: '10mb' }));
         app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-        // Apply rate limiting
-        app.use(generalLimiter);
+        // Apply additional rate limiting (general limiter already applied above)
         app.use(speedLimiter);
 
         // Security middleware
@@ -290,6 +295,9 @@ async function startServer() {
         
         // Import the modular error handlers from middleware
         const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
+        
+        // CSRF error handler - must be before general error handler
+        app.use(csrfErrorHandler);
         
         // 404 handler for undefined routes - must be after all valid routes
         app.use(notFoundHandler);

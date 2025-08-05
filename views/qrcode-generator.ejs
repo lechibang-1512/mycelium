@@ -13,7 +13,7 @@
             align-items: center;
         }
         
-        .qr-generator-tabs .nav-link i {
+        .nav-link i {
             margin-right: 8px;
         }
         
@@ -585,10 +585,16 @@
                             const printItem = document.createElement('div');
                             printItem.className = 'print-item';
                             
-                            printItem.innerHTML = `
-                                <img src="${img.src}" alt="QR Code">
-                                <p>${img.dataset.productName}</p>
-                            `;
+                            // Safely create DOM elements instead of using innerHTML
+                            const imgElement = document.createElement('img');
+                            imgElement.src = img.src;
+                            imgElement.alt = 'QR Code';
+                            
+                            const textElement = document.createElement('p');
+                            textElement.textContent = img.dataset.productName || '';
+                            
+                            printItem.appendChild(imgElement);
+                            printItem.appendChild(textElement);
                             
                             printGrid.appendChild(printItem);
                             window.print();
@@ -605,10 +611,16 @@
                     const printItem = document.createElement('div');
                     printItem.className = 'print-item';
                     
-                    printItem.innerHTML = `
-                        <img src="${img.src}" alt="QR Code">
-                        <p>${img.dataset.productName}</p>
-                    `;
+                    // Safely create DOM elements instead of using innerHTML
+                    const imgElement = document.createElement('img');
+                    imgElement.src = img.src;
+                    imgElement.alt = 'QR Code';
+                    
+                    const textElement = document.createElement('p');
+                    textElement.textContent = img.dataset.productName || '';
+                    
+                    printItem.appendChild(imgElement);
+                    printItem.appendChild(textElement);
                     
                     printGrid.appendChild(printItem);
                 });

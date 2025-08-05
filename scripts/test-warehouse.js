@@ -7,7 +7,15 @@ async function testWarehouseService() {
     
     try {
         console.log('Testing Warehouse Service...');
-        console.log('Database config:', dbConfig.development);
+        // Log database config without sensitive information
+        const safeDbConfig = {
+            host: dbConfig.development.host,
+            port: dbConfig.development.port,
+            user: dbConfig.development.user,
+            database: dbConfig.development.database,
+            connectionLimit: dbConfig.development.connectionLimit
+        };
+        console.log('Database config:', safeDbConfig);
         
         // Create database connection pool
         pool = mysql.createPool(dbConfig.development);
