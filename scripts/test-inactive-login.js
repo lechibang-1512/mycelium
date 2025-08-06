@@ -3,7 +3,12 @@
 /**
  * Test Inactive User Login
  * Tests if users with is_active = 0 are blocked from logging in
+ * Can be run from anywhere within the project directory
  */
+
+// Initialize project environment
+const { initializeProject } = require('./utils-project-root');
+const { projectRoot } = initializeProject({ verbose: false, requireEnv: false });
 
 const http = require('http');
 const { URLSearchParams } = require('url');
@@ -161,7 +166,8 @@ async function checkServerRunning() {
 
 async function main() {
     console.log('🔐 Inactive User Login Test Suite');
-    console.log('==================================\\n');
+    console.log('==================================\n');
+    console.log(`📁 Running from project root: ${projectRoot}\n`);
     
     // Check if server is running
     console.log('🔍 Checking if server is running...');

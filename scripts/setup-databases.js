@@ -1,6 +1,15 @@
 #!/usr/bin/env node
 
-require('dotenv').config();
+/**
+ * Database Setup Script
+ * Sets up all required databases with their schemas
+ * Can be run from anywhere within the project directory
+ */
+
+// Initialize project environment
+const { initializeProject, getProjectPath } = require('./utils-project-root');
+const { projectRoot } = initializeProject({ verbose: true, requireEnv: true });
+
 const mariadb = require('mariadb');
 const fs = require('fs');
 const path = require('path');
@@ -42,7 +51,7 @@ async function setupDatabases() {
             
             if (tables.length === 0) {
                 console.log(`  📄 Loading schema from ${db.schema}`);
-                const schemaPath = path.join(__dirname, '../sql', db.schema);
+                const schemaPath = getProjectPath(`sql/${db.schema}`);
                 
                 if (fs.existsSync(schemaPath)) {
                     const schema = fs.readFileSync(schemaPath, 'utf8');

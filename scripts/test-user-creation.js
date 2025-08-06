@@ -3,7 +3,12 @@
 /**
  * Test User Creation Flow
  * Tests the complete flow: login -> access user management -> create user
+ * Can be run from anywhere within the project directory
  */
+
+// Initialize project environment
+const { initializeProject } = require('./utils-project-root');
+const { projectRoot } = initializeProject({ verbose: false, requireEnv: false });
 
 const http = require('http');
 const { URLSearchParams } = require('url');
@@ -234,6 +239,10 @@ async function testCompleteFlow() {
 }
 
 // Run the test
+console.log('🧪 Starting User Creation Test Suite');
+console.log(`📁 Running from project root: ${projectRoot}`);
+console.log('=====================================\n');
+
 testCompleteFlow().then(success => {
     console.log('\n📊 Test Results:');
     console.log(`   Complete flow: ${success ? '✅ PASS' : '❌ FAIL'}`);

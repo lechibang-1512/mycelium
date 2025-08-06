@@ -1,6 +1,6 @@
+const { initializeProject } = require('./utils-project-root');
+const { projectRoot } = initializeProject({ verbose: false, requireEnv: true });
 
-
-require('dotenv').config();
 const mariadb = require('mariadb');
 const bcrypt = require('bcrypt');
 

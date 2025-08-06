@@ -3,7 +3,12 @@
 /**
  * CSRF Token Test Script
  * Tests CSRF token generation and validation for the login endpoint
+ * Can be run from anywhere within the project directory
  */
+
+// Initialize project environment
+const { initializeProject } = require('./utils-project-root');
+const { projectRoot } = initializeProject({ verbose: false, requireEnv: false });
 
 const http = require('http');
 const https = require('https');

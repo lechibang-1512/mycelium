@@ -3,7 +3,12 @@
 /**
  * Test Login Functionality
  * Tests if the admin user can login successfully
+ * Can be run from anywhere within the project directory
  */
+
+// Initialize project environment
+const { initializeProject } = require('./utils-project-root');
+const { projectRoot } = initializeProject({ verbose: false, requireEnv: false });
 
 const http = require('http');
 const { URLSearchParams } = require('url');
@@ -153,7 +158,8 @@ async function checkServerRunning() {
 
 async function main() {
     console.log('🔐 Admin Login Test Suite');
-    console.log('=========================\\n');
+    console.log('=========================\n');
+    console.log(`📁 Running from project root: ${projectRoot}\n`);
     
     // Check if server is running
     console.log('🔍 Checking if server is running...');

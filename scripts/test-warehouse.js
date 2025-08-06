@@ -1,6 +1,18 @@
+#!/usr/bin/env node
+
+/**
+ * Test Warehouse Service
+ * Tests warehouse management functionality
+ * Can be run from anywhere within the project directory
+ */
+
+// Initialize project environment
+const { initializeProject, getProjectPath } = require('./utils-project-root');
+const { projectRoot } = initializeProject({ verbose: true, requireEnv: true });
+
 const mysql = require('mysql2/promise');
-const WarehouseService = require('../services/WarehouseService');
-const dbConfig = require('../config/database');
+const WarehouseService = require(getProjectPath('services/WarehouseService'));
+const dbConfig = require(getProjectPath('config/database'));
 
 async function testWarehouseService() {
     let pool;
@@ -66,9 +78,12 @@ async function testWarehouseService() {
     }
 }
 
-console.log('Starting warehouse service test...');
+console.log('🏪 Starting warehouse service test...');
+console.log(`📁 Running from project root: ${projectRoot}`);
 testWarehouseService().then(() => {
-    console.log('Test function completed');
+    console.log('✅ Test function completed successfully');
+    process.exit(0);
 }).catch(error => {
-    console.error('Unhandled error:', error);
+    console.error('❌ Unhandled error:', error);
+    process.exit(1);
 });

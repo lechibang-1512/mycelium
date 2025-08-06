@@ -6,7 +6,12 @@
  * 1) Verifies that .env and .env.example exist
  * 2) Logs all required variables and their values (or marks them missing)
  * 3) Validates presence, placeholders, duplicates, and types
+ * Can be run from anywhere within the project directory
  */
+
+// Initialize project environment
+const { initializeProject, findProjectRoot } = require('./utils-project-root');
+const { projectRoot } = initializeProject({ verbose: false, requireEnv: false });
 
 const fs = require('fs');
 const path = require('path');
@@ -150,4 +155,7 @@ function validateEnv(root) {
 }
 
 // --- Run ---
-validateEnv(process.cwd());
+console.log('🔍 Environment Variable Verification');
+console.log(`📁 Project root: ${projectRoot}`);
+console.log('=====================================\n');
+validateEnv(projectRoot);

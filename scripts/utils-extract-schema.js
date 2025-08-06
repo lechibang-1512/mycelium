@@ -1,3 +1,15 @@
+#!/usr/bin/env node
+
+/**
+ * Database Schema Extract Tool
+ * Extracts and analyzes database schemas
+ * Can be run from anywhere within the project directory
+ */
+
+// Initialize project environment first
+const { initializeProject, getProjectPath } = require('./utils-project-root');
+const { projectRoot } = initializeProject({ verbose: false, requireEnv: false });
+
 // Auto-detect and load environment variables from multiple possible locations
 const { exec, spawn } = require('child_process');
 const fs = require('fs').promises;
@@ -84,37 +96,9 @@ const dbs = [
 ];
 
 // --- CONFIGURATION ---
-// Auto-detect SQL directory location
-function getProjectRoot() {
-  let currentDir = __dirname;
-  let attempts = 0;
-  const maxAttempts = 5;
-
-  while (attempts < maxAttempts) {
-    // Check if this looks like project root (has package.json)
-    const packageJsonPath = path.join(currentDir, 'package.json');
-    try {
-      if (require('fs').existsSync(packageJsonPath)) {
-        console.log(`📁 Detected project root: ${currentDir}`);
-        return currentDir;
-      }
-    } catch (error) {
-      // Continue searching
-    }
-    
-    const parentDir = path.dirname(currentDir);
-    if (parentDir === currentDir) break; // Reached filesystem root
-    currentDir = parentDir;
-    attempts++;
-  }
-
-  // Fallback to script's parent directory
-  console.log(`📁 Using fallback directory: ${path.dirname(__dirname)}`);
-  return path.dirname(__dirname);
-}
-
-const PROJECT_ROOT = getProjectRoot();
-const SQL_DIR = path.join(PROJECT_ROOT, 'sql');
+// Use the project root from utils-project-root
+const PROJECT_ROOT = projectRoot;
+const SQL_DIR = getProjectPath('sql');
 
 /**
  * Ensures required packages are installed.
