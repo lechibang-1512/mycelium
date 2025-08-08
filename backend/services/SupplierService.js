@@ -7,7 +7,7 @@ const { QueryTypes, Op } = require('sequelize');
 const { sequelizeMaster } = require('../config/sequelize');
 const { Supplier, Transaction, Inventory } = require('../models/master');
 const { generateId } = require('../utils/generateId');
-const { ValidationError, NotFoundError, ConflictError, InsufficientStockError, CapacityError } = require('../utils/errors');
+const { ValidationError, ConflictError } = require('../utils/errors');
 
 
 class SupplierService {
@@ -245,7 +245,7 @@ class SupplierService {
         let brands = [];
         try {
             brands = typeof s.brands === 'string' ? JSON.parse(s.brands) : (s.brands || []);
-        } catch (e) { brands = []; }
+        } catch (_e) { brands = []; }
 
         return {
             ...s,

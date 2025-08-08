@@ -5,8 +5,8 @@ import { formatDate } from '../utils/formatters.js';
 const disposalAPI = {
     getPending: () => Promise.resolve({ data: { success: true, data: [] } }),
     getHistory: () => Promise.resolve({ data: { success: true, data: [] } }),
-    moveToDisposal: (payload) => Promise.resolve({ data: { success: true } }),
-    completeDisposal: (payload) => Promise.resolve({ data: { success: true } }),
+    moveToDisposal: (_payload) => Promise.resolve({ data: { success: true } }),
+    completeDisposal: (_payload) => Promise.resolve({ data: { success: true } }),
 };
 
 const getBadgeCls = (status) =>

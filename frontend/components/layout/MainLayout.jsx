@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { 
-    LayoutDashboard, Package, Smartphone, Settings, Download, 
+    LayoutDashboard, Package, Smartphone, Download, 
     ClipboardCheck, Lightbulb, Truck, Warehouse, Wrench, 
-    FileText, ShoppingCart, Receipt, Users, Shield, Menu, X, 
+    FileText, ShoppingCart, Receipt, Users, Shield, Menu, 
     LogOut, User as UserIcon, ChevronDown, Monitor, Component, 
     Cpu, Activity, Boxes
 } from 'lucide-react';

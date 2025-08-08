@@ -3,7 +3,6 @@ import { api } from '../utils/api.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
 import { Card } from '../components/ui/Card.jsx';
-import { Badge } from '../components/ui/Badge.jsx';
 import { Spinner } from '../components/ui/Spinner.jsx';
 import { PageHeader } from '../components/ui/PageHeader.jsx';
 import { Modal, ModalFooter } from '../components/ui/Modal.jsx';

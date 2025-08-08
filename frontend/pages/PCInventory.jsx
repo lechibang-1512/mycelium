@@ -69,7 +69,7 @@ export default function PCInventory() {
         try {
             const res = await api.get('/pc-inventory');
             setInventory(res?.data || []);
-        } catch (e) {
+        } catch (_e) {
             setError('Failed to load PC inventory');
         } finally {
             setLoading(false);

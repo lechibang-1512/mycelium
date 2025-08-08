@@ -7,7 +7,7 @@ const { QueryTypes, Op } = require('sequelize');
 const { sequelizeMaster } = require('../config/sequelize');
 const { RepairJob, RepairJobPart, Inventory } = require('../models/master');
 const { generateId } = require('../utils/generateId');
-const { ValidationError, NotFoundError, ConflictError, InsufficientStockError, CapacityError } = require('../utils/errors');
+const { NotFoundError, InsufficientStockError } = require('../utils/errors');
 
 
 class RepairService {

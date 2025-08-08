@@ -116,7 +116,7 @@ export default function PCComponents() {
                     <div className="text-center py-16 text-slate-400">
                         <Cpu className="w-12 h-12 mx-auto mb-3 opacity-20" />
                         <p className="text-lg font-medium text-slate-500">No {type.toUpperCase()} components found</p>
-                        <p className="text-sm mt-1">Click "Add Component" to create your first entry.</p>
+                        <p className="text-sm mt-1">Click &quot;Add Component&quot; to create your first entry.</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto w-full">

@@ -6,7 +6,7 @@
 const { QueryTypes } = require('sequelize');
 const { sequelizeMaster } = require('../config/sequelize');
 const { generateId } = require('../utils/generateId');
-const { CapacityError, InsufficientStockError, ValidationError, NotFoundError, ConflictError } = require('../utils/errors');
+const { CapacityError, InsufficientStockError, ValidationError, NotFoundError } = require('../utils/errors');
 
 const MAX_QUANTITY_PER_TRANSACTION = 10000;
 

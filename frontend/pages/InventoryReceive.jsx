@@ -55,7 +55,7 @@ export default function InventoryReceive() {
         try {
             const res = await api.get(`/receiving/invoices/${uuid}/manifest`);
             setManifest(res);
-        } catch (e) {
+        } catch (_e) {
             setError('Failed to load invoice manifest');
         }
     };

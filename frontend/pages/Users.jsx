@@ -13,7 +13,6 @@ const IC = 'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm
 
 function UserModal({ user, onClose, onSaved }) {
     const isEdit = !!user;
-    const toast = useToast();
     const [form, setForm] = useState({ 
         username: user?.username || '', 
         fullName: user?.fullName || user?.full_name || '', 

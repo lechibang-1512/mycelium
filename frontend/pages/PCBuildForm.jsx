@@ -105,7 +105,7 @@ export default function PCBuildForm() {
                         total_price: buildRes.data.total_price ?? '',
                     }));
                 }
-            } catch (err) {
+            } catch (_err) {
                 setError('Failed to load component options or build details.');
             } finally {
                 setLoading(false);

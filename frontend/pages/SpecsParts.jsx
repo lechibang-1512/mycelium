@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../utils/api.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
@@ -202,7 +202,9 @@ export default function SpecsParts() {
             const all = res.data?.data || res.data || [];
             setAllParts(all);
             setCategories(Array.from(new Set(all.map(p => p?.part_category).filter(Boolean))));
-        } catch {} finally { setLoading(false); }
+        } catch (e) {
+            console.error(e);
+        } finally { setLoading(false); }
     };
 
     useEffect(() => {
@@ -244,7 +246,10 @@ export default function SpecsParts() {
         const label = part.is_active ? 'deactivate' : 'activate';
         if (!window.confirm(`Are you sure you want to ${label} this part?`)) return;
         try { await api.put(`/spare-parts/${id}`, { is_active: !part.is_active }); showMsg(`Part ${label}d`); fetchParts(); }
-        catch (e) { showMsg('Failed to toggle status', 'error'); }
+        catch (e) {
+            console.error(e);
+            showMsg('Failed to toggle status', 'error');
+        }
     };
 
     const handleSaved = (text) => { setModal(null); showMsg(text); fetchParts(); };

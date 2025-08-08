@@ -9,7 +9,7 @@ const { Invoice, InvoiceItem } = require('../models/master');
 const { generateId } = require('../utils/generateId');
 const InventoryTransactionService = require('./InventoryTransactionService');
 const InvoiceService = require('./InvoiceService');
-const { ValidationError, NotFoundError, ConflictError, InsufficientStockError, CapacityError } = require('../utils/errors');
+const { ValidationError, NotFoundError } = require('../utils/errors');
 
 
 class InvoiceReceivingService {
@@ -291,7 +291,7 @@ class InvoiceReceivingService {
         };
     }
 
-    async resetReceivingForItem(invoiceUuid, itemId, productUuid) {
+    async resetReceivingForItem(invoiceUuid, itemId, _productUuid) {
         // Fetch invoice
         const [invoice] = await sequelizeMaster.query(`
             SELECT id FROM invoices WHERE uuid = ? OR id = ?

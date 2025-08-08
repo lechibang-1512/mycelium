@@ -7,7 +7,7 @@ const { QueryTypes, Op } = require('sequelize');
 const { sequelizeMaster } = require('../config/sequelize');
 const { PhoneSpec, Inventory } = require('../models/master');
 const { generateId } = require('../utils/generateId');
-const { ValidationError, NotFoundError, ConflictError, InsufficientStockError, CapacityError } = require('../utils/errors');
+const { ValidationError } = require('../utils/errors');
 
 
 class PhonesService {
@@ -188,7 +188,7 @@ class PhonesService {
         }
 
         let currentAttrs = {};
-        try { currentAttrs = typeof existing.attributes === 'string' ? JSON.parse(existing.attributes) : existing.attributes || {}; } catch (e) { /* intentional */ }
+        try { currentAttrs = typeof existing.attributes === 'string' ? JSON.parse(existing.attributes) : existing.attributes || {}; } catch (_e) { /* intentional */ }
 
         if (phoneData.attributes) {
             const newAttrs = { ...currentAttrs, ...phoneData.attributes };
@@ -229,7 +229,7 @@ class PhonesService {
 
     _mapPhone(p) {
         let attrs = {};
-        try { attrs = typeof p.attributes === 'string' ? JSON.parse(p.attributes) : p.attributes || {}; } catch (e) { /* intentional */ }
+        try { attrs = typeof p.attributes === 'string' ? JSON.parse(p.attributes) : p.attributes || {}; } catch (_e) { /* intentional */ }
 
         return {
             product_id: p.product_id,

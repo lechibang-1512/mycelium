@@ -38,7 +38,7 @@ export default function Inventory() {
             const data = Array.isArray(result) ? result : (Array.isArray(result?.data) ? result.data : []);
             setPhonesData(data);
             phonesLoadedRef.current = true;
-        } catch (err) {
+        } catch (_err) {
             setError('Failed to load inventory');
         } finally {
             setPhonesLoading(false);
@@ -52,7 +52,7 @@ export default function Inventory() {
             const data = result?.data || result || [];
             setSparePartsData(Array.isArray(data) ? data : []);
             spareLoadedRef.current = true;
-        } catch (err) {
+        } catch (_err) {
             setError('Failed to load spare parts');
         } finally {
             setSpareLoading(false);

@@ -43,7 +43,9 @@ function RepairsPanel() {
             if (st) p.status = st;
             const res = await api.get('/repair-jobs', p);
             setData(Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res?.data) ? res.data : []));
-        } catch {} finally { setLoading(false); }
+        } catch (e) {
+            console.error(e);
+        } finally { setLoading(false); }
     };
 
     useEffect(() => { load(); }, []);
@@ -139,7 +141,9 @@ function RMAPanel() {
             if (st) p.status = st;
             const res = await api.get('/rma', p);
             setData(Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res?.data) ? res.data : []));
-        } catch {} finally { setLoading(false); }
+        } catch (e) {
+            console.error(e);
+        } finally { setLoading(false); }
     };
 
     useEffect(() => { load(); }, []);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '../utils/api.js';
 import { formatDateOnly, formatDateTime } from '../utils/formatters.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
@@ -140,7 +140,7 @@ function CreateModal({ warehouses, onClose, onCreated }) {
     );
 }
 
-function DetailModal({ count, canWrite, canApprove, canManage, onClose, onAction, onCountItem, onDeleteItem, onRefresh }) {
+function DetailModal({ count, canWrite, canApprove, canManage, onClose, onAction, onCountItem, onDeleteItem }) {
     if (!count) return null;
     const c = count;
     const prog = c.total_items ? Math.round((c.counted_items / c.total_items) * 100) : 0;
@@ -250,7 +250,7 @@ export default function Stocktake() {
     const [selectedCount, setSelectedCount] = useState(null);
     const [countItem, setCountItem] = useState(null);
 
-    const searchTimer = useRef(null);
+
 
     const fetchAll = useCallback(async () => {
         setLoading(true);
@@ -268,7 +268,10 @@ export default function Stocktake() {
             setAccuracy(accuracyRes?.data?.data || []);
             setDueItems(dueRes?.data?.data || []);
             setWarehouses(whRes?.data?.warehouses || whRes?.data?.data || []);
-        } catch (e) { setMessage({ type: 'error', text: 'Failed to load data' }); }
+        } catch (err) {
+            console.error(err);
+            setMessage({ type: 'error', text: 'Failed to load data' });
+        }
         finally { setLoading(false); }
     }, [filters]);
 
@@ -300,7 +303,10 @@ export default function Stocktake() {
         try {
             const res = await api.get(`/stocktake/${id}`);
             setSelectedCount(res?.data?.data);
-        } catch (e) { setMessage({ type: 'error', text: 'Failed to fetch detail' }); }
+        } catch (err) {
+            console.error(err);
+            setMessage({ type: 'error', text: 'Failed to fetch detail' });
+        }
     };
 
     const handleDeleteItem = async (itemId) => {

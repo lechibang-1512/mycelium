@@ -7,7 +7,7 @@ const { Op } = require('sequelize');
 const { User, Role, UserRole } = require('../models/security');
 const bcrypt = require('bcryptjs');
 const { generateId } = require('../utils/generateId');
-const { ValidationError, NotFoundError, ConflictError, InsufficientStockError, CapacityError } = require('../utils/errors');
+const { ValidationError } = require('../utils/errors');
 
 
 class UsersService {

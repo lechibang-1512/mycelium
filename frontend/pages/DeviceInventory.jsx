@@ -54,7 +54,7 @@ export default function DeviceInventory() {
             const res = await api.get('/serialized-inventory/devices', params);
             const data = res?.data?.data || res?.data || res || [];
             setDevices(Array.isArray(data) ? data : []);
-        } catch (e) {
+        } catch (_e) {
             setError('Failed to load devices');
         } finally {
             setLoading(false);

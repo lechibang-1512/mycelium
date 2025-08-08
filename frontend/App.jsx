@@ -35,12 +35,7 @@ import UserRoles from './pages/UserRoles.jsx';
 import SpecsPhones from './pages/SpecsPhones.jsx';
 import SpecsParts from './pages/SpecsParts.jsx';
 
-// We will add components here as we migrate them
-const Placeholder = ({ name }) => (
-  <div className="flex items-center justify-center min-h-screen text-2xl">
-    {name} is being migrated...
-  </div>
-);
+
 
 function App() {
   return (

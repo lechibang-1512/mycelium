@@ -97,7 +97,7 @@ class SparePartsService {
 
     _mapPart(p) {
         let models = [];
-        try { models = typeof p.compatible_models === 'string' ? JSON.parse(p.compatible_models) : p.compatible_models || []; } catch (e) { /* intentional */ }
+        try { models = typeof p.compatible_models === 'string' ? JSON.parse(p.compatible_models) : p.compatible_models || []; } catch (_e) { /* intentional */ }
         return {
             id: p.spare_part_id,
             code: p.part_code,

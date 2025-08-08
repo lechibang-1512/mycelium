@@ -60,7 +60,9 @@ export default function Invoices() {
         try { 
             await api.patch(`/invoices/${id}/status`, { status: 'pending' }); 
             fetchInvoices(); 
-        } catch {}
+        } catch (e) {
+            console.error(e);
+        }
     };
 
     return (

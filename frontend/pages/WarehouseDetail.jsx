@@ -7,7 +7,7 @@ import { Badge } from '../components/ui/Badge.jsx';
 import { Spinner } from '../components/ui/Spinner.jsx';
 import { Modal, ModalFooter } from '../components/ui/Modal.jsx';
 import { 
-    Warehouse, MapPin, User, Plus, ArrowLeft, Pencil, 
+    MapPin, User, Plus, ArrowLeft, Pencil, 
     ArrowRightLeft, BarChart3, LayoutGrid, GripHorizontal, 
     Eye, Trash2, CheckCircle2, AlertTriangle, Smartphone, 
     Boxes, Wrench, Inbox
@@ -319,7 +319,7 @@ function TransferModal({ bins, warehouseId, onClose, onTransferred }) {
         finally { setLoadingItems(false); }
     };
 
-    const loadDestContents = async (binId) => {
+    const _loadDestContents = async (binId) => {
         if (!binId) { setDestContent(null); return; }
         try {
             const r = await api.get(`/bins/${binId}/contents`);
@@ -622,7 +622,7 @@ export default function WarehouseDetail() {
                 totalSpareParts: ss.unique_spare_parts || 0, 
                 totalItems: ss.total_items || 0 
             });
-        } catch (e) {
+        } catch (_e) {
             setError('Failed to load warehouse data');
         } finally { setLoading(false); }
     }, [warehouseId]);

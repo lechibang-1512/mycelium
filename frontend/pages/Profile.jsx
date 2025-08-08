@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../utils/api.js';
-import { escapeHtml } from '../utils/formatters.js';
+import { } from '../utils/formatters.js';
 
 const CATEGORY_CONFIG = {
     inventory: { icon: 'fa-box', col: 'text-primary', bg: 'bg-primary', label: 'Inventory' },

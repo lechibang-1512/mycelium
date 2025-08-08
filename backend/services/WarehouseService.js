@@ -7,7 +7,7 @@ const { QueryTypes, Op } = require('sequelize');
 const { sequelizeMaster } = require('../config/sequelize');
 const { Warehouse, WarehouseZone, WarehouseBin, Inventory, Transaction } = require('../models/master');
 const { generateId } = require('../utils/generateId');
-const { ValidationError, NotFoundError, ConflictError, InsufficientStockError, CapacityError } = require('../utils/errors');
+const { ValidationError, NotFoundError, ConflictError, InsufficientStockError } = require('../utils/errors');
 
 
 class WarehouseService {

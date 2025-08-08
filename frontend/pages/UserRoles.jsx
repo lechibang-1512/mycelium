@@ -35,7 +35,7 @@ const RoleBadge = ({ name }) => (
     <Badge variant={ROLE_COLORS[name] || 'info'}>{name}</Badge>
 );
 
-function AssignModal({ user, roles, onClose, onSaved }) {
+function AssignModal({ user, roles, onClose, _onSaved }) {
     const toast = useToast();
     const [currentRoles, setCurrentRoles] = useState([]);
     const [avail, setAvail] = useState([]);
@@ -484,7 +484,7 @@ export default function UserRoles() {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
-                                            {users.map((u, i) => {
+                                            {users.map((u, _i) => {
                                                 const uid = u.user_id || u.id;
                                                 return (
                                                     <tr key={uid} className="hover:bg-slate-50 transition-colors">

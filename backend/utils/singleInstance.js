@@ -43,7 +43,7 @@ async function killProcessOnPort(port) {
             pids.forEach(pid => {
                 try {
                     process.kill(parseInt(pid, 10), 'SIGTERM');
-                } catch (_e) {
+                } catch (__e) {
                     // Ignored
                 }
             });
@@ -52,7 +52,7 @@ async function killProcessOnPort(port) {
                 pids.forEach(pid => {
                     try {
                         process.kill(parseInt(pid, 10), 'SIGKILL');
-                    } catch (_e) {
+                    } catch (__e) {
                         // Ignored
                     }
                 });

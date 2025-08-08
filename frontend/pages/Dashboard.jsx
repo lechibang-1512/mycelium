@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../utils/api.js';
 import { formatKPI, formatCurrency, formatNumber, getStatusColor } from '../utils/formatters.js';
-import { useToast } from '../contexts/ToastContext.jsx';
 import { Card, CardHeader, CardContent } from '../components/ui/Card.jsx';
 import { Badge } from '../components/ui/Badge.jsx';
 import { Spinner } from '../components/ui/Spinner.jsx';
@@ -10,7 +9,6 @@ import { PageHeader } from '../components/ui/PageHeader.jsx';
 import { LayoutDashboard, Boxes, Coins, AlertTriangle, Wrench, RotateCcw, TrendingUp, Warehouse } from 'lucide-react';
 
 export default function Dashboard() {
-    const toast = useToast();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [data, setData] = useState({

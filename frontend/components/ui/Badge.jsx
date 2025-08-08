@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const variantClasses = {
   success: 'bg-emerald-100 text-emerald-800 border-emerald-200',
@@ -18,3 +19,9 @@ export function Badge({ children, variant = 'secondary', className = '' }) {
     </span>
   );
 }
+
+Badge.propTypes = {
+  children: PropTypes.node,
+  variant: PropTypes.string,
+  className: PropTypes.string,
+};

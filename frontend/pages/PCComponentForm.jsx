@@ -394,7 +394,7 @@ export default function PCComponentForm() {
                 try {
                     const res = await api.get(`/pc-components/${type}/${id}`);
                     setFormData(res?.data || {});
-                } catch (err) {
+                } catch (_err) {
                     setError('Failed to load component details.');
                 }
             } else {

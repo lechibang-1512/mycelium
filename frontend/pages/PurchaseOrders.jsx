@@ -49,7 +49,9 @@ export default function PurchaseOrders() {
             const res = await api.get('/invoices/purchase-orders', params);
             setPos(res.data?.purchaseOrders || []);
             setStats(res.data?.stats || {});
-        } catch { } finally { setLoading(false); }
+        } catch (e) {
+            console.error(e);
+        } finally { setLoading(false); }
     }, [filters]);
 
     useEffect(() => {
