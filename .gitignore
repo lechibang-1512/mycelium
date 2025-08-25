@@ -63,3 +63,8 @@ mycelium_code_submission/
 backend/public/assets/fontawesome/
 
 db_data
+
+# Spec Kit & Agents
+.specify/
+.agents/
+AGENTS.md
