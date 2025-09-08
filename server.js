@@ -224,11 +224,10 @@ async function startServer() {
         app.use(cookieParser());
         app.use(dynamicSessionMiddleware.getMiddleware());
         app.use(flash());
-
-        // CSRF Protection - Import modular CSRF handling
-        const { csrfProtection, csrfMiddleware, csrfErrorHandler } = require('./middleware/csrfProtection');
-        app.use(csrfProtection);
-        app.use(csrfMiddleware);
+        // Standard CSRF protection using lusca
+        const lusca = require('lusca');
+        app.use(lusca.csrf());
+        // (Removed custom modular CSRF middleware: csrfProtection, csrfMiddleware, csrfErrorHandler)
 
         // Make helper functions available to all views
         app.use((req, res, next) => {

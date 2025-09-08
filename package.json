@@ -72,7 +72,8 @@
     "qrcode": "^1.5.4",
     "validator": "^13.15.15",
     "xss": "^1.0.15",
-    "zxcvbn": "^4.4.2"
+    "zxcvbn": "^4.4.2",
+    "lusca": "^1.7.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
