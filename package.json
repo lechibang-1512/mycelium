@@ -47,7 +47,7 @@
   "homepage": "https://github.com/your-username/inventory-management-system#readme",
   "dependencies": {
     "@dr.pogodin/csurf": "^1.16.5",
-    "axios": "^1.11.0",
+    "axios": "^1.12.0",
     "bcrypt": "^6.0.0",
     "canvas": "^3.1.2",
     "cheerio": "^1.1.0",
