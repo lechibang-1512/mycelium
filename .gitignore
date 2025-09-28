@@ -64,7 +64,6 @@ backend/public/assets/fontawesome/
 
 db_data
 
-# Spec Kit & Agents
-.specify/
+# Agents
 .agents/
 AGENTS.md
