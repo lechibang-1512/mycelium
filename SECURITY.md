@@ -1,129 +1,116 @@
 # Security Policy
 
-## Reporting Security Vulnerabilities
+This document describes how to report security issues, our responsible disclosure policy, supported versions, and the security controls implemented by the project.
 
-If you discover a security vulnerability in the Mycelium ERP system, please report it responsibly:
+## Reporting security vulnerabilities (preferred)
 
-1. **Check Known Issues**: Review existing issues and the CWE (Common Weakness Enumeration) database
-2. **Create an Issue**: If the vulnerability is confirmed to be valid and warrants investigation, please create an issue on our repository
-3. **Provide Details**: Include steps to reproduce, potential impact, and suggested fixes if available
+If you discover a potential security vulnerability, please report it to the maintainers using one of the following secure channels:
 
-## Security Features
+- Preferred: create a private issue in this repository and mark it "security" (if the hosting supports private issues)
+- Email: security@mycelium.example (use PGP to encrypt sensitive details if possible)
+- If you need to share sensitive PoC code or data, please ask for a secure upload method in the initial report.
 
-This application implements comprehensive security measures:
+What to include in your report:
 
-### Authentication & Session Security
-- **Advanced Session Management**: Unique tokens, validation, and real-time tracking
-- **Session Timeout**: Automatic idle timeout (30 minutes) and maximum duration limits
-- **Dynamic Session Secrets**: Automatic rotation with fallback support
-- **Session Hijacking Protection**: User agent validation and IP monitoring
-- **Secure Session Storage**: HTTPOnly, Secure, and SameSite cookie attributes
+- A clear description of the vulnerability and the affected component (file/module)
+- Steps to reproduce (minimal PoC if possible)
+- Expected and actual behavior
+- Impact assessment (data exposure, RCE, privilege escalation, etc.)
+- Any suggested mitigations or patches
 
-### Password Security
-- **Strong Password Policies**: Enforced complexity requirements
-- **Password Strength Validation**: Real-time strength checking with user feedback
-- **Password History**: Prevention of password reuse
-- **Secure Hashing**: bcrypt with 12 rounds for enhanced security
-- **Common Password Detection**: Protection against frequently used passwords
+If you prefer to open a public issue first, please avoid posting full exploit code or sensitive data in public.
 
-### Input Protection
-- **Comprehensive Input Validation**: Server-side validation for all user inputs
-- **XSS Protection**: HTML sanitization and Content Security Policy (CSP)
-- **SQL Injection Prevention**: Parameterized queries and input escaping
-- **CSRF Protection**: Comprehensive protection against cross-site request forgery attacks
-  - **Token Generation**: Automatic CSRF token generation for all requests
-  - **Token Validation**: Mandatory validation for state-changing operations (POST, PUT, PATCH, DELETE)
-  - **Multiple Token Sources**: Support for tokens in request body, headers, and query parameters
-  - **Secure Token Storage**: HTTPOnly cookies with SameSite protection
-  - **CWE-352 Compliance**: Fully mitigates Cross-Site Request Forgery vulnerabilities
-- **File Upload Security**: Type validation and size limits
+## Responsible disclosure policy and timelines
 
-### Rate Limiting & Brute Force Protection
-- **Authentication Rate Limiting**: 5 attempts per 15 minutes for login endpoints
-- **General Rate Limiting**: 1000 requests per 15 minutes per IP
-- **API Write Protection**: 30 write operations per minute
-- **Password Reset Limiting**: 3 attempts per hour
-- **Admin Panel Protection**: Enhanced rate limiting for administrative functions
+- Acknowledge receipt: within 2 business days
+- Initial triage: within 7 calendar days
+- Fix or mitigation plan: within 30 calendar days for high/critical issues when practical
+- Public disclosure / advisory: coordinated with reporter; typically within 90 days of initial report for critical issues unless a longer embargo is required
 
-### Security Headers
-- **Content Security Policy (CSP)**: Prevents XSS and code injection
-- **Strict Transport Security (HSTS)**: Forces HTTPS in production
-- **X-Frame-Options**: Prevents clickjacking attacks
-- **X-Content-Type-Options**: Prevents MIME type sniffing
-- **Permissions Policy**: Restricts browser APIs access
+If there are legal or operational constraints that prevent us from meeting these timelines we will communicate them to the reporter.
 
-### Data Protection
-- **Environment-based Configuration**: All sensitive credentials in environment variables
-- **Secret Sanitization**: Automatic sanitization of sensitive data in logs and responses
-- **Database Security**: Separate users with minimal required permissions
-- **Input Sanitization**: Comprehensive data validation and sanitization
+## Severity & CVE handling
 
-### Monitoring & Auditing
-- **Session Monitoring**: Real-time session tracking and security violation detection
-- **Security Logging**: Comprehensive logging of security events
-- **Failed Login Tracking**: Monitoring and alerting for suspicious activities
-- **Automatic Cleanup**: Regular cleanup of expired sessions and data
+- We classify issues as Low / Medium / High / Critical based on impact and exploitability.
+- For High/Critical vulnerabilities we will request a CVE assignment and publish an advisory once a fix or mitigation is available.
 
-## Security Best Practices
+## Security contact and PGP
 
-### For Administrators
-- Use strong, unique passwords for all database accounts
-- Generate cryptographically secure session secrets (minimum 64 characters)
-- Never commit `.env` files to version control
-- Use HTTPS in production environments
-- Regularly update dependencies and apply security patches
-- Monitor session activity for suspicious behavior
-- Implement proper database user permissions
-- Review security logs regularly
-- Enable automatic session secret rotation
+- Email: security@mycelium.example
+- PGP key fingerprint: 0000 0000 0000 0000 0000 0000 0000 0000 (replace with real key)
 
-### For Users
-- Use strong passwords with mixed case, numbers, and special characters
-- Avoid common passwords and patterns
-- Log out when finished, especially on shared devices
-- Report suspicious activity immediately
-- Keep your browser updated
-- Don't share login credentials
+## Disclosure & credits
 
-### For Developers
-- Follow secure coding practices
-- Validate all inputs on both client and server side
-- Use parameterized queries for database operations
-- Implement proper error handling without information disclosure
-- Regular security testing and code reviews
-- Keep security dependencies updated
+We aim to credit external researchers who report security issues, unless they request anonymity.
 
-## Implementation Details
+## Security features (summary)
 
-### Session Security
-- Session tokens: 32-byte cryptographically secure random tokens
-- Session IDs: 16-byte cryptographically secure identifiers
-- Automatic session cleanup every 15 minutes
-- Session validation on every request
+The following is a high-level summary of the security controls implemented by this project. For implementation details see source files under `middleware/`, `services/`, and `config/`.
 
-### Password Requirements
-- Minimum 8 characters (recommended 12+)
-- At least one uppercase letter
-- At least one lowercase letter
-- At least one number
-- At least one special character
-- Protection against common passwords and patterns
+- Authentication & sessions
+  - Advanced session management with token validation and rotation
+  - Idle timeout (configurable, default 30 minutes) and max session duration
+  - Dynamic session secret rotation with fallback
+  - HTTPOnly, Secure, SameSite cookie attributes
 
-### Rate Limiting Configuration
-- General: 1000 requests per 15 minutes
-- Authentication: 5 attempts per 15 minutes
-- Password Reset: 3 attempts per hour
-- Admin Panel: 200 requests per 15 minutes
-- API Writes: 30 operations per minute
+- Password security
+  - Enforced complexity checks and client-side strength feedback
+  - Password history checks to prevent reuse
+  - bcrypt hashing (configurable rounds)
 
-## Supported Versions
+- Input protection
+  - Server-side validation and sanitization
+  - CSP and XSS mitigations (sanitizers and DOM sanitization)
+  - Parameterized queries to prevent SQL injection
+  - CSRF protection (tokens validated for state-changing requests)
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.0.x   | :white_check_mark: |
+- Rate limiting & brute force protections
+  - Login throttling and global/request-level rate limits
 
-## Security Updates
+- Security headers
+  - HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Permissions-Policy
 
-This document is regularly updated to reflect the latest security measures and best practices implemented in the system.
+- Monitoring & logging
+  - Security logging of suspicious events and failed logins
 
-For questions about security practices or to report vulnerabilities, please create an issue in this repository.
+## Implementation details (where to find them)
+
+- Session management: `services/SessionManagementService.js`, `middleware/DynamicSessionMiddleware.js`
+- CSRF protection: `middleware/csrfProtection.js`
+- Rate limiting: `middleware/rateLimiting.js`
+- Input validation: `middleware/inputValidation.js`, `services/SanitizationService.js`
+
+## Supported versions
+
+We publish security support windows for releases. Supported versions currently:
+
+| Version | Support status | Notes |
+| ------- | -------------- | ----- |
+| 1.0.x   | Supported      | Active maintenance for security issues |
+
+If you are running an older fork or custom deployment, please upgrade to the latest 1.0.x patch release.
+
+## Reporting process (example)
+
+1. Send an email to `security@mycelium.example` or open a private issue with the subject `SECURITY REPORT: <short description>`.
+2. Attach PoC or steps to reproduce. If data is sensitive, ask for a secure upload channel.
+3. We will acknowledge and triage the issue and provide a reference number.
+
+## Disclosure and coordination
+
+We will coordinate patch releases and advisories with the reporter. Where possible, we will ship a patch and release notes, then publish an advisory.
+
+## Emergency contact
+
+If you believe a vulnerability is being actively exploited in production and immediate action is required, please mark the initial report as "urgent" and include contact phone number or alternate secure channel for faster coordination.
+
+## Other notes
+
+- Never send secrets (passwords, private keys) in plain email. Use PGP or a secure upload.
+- Do not attempt to access, exfiltrate, or modify production data during testing without prior authorization.
+- We reserve the right to notify affected parties and hosting providers if there is imminent risk to users.
+
+---
+
+Last updated: 2025-10-10
+
