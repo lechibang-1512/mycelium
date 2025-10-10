@@ -4,12 +4,7 @@ require('dotenv').config();
 // Safe formatter for device information - add to prevent template literal syntax errors
 function formatDeviceInfo(maker, name) {
     // Ensure both inputs are strings
-    con        // Set view engine
-        app.set('view engine', 'ejs');
-        app.set('views', path.join(__dirname, 'views'));
-
-        // Import modular routes
-        const authRoutes = require('./routes/auth')(authPool, convertBigIntToNumber);ceMaker = (maker || '').toString();
+    const deviceMaker = (maker || '').toString();
     const deviceName = (name || '').toString();
     // Combine and trim, providing a default if empty
     return (deviceMaker + ' ' + deviceName).trim() || 'N/A';
@@ -57,6 +52,8 @@ const { createDynamicSessionMiddleware } = require('./middleware/DynamicSessionM
 
 // Import security middleware
 const { sanitizeApiResponse, securityHeaders, preventSecretExposure } = require('./middleware/security');
+// Import CSRF helpers (csrfErrorHandler used later)
+const { csrfProtection, csrfMiddleware, csrfErrorHandler } = require('./middleware/csrfProtection');
 
 // Import rate limiting middleware
 const {
@@ -109,7 +106,7 @@ const authDbConfig = {
     port: process.env.AUTH_DB_PORT || 3306,
     user: process.env.AUTH_DB_USER,
     password: process.env.AUTH_DB_PASSWORD,
-    database: process.env.AUTH_DB_NAME || 'users_db',
+    database: process.env.AUTH_DB_NAME || 'security_db',
     connectionLimit: 10,
     bigIntAsNumber: true
 };

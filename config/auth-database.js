@@ -8,7 +8,7 @@ module.exports = {
         user: process.env.AUTH_DB_USER,
         // Do NOT log or expose the password in any logs
         password: process.env.AUTH_DB_PASSWORD,
-        database: process.env.AUTH_DB_NAME || 'users_db',
+        database: process.env.AUTH_DB_NAME || 'security_db',
         connectionLimit: 5,
         acquireTimeout: 60000,
         timeout: 60000,

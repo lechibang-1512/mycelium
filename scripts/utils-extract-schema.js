@@ -228,26 +228,135 @@ async function run() {
         await conn.query("SELECT 1");
         console.log(`  ✓ Connection test successful`);
 
-        const tables = await conn.query("SHOW TABLES");
+        // Query INFORMATION_SCHEMA to get table names and types (BASE TABLE vs VIEW)
+        const tables = await conn.query(
+          'SELECT TABLE_NAME, TABLE_TYPE FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ?',
+          [db.config.database]
+        );
 
         if (tables.length === 0) {
-          console.log(`  No tables in ${db.name}`);
+          console.log(`  No tables/views in ${db.name}`);
           await conn.end();
           continue;
         }
 
-        console.log(`  Found ${tables.length} tables`);
+        console.log(`  Found ${tables.length} tables/views`);
         let schemaSQL = `-- Schema for ${db.name}\n-- Generated on ${new Date().toISOString()}\n\n`;
 
+        // Helper: extract the CREATE statement string from a SHOW CREATE result row
+        function extractCreateStatement(resultRow) {
+          if (!resultRow || typeof resultRow !== 'object') return null;
+          // Find the first string value which contains 'CREATE'
+          for (const val of Object.values(resultRow)) {
+            if (typeof val === 'string' && val.trim().toUpperCase().startsWith('CREATE')) {
+              return val.trim();
+            }
+          }
+          // Fallback: return first string value
+          for (const val of Object.values(resultRow)) {
+            if (typeof val === 'string') return val;
+          }
+          return null;
+        }
+
+        // Sanitize CREATE statements for portability:
+        // - Remove DEFINER=`user`@`host`
+        // - Remove ALGORITHM=UNDEFINED (or any ALGORITHM=...) since it may not be portable
+        // - Trim extra whitespace and ensure no duplicate semicolons
+        function sanitizeCreateStatement(createStmt) {
+          if (!createStmt || typeof createStmt !== 'string') return createStmt;
+
+          let s = createStmt;
+
+          // Remove DEFINER clause: DEFINER=`user`@`host`
+          s = s.replace(/DEFINER=`[^`]+`@`[^`]+`\s*/ig, '');
+
+          // Remove ALGORITHM=... clause (commonly ALGORITHM=UNDEFINED)
+          s = s.replace(/ALGORITHM\s*=\s*\w+\s*/ig, '');
+
+          // Remove SQL SECURITY clauses (DEFINER/INVOKER) which may not be portable
+          s = s.replace(/SQL\s+SECURITY\s+\w+\s*/ig, '');
+
+          // Normalize multiple spaces
+          s = s.replace(/\s+/g, ' ').trim();
+
+          // Ensure it ends without multiple semicolons
+          s = s.replace(/;+/g, ';');
+
+          // Some SHOW CREATE VIEW returns the full 'CREATE ... VIEW `name` AS select ...' which is fine.
+          return s;
+        }
+
+        // Pretty-print CREATE statements for readability.
+        // - For CREATE TABLE: put columns/definitions on separate indented lines
+        // - For CREATE VIEW: break after AS
+        function formatCreateStatement(stmt) {
+          if (!stmt || typeof stmt !== 'string') return stmt;
+
+          // Work on a copy
+          let s = stmt.trim();
+
+          // Ensure single trailing semicolon
+          s = s.replace(/;+/g, ';').trim();
+          if (!s.endsWith(';')) s = s + ';';
+
+          // Pretty format CREATE TABLE
+          if (/^CREATE\s+TABLE/i.test(s)) {
+            // Find opening parenthesis for column list
+            const parenIndex = s.indexOf('(');
+            if (parenIndex > -1) {
+              const head = s.slice(0, parenIndex + 1).trim();
+              const tail = s.slice(parenIndex + 1, s.lastIndexOf(')')).trim();
+              const foot = s.slice(s.lastIndexOf(')')).replace(/\s*;?\s*$/, ')').trim();
+
+              // Split columns/definitions by comma at top level. Simple approach: split on ',\s*`' and keep leading char
+              const parts = tail.split(/,\s*(?=`|\w)/);
+              const formattedParts = parts.map(p => '  ' + p.trim());
+              return `${head}\n${formattedParts.join(',\n')}\n${foot};`;
+            }
+          }
+
+          // Pretty format CREATE VIEW: break at AS
+          if (/^CREATE\s+VIEW/i.test(s)) {
+            const m = s.match(/(CREATE\s+VIEW\s+`?[^`\s]+`?\s*)(AS\s*)([\s\S]+)/i);
+            if (m) {
+              const head = m[1].trim();
+              const as = m[2].trim();
+              const body = m[3].replace(/;$/, '').trim();
+              return `${head} ${as}\n${body};`;
+            }
+          }
+
+          return s;
+        }
+
         for (const row of tables) {
-          const tableName = Object.values(row)[0];
-          console.log(`    Processing table: ${tableName}`);
+          const tableName = row.TABLE_NAME || Object.values(row)[0];
+          const tableType = (row.TABLE_TYPE || '').toUpperCase();
+          console.log(`    Processing ${tableType === 'VIEW' ? 'view' : 'table'}: ${tableName}`);
           try {
-            const createTable = await conn.query(`SHOW CREATE TABLE \`${tableName}\``);
-            schemaSQL += `-- Table: ${tableName}\n${createTable[0]['Create Table']};\n\n`;
+            if (tableType === 'VIEW') {
+              const createView = await conn.query("SHOW CREATE VIEW `" + tableName + "`");
+              const createStmtRaw = extractCreateStatement(createView[0]);
+              if (createStmtRaw) {
+                const createStmt = sanitizeCreateStatement(createStmtRaw);
+                schemaSQL += `-- View: ${tableName}\n${createStmt}\n\n`;
+              } else {
+                throw new Error('Unexpected SHOW CREATE VIEW result');
+              }
+            } else {
+              const createTable = await conn.query("SHOW CREATE TABLE `" + tableName + "`");
+              const createStmtRaw = extractCreateStatement(createTable[0]);
+              if (createStmtRaw) {
+                const createStmt = sanitizeCreateStatement(createStmtRaw);
+                schemaSQL += `-- Table: ${tableName}\n${createStmt}\n\n`;
+              } else {
+                throw new Error('Unexpected SHOW CREATE TABLE result');
+              }
+            }
           } catch (err) {
-            console.error(`    ✗ Could not dump table ${tableName}: ${err.message}`);
-            schemaSQL += `-- Could not dump table ${tableName}: ${err.message}\n\n`;
+            console.error(`    ✗ Could not dump ${tableName}: ${err.message}`);
+            schemaSQL += `-- Could not dump ${tableName}: ${err.message}\n\n`;
           }
         }
 

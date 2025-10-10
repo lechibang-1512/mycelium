@@ -23,7 +23,9 @@
     "schema-extract": "node scripts/utils-extract-schema.js",
     "cleanup": "node scripts/utils-empty-file-cleanup.js",
     "killserver": "node scripts/utils-killserver.js",
-    "test-session-secrets": "node scripts/test-dynamic-session-secrets.js"
+    "test-session-secrets": "node scripts/test-dynamic-session-secrets.js",
+    "test-db-schema": "node scripts/test-db-schema-issues.js",
+    "fix-db-schema": "node scripts/fix-db-schema-issues.js"
   },
   "repository": {
     "type": "git",

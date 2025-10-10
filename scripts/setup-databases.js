@@ -36,7 +36,7 @@ async function setupDatabases() {
         const databases = [
             { name: process.env.DB_NAME || 'master_specs_db', schema: 'master_specs_db-schema.sql' },
             { name: process.env.SUPPLIERS_DB_NAME || 'suppliers_db', schema: 'suppliers_db-schema.sql' },
-            { name: process.env.AUTH_DB_NAME || 'security_db', schema: 'users_db-schema.sql' }
+            { name: process.env.AUTH_DB_NAME || 'security_db', schema: 'security_db-schema.sql' }
         ];
         
         for (const db of databases) {
@@ -47,8 +47,10 @@ async function setupDatabases() {
             await conn.query(`USE \`${db.name}\``);
             
             // Check if tables exist
-            const [tables] = await conn.query(`SHOW TABLES FROM \`${db.name}\``);
-            
+            // Some drivers may return an empty array when no tables exist. Avoid destructuring
+            // into undefined which would cause a crash when checking .length.
+            const tables = await conn.query(`SHOW TABLES FROM \`${db.name}\``) || [];
+
             if (tables.length === 0) {
                 console.log(`  📄 Loading schema from ${db.schema}`);
                 const schemaPath = getProjectPath(`sql/${db.schema}`);

@@ -205,11 +205,11 @@ module.exports = (authPool, convertBigIntToNumber) => {
             const statsResult = await conn.query(`
                 SELECT 
                     COUNT(DISTINCT se.id) as totalLogins,
-                    COUNT(DISTINCT CASE WHEN se.event_type = 'LOGIN_SUCCESS' 
+                    COUNT(DISTINCT CASE WHEN se.event_type = 'login_success' 
                           AND se.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN se.id END) as recentLogins,
-                    (SELECT COUNT(*) FROM security_events WHERE user_id = ? AND event_type = 'LOGIN_FAILURE') as failedLogins
+                    (SELECT COUNT(*) FROM security_events WHERE user_id = ? AND event_type = 'failed_login') as failedLogins
                 FROM security_events se 
-                WHERE se.user_id = ? AND se.event_type = 'LOGIN_SUCCESS'
+                WHERE se.user_id = ? AND se.event_type = 'login_success'
             `, [userId, userId]);
 
             const stats = {

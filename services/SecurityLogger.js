@@ -97,25 +97,25 @@ class SecurityLogger extends CleanupServiceInterface {
             if (this.securityDbPool) {
                 const conn = await this.securityDbPool.getConnection();
                 
-                // Ensure the security_events table exists
+                // Ensure the security_events table exists (details stored as LONGTEXT for compatibility)
                 await conn.query(`
                     CREATE TABLE IF NOT EXISTS security_events (
                         id INT AUTO_INCREMENT PRIMARY KEY,
-                        event_type ENUM('login', 'logout', 'failed_login', 'login_success', 'session_hijack', 'token_invalidation', 'password_change', 'account_lockout') NOT NULL,
-                        user_id INT,
-                        username VARCHAR(50),
-                        ip_address VARCHAR(45),
-                        user_agent TEXT,
-                        session_id VARCHAR(32),
-                        details JSON,
-                        risk_level ENUM('low', 'medium', 'high', 'critical') DEFAULT 'low',
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        event_type ENUM('login','logout','failed_login','login_success','session_hijack','token_invalidation','password_change','account_lockout') NOT NULL,
+                        user_id INT DEFAULT NULL,
+                        username VARCHAR(50) DEFAULT NULL,
+                        ip_address VARCHAR(45) DEFAULT NULL,
+                        user_agent TEXT DEFAULT NULL,
+                        session_id VARCHAR(32) DEFAULT NULL,
+                        details LONGTEXT DEFAULT NULL,
+                        risk_level ENUM('low','medium','high','critical') DEFAULT 'low',
+                        created_at TIMESTAMP NULL DEFAULT current_timestamp(),
                         INDEX idx_event_type (event_type),
                         INDEX idx_user_id (user_id),
                         INDEX idx_created_at (created_at),
                         INDEX idx_risk_level (risk_level),
                         INDEX idx_ip_address (ip_address)
-                    )
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
                 `);
                 
                 conn.end();
@@ -125,19 +125,19 @@ class SecurityLogger extends CleanupServiceInterface {
             if (this.authPool) {
                 const authConn = await this.authPool.getConnection();
                 
-                // Ensure the failed_login_attempts table exists
+                // Ensure the failed_login_attempts table exists (identifier_type values lowercase)
                 await authConn.query(`
                     CREATE TABLE IF NOT EXISTS failed_login_attempts (
                         id INT AUTO_INCREMENT PRIMARY KEY,
                         identifier VARCHAR(100) NOT NULL,
-                        identifier_type ENUM('username', 'email', 'ip') NOT NULL,
-                        ip_address VARCHAR(45),
-                        user_agent TEXT,
-                        attempt_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        identifier_type ENUM('username','email','ip') NOT NULL,
+                        ip_address VARCHAR(45) DEFAULT NULL,
+                        user_agent TEXT DEFAULT NULL,
+                        attempt_time TIMESTAMP NULL DEFAULT current_timestamp(),
                         INDEX idx_identifier (identifier, identifier_type),
                         INDEX idx_ip_address (ip_address),
                         INDEX idx_attempt_time (attempt_time)
-                    )
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
                 `);
                 
                 authConn.end();
@@ -184,6 +184,37 @@ class SecurityLogger extends CleanupServiceInterface {
         // Log to console for immediate visibility
         const riskEmoji = this.getRiskEmoji(event.risk_level);
         console.log(`${riskEmoji} Security Event: ${cleanEventType} | User: ${details.username || 'unknown'} | Risk: ${event.risk_level}`);
+    }
+
+    /**
+     * Normalize arbitrary eventType strings to the allowed enum values for the DB.
+     */
+    normalizeEventTypeForDb(eventType) {
+        if (!eventType || typeof eventType !== 'string') return 'login';
+        const lower = eventType.toLowerCase();
+        const mapping = {
+            'login': 'login',
+            'logout': 'logout',
+            'failed_login': 'failed_login',
+            'login_success': 'login_success',
+            'session_hijack': 'session_hijack',
+            'token_invalidation': 'token_invalidation',
+            'password_change': 'password_change',
+            'account_lockout': 'account_lockout'
+        };
+
+        // Direct match
+        if (mapping[lower]) return mapping[lower];
+
+        // Map common application-specific events to nearest enum
+        if (lower.includes('password')) return 'password_change';
+        if (lower.includes('token')) return 'token_invalidation';
+        if (lower.includes('lock') || lower.includes('unlock')) return 'account_lockout';
+        if (lower.includes('session') || lower.includes('hijack')) return 'session_hijack';
+        if (lower.includes('login')) return lower.includes('fail') ? 'failed_login' : 'login';
+
+        // Fallback
+        return 'login';
     }
 
     /**
@@ -377,12 +408,13 @@ class SecurityLogger extends CleanupServiceInterface {
                 }
                 eventType = String(eventType || '').substring(0, 50);
                 
+                const dbEventType = this.normalizeEventTypeForDb(eventType);
                 await conn.query(
                     `INSERT INTO security_events 
                      (event_type, user_id, username, ip_address, user_agent, session_id, details, risk_level) 
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                     [
-                        eventType,
+                        dbEventType,
                         event.user_id,
                         event.username,
                         event.ip_address,

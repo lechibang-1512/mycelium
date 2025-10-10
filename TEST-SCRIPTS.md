@@ -101,7 +101,17 @@ All test scripts can be run from any subfolder within the project, including:
 - Validates database operations
 - Tests service initialization
 
-### 🔧 Utility Scripts
+#### `test-db-schema-issues.js`
+**Purpose**: Test and verify database schema integrity  
+**Usage**: `node scripts/test-db-schema-issues.js` or `npm run test-db-schema`  
+**Features**:
+- Tests all tables across all databases (master_specs_db, security_db, suppliers_db)
+- Verifies column existence and data types
+- Reports missing columns and tables
+- Provides detailed summary of findings
+- **Requires**: Database connection
+
+### 🛠️ Database Maintenance
 
 #### `utils-project-root.js`
 **Purpose**: Project root detection utility (core dependency)  

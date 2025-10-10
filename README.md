@@ -76,7 +76,7 @@ Create three MySQL databases:
 ```sql
 CREATE DATABASE master_specs_db;
 CREATE DATABASE suppliers_db;
-CREATE DATABASE users_db;
+CREATE DATABASE security_db;
 ```
 
 Create a dedicated database user with appropriate permissions:
@@ -84,7 +84,7 @@ Create a dedicated database user with appropriate permissions:
 CREATE USER 'your_db_user'@'localhost' IDENTIFIED BY 'your_database_password';
 GRANT ALL PRIVILEGES ON master_specs_db.* TO 'your_db_user'@'localhost';
 GRANT ALL PRIVILEGES ON suppliers_db.* TO 'your_db_user'@'localhost';
-GRANT ALL PRIVILEGES ON users_db.* TO 'your_db_user'@'localhost';
+GRANT ALL PRIVILEGES ON security_db.* TO 'your_db_user'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
@@ -116,7 +116,7 @@ AUTH_DB_HOST=127.0.0.1
 AUTH_DB_PORT=3306
 AUTH_DB_USER=your_db_user
 AUTH_DB_PASSWORD=your_database_password
-AUTH_DB_NAME=users_db
+AUTH_DB_NAME=security_db
 
 # Session Configuration
 SESSION_SECRET=your_generated_session_secret
@@ -298,7 +298,7 @@ The application will be available at `http://localhost:3000`
 ├── sql/                  # Database schemas
 │   ├── master_specs_db-schema.sql  # Main inventory database
 │   ├── suppliers_db-schema.sql     # Suppliers database
-│   └── users_db-schema.sql         # Users and authentication database
+│   └── security_db-schema.sql      # Users and authentication database
 └── server.js             # Main application entry point
 ```
 

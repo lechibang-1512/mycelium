@@ -113,15 +113,14 @@ class TokenInvalidationService extends CleanupServiceInterface {
                 )
             `);
             
-            // Ensure the user_token_invalidation table exists
+            // Ensure the user_token_invalidation table exists (user_id as primary key to match security schema)
             await conn.query(`
                 CREATE TABLE IF NOT EXISTS user_token_invalidation (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    user_id INT NOT NULL,
+                    user_id INT NOT NULL PRIMARY KEY,
                     invalidated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    reason VARCHAR(255) DEFAULT 'user_action',
+                    reason VARCHAR(100) DEFAULT 'security_action',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    INDEX idx_user_id (user_id),
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                     INDEX idx_invalidated_at (invalidated_at)
                 )
             `);
