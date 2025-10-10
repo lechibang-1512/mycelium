@@ -1,5 +1,5 @@
 -- Schema for security_db
--- Generated on 2025-10-10T04:06:48.396Z
+-- Generated on 2025-10-10T16:30:58.507Z
 
 -- Table: security_events
 CREATE TABLE `security_events` ( `id` int(11) NOT NULL AUTO_INCREMENT, `event_type` enum('login','logout','failed_login','login_success','session_hijack','token_invalidation','password_change','account_lockout') NOT NULL, `user_id` int(11) DEFAULT NULL, `username` varchar(50) DEFAULT NULL, `ip_address` varchar(45) DEFAULT NULL, `user_agent` text DEFAULT NULL, `session_id` varchar(32) DEFAULT NULL, `details` longtext DEFAULT NULL, `risk_level` enum('low','medium','high','critical') DEFAULT 'low', `created_at` timestamp NULL DEFAULT current_timestamp(), PRIMARY KEY (`id`), KEY `idx_event_type` (`event_type`), KEY `idx_user_id` (`user_id`), KEY `idx_created_at` (`created_at`), KEY `idx_risk_level` (`risk_level`), KEY `idx_ip_address` (`ip_address`) ) ENGINE=InnoDB AUTO_INCREMENT=72 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
