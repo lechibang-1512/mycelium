@@ -225,10 +225,15 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             
             const receiptId = req.params.receipt_id;
             
+            // Validate receipt ID
+            if (!receiptId || receiptId.trim() === '') {
+                return res.status(400).json({ success: false, error: 'Invalid receipt ID' });
+            }
+            
             // Check if receipt exists
-            const [receipt] = await conn.query('SELECT * FROM receipts WHERE receipt_id = ?', [receiptId]);
-            if (!receipt) {
-                return res.json({ success: false, error: 'Receipt not found' });
+            const receiptResult = await conn.query('SELECT * FROM receipts WHERE receipt_id = ?', [receiptId]);
+            if (!receiptResult || receiptResult.length === 0) {
+                return res.status(404).json({ success: false, error: 'Receipt not found' });
             }
             
             // Delete the receipt
@@ -238,7 +243,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             
         } catch (err) {
             console.error('Error deleting receipt:', err);
-            res.json({ success: false, error: 'Failed to delete receipt' });
+            res.status(500).json({ success: false, error: 'Failed to delete receipt' });
         } finally {
             if (conn) conn.release();
         }
@@ -290,7 +295,17 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             const receiptIds = req.body.receiptIds || [];
             
             if (receiptIds.length === 0) {
-                return res.json({ success: false, error: 'No receipts selected for deletion' });
+                return res.status(400).json({ success: false, error: 'No receipts selected for deletion' });
+            }
+            
+            // Validate receiptIds is an array
+            if (!Array.isArray(receiptIds)) {
+                return res.status(400).json({ success: false, error: 'Invalid receiptIds format' });
+            }
+            
+            // Validate maximum bulk delete limit
+            if (receiptIds.length > 100) {
+                return res.status(400).json({ success: false, error: 'Cannot delete more than 100 receipts at once' });
             }
             
             // Delete the receipts
@@ -304,7 +319,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             
         } catch (err) {
             console.error('Error bulk deleting receipts:', err);
-            res.json({ success: false, error: 'Failed to delete receipts' });
+            res.status(500).json({ success: false, error: 'Failed to delete receipts' });
         } finally {
             if (conn) conn.release();
         }

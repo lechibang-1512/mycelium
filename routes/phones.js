@@ -89,12 +89,19 @@ module.exports = (pool, convertBigIntToNumber, formatDeviceInfo) => {
             const productId = req.params.id;
             const sanitizedData = SanitizationService.sanitizePhoneInput(req.body);
             
-            // Build dynamic update query
+            // Build dynamic update query with field validation
+            const allowedFields = new Set([
+                'device_name', 'device_maker', 'device_price', 'device_inventory',
+                'ram', 'rom', 'color', 'screen_size', 'battery', 'camera',
+                'processor', 'os', 'release_date', 'weight', 'dimensions',
+                'network', 'sim', 'fingerprint', 'nfc', 'usb', 'features'
+            ]);
+            
             const updateFields = [];
             const updateValues = [];
             
             Object.entries(sanitizedData).forEach(([key, value]) => {
-                if (value !== null && value !== undefined && value !== '') {
+                if (allowedFields.has(key) && value !== null && value !== undefined && value !== '') {
                     updateFields.push(`${key} = ?`);
                     updateValues.push(value);
                 }
@@ -155,13 +162,20 @@ module.exports = (pool, convertBigIntToNumber, formatDeviceInfo) => {
             conn = await pool.getConnection();
             const sanitizedData = SanitizationService.sanitizePhoneInput(req.body);
             
-            // Build dynamic insert query
+            // Build dynamic insert query with field validation
+            const allowedFields = new Set([
+                'device_name', 'device_maker', 'device_price', 'device_inventory',
+                'ram', 'rom', 'color', 'screen_size', 'battery', 'camera',
+                'processor', 'os', 'release_date', 'weight', 'dimensions',
+                'network', 'sim', 'fingerprint', 'nfc', 'usb', 'features', 'product_type'
+            ]);
+            
             const fields = [];
             const placeholders = [];
             const values = [];
             
             Object.entries(sanitizedData).forEach(([key, value]) => {
-                if (value !== null && value !== undefined && value !== '') {
+                if (allowedFields.has(key) && value !== null && value !== undefined && value !== '') {
                     fields.push(key);
                     placeholders.push('?');
                     values.push(value);
@@ -173,6 +187,11 @@ module.exports = (pool, convertBigIntToNumber, formatDeviceInfo) => {
                 fields.push('product_type');
                 placeholders.push('?');
                 values.push('phone');
+            }
+            
+            if (fields.length === 0) {
+                req.flash('error', 'No valid phone data provided');
+                return res.redirect('/phones/add');
             }
             
             const insertQuery = `INSERT INTO specs_db (${fields.join(', ')}) VALUES (${placeholders.join(', ')})`;

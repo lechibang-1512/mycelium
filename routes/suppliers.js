@@ -106,18 +106,29 @@ module.exports = (suppliersPool, convertBigIntToNumber) => {
                 return res.redirect('/suppliers/add');
             }
             
-            // Build dynamic insert query
+            // Build dynamic insert query with field validation
+            const allowedFields = new Set([
+                'name', 'contact_person', 'contact_email', 'email', 'phone', 
+                'address', 'city', 'country', 'postal_code', 'tax_id',
+                'payment_terms', 'notes', 'is_active'
+            ]);
+            
             const fields = [];
             const placeholders = [];
             const values = [];
             
             Object.entries(sanitizedData).forEach(([key, value]) => {
-                if (value !== null && value !== undefined && value !== '') {
+                if (allowedFields.has(key) && value !== null && value !== undefined && value !== '') {
                     fields.push(key);
                     placeholders.push('?');
                     values.push(value);
                 }
             });
+            
+            if (fields.length === 0) {
+                req.flash('error', 'No valid supplier data provided');
+                return res.redirect('/suppliers/add');
+            }
             
             const insertQuery = `INSERT INTO suppliers (${fields.join(', ')}) VALUES (${placeholders.join(', ')})`;
             const result = await conn.query(insertQuery, values);
@@ -173,12 +184,18 @@ module.exports = (suppliersPool, convertBigIntToNumber) => {
                 return res.redirect('/suppliers');
             }
             
-            // Build dynamic update query
+            // Build dynamic update query with field validation
+            const allowedFields = new Set([
+                'name', 'contact_person', 'contact_email', 'email', 'phone', 
+                'address', 'city', 'country', 'postal_code', 'tax_id',
+                'payment_terms', 'notes', 'is_active'
+            ]);
+            
             const updateFields = [];
             const updateValues = [];
             
             Object.entries(sanitizedData).forEach(([key, value]) => {
-                if (value !== null && value !== undefined && value !== '') {
+                if (allowedFields.has(key) && value !== null && value !== undefined && value !== '') {
                     updateFields.push(`${key} = ?`);
                     updateValues.push(value);
                 }

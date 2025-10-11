@@ -66,26 +66,37 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             
             // Validate inputs
             if (!product_id || !supplier_id || !quantity || quantity <= 0) {
+                await conn.rollback();
                 req.flash('error', 'Please provide all required fields with valid values');
+                return res.redirect('/inventory/receive');
+            }
+
+            // Validate numeric inputs
+            const quantityValue = parseInt(quantity);
+            if (isNaN(quantityValue) || quantityValue <= 0) {
+                await conn.rollback();
+                req.flash('error', 'Invalid quantity provided');
                 return res.redirect('/inventory/receive');
             }
 
             // Validate warehouse and zone if provided
             if (warehouse_id && !zone_id) {
+                await conn.rollback();
                 req.flash('error', 'Please select a zone when warehouse is specified');
                 return res.redirect('/inventory/receive');
             }
             
             // Get current phone data
-            const [phone] = await conn.query('SELECT * FROM specs_db WHERE product_id = ?', [product_id]);
-            if (!phone) {
+            const phoneResult = await conn.query('SELECT * FROM specs_db WHERE product_id = ?', [product_id]);
+            if (!phoneResult || phoneResult.length === 0) {
+                await conn.rollback();
                 req.flash('error', 'Phone not found');
                 return res.redirect('/inventory/receive');
             }
+            const phone = phoneResult[0];
             
             // Calculate financial values
             const unitCostValue = parseFloat(unit_cost) || 0;
-            const quantityValue = parseInt(quantity);
             const vatRateValue = parseFloat(vat_rate) || 0;
             const importDutyValue = parseFloat(import_duty) || 0;
             const otherFeesValue = parseFloat(other_fees) || 0;
@@ -254,18 +265,28 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             
             // Validate inputs
             if (!product_id || !quantity || quantity <= 0) {
+                await conn.rollback();
                 req.flash('error', 'Please provide all required fields with valid values');
                 return res.redirect('/inventory/sell');
             }
             
-            // Get current phone data
-            const [phone] = await conn.query('SELECT * FROM specs_db WHERE product_id = ?', [product_id]);
-            if (!phone) {
-                req.flash('error', 'Phone not found');
+            // Validate numeric inputs
+            const quantityValue = parseInt(quantity);
+            if (isNaN(quantityValue) || quantityValue <= 0) {
+                await conn.rollback();
+                req.flash('error', 'Invalid quantity provided');
                 return res.redirect('/inventory/sell');
             }
             
-            const quantityValue = parseInt(quantity);
+            // Get current phone data
+            const phoneResult = await conn.query('SELECT * FROM specs_db WHERE product_id = ?', [product_id]);
+            if (!phoneResult || phoneResult.length === 0) {
+                await conn.rollback();
+                req.flash('error', 'Phone not found');
+                return res.redirect('/inventory/sell');
+            }
+            const phone = phoneResult[0];
+            
             const currentInventory = phone.device_inventory || 0;
 
             // Check warehouse-specific availability if specified

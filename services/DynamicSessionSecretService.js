@@ -110,6 +110,8 @@ class DynamicSessionSecretService {
             console.log('✅ Session secret rotated successfully');
             
             // Notify that secret has been rotated (for session re-validation)
+            // Emit an application-level event so other parts of the app (middleware)
+            // can react to secret rotation. We call a helper which is defined below.
             this.notifySecretRotation();
             
             return this.currentSecret;
@@ -236,7 +238,9 @@ class DynamicSessionSecretService {
      */
     getRotationStatus() {
         return {
-            currentSecretAge: this.currentSecret ? Date.now() - (this.secretHistory[0]?.timestamp || Date.now()) : 0,
+            // If we have historical timestamps use the most recent entry for a rough age.
+            // If unavailable, return 0 to indicate unknown/just-created.
+            currentSecretAge: this.secretHistory && this.secretHistory.length > 0 ? Date.now() - this.secretHistory[0].timestamp : 0,
             autoRotationEnabled: !!this.rotationInterval,
             rotationIntervalHours: this.config.rotationIntervalHours,
             secretHistory: this.secretHistory.map(entry => ({
@@ -249,6 +253,22 @@ class DynamicSessionSecretService {
                 new Date(Date.now() + this.config.rotationIntervalHours * 60 * 60 * 1000).toISOString() : 
                 'Manual only'
         };
+    }
+
+    /**
+     * Notify other parts of the process that a secret rotation occurred.
+     * Uses a process-level event so consumers outside this module (for example
+     * middleware running in a different module) can listen and react.
+     */
+    notifySecretRotation() {
+        try {
+            // Provide a minimal payload (no secrets) - listeners should fetch secrets
+            // from the service instance rather than relying on event payloads.
+            process.emit('sessionSecretRotated');
+        } catch (err) {
+            // Do not throw - rotation already succeeded; just log the issue.
+            console.warn('⚠️  Failed to emit sessionSecretRotated event:', err && err.message);
+        }
     }
 
     /**

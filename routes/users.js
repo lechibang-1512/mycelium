@@ -76,10 +76,18 @@ module.exports = (authPool, convertBigIntToNumber) => {
                 countQuery += ' AND locked_until > NOW()';
             }
 
-            // Add sorting
-            const allowedSortFields = ['username', 'fullName', 'email', 'role', 'created_at', 'last_login'];
-            const safeSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'created_at';
-            const safeSortOrder = ['ASC', 'DESC'].includes(sortOrder.toUpperCase()) ? sortOrder.toUpperCase() : 'DESC';
+            // Add sorting - properly validated to prevent SQL injection
+            const allowedSortFields = {
+                'username': 'username',
+                'fullName': 'fullName',
+                'email': 'email',
+                'role': 'role',
+                'created_at': 'created_at',
+                'last_login': 'last_login'
+            };
+            const safeSortBy = allowedSortFields[sortBy] || 'created_at';
+            const allowedSortOrders = { 'ASC': 'ASC', 'DESC': 'DESC' };
+            const safeSortOrder = allowedSortOrders[sortOrder?.toUpperCase()] || 'DESC';
             
             query += ` ORDER BY ${safeSortBy} ${safeSortOrder} LIMIT ? OFFSET ?`;
             params.push(limit, offset);
@@ -667,10 +675,35 @@ module.exports = (authPool, convertBigIntToNumber) => {
                     error: 'No users selected' 
                 });
             }
+            
+            // Validate userIds is an array
+            if (!Array.isArray(userIds)) {
+                return res.status(400).json({ 
+                    success: false, 
+                    error: 'Invalid userIds format' 
+                });
+            }
+            
+            // Validate maximum bulk operation limit
+            if (userIds.length > 100) {
+                return res.status(400).json({ 
+                    success: false, 
+                    error: 'Cannot perform bulk operations on more than 100 users at once' 
+                });
+            }
+            
+            // Validate all userIds are numeric
+            const numericUserIds = userIds.map(id => parseInt(id)).filter(id => !isNaN(id));
+            if (numericUserIds.length !== userIds.length) {
+                return res.status(400).json({ 
+                    success: false, 
+                    error: 'Invalid user IDs provided' 
+                });
+            }
 
             // Prevent operations on own account
             const currentUserId = req.session.user.id;
-            if (userIds.includes(currentUserId.toString())) {
+            if (numericUserIds.includes(currentUserId)) {
                 return res.status(400).json({ 
                     success: false, 
                     error: 'Cannot perform bulk operations on your own account' 
@@ -679,56 +712,61 @@ module.exports = (authPool, convertBigIntToNumber) => {
 
             const conn = await authPool.getConnection();
             let result = { success: true, message: '', affected: 0 };
-
-            switch (action) {
-                case 'activate':
-                    const activateResult = await conn.query(`
-                        UPDATE users 
-                        SET is_active = 1, updated_at = CURRENT_TIMESTAMP 
-                        WHERE id IN (${userIds.map(() => '?').join(',')})
-                    `, userIds);
-                    result.affected = activateResult.affectedRows;
-                    result.message = `${result.affected} user(s) activated successfully`;
-                    break;
-
-                case 'deactivate':
-                    const deactivateResult = await conn.query(`
-                        UPDATE users 
-                        SET is_active = 0, updated_at = CURRENT_TIMESTAMP 
-                        WHERE id IN (${userIds.map(() => '?').join(',')})
-                    `, userIds);
-                    result.affected = deactivateResult.affectedRows;
-                    result.message = `${result.affected} user(s) deactivated successfully`;
-                    
-                    // Force logout deactivated users
-                    const { SessionSecurity } = require('../middleware/auth');
-                    const sessionService = SessionSecurity.sessionManagementService;
-                    if (sessionService) {
-                        userIds.forEach(userId => {
-                            sessionService.forceLogoutUser(parseInt(userId));
-                        });
-                    }
-                    break;
-
-                case 'unlock':
-                    const unlockResult = await conn.query(`
-                        UPDATE users 
-                        SET failed_login_attempts = 0, locked_until = NULL, updated_at = CURRENT_TIMESTAMP 
-                        WHERE id IN (${userIds.map(() => '?').join(',')})
-                    `, userIds);
-                    result.affected = unlockResult.affectedRows;
-                    result.message = `${result.affected} user(s) unlocked successfully`;
-                    break;
-
-                default:
-                    conn.end();
-                    return res.status(400).json({ 
-                        success: false, 
-                        error: 'Invalid action' 
-                    });
+            
+            // Validate action
+            const allowedActions = ['activate', 'deactivate', 'unlock'];
+            if (!allowedActions.includes(action)) {
+                conn.end();
+                return res.status(400).json({ 
+                    success: false, 
+                    error: 'Invalid action' 
+                });
             }
 
-            conn.end();
+            try {
+                switch (action) {
+                    case 'activate':
+                        const activateResult = await conn.query(`
+                            UPDATE users 
+                            SET is_active = 1, updated_at = CURRENT_TIMESTAMP 
+                            WHERE id IN (${numericUserIds.map(() => '?').join(',')})
+                        `, numericUserIds);
+                        result.affected = activateResult.affectedRows;
+                        result.message = `${result.affected} user(s) activated successfully`;
+                        break;
+
+                    case 'deactivate':
+                        const deactivateResult = await conn.query(`
+                            UPDATE users 
+                            SET is_active = 0, updated_at = CURRENT_TIMESTAMP 
+                            WHERE id IN (${numericUserIds.map(() => '?').join(',')})
+                        `, numericUserIds);
+                        result.affected = deactivateResult.affectedRows;
+                        result.message = `${result.affected} user(s) deactivated successfully`;
+                        
+                        // Force logout deactivated users
+                        const { SessionSecurity } = require('../middleware/auth');
+                        const sessionService = SessionSecurity.sessionManagementService;
+                        if (sessionService) {
+                            numericUserIds.forEach(userId => {
+                                sessionService.forceLogoutUser(userId);
+                            });
+                        }
+                        break;
+
+                    case 'unlock':
+                        const unlockResult = await conn.query(`
+                            UPDATE users 
+                            SET failed_login_attempts = 0, locked_until = NULL, updated_at = CURRENT_TIMESTAMP 
+                            WHERE id IN (${numericUserIds.map(() => '?').join(',')})
+                        `, numericUserIds);
+                        result.affected = unlockResult.affectedRows;
+                        result.message = `${result.affected} user(s) unlocked successfully`;
+                        break;
+                }
+            } finally {
+                conn.end();
+            }
 
             // Log bulk action
             if (SessionSecurity.securityLogger) {
@@ -739,7 +777,7 @@ module.exports = (authPool, convertBigIntToNumber) => {
                     userAgent: req.get('User-Agent'),
                     additionalData: {
                         action,
-                        targetUserIds: userIds,
+                        targetUserIds: numericUserIds,
                         affectedCount: result.affected,
                         riskScore: 25
                     }

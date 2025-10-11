@@ -1,2 +1,4 @@
 node_modules
 .env
+*.session-secrets.json
+.session-secrets.json

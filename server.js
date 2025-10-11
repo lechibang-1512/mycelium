@@ -52,6 +52,8 @@ const { createDynamicSessionMiddleware } = require('./middleware/DynamicSessionM
 
 // Import security middleware
 const { sanitizeApiResponse, securityHeaders, preventSecretExposure } = require('./middleware/security');
+// Use helmet for sane defaults; disable helmet's CSP since we set a custom CSP in middleware/security.js
+const helmet = require('helmet');
 // Import CSRF helpers (csrfErrorHandler used later)
 const { csrfProtection, csrfMiddleware, csrfErrorHandler } = require('./middleware/csrfProtection');
 
@@ -183,7 +185,10 @@ async function startServer() {
         app.use(speedLimiter);
 
         // Security middleware
-        app.use(securityHeaders);
+    // Helmet provides a set of sensible defaults. We disable its CSP handling
+    // because `securityHeaders` sets a custom CSP that matches application needs.
+    app.use(helmet({ contentSecurityPolicy: false }));
+    app.use(securityHeaders);
         app.use(preventSecretExposure);
         app.use(sanitizeApiResponse);
         app.use(InputValidator.sanitizeText);
