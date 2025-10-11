@@ -65,7 +65,7 @@ class SalesAnalyticsService {
                 SUM(ABS(il.quantity_changed)) as units_sold,
                 SUM(ps.device_price * ABS(il.quantity_changed)) as revenue
             FROM inventory_log il
-            JOIN specs_db ps ON il.phone_id = ps.product_id
+            JOIN specs_db ps ON il.product_id = ps.product_id
             WHERE il.transaction_type = 'outgoing' 
             AND ${dateCondition}
             GROUP BY ${groupBy}
@@ -96,7 +96,7 @@ class SalesAnalyticsService {
                     SUM(ABS(il.quantity_changed)) as units_sold,
                     SUM(ps.device_price * ABS(il.quantity_changed)) as revenue
                 FROM inventory_log il
-                JOIN specs_db ps ON il.phone_id = ps.product_id
+                JOIN specs_db ps ON il.product_id = ps.product_id
                 WHERE il.transaction_type = 'outgoing' 
                 AND ${dateCondition}
                 GROUP BY ps.product_id, ps.device_name, ps.device_maker, ps.device_price
@@ -128,9 +128,9 @@ class SalesAnalyticsService {
                     SUM(ABS(il.quantity_changed)) as total_units_sold,
                     SUM(ps.device_price * ABS(il.quantity_changed)) as total_revenue,
                     AVG(ps.device_price * ABS(il.quantity_changed)) as avg_transaction_value,
-                    COUNT(DISTINCT il.phone_id) as unique_products_sold
+                    COUNT(DISTINCT il.product_id) as unique_products_sold
                 FROM inventory_log il
-                JOIN specs_db ps ON il.phone_id = ps.product_id
+                JOIN specs_db ps ON il.product_id = ps.product_id
                 WHERE il.transaction_type = 'outgoing' 
                 AND ${dateCondition}
             `;
@@ -232,7 +232,7 @@ class SalesAnalyticsService {
                 SUM(ps.device_price * ABS(il.quantity_changed)) as total_revenue,
                 SUM(ABS(il.quantity_changed)) as total_units
             FROM inventory_log il
-            JOIN specs_db ps ON il.phone_id = ps.product_id
+            JOIN specs_db ps ON il.product_id = ps.product_id
             WHERE il.transaction_type = 'outgoing' 
         `;
 

@@ -13,7 +13,7 @@ module.exports = (pool, convertBigIntToNumber) => {
             // Extract filter parameters
             const filters = {
                 transaction_type: req.query.transaction_type || '',
-                phone_id: req.query.phone_id || '',
+                product_id: req.query.product_id || '',
                 start_date: req.query.start_date || '',
                 end_date: req.query.end_date || ''
             };
@@ -31,9 +31,9 @@ module.exports = (pool, convertBigIntToNumber) => {
                 queryParams.push(filters.transaction_type);
             }
             
-            if (filters.phone_id) {
-                whereConditions.push('il.phone_id = ?');
-                queryParams.push(filters.phone_id);
+            if (filters.product_id) {
+                whereConditions.push('il.product_id = ?');
+                queryParams.push(filters.product_id);
             }
             
             if (filters.start_date) {
@@ -52,7 +52,7 @@ module.exports = (pool, convertBigIntToNumber) => {
             const countQuery = `
                 SELECT COUNT(*) as total
                 FROM inventory_log il
-                LEFT JOIN specs_db s ON il.phone_id = s.product_id
+                LEFT JOIN specs_db s ON il.product_id = s.product_id
                 ${whereClause}
             `;
             
@@ -64,7 +64,7 @@ module.exports = (pool, convertBigIntToNumber) => {
                 SELECT il.*, s.device_name, s.device_maker,
                        DATE_FORMAT(il.transaction_date, '%M %d, %Y at %h:%i %p') as formatted_date
                 FROM inventory_log il
-                LEFT JOIN specs_db s ON il.phone_id = s.product_id
+                LEFT JOIN specs_db s ON il.product_id = s.product_id
                 ${whereClause}
                 ORDER BY il.transaction_date DESC
                 LIMIT ? OFFSET ?

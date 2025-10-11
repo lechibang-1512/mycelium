@@ -322,7 +322,7 @@ class UserValidationService extends BaseValidationService {
      */
     getTransactionValidationSchema() {
         return {
-            phone_id: {
+            product_id: {
                 required: true,
                 rules: [
                     { name: 'integer', options: { min: 1 } }

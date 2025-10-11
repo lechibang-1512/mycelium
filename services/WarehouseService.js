@@ -174,7 +174,7 @@ class WarehouseService {
      */
     async updateWarehouseProductLocation(conn, productId, warehouseId, zoneId, quantityChange) {
         const query = `
-            INSERT INTO warehouse_product_locations (phone_id, warehouse_id, zone_id, quantity)
+            INSERT INTO warehouse_product_locations (product_id, warehouse_id, zone_id, quantity)
             VALUES (?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE 
                 quantity = quantity + VALUES(quantity),
@@ -190,7 +190,7 @@ class WarehouseService {
         // Log outgoing from source
         const outgoingQuery = `
             INSERT INTO inventory_log (
-                phone_id, transaction_type, quantity_changed, warehouse_id, zone_id, notes, transaction_date
+                product_id, transaction_type, quantity_changed, warehouse_id, zone_id, notes, transaction_date
             ) VALUES (?, 'outgoing', ?, ?, ?, ?, NOW())
         `;
         await conn.query(outgoingQuery, [productId, -quantity, fromWarehouseId, fromZoneId, notes]);
@@ -198,7 +198,7 @@ class WarehouseService {
         // Log incoming to destination
         const incomingQuery = `
             INSERT INTO inventory_log (
-                phone_id, transaction_type, quantity_changed, warehouse_id, zone_id, notes, transaction_date
+                product_id, transaction_type, quantity_changed, warehouse_id, zone_id, notes, transaction_date
             ) VALUES (?, 'incoming', ?, ?, ?, ?, NOW())
         `;
         await conn.query(incomingQuery, [productId, quantity, toWarehouseId, toZoneId, notes]);
@@ -212,7 +212,7 @@ class WarehouseService {
         try {
             const query = `
                 INSERT INTO batch_tracking (
-                    batch_no, lot_no, phone_id, supplier_id, warehouse_id, zone_id,
+                    batch_no, lot_no, product_id, supplier_id, warehouse_id, zone_id,
                     quantity_received, quantity_remaining, expiry_date, notes
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `;
@@ -234,7 +234,7 @@ class WarehouseService {
         try {
             const query = `
                 INSERT INTO serialized_inventory (
-                    phone_id, serial_number, warehouse_id, zone_id, batch_no, lot_no,
+                    product_id, serial_number, warehouse_id, zone_id, batch_no, lot_no,
                     expiry_date, supplier_id, notes
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             `;
@@ -289,7 +289,7 @@ class WarehouseService {
                     w.name as warehouse_name,
                     wz.name as zone_name
                 FROM batch_tracking bt
-                JOIN specs_db sd ON bt.phone_id = sd.product_id
+                JOIN specs_db sd ON bt.product_id = sd.product_id
                 LEFT JOIN warehouses w ON bt.warehouse_id = w.warehouse_id
                 LEFT JOIN warehouse_zones wz ON bt.zone_id = wz.zone_id
                 WHERE bt.batch_no = ?
@@ -297,7 +297,7 @@ class WarehouseService {
             const params = [batchNo];
 
             if (productId) {
-                query += ' AND bt.phone_id = ?';
+                query += ' AND bt.product_id = ?';
                 params.push(productId);
             }
 
@@ -356,7 +356,7 @@ class WarehouseService {
                 SELECT 
                     w.warehouse_id,
                     w.name as warehouse_name,
-                    COUNT(DISTINCT wpl.phone_id) as unique_products,
+                    COUNT(DISTINCT wpl.product_id) as unique_products,
                     SUM(wpl.quantity) as total_items,
                     SUM(wpl.reserved_quantity) as total_reserved,
                     SUM(wpl.quantity - wpl.reserved_quantity) as total_available,
@@ -409,7 +409,7 @@ class WarehouseService {
             let query = `
                 SELECT *
                 FROM batch_tracking
-                WHERE phone_id = ? AND status = 'active' AND quantity_remaining > 0
+                WHERE product_id = ? AND status = 'active' AND quantity_remaining > 0
             `;
             const params = [productId];
 
@@ -436,7 +436,7 @@ class WarehouseService {
             let query = `
                 SELECT *
                 FROM batch_tracking
-                WHERE phone_id = ? AND status = 'active' AND quantity_remaining > 0
+                WHERE product_id = ? AND status = 'active' AND quantity_remaining > 0
             `;
             const params = [productId];
 
@@ -501,7 +501,7 @@ class WarehouseService {
             const params = [];
 
             if (filters.productId) {
-                query += ' AND phone_id = ?';
+                query += ' AND product_id = ?';
                 params.push(filters.productId);
             }
 
@@ -698,7 +698,7 @@ class WarehouseService {
                     wpl.last_counted
                 FROM warehouse_zones wz
                 LEFT JOIN warehouse_product_locations wpl ON wz.zone_id = wpl.zone_id 
-                    AND wpl.phone_id = ? AND wpl.warehouse_id = ?
+                    AND wpl.product_id = ? AND wpl.warehouse_id = ?
                 WHERE wz.warehouse_id = ? AND wz.is_active = TRUE
                 ORDER BY wz.zone_type, wz.name
             `;
@@ -732,7 +732,7 @@ class WarehouseService {
                     END as utilization_percentage
                 FROM warehouse_zones wz
                 LEFT JOIN warehouse_product_locations wpl ON wz.zone_id = wpl.zone_id 
-                    AND wpl.phone_id = ? AND wpl.warehouse_id = ?
+                    AND wpl.product_id = ? AND wpl.warehouse_id = ?
                 WHERE wz.warehouse_id = ? AND wz.is_active = TRUE
                 ORDER BY wz.zone_type, wz.name
             `;
@@ -933,7 +933,7 @@ class WarehouseService {
     async logInventoryChange(conn, productId, transactionType, quantityChanged, warehouseId, zoneId, notes) {
         const query = `
             INSERT INTO inventory_log (
-                phone_id, transaction_type, quantity_changed, warehouse_id, zone_id, notes, transaction_date
+                product_id, transaction_type, quantity_changed, warehouse_id, zone_id, notes, transaction_date
             ) VALUES (?, ?, ?, ?, ?, ?, NOW())
         `;
         await conn.query(query, [productId, transactionType, quantityChanged, warehouseId, zoneId, notes]);
@@ -945,7 +945,7 @@ class WarehouseService {
     async getCurrentQuantity(conn, productId, warehouseId, zoneId) {
         const query = `
             SELECT quantity FROM warehouse_product_locations 
-            WHERE phone_id = ? AND warehouse_id = ? AND zone_id = ?
+            WHERE product_id = ? AND warehouse_id = ? AND zone_id = ?
         `;
         const result = await conn.query(query, [productId, warehouseId, zoneId]);
         return result[0]?.quantity || 0;
@@ -963,7 +963,7 @@ class WarehouseService {
             const [sourceStock] = await conn.query(`
                 SELECT quantity, reserved_quantity 
                 FROM warehouse_product_locations 
-                WHERE phone_id = ? AND warehouse_id = ? AND zone_id = ?
+                WHERE product_id = ? AND warehouse_id = ? AND zone_id = ?
             `, [productId, warehouseId, fromZoneId]);
 
             if (!sourceStock || (sourceStock.quantity - sourceStock.reserved_quantity) < quantity) {
@@ -1008,7 +1008,7 @@ class WarehouseService {
                 SELECT zone_id, quantity, reserved_quantity, 
                        (quantity - COALESCE(reserved_quantity, 0)) as available_quantity
                 FROM warehouse_product_locations 
-                WHERE phone_id = ? AND warehouse_id = ?
+                WHERE product_id = ? AND warehouse_id = ?
             `, [productId, warehouseId]);
 
             // Get zone information for capacity planning
@@ -1170,7 +1170,7 @@ class WarehouseService {
                     wpl.location_id,
                     wpl.warehouse_id,
                     wpl.zone_id,
-                    wpl.phone_id,
+                    wpl.product_id,
                     wpl.aisle,
                     wpl.shelf,
                     wpl.bin,
@@ -1184,8 +1184,8 @@ class WarehouseService {
                 FROM warehouse_product_locations wpl
                 JOIN warehouses w ON wpl.warehouse_id = w.warehouse_id
                 LEFT JOIN warehouse_zones wz ON wpl.zone_id = wz.zone_id
-                JOIN specs_db sd ON wpl.phone_id = sd.product_id
-                WHERE wpl.phone_id = ? AND wpl.warehouse_id = ?
+                JOIN specs_db sd ON wpl.product_id = sd.product_id
+                WHERE wpl.product_id = ? AND wpl.warehouse_id = ?
             `;
             const params = [productId, warehouseId];
 
@@ -1212,7 +1212,7 @@ class WarehouseService {
             const query = `
                 UPDATE warehouse_product_locations 
                 SET aisle = ?, shelf = ?, bin = ?, updated_at = NOW()
-                WHERE phone_id = ? AND warehouse_id = ? AND zone_id = ?
+                WHERE product_id = ? AND warehouse_id = ? AND zone_id = ?
             `;
             
             const result = await conn.query(query, [aisle, shelf, bin, productId, warehouseId, zoneId]);
@@ -1279,7 +1279,7 @@ class WarehouseService {
                     wpl.last_counted
                 FROM warehouse_zones wz
                 LEFT JOIN warehouse_product_locations wpl ON wz.zone_id = wpl.zone_id 
-                    AND wpl.phone_id = ? AND wpl.warehouse_id = ?
+                    AND wpl.product_id = ? AND wpl.warehouse_id = ?
                 WHERE wz.warehouse_id = ? AND wz.is_active = TRUE
                 ORDER BY wz.zone_type, wz.name
             `;
@@ -1313,7 +1313,7 @@ class WarehouseService {
                     END as utilization_percentage
                 FROM warehouse_zones wz
                 LEFT JOIN warehouse_product_locations wpl ON wz.zone_id = wpl.zone_id 
-                    AND wpl.phone_id = ? AND wpl.warehouse_id = ?
+                    AND wpl.product_id = ? AND wpl.warehouse_id = ?
                 WHERE wz.warehouse_id = ? AND wz.is_active = TRUE
                 ORDER BY wz.zone_type, wz.name
             `;

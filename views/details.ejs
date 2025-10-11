@@ -474,7 +474,7 @@
     <%- include('partials/footer') %>
 
     <script>
-        function deletePhone(phoneId) {
+        function deletePhone(productId) {
             confirmDialog(
                 'Delete Phone',
                 'Are you sure you want to delete this phone? This action cannot be undone.',
@@ -482,7 +482,7 @@
                     // Create a form and submit it
                     const form = document.createElement('form');
                     form.method = 'POST';
-                    form.action = `/phones/${phoneId}/delete`;
+                    form.action = `/phones/${productId}/delete`;
                     
                     // Add CSRF token
                     const csrfInput = document.createElement('input');

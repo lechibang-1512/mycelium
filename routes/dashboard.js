@@ -16,8 +16,8 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             const [lowStockResult] = await conn.query('SELECT COUNT(*) as count FROM specs_db WHERE device_inventory <= 5');
             const [suppliersResult] = await suppliersConn.query('SELECT COUNT(*) as count FROM suppliers WHERE is_active = 1');
             const lowStockProducts = await conn.query('SELECT device_name, device_maker, device_inventory FROM specs_db WHERE device_inventory <= 5 ORDER BY device_inventory ASC LIMIT 10');
-            const recentTransactions = await conn.query(`SELECT il.transaction_date, il.transaction_type, il.quantity_changed, s.device_name, s.device_maker FROM inventory_log il LEFT JOIN specs_db s ON il.phone_id = s.product_id ORDER BY il.transaction_date DESC LIMIT 10`);
-            const topProducts = await conn.query(`SELECT s.device_name, s.device_maker, SUM(ABS(il.quantity_changed)) as total_sold FROM inventory_log il LEFT JOIN specs_db s ON il.phone_id = s.product_id WHERE il.transaction_type = 'outgoing' GROUP BY il.phone_id ORDER BY total_sold DESC LIMIT 5`);
+            const recentTransactions = await conn.query(`SELECT il.transaction_date, il.transaction_type, il.quantity_changed, s.device_name, s.device_maker FROM inventory_log il LEFT JOIN specs_db s ON il.product_id = s.product_id ORDER BY il.transaction_date DESC LIMIT 10`);
+            const topProducts = await conn.query(`SELECT s.device_name, s.device_maker, SUM(ABS(il.quantity_changed)) as total_sold FROM inventory_log il LEFT JOIN specs_db s ON il.product_id = s.product_id WHERE il.transaction_type = 'outgoing' GROUP BY il.product_id ORDER BY total_sold DESC LIMIT 5`);
 
             res.render('dashboard', {
                 title: 'Dashboard',

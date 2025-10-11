@@ -74,7 +74,7 @@ async function testInventoryLogTable() {
   console.log('\n=== Testing inventory_log Table ===');
   const requiredColumns = [
     'log_id',
-    'phone_id',
+    'product_id',
     'transaction_type',
     'quantity_changed',
     'transaction_date',  // MISSING in schema!
@@ -217,7 +217,7 @@ async function testWarehouseProductLocationsTable() {
       'location_id',
       'warehouse_id',
       'zone_id',
-      'phone_id',
+      'product_id',
       'quantity',
       'reserved_quantity',
       'min_stock_level'
@@ -249,7 +249,7 @@ async function testSerializedInventoryTable() {
   
   const requiredColumns = [
     'serial_id',
-    'phone_id',
+    'product_id',
     'serial_number',
     'warehouse_id',
     'zone_id',
@@ -298,7 +298,7 @@ async function testBatchTrackingTable() {
     
     const requiredColumns = [
       'batch_id',
-      'phone_id',
+      'product_id',
       'warehouse_id',
       'zone_id',
       'batch_no'

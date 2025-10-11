@@ -236,12 +236,12 @@
                                         </select>
                                     </div>
                                     <div class="col-md-3">
-                                        <label for="phoneId" class="form-label">Product</label>
-                                        <select class="form-select" id="phoneId" name="phoneId">
+                                        <label for="productId" class="form-label">Product</label>
+                                        <select class="form-select" id="productId" name="productId">
                                             <option value="">All Products</option>
                                             <% phones.forEach(phone => { %>
                                                 <option value="<%= phone.product_id %>" 
-                                                        <%= filters.phoneId === phone.product_id ? 'selected' : '' %>>
+                                                        <%= filters.productId === phone.product_id ? 'selected' : '' %>>
                                                     <%= phone.device_maker %> <%= phone.device_name %>
                                                 </option>
                                             <% }); %>
@@ -426,7 +426,7 @@
                                                         <strong><%= receipt.device_maker %></strong><br>
                                                         <small class="text-muted"><%= receipt.device_name %></small>
                                                     <% } else { %>
-                                                        <small class="text-muted">Product ID: <%= receipt.phone_id %></small>
+                                                        <small class="text-muted">Product ID: <%= receipt.product_id %></small>
                                                     <% } %>
                                                 </td>
                                                 <td>
@@ -496,7 +496,7 @@
                                                         <% if (receipt.device_maker && receipt.device_name) { %>
                                                             <%= receipt.device_maker %> <%= receipt.device_name %>
                                                         <% } else { %>
-                                                            Product ID: <%= receipt.phone_id %>
+                                                            Product ID: <%= receipt.product_id %>
                                                         <% } %>
                                                     </h6>
                                                     <p class="card-text">
@@ -788,7 +788,7 @@
 
         // Auto-submit form when filters change (for advanced filters)
         document.addEventListener('DOMContentLoaded', function() {
-            const autoSubmitElements = ['receiptType', 'supplierId', 'phoneId', 'sortBy', 'itemsPerPage'];
+            const autoSubmitElements = ['receiptType', 'supplierId', 'productId', 'sortBy', 'itemsPerPage'];
             
             autoSubmitElements.forEach(id => {
                 const element = document.getElementById(id);

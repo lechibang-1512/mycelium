@@ -64,7 +64,7 @@ class ReceiptService {
             },
             notes,
             metadata: {
-                phoneId: phone.product_id,
+                productId: phone.product_id,
                 supplierId: supplier.supplier_id,
                 generatedAt: new Date().toISOString()
             }
@@ -123,7 +123,7 @@ class ReceiptService {
             },
             notes,
             metadata: {
-                phoneId: phone.product_id,
+                productId: phone.product_id,
                 generatedAt: new Date().toISOString()
             }
         };
@@ -323,7 +323,7 @@ class ReceiptService {
             receipt_id: receipt.receiptId,
             receipt_type: receipt.type,
             receipt_data: JSON.stringify(receipt),
-            product_id: receipt.metadata.phoneId, // Use product_id to match the receipts table schema
+            product_id: receipt.metadata.productId, // Use product_id to match the receipts table schema
             supplier_id: receipt.metadata.supplierId || null,
             transaction_date: new Date(),
             subtotal: this.parseAmount(receipt.financials.subtotal),

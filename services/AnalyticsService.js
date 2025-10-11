@@ -95,7 +95,7 @@ class AnalyticsService {
         const query = `
             SELECT COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as total_revenue
             FROM inventory_log il
-            JOIN specs_db ps ON il.phone_id = ps.product_id
+            JOIN specs_db ps ON il.product_id = ps.product_id
             WHERE il.transaction_type = 'outgoing' 
             AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
         `;
@@ -150,7 +150,7 @@ class AnalyticsService {
                 COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as daily_revenue,
                 COALESCE(SUM(ABS(il.quantity_changed)), 0) as daily_units
             FROM inventory_log il
-            JOIN specs_db ps ON il.phone_id = ps.product_id
+            JOIN specs_db ps ON il.product_id = ps.product_id
             WHERE il.transaction_type = 'outgoing' 
             AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
             GROUP BY DATE(il.transaction_date)
@@ -170,7 +170,7 @@ class AnalyticsService {
                 COALESCE(SUM(ABS(il.quantity_changed)), 0) as total_sold,
                 COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as revenue
             FROM specs_db ps
-            LEFT JOIN inventory_log il ON ps.product_id = il.phone_id AND il.transaction_type = 'outgoing'
+            LEFT JOIN inventory_log il ON ps.product_id = il.product_id AND il.transaction_type = 'outgoing'
             AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
             GROUP BY ps.product_id, ps.device_name, ps.device_maker, ps.device_price, ps.device_inventory
             ORDER BY total_sold DESC
@@ -224,7 +224,7 @@ class AnalyticsService {
                 COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as previous_revenue,
                 COALESCE(SUM(ABS(il.quantity_changed)), 0) as previous_units
             FROM inventory_log il
-            JOIN specs_db ps ON il.phone_id = ps.product_id
+            JOIN specs_db ps ON il.product_id = ps.product_id
             WHERE il.transaction_type = 'outgoing' 
             AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
             AND il.transaction_date < DATE_SUB(NOW(), INTERVAL ? DAY)
@@ -248,7 +248,7 @@ class AnalyticsService {
                 ps.device_maker, 
                 ps.device_price
             FROM inventory_log il
-            JOIN specs_db ps ON il.phone_id = ps.product_id
+            JOIN specs_db ps ON il.product_id = ps.product_id
             ORDER BY il.transaction_date DESC
             LIMIT ?
         `;
@@ -273,7 +273,7 @@ class AnalyticsService {
                     AVG(ps.device_price * il.quantity_changed) as avg_delivery_value,
                     MAX(il.transaction_date) as last_delivery_date
                 FROM inventory_log il
-                JOIN specs_db ps ON il.phone_id = ps.product_id
+                JOIN specs_db ps ON il.product_id = ps.product_id
                 WHERE il.transaction_type = 'incoming'
                 AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
                 AND il.supplier_id IS NOT NULL
@@ -365,7 +365,7 @@ class AnalyticsService {
                 COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as revenue,
                 COALESCE(AVG(ps.device_price), 0) as avg_price
             FROM specs_db ps
-            LEFT JOIN inventory_log il ON ps.product_id = il.phone_id 
+            LEFT JOIN inventory_log il ON ps.product_id = il.product_id 
                 AND il.transaction_type = 'outgoing'
                 AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
             GROUP BY ps.device_maker
@@ -383,10 +383,10 @@ class AnalyticsService {
         const query = `
             SELECT 
                 COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as total_revenue,
-                COALESCE(COUNT(DISTINCT il.phone_id), 0) as products_sold,
+                COALESCE(COUNT(DISTINCT il.product_id), 0) as products_sold,
                 COALESCE(AVG(ps.device_price), 0) as avg_selling_price
             FROM inventory_log il
-            JOIN specs_db ps ON il.phone_id = ps.product_id
+            JOIN specs_db ps ON il.product_id = ps.product_id
             WHERE il.transaction_type = 'outgoing' 
             AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
         `;
@@ -422,7 +422,7 @@ class AnalyticsService {
                     ELSE 0 
                 END as turnover_ratio
             FROM specs_db ps
-            LEFT JOIN inventory_log il ON ps.product_id = il.phone_id 
+            LEFT JOIN inventory_log il ON ps.product_id = il.product_id 
                 AND il.transaction_type = 'outgoing'
                 AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
             GROUP BY ps.product_id, ps.device_name, ps.device_maker, ps.device_inventory
@@ -455,7 +455,7 @@ class AnalyticsService {
                 COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END), 0) as units_sold,
                 COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ps.device_price * ABS(il.quantity_changed) ELSE 0 END), 0) as revenue
             FROM specs_db ps
-            LEFT JOIN inventory_log il ON ps.product_id = il.phone_id 
+            LEFT JOIN inventory_log il ON ps.product_id = il.product_id 
                 AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
             GROUP BY ps.device_maker
             HAVING product_count > 0
@@ -478,7 +478,7 @@ class AnalyticsService {
                 SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END) as units_sold,
                 SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ps.device_price * ABS(il.quantity_changed) ELSE 0 END) as revenue
             FROM inventory_log il
-            JOIN specs_db ps ON il.phone_id = ps.product_id
+            JOIN specs_db ps ON il.product_id = ps.product_id
             WHERE il.transaction_date >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
             GROUP BY YEAR(il.transaction_date), MONTH(il.transaction_date)
             ORDER BY year_num DESC, month_num DESC
@@ -505,7 +505,7 @@ class AnalyticsService {
             FROM specs_db ps
             LEFT JOIN (
                 SELECT 
-                    il.phone_id,
+                    il.product_id,
                     DATEDIFF(NOW(), MIN(il.transaction_date)) as days_since_first_sale,
                     SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END) as total_sold,
                     SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END) / 
@@ -519,8 +519,8 @@ class AnalyticsService {
                     END as lifecycle_stage
                 FROM inventory_log il
                 WHERE il.transaction_type = 'outgoing'
-                GROUP BY il.phone_id
-            ) lifecycle_data ON ps.product_id = lifecycle_data.phone_id
+                GROUP BY il.product_id
+            ) lifecycle_data ON ps.product_id = lifecycle_data.product_id
             ORDER BY lifecycle_data.sales_velocity DESC
         `;
         const result = await conn.query(query);
@@ -573,7 +573,7 @@ class AnalyticsService {
                 COUNT(CASE WHEN il.transaction_type = 'incoming' THEN 1 END) as today_receiving_count,
                 COALESCE(SUM(CASE WHEN il.transaction_type = 'incoming' THEN il.quantity_changed ELSE 0 END), 0) as today_units_received
             FROM inventory_log il
-            JOIN specs_db ps ON il.phone_id = ps.product_id
+            JOIN specs_db ps ON il.product_id = ps.product_id
             WHERE DATE(il.transaction_date) = CURDATE()
         `;
         
@@ -582,7 +582,7 @@ class AnalyticsService {
                 COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END), 0) as week_units_sold,
                 COALESCE(SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ps.device_price * ABS(il.quantity_changed) ELSE 0 END), 0) as week_revenue
             FROM inventory_log il
-            JOIN specs_db ps ON il.phone_id = ps.product_id
+            JOIN specs_db ps ON il.product_id = ps.product_id
             WHERE il.transaction_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)
         `;
 
@@ -675,7 +675,7 @@ class AnalyticsService {
                     COALESCE(SUM(ABS(quantity_changed)), 0) as today_units,
                     COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as today_revenue
                 FROM inventory_log il
-                JOIN specs_db ps ON il.phone_id = ps.product_id
+                JOIN specs_db ps ON il.product_id = ps.product_id
                 WHERE il.transaction_type = 'outgoing' 
                 AND DATE(il.transaction_date) = CURDATE()
             `;
@@ -823,7 +823,7 @@ class AnalyticsService {
                     COALESCE(SUM(CASE WHEN il.transaction_type = 'incoming' THEN il.quantity_changed ELSE 0 END), 0) as total_received,
                     COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as total_revenue
                 FROM specs_db ps
-                LEFT JOIN inventory_log il ON ps.product_id = il.phone_id 
+                LEFT JOIN inventory_log il ON ps.product_id = il.product_id 
                     AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
                 WHERE ps.product_id = ?
                 GROUP BY ps.product_id

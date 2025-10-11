@@ -46,8 +46,8 @@
                     <form action="/inventory/receive" method="POST">
                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <div class="mb-3">
-                            <label for="phone_id" class="form-label">Phone Model *</label>
-                            <select class="form-select" id="phone_id" name="phone_id" required>
+                            <label for="product_id" class="form-label">Phone Model *</label>
+                            <select class="form-select" id="product_id" name="product_id" required>
                                 <option value="" disabled selected>Select a phone...</option>
                                 <% phones.forEach(phone => { %>
                                     <option value="<%= phone.product_id %>" 
@@ -413,7 +413,7 @@
         }
 
         // Phone selection handler to show details
-        document.getElementById('phone_id').addEventListener('change', function() {
+        document.getElementById('product_id').addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
             const detailsDiv = document.getElementById('phone-details');
             
@@ -520,17 +520,17 @@
 
         // Form validation with modern notifications
         document.querySelector('form').addEventListener('submit', function(e) {
-            const phoneId = document.getElementById('phone_id').value;
+            const productId = document.getElementById('product_id').value;
             const supplierId = document.getElementById('supplier_id').value;
             const quantity = document.getElementById('quantity').value;
             const unitCost = document.getElementById('unit_cost').value;
             const warehouseId = document.getElementById('warehouse_id').value;
             const zoneId = document.getElementById('zone_id').value;
             
-            if (!phoneId) {
+            if (!productId) {
                 e.preventDefault();
                 showWarning('Please select a phone model.');
-                document.getElementById('phone_id').focus();
+                document.getElementById('product_id').focus();
                 return;
             }
             

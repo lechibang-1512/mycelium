@@ -44,8 +44,8 @@
                     <form action="/inventory/sell" method="POST">
                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <div class="mb-3">
-                            <label for="phone_id" class="form-label">Phone Model *</label>
-                            <select class="form-select" id="phone_id" name="phone_id" required>
+                            <label for="product_id" class="form-label">Phone Model *</label>
+                            <select class="form-select" id="product_id" name="product_id" required>
                                 <option value="" disabled selected>Select a phone to sell...</option>
                                 <% phones.forEach(phone => { %>
                                     <option value="<%= phone.product_id %>"
@@ -430,7 +430,7 @@
         }
 
         // Phone selection handler to show details
-        document.getElementById('phone_id').addEventListener('change', function() {
+        document.getElementById('product_id').addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
             const detailsDiv = document.getElementById('phone-details');
             
@@ -509,7 +509,7 @@
         // Quantity input handler to update total value and validation
         document.getElementById('quantity').addEventListener('input', function() {
             const quantity = parseInt(this.value) || 0;
-            const selectedOption = document.getElementById('phone_id').options[document.getElementById('phone_id').selectedIndex];
+            const selectedOption = document.getElementById('product_id').options[document.getElementById('product_id').selectedIndex];
             
             if (selectedOption.value) {
                 const availableStock = parseInt(selectedOption.getAttribute('data-stock'));
@@ -563,15 +563,15 @@
 
         // Form validation with modern notifications
         document.querySelector('form').addEventListener('submit', function(e) {
-            const phoneId = document.getElementById('phone_id').value;
+            const productId = document.getElementById('product_id').value;
             const quantity = document.getElementById('quantity').value;
             const warehouseId = document.getElementById('warehouse_id').value;
             const zoneId = document.getElementById('zone_id').value;
             
-            if (!phoneId) {
+            if (!productId) {
                 e.preventDefault();
                 showWarning('Please select a phone model');
-                document.getElementById('phone_id').focus();
+                document.getElementById('product_id').focus();
                 return;
             }
             
@@ -583,7 +583,7 @@
             }
 
             // Validate against available stock
-            const selectedOption = document.getElementById('phone_id').options[document.getElementById('phone_id').selectedIndex];
+            const selectedOption = document.getElementById('product_id').options[document.getElementById('product_id').selectedIndex];
             const availableStock = parseInt(selectedOption.getAttribute('data-stock'));
             if (parseInt(quantity) > availableStock) {
                 e.preventDefault();
@@ -640,14 +640,14 @@
         document.getElementById('zone_id').addEventListener('change', async function() {
             const warehouseId = document.getElementById('warehouse_id').value;
             const zoneId = this.value;
-            const phoneId = document.getElementById('phone_id').value;
+            const productId = document.getElementById('product_id').value;
             const warehouseStockInfo = document.getElementById('warehouse-stock-info');
             const warehouseStockText = document.getElementById('warehouse-stock-text');
             const showBinsBtn = document.getElementById('show-bins-btn');
             
-            if (warehouseId && zoneId && phoneId) {
+            if (warehouseId && zoneId && productId) {
                 try {
-                    const response = await fetch(`/api/warehouse/${warehouseId}/zone/${zoneId}/product/${phoneId}/stock`);
+                    const response = await fetch(`/api/warehouse/${warehouseId}/zone/${zoneId}/product/${productId}/stock`);
                     const data = await response.json();
                     
                     if (data.success && data.stock) {
@@ -667,8 +667,8 @@
                     }
 
                     // Load additional bin locations for the product
-                    if (phoneId && warehouseId) {
-                        loadProductBinLocations(phoneId, warehouseId, zoneId);
+                    if (productId && warehouseId) {
+                        loadProductBinLocations(productId, warehouseId, zoneId);
                     }
                 } catch (error) {
                     console.error('Error loading warehouse stock:', error);
@@ -684,13 +684,13 @@
         });
 
         // Function to load bin locations for a product
-        async function loadProductBinLocations(phoneId, warehouseId, selectedZoneId = null) {
+        async function loadProductBinLocations(productId, warehouseId, selectedZoneId = null) {
             const stockBinsList = document.getElementById('stock-bins-list');
             const stockBinsLoading = document.getElementById('stock-bins-loading');
 
             try {
                 const queryParams = selectedZoneId ? `?zoneId=${selectedZoneId}` : '';
-                const response = await fetch(`/warehouses/${warehouseId}/product/${phoneId}/bins${queryParams}`);
+                const response = await fetch(`/warehouses/${warehouseId}/product/${productId}/bins${queryParams}`);
                 const data = await response.json();
 
                 if (data.success && data.binDetails && data.binDetails.length > 0) {

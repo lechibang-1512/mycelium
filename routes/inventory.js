@@ -43,7 +43,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             await conn.beginTransaction();
             
             const {
-                phone_id,
+                product_id,
                 supplier_id,
                 quantity,
                 unit_cost,
@@ -65,7 +65,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             } = req.body;
             
             // Validate inputs
-            if (!phone_id || !supplier_id || !quantity || quantity <= 0) {
+            if (!product_id || !supplier_id || !quantity || quantity <= 0) {
                 req.flash('error', 'Please provide all required fields with valid values');
                 return res.redirect('/inventory/receive');
             }
@@ -77,7 +77,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             }
             
             // Get current phone data
-            const [phone] = await conn.query('SELECT * FROM specs_db WHERE product_id = ?', [phone_id]);
+            const [phone] = await conn.query('SELECT * FROM specs_db WHERE product_id = ?', [product_id]);
             if (!phone) {
                 req.flash('error', 'Phone not found');
                 return res.redirect('/inventory/receive');
@@ -99,7 +99,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             const newInventoryLevel = (phone.device_inventory || 0) + quantityValue;
             await conn.query(
                 'UPDATE specs_db SET device_inventory = ? WHERE product_id = ?',
-                [newInventoryLevel, phone_id]
+                [newInventoryLevel, product_id]
             );
 
             // Handle warehouse-specific operations
@@ -107,7 +107,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 // Update or create warehouse product location
                 const locationQuery = `
                     INSERT INTO warehouse_product_locations 
-                    (warehouse_id, zone_id, phone_id, aisle, shelf, bin, quantity, created_at, updated_at)
+                    (warehouse_id, zone_id, product_id, aisle, shelf, bin, quantity, created_at, updated_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                     ON DUPLICATE KEY UPDATE 
                         quantity = quantity + VALUES(quantity),
@@ -117,7 +117,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                         updated_at = NOW()
                 `;
                 await conn.query(locationQuery, [
-                    warehouse_id, zone_id, phone_id, 
+                    warehouse_id, zone_id, product_id, 
                     aisle || null, shelf || null, bin || null, 
                     quantityValue
                 ]);
@@ -126,13 +126,13 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 if (batch_no) {
                     const batchQuery = `
                         INSERT INTO batch_tracking 
-                        (phone_id, warehouse_id, zone_id, batch_no, lot_no, supplier_id, 
+                        (product_id, warehouse_id, zone_id, batch_no, lot_no, supplier_id, 
                          quantity_received, quantity_remaining, purchase_price, expiry_date, 
                          received_date, status, created_at, updated_at)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_DATE, 'active', NOW(), NOW())
                     `;
                     await conn.query(batchQuery, [
-                        phone_id, warehouse_id, zone_id, batch_no, lot_no || null, supplier_id,
+                        product_id, warehouse_id, zone_id, batch_no, lot_no || null, supplier_id,
                         quantityValue, quantityValue, unitCostValue, expiry_date || null
                     ]);
                 }
@@ -141,12 +141,12 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             // Log the inventory transaction with warehouse info
             const logQuery = `
                 INSERT INTO inventory_log 
-                (phone_id, transaction_type, quantity_changed, total_value, new_inventory_level, 
+                (product_id, transaction_type, quantity_changed, total_value, new_inventory_level, 
                  supplier_id, warehouse_id, zone_id, batch_no, lot_no, expiry_date, notes, transaction_date) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
             `;
             await conn.query(logQuery, [
-                phone_id, 'incoming', quantityValue, totalCost, newInventoryLevel, 
+                product_id, 'incoming', quantityValue, totalCost, newInventoryLevel, 
                 supplier_id, warehouse_id || null, zone_id || null, 
                 batch_no || null, lot_no || null, expiry_date || null, notes || null
             ]);
@@ -178,7 +178,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 
                 await conn.query(
                     'INSERT INTO receipts (receipt_id, receipt_type, receipt_data, product_id, supplier_id, transaction_date, subtotal, tax_amount, total_amount, notes) VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?)',
-                    [receiptId, 'PURCHASE_RECEIPT', JSON.stringify(receiptData), phone_id, supplier_id, subtotal, vatAmount, totalCost, notes || null]
+                    [receiptId, 'PURCHASE_RECEIPT', JSON.stringify(receiptData), product_id, supplier_id, subtotal, vatAmount, totalCost, notes || null]
                 );
             }
             
@@ -187,7 +187,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 // Assign stock to warehouse and zone
                 await conn.query(
                     'INSERT INTO stock_assignments (product_id, warehouse_id, zone_id, aisle, shelf, bin, batch_no, lot_no, expiry_date, quantity) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    [phone_id, warehouse_id, zone_id, aisle || null, shelf || null, bin || null, batch_no || null, lot_no || null, expiry_date || null, quantityValue]
+                    [product_id, warehouse_id, zone_id, aisle || null, shelf || null, bin || null, batch_no || null, lot_no || null, expiry_date || null, quantityValue]
                 );
             }
             
@@ -235,7 +235,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             await conn.beginTransaction();
             
             const {
-                phone_id,
+                product_id,
                 quantity,
                 tax_type,
                 tax_rate,
@@ -253,13 +253,13 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             } = req.body;
             
             // Validate inputs
-            if (!phone_id || !quantity || quantity <= 0) {
+            if (!product_id || !quantity || quantity <= 0) {
                 req.flash('error', 'Please provide all required fields with valid values');
                 return res.redirect('/inventory/sell');
             }
             
             // Get current phone data
-            const [phone] = await conn.query('SELECT * FROM specs_db WHERE product_id = ?', [phone_id]);
+            const [phone] = await conn.query('SELECT * FROM specs_db WHERE product_id = ?', [product_id]);
             if (!phone) {
                 req.flash('error', 'Phone not found');
                 return res.redirect('/inventory/sell');
@@ -273,8 +273,8 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             if (warehouse_id && zone_id) {
                 const [warehouseStock] = await conn.query(`
                     SELECT quantity FROM warehouse_product_locations 
-                    WHERE phone_id = ? AND warehouse_id = ? AND zone_id = ?
-                `, [phone_id, warehouse_id, zone_id]);
+                    WHERE product_id = ? AND warehouse_id = ? AND zone_id = ?
+                `, [product_id, warehouse_id, zone_id]);
                 
                 warehouseQuantity = warehouseStock?.quantity || 0;
                 
@@ -305,7 +305,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             const newInventoryLevel = currentInventory - quantityValue;
             await conn.query(
                 'UPDATE specs_db SET device_inventory = ? WHERE product_id = ?',
-                [newInventoryLevel, phone_id]
+                [newInventoryLevel, product_id]
             );
 
             // Handle warehouse-specific operations
@@ -314,18 +314,18 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 await conn.query(`
                     UPDATE warehouse_product_locations 
                     SET quantity = quantity - ?, updated_at = NOW()
-                    WHERE phone_id = ? AND warehouse_id = ? AND zone_id = ?
-                `, [quantityValue, phone_id, warehouse_id, zone_id]);
+                    WHERE product_id = ? AND warehouse_id = ? AND zone_id = ?
+                `, [quantityValue, product_id, warehouse_id, zone_id]);
 
                 // Handle FIFO batch tracking for sold items
                 const batchesQuery = `
                     SELECT batch_id, quantity_remaining, batch_no, lot_no 
                     FROM batch_tracking 
-                    WHERE phone_id = ? AND warehouse_id = ? AND zone_id = ? 
+                    WHERE product_id = ? AND warehouse_id = ? AND zone_id = ? 
                       AND status = 'active' AND quantity_remaining > 0
                     ORDER BY received_date ASC, batch_id ASC
                 `;
-                const batches = await conn.query(batchesQuery, [phone_id, warehouse_id, zone_id]);
+                const batches = await conn.query(batchesQuery, [product_id, warehouse_id, zone_id]);
 
                 let remainingToSell = quantityValue;
                 for (const batch of batches) {
@@ -350,12 +350,12 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             // Log the inventory transaction with warehouse info
             const logQuery = `
                 INSERT INTO inventory_log 
-                (phone_id, transaction_type, quantity_changed, total_value, new_inventory_level, 
+                (product_id, transaction_type, quantity_changed, total_value, new_inventory_level, 
                  warehouse_id, zone_id, notes, transaction_date) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
             `;
             await conn.query(logQuery, [
-                phone_id, 'outgoing', -quantityValue, totalAmount, newInventoryLevel, 
+                product_id, 'outgoing', -quantityValue, totalAmount, newInventoryLevel, 
                 warehouse_id || null, zone_id || null, 
                 `Sale${bin_location ? ` from bin: ${bin_location}` : ''}${notes ? ` - ${notes}` : ''}`
             ]);
@@ -388,7 +388,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 
                 await conn.query(
                     'INSERT INTO receipts (receipt_id, receipt_type, receipt_data, product_id, transaction_date, subtotal, tax_amount, total_amount, notes) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?)',
-                    [receiptId, 'SALES_RECEIPT', JSON.stringify(receiptData), phone_id, subtotal, taxAmount, totalAmount, notes || null]
+                    [receiptId, 'SALES_RECEIPT', JSON.stringify(receiptData), product_id, subtotal, taxAmount, totalAmount, notes || null]
                 );
             }
             
@@ -515,7 +515,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                     SELECT quantity, reserved_quantity, aisle, shelf, bin,
                            (quantity - COALESCE(reserved_quantity, 0)) as available_quantity
                     FROM warehouse_product_locations 
-                    WHERE warehouse_id = ? AND zone_id = ? AND phone_id = ?
+                    WHERE warehouse_id = ? AND zone_id = ? AND product_id = ?
                 `, [warehouseIdNum, zoneIdNum, productIdNum]);
                 
                 res.json({ 
@@ -560,7 +560,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                         wpl.aisle, wpl.shelf, wpl.bin
                     FROM warehouse_zones wz
                     LEFT JOIN warehouse_product_locations wpl ON wz.zone_id = wpl.zone_id 
-                        AND wpl.phone_id = ? AND wpl.warehouse_id = ?
+                        AND wpl.product_id = ? AND wpl.warehouse_id = ?
                     WHERE wz.warehouse_id = ? AND wz.is_active = TRUE
                     ORDER BY wz.zone_type, wz.name
                 `;

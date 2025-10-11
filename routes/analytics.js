@@ -17,7 +17,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
             const [totalRevenue] = await conn.query(`
                 SELECT COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as total_revenue
                 FROM inventory_log il
-                JOIN specs_db ps ON il.phone_id = ps.product_id
+                JOIN specs_db ps ON il.product_id = ps.product_id
                 WHERE il.transaction_type = 'outgoing' 
                 AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
             `, [period]);
@@ -46,7 +46,7 @@ module.exports = (pool, suppliersPool, convertBigIntToNumber) => {
                 SELECT il.*, s.device_name, s.device_maker,
                        DATE_FORMAT(il.transaction_date, '%M %d, %Y at %h:%i %p') as formatted_date
                 FROM inventory_log il
-                LEFT JOIN specs_db s ON il.phone_id = s.product_id
+                LEFT JOIN specs_db s ON il.product_id = s.product_id
                 ORDER BY il.transaction_date DESC
                 LIMIT 10
             `);

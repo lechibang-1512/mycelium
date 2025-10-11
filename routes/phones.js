@@ -11,9 +11,9 @@ module.exports = (pool, convertBigIntToNumber, formatDeviceInfo) => {
         let conn;
         try {
             conn = await pool.getConnection();
-            const phoneId = req.params.id;
+            const productId = req.params.id;
             
-            const [phone] = await conn.query('SELECT * FROM specs_db WHERE product_id = ?', [phoneId]);
+            const [phone] = await conn.query('SELECT * FROM specs_db WHERE product_id = ?', [productId]);
             
             if (!phone) {
                 req.flash('error', 'Phone not found');
@@ -24,10 +24,10 @@ module.exports = (pool, convertBigIntToNumber, formatDeviceInfo) => {
             const inventoryLogs = await conn.query(`
                 SELECT *, DATE_FORMAT(transaction_date, '%M %d, %Y at %h:%i %p') as formatted_date
                 FROM inventory_log 
-                WHERE phone_id = ? 
+                WHERE product_id = ? 
                 ORDER BY transaction_date DESC 
                 LIMIT 10
-            `, [phoneId]);
+            `, [productId]);
 
             res.render('details', {
                 title: phone.device_name || 'Phone Details',
@@ -59,9 +59,9 @@ module.exports = (pool, convertBigIntToNumber, formatDeviceInfo) => {
         let conn;
         try {
             conn = await pool.getConnection();
-            const phoneId = req.params.id;
+            const productId = req.params.id;
             
-            const [phone] = await conn.query('SELECT * FROM specs_db WHERE product_id = ?', [phoneId]);
+            const [phone] = await conn.query('SELECT * FROM specs_db WHERE product_id = ?', [productId]);
             
             if (!phone) {
                 req.flash('error', 'Phone not found');
@@ -86,7 +86,7 @@ module.exports = (pool, convertBigIntToNumber, formatDeviceInfo) => {
         let conn;
         try {
             conn = await pool.getConnection();
-            const phoneId = req.params.id;
+            const productId = req.params.id;
             const sanitizedData = SanitizationService.sanitizePhoneInput(req.body);
             
             // Build dynamic update query
@@ -102,16 +102,16 @@ module.exports = (pool, convertBigIntToNumber, formatDeviceInfo) => {
             
             if (updateFields.length === 0) {
                 req.flash('error', 'No valid data to update');
-                return res.redirect(`/phone/${phoneId}`);
+                return res.redirect(`/phone/${productId}`);
             }
             
-            updateValues.push(phoneId);
+            updateValues.push(productId);
             
             const updateQuery = `UPDATE specs_db SET ${updateFields.join(', ')} WHERE product_id = ?`;
             await conn.query(updateQuery, updateValues);
             
             req.flash('success', 'Phone updated successfully');
-            res.redirect(`/phone/${phoneId}`);
+            res.redirect(`/phone/${productId}`);
         } catch (err) {
             next(err);
         } finally {
@@ -124,20 +124,20 @@ module.exports = (pool, convertBigIntToNumber, formatDeviceInfo) => {
         let conn;
         try {
             conn = await pool.getConnection();
-            const phoneId = req.params.id;
+            const productId = req.params.id;
             
             // Check if phone exists
-            const [phone] = await conn.query('SELECT device_name FROM specs_db WHERE product_id = ?', [phoneId]);
+            const [phone] = await conn.query('SELECT device_name FROM specs_db WHERE product_id = ?', [productId]);
             if (!phone) {
                 req.flash('error', 'Phone not found');
                 return res.redirect('/');
             }
             
             // Delete related inventory logs first
-            await conn.query('DELETE FROM inventory_log WHERE phone_id = ?', [phoneId]);
+            await conn.query('DELETE FROM inventory_log WHERE product_id = ?', [productId]);
             
             // Delete the phone
-            await conn.query('DELETE FROM specs_db WHERE product_id = ?', [phoneId]);
+            await conn.query('DELETE FROM specs_db WHERE product_id = ?', [productId]);
             
             req.flash('success', `Phone "${phone.device_name}" deleted successfully`);
             res.redirect('/?success=deleted');

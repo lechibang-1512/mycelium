@@ -19,7 +19,7 @@ class WarehouseAnalyticsService {
                 SELECT 
                     w.warehouse_id,
                     w.name as warehouse_name,
-                    COUNT(DISTINCT il.phone_id) as unique_products_moved,
+                    COUNT(DISTINCT il.product_id) as unique_products_moved,
                     SUM(CASE WHEN il.transaction_type = 'incoming' THEN ABS(il.quantity_changed) ELSE 0 END) as total_received,
                     SUM(CASE WHEN il.transaction_type = 'outgoing' THEN ABS(il.quantity_changed) ELSE 0 END) as total_shipped,
                     COUNT(CASE WHEN il.transaction_type = 'incoming' THEN 1 END) as receiving_transactions,
@@ -28,7 +28,7 @@ class WarehouseAnalyticsService {
                 FROM warehouses w
                 LEFT JOIN inventory_log il ON w.warehouse_id = il.warehouse_id
                     AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-                LEFT JOIN specs_db ps ON il.phone_id = ps.product_id
+                LEFT JOIN specs_db ps ON il.product_id = ps.product_id
                 WHERE w.is_active = TRUE
                 GROUP BY w.warehouse_id, w.name
                 ORDER BY revenue_generated DESC
@@ -52,7 +52,7 @@ class WarehouseAnalyticsService {
                     wz.name as zone_name,
                     wz.zone_type,
                     w.name as warehouse_name,
-                    COUNT(DISTINCT wpl.phone_id) as unique_products,
+                    COUNT(DISTINCT wpl.product_id) as unique_products,
                     COALESCE(SUM(wpl.quantity), 0) as total_inventory,
                     COALESCE(SUM(wpl.reserved_quantity), 0) as reserved_inventory,
                     COALESCE(SUM(wpl.quantity - wpl.reserved_quantity), 0) as available_inventory
@@ -90,7 +90,7 @@ class WarehouseAnalyticsService {
                     SUM(CASE WHEN DATEDIFF(expiry_date, CURRENT_DATE) <= 30 THEN 1 ELSE 0 END) as expiring_month,
                     SUM(CASE WHEN DATEDIFF(expiry_date, CURRENT_DATE) <= 90 THEN 1 ELSE 0 END) as expiring_quarter,
                     SUM(quantity_remaining) as total_quantity_at_risk,
-                    COUNT(DISTINCT phone_id) as unique_products_at_risk
+                    COUNT(DISTINCT product_id) as unique_products_at_risk
                 FROM batch_tracking
                 WHERE status = 'active' 
                     AND expiry_date IS NOT NULL
@@ -117,7 +117,7 @@ class WarehouseAnalyticsService {
                     COUNT(CASE WHEN status = 'damaged' THEN 1 END) as damaged,
                     COUNT(CASE WHEN status = 'returned' THEN 1 END) as returned,
                     COUNT(CASE WHEN status = 'reserved' THEN 1 END) as reserved,
-                    COUNT(DISTINCT phone_id) as unique_products_serialized
+                    COUNT(DISTINCT product_id) as unique_products_serialized
                 FROM serialized_inventory
                 WHERE 1=1
             `;
@@ -180,7 +180,7 @@ class WarehouseAnalyticsService {
                     wz.name as zone_name,
                     wz.zone_type,
                     w.name as warehouse_name,
-                    COUNT(DISTINCT il.phone_id) as unique_products,
+                    COUNT(DISTINCT il.product_id) as unique_products,
                     COALESCE(SUM(ABS(il.quantity_changed)), 0) as total_units_moved,
                     COALESCE(SUM(ps.device_price * ABS(il.quantity_changed)), 0) as revenue_generated
                 FROM warehouse_zones wz
@@ -188,7 +188,7 @@ class WarehouseAnalyticsService {
                 LEFT JOIN inventory_log il ON wz.zone_id = il.zone_id
                     AND il.transaction_type = 'outgoing'
                     AND il.transaction_date >= DATE_SUB(NOW(), INTERVAL ? DAY)
-                LEFT JOIN specs_db ps ON il.phone_id = ps.product_id
+                LEFT JOIN specs_db ps ON il.product_id = ps.product_id
                 WHERE wz.is_active = TRUE AND w.is_active = TRUE
                 GROUP BY wz.zone_id, wz.name, wz.zone_type, w.name
                 ORDER BY revenue_generated DESC
@@ -224,7 +224,7 @@ class WarehouseAnalyticsService {
                 CROSS JOIN specs_db sd
                 LEFT JOIN warehouse_zones wz ON w.warehouse_id = wz.warehouse_id
                 LEFT JOIN warehouse_product_locations wpl ON w.warehouse_id = wpl.warehouse_id 
-                    AND sd.product_id = wpl.phone_id
+                    AND sd.product_id = wpl.product_id
                     AND (wz.zone_id = wpl.zone_id OR wpl.zone_id IS NULL)
                 WHERE w.is_active = TRUE
                     AND COALESCE(wpl.quantity - wpl.reserved_quantity, 0) <= ?
@@ -267,7 +267,7 @@ class WarehouseAnalyticsService {
                 SELECT 
                     w.warehouse_id,
                     w.name as warehouse_name,
-                    COUNT(DISTINCT wpl.phone_id) as unique_products,
+                    COUNT(DISTINCT wpl.product_id) as unique_products,
                     SUM(wpl.quantity) as total_items,
                     SUM(wpl.reserved_quantity) as total_reserved,
                     SUM(wpl.quantity - wpl.reserved_quantity) as total_available,
@@ -276,7 +276,7 @@ class WarehouseAnalyticsService {
                 FROM warehouses w
                 LEFT JOIN warehouse_product_locations wpl ON w.warehouse_id = wpl.warehouse_id
                 LEFT JOIN warehouse_zones wz ON w.warehouse_id = wz.warehouse_id AND wz.is_active = TRUE
-                LEFT JOIN specs_db ps ON wpl.phone_id = ps.product_id
+                LEFT JOIN specs_db ps ON wpl.product_id = ps.product_id
                 WHERE w.is_active = TRUE
             `;
             const params = [];
@@ -304,7 +304,7 @@ class WarehouseAnalyticsService {
             const query = `
                 SELECT 
                     COUNT(*) as total_batches,
-                    COUNT(DISTINCT phone_id) as unique_products,
+                    COUNT(DISTINCT product_id) as unique_products,
                     SUM(quantity_received) as total_quantity_received,
                     SUM(quantity_remaining) as total_quantity_remaining,
                     COUNT(CASE WHEN expiry_date IS NOT NULL THEN 1 END) as batches_with_expiry,

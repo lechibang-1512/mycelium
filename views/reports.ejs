@@ -38,11 +38,11 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label for="phone_id" class="form-label">Phone Model</label>
-                                <select class="form-select" id="phone_id" name="phone_id">
+                                <label for="product_id" class="form-label">Phone Model</label>
+                                <select class="form-select" id="product_id" name="product_id">
                                     <option value="">All Phones</option>
                                     <% phones.forEach(phone => { %>
-                                        <option value="<%= phone.id %>" <%= filters.phone_id == phone.id ? 'selected' : '' %>>
+                                        <option value="<%= phone.id %>" <%= filters.product_id == phone.id ? 'selected' : '' %>>
                                             <%= phone.device_maker %> <%= phone.device_name %>
                                         </option>
                                     <% }); %>
@@ -176,19 +176,19 @@
                                     <ul class="pagination justify-content-center">
                                         <% if (currentPage > 1) { %>
                                             <li class="page-item">
-                                                <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>&transaction_type=<%= filters.transaction_type %>&phone_id=<%= filters.phone_id %>&start_date=<%= filters.start_date %>&end_date=<%= filters.end_date %>">Previous</a>
+                                                <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>&transaction_type=<%= filters.transaction_type %>&product_id=<%= filters.product_id %>&start_date=<%= filters.start_date %>&end_date=<%= filters.end_date %>">Previous</a>
                                             </li>
                                         <% } %>
 
                                         <% for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) { %>
                                             <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                                <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&transaction_type=<%= filters.transaction_type %>&phone_id=<%= filters.phone_id %>&start_date=<%= filters.start_date %>&end_date=<%= filters.end_date %>"><%= i %></a>
+                                                <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&transaction_type=<%= filters.transaction_type %>&product_id=<%= filters.product_id %>&start_date=<%= filters.start_date %>&end_date=<%= filters.end_date %>"><%= i %></a>
                                             </li>
                                         <% } %>
 
                                         <% if (currentPage < totalPages) { %>
                                             <li class="page-item">
-                                                <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>&transaction_type=<%= filters.transaction_type %>&phone_id=<%= filters.phone_id %>&start_date=<%= filters.start_date %>&end_date=<%= filters.end_date %>">Next</a>
+                                                <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>&transaction_type=<%= filters.transaction_type %>&product_id=<%= filters.product_id %>&start_date=<%= filters.start_date %>&end_date=<%= filters.end_date %>">Next</a>
                                             </li>
                                         <% } %>
                                     </ul>
@@ -209,7 +209,7 @@
                                 </div>
                                 <h5 class="text-muted">No inventory transactions found</h5>
                                 <p class="text-muted">
-                                    <% if (filters.transaction_type || filters.phone_id || filters.start_date || filters.end_date) { %>
+                                    <% if (filters.transaction_type || filters.product_id || filters.start_date || filters.end_date) { %>
                                         Try adjusting your filter criteria to see more results.
                                     <% } else { %>
                                         Inventory transactions will appear here when stock is received or sold.
