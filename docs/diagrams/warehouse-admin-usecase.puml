@@ -1,0 +1,183 @@
+@startuml warehouse-admin-usecase
+title Warehouse Admin Use Case Diagram
+left to right direction
+
+skinparam backgroundColor #f8fafc
+skinparam componentStyle uml2
+skinparam usecase {
+  BackgroundColor #fef3c7
+  BorderColor #2b6cb0
+  FontColor #0f172a
+  FontSize 11
+}
+skinparam actor {
+  BackgroundColor #ffffff
+  BorderColor #2b6cb0
+  FontColor #0f172a
+}
+
+actor "Warehouse Admin\n(role: admin)" as Admin #2b6cb0
+
+' Admin-only primary use cases
+usecase "Create User Account" as UC_CreateUser
+usecase "Edit User Account" as UC_EditUser
+usecase "Delete User Account" as UC_DeleteUser
+usecase "View User Details" as UC_ViewUser
+
+usecase "View All Sessions" as UC_ViewSessions
+usecase "Force User Logout" as UC_ForceLogout
+usecase "Invalidate Tokens" as UC_InvalidateToken
+
+usecase "Delete Product" as UC_DeleteProduct
+usecase "Delete Receipt" as UC_DeleteReceipt
+usecase "Delete Supplier" as UC_DeleteSupplier
+
+' Authentication & Profile
+usecase "Login to System" as UC_Login
+usecase "Logout from System" as UC_Logout
+usecase "Update Profile" as UC_UpdateProfile
+
+' User Management sub-functions (included)
+usecase "Validate User Data" as UC_ValidateUser
+usecase "Hash Password" as UC_HashPassword
+usecase "Check Role Permissions" as UC_CheckRole
+usecase "Log User Changes" as UC_LogUserChange
+usecase "Toggle User Status" as UC_ToggleStatus
+usecase "Reset Failed Attempts" as UC_ResetAttempts
+usecase "Bulk User Actions" as UC_BulkActions
+
+' Session Management sub-functions (included)
+usecase "Validate Session Security" as UC_ValidateSession
+usecase "Log Security Events" as UC_LogSecurity
+usecase "View User Session History" as UC_ViewUserSessions
+
+' Authentication sub-functions (included)
+usecase "Create Session Token" as UC_CreateToken
+usecase "Validate Credentials" as UC_ValidateCredentials
+usecase "Check Account Status" as UC_CheckStatus
+
+' Analytics (inherited from Staff)
+usecase "View Analytics Dashboard" as UC_ViewAnalytics
+usecase "Generate Custom Reports" as UC_CustomReports
+usecase "Export Data" as UC_Export
+
+' Inventory Operations (inherited from Staff)
+usecase "Manage Products" as UC_ManageProducts
+usecase "Receive Stock" as UC_ReceiveStock
+usecase "Sell Stock" as UC_SellStock
+usecase "Manage Warehouses" as UC_ManageWarehouses
+usecase "Manage Suppliers" as UC_ManageSuppliers
+usecase "QR Operations" as UC_QROperations
+usecase "View Stock Alerts" as UC_ViewAlerts
+
+' Warehouse Management sub-functions
+usecase "Create/Edit Zones" as UC_ManageZones
+usecase "Configure Bin Locations" as UC_ConfigureBins
+usecase "Transfer Inventory" as UC_TransferInventory
+usecase "Track Batches" as UC_TrackBatches
+usecase "Track Serials" as UC_TrackSerials
+
+' Admin relationships for User Management
+Admin --> UC_CreateUser
+Admin --> UC_EditUser
+Admin --> UC_DeleteUser
+Admin --> UC_ViewUser
+
+UC_CreateUser ..> UC_ValidateUser : <<include>>
+UC_CreateUser ..> UC_HashPassword : <<include>>
+UC_CreateUser ..> UC_CheckRole : <<include>>
+UC_CreateUser ..> UC_LogUserChange : <<include>>
+
+UC_EditUser ..> UC_ValidateUser : <<include>>
+UC_EditUser ..> UC_LogUserChange : <<include>>
+UC_EditUser ..> UC_ToggleStatus : <<extend>>
+UC_EditUser ..> UC_ResetAttempts : <<extend>>
+
+UC_DeleteUser ..> UC_CheckRole : <<include>>
+UC_DeleteUser ..> UC_LogUserChange : <<include>>
+
+UC_ViewUser ..> UC_BulkActions : <<extend>>
+
+' Admin relationships for Session Management
+Admin --> UC_ViewSessions
+Admin --> UC_ForceLogout
+Admin --> UC_InvalidateToken
+
+UC_ViewSessions ..> UC_ValidateSession : <<include>>
+UC_ViewSessions ..> UC_ViewUserSessions : <<extend>>
+
+UC_ForceLogout ..> UC_InvalidateToken : <<include>>
+UC_ForceLogout ..> UC_LogSecurity : <<include>>
+
+UC_InvalidateToken ..> UC_LogSecurity : <<include>>
+
+' Admin relationships for Delete Operations
+Admin --> UC_DeleteProduct
+Admin --> UC_DeleteReceipt
+Admin --> UC_DeleteSupplier
+
+UC_DeleteProduct ..> UC_CheckRole : <<include>>
+UC_DeleteProduct ..> UC_LogUserChange : <<include>>
+
+UC_DeleteReceipt ..> UC_CheckRole : <<include>>
+UC_DeleteReceipt ..> UC_LogUserChange : <<include>>
+
+UC_DeleteSupplier ..> UC_CheckRole : <<include>>
+UC_DeleteSupplier ..> UC_LogUserChange : <<include>>
+
+' Authentication
+Admin --> UC_Login
+Admin --> UC_Logout
+Admin --> UC_UpdateProfile
+
+UC_Login ..> UC_ValidateCredentials : <<include>>
+UC_Login ..> UC_CheckStatus : <<include>>
+UC_Login ..> UC_CreateToken : <<include>>
+UC_Login ..> UC_LogSecurity : <<include>>
+
+UC_Logout ..> UC_InvalidateToken : <<include>>
+UC_Logout ..> UC_LogSecurity : <<include>>
+
+' Analytics & Reporting (Admin inherits from Staff)
+Admin --> UC_ViewAnalytics
+Admin --> UC_CustomReports
+
+UC_ViewAnalytics ..> UC_Export : <<extend>>
+UC_CustomReports ..> UC_Export : <<extend>>
+
+' Inventory Operations (Admin inherits from Staff)
+Admin --> UC_ManageProducts
+Admin --> UC_ReceiveStock
+Admin --> UC_SellStock
+Admin --> UC_ManageWarehouses
+Admin --> UC_ManageSuppliers
+Admin --> UC_QROperations
+Admin --> UC_ViewAlerts
+
+UC_ManageWarehouses ..> UC_ManageZones : <<include>>
+UC_ManageWarehouses ..> UC_ConfigureBins : <<include>>
+UC_ManageWarehouses ..> UC_TransferInventory : <<extend>>
+UC_ManageWarehouses ..> UC_TrackBatches : <<extend>>
+UC_ManageWarehouses ..> UC_TrackSerials : <<extend>>
+
+rectangle "CRUD Operations\n• Add, Edit, Delete\n• View Details\n• Toggle Status\n• FAQs Management" as CRUDNote #fef3c7
+
+note top of CRUDNote
+  **Admin Exclusive Capabilities:**
+  • Complete user lifecycle management
+  • Session security and force logout
+  • Delete operations (products, receipts, suppliers)
+  • Full system configuration access
+  
+  **Inherited from Staff:**
+  • All warehouse operations
+  • All inventory operations
+  • All supplier operations
+  • All QR code operations
+  • All analytics and reporting
+  
+  **Role:** admin
+  **Middleware:** isAdmin
+end note
+
+@enduml

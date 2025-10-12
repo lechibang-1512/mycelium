@@ -1,0 +1,338 @@
+@startuml business-process-warehouse-management
+title Business Process: Warehouse & Zone Management
+
+skinparam backgroundColor #f8fafc
+skinparam activityBackgroundColor #dbeafe
+skinparam activityBorderColor #2b6cb0
+skinparam activityFontColor #0f172a
+
+|Staff/Admin|
+start
+:Access Warehouse Management;
+
+|System|
+:Display Warehouses List;
+
+|Staff/Admin|
+if (Action?) then (Create New Warehouse)
+  
+  |Staff/Admin|
+  :Click "Create Warehouse";
+  
+  |System|
+  :Display Warehouse Form;
+  
+  |Staff/Admin|
+  :Enter Warehouse Details;
+  note right
+    • Name
+    • Code (unique)
+    • Address
+    • City, State, ZIP
+    • Capacity
+    • Manager Info
+    • Contact Details
+  end note
+  :Submit Form;
+  
+  |System|
+  :Validate Input;
+  
+  if (Validation Passes?) then (yes)
+    :Begin Transaction;
+    
+    fork
+      :Create Warehouse Record;
+      :Generate warehouse_id;
+      :Store all details;
+      :Set status = "active";
+    fork again
+      :Create Default Zones;
+      :Create "Receiving" zone;
+      :Create "Storage" zone;
+      :Create "Picking" zone;
+      :Create "Shipping" zone;
+      :Create "Returns" zone;
+      :Create "Quarantine" zone;
+      note right
+        Default zones are created
+        automatically for new warehouses
+        
+        Each zone has:
+        • Name and code
+        • Type
+        • Capacity
+        • Default status
+      end note
+    fork again
+      :Create Default Bin Structure;
+      :Create bin locations for each zone;
+      :Use aisle-shelf-bin format;
+      note right
+        Example bin structure:
+        • A01-01-01 (Aisle A, Shelf 1, Bin 1)
+        • A01-01-02
+        • B01-01-01
+        etc.
+      end note
+    fork again
+      :Log Warehouse Creation;
+      :Store performer_user_id;
+      :Store timestamp;
+    end fork
+    
+    :Commit Transaction;
+    :Display Success Message;
+    stop
+  else (no)
+    :Display Validation Errors;
+    stop
+  endif
+
+else (Edit Existing Warehouse)
+  
+  |Staff/Admin|
+  :Select Warehouse;
+  :Click "Edit";
+  
+  |System|
+  :Load Warehouse Data;
+  :Display Edit Form;
+  
+  |Staff/Admin|
+  :Update Details;
+  :Submit Form;
+  
+  |System|
+  :Validate Changes;
+  :Update Warehouse Record;
+  :Log Changes;
+  :Display Success Message;
+  stop
+
+else (Manage Zones)
+  
+  |Staff/Admin|
+  :Select Warehouse;
+  :Click "Manage Zones";
+  
+  |System|
+  :Display Zones List;
+  :Show Zone Utilization;
+  :Show Zone Capacity;
+  
+  |Staff/Admin|
+  if (Zone Action?) then (Create Zone)
+    
+    |Staff/Admin|
+    :Click "Add Zone";
+    
+    |System|
+    :Display Zone Form;
+    
+    |Staff/Admin|
+    :Enter Zone Details;
+    note right
+      • Name
+      • Code (unique in warehouse)
+      • Type (receiving, storage, etc.)
+      • Capacity
+      • Dimensions
+      • Temperature controlled
+      • Security level
+    end note
+    :Submit Form;
+    
+    |System|
+    :Validate Zone Data;
+    
+    if (Valid?) then (yes)
+      :Create Zone Record;
+      :Link to warehouse_id;
+      :Create Default Bins;
+      :Log Zone Creation;
+      :Display Success;
+      stop
+    else (no)
+      :Display Errors;
+      stop
+    endif
+    
+  else (Edit Zone)
+    
+    |Staff/Admin|
+    :Select Zone;
+    :Click "Edit";
+    
+    |System|
+    :Load Zone Data;
+    :Display Edit Form;
+    
+    |Staff/Admin|
+    :Update Details;
+    :Submit Form;
+    
+    |System|
+    :Validate Changes;
+    :Update Zone Record;
+    :Log Changes;
+    :Display Success;
+    stop
+    
+  else (Manage Bins)
+    
+    |Staff/Admin|
+    :Select Zone;
+    :Click "Manage Bins";
+    
+    |System|
+    :Display Bin Structure;
+    :Show Bin Occupancy;
+    
+    |Staff/Admin|
+    if (Bin Action?) then (Create Bins)
+      
+      |Staff/Admin|
+      :Specify Bin Range;
+      note right
+        Example:
+        • Aisles: A-D
+        • Shelves per aisle: 1-10
+        • Bins per shelf: 1-20
+        
+        System generates:
+        A01-01-01 through D10-20-01
+      end note
+      :Submit;
+      
+      |System|
+      :Generate Bin Locations;
+      :Create bin records;
+      :Set status = "empty";
+      :Link to zone_id;
+      :Display Success;
+      stop
+      
+    else (View Bin Details)
+      
+      |Staff/Admin|
+      :Select Bin;
+      
+      |System|
+      :Display Bin Information;
+      :Show Current Contents;
+      :Show Capacity;
+      :Show History;
+      stop
+      
+    endif
+    
+  else (View Analytics)
+    
+    |Staff/Admin|
+    :Select Zone;
+    :Click "Analytics";
+    
+    |System|
+    :Calculate Zone Metrics;
+    fork
+      :Calculate Utilization %;
+      :occupied_bins / total_bins;
+    fork again
+      :Calculate Throughput;
+      :movements per day;
+    fork again
+      :Calculate Efficiency;
+      :average pick time;
+    fork again
+      :Generate Heatmap;
+      :show busy areas;
+    end fork
+    
+    :Display Zone Analytics;
+    :Render Charts;
+    :Show Recommendations;
+    stop
+    
+  endif
+
+else (Transfer Inventory)
+  
+  |Staff/Admin|
+  :Click "Transfer Inventory";
+  
+  |System|
+  :Display Transfer Form;
+  
+  |Staff/Admin|
+  :Select Source Warehouse/Zone;
+  :Select Destination Warehouse/Zone;
+  :Select Products & Quantities;
+  note right
+    Can transfer:
+    • Intra-warehouse (zone to zone)
+    • Inter-warehouse
+    • Specific serials
+    • Entire batches
+  end note
+  :Submit Transfer;
+  
+  |System|
+  :Validate Transfer;
+  
+  fork
+    :Check Source Stock;
+    :Verify sufficient quantity;
+  fork again
+    :Check Destination Capacity;
+    :Verify space available;
+  fork again
+    if (Serialized Items?) then (yes)
+      :Validate Serial Locations;
+    endif
+  end fork
+  
+  if (Validation Passes?) then (yes)
+    :Begin Transaction;
+    
+    fork
+      :Create Transfer Record;
+      :Set status = "initiated";
+      :Store source/destination;
+      :Store transfer_date;
+      :Store performer_user_id;
+    fork again
+      :Update Inventory Levels;
+      :Decrement source location;
+      :Increment destination location;
+    fork again
+      if (Serialized?) then (yes)
+        :Update Serial Locations;
+        :Create serial_history entries;
+      endif
+    fork again
+      if (Batch Tracked?) then (yes)
+        :Update Batch Locations;
+        :Log batch movements;
+      endif
+    fork again
+      :Create Inventory Log Entries;
+      :Log source decrement;
+      :Log destination increment;
+    fork again
+      :Set Transfer Status;
+      :status = "completed";
+    end fork
+    
+    :Commit Transaction;
+    :Display Success;
+    :Show Transfer Receipt;
+    stop
+  else (no)
+    :Display Validation Errors;
+    stop
+  endif
+
+endif
+
+@enduml

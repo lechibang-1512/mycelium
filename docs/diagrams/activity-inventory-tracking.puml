@@ -1,0 +1,460 @@
+@startuml activity-inventory-tracking
+title Activity Diagram: Serialized Inventory & Batch Tracking
+
+skinparam backgroundColor #f8fafc
+skinparam activityBackgroundColor #dbeafe
+skinparam activityBorderColor #2b6cb0
+skinparam activityFontColor #0f172a
+
+|Staff/Admin|
+start
+
+if (Operation Type?) then (Create Serial Record)
+  
+  :Access Serial Creation;
+  note right
+    Context:
+    • During stock receipt
+    • Standalone serial creation
+    • Batch generation
+  end note
+  
+  |System|
+  :Display Serial Form;
+  
+  |Staff/Admin|
+  :Enter Serial Details;
+  note right
+    Required:
+    • Serial Number (unique)
+    • Product ID
+    • Warehouse/Zone/Bin
+    
+    Optional:
+    • Batch ID
+    • Purchase Cost
+    • Warranty Info
+    • Notes
+  end note
+  :Submit Form;
+  
+  |System|
+  :Validate Serial Data;
+  
+  fork
+    :Check Serial Uniqueness;
+    :Query serialized_inventory;
+    :Ensure globally unique;
+  fork again
+    :Validate Product Exists;
+    :Check product.is_serializable = true;
+  fork again
+    :Validate Location;
+    :Verify warehouse/zone/bin exists;
+  fork again
+    if (Batch Specified?) then (yes)
+      :Validate Batch Exists;
+      :Check batch is active;
+    endif
+  end fork
+  
+  if (All Validations Pass?) then (yes)
+    :Begin Transaction;
+    
+    fork
+      :Insert Serial Record;
+      :serial_number, product_id;
+      :batch_id (if applicable);
+      :warehouse_id, zone_id, bin_id;
+      :status = "available";
+      :created_at = now;
+      :created_by = user_id;
+    fork again
+      :Create Serial History Entry;
+      :action = "created";
+      :from_status = null;
+      :to_status = "available";
+      :location = current_location;
+      :performed_by = user_id;
+      :timestamp = now;
+    fork again
+      if (Batch Linked?) then (yes)
+        :Update Batch Serial Count;
+        :Increment serialized_count;
+      endif
+    fork again
+      :Generate Serial QR Code;
+      :type = "serial";
+      :serialNumber = serial_number;
+      :Embed product info;
+    fork again
+      :Log Inventory Event;
+      :action = "serial_created";
+      :details = serial_info;
+    end fork
+    
+    :Commit Transaction;
+    :Display Success;
+    :Show Serial Details;
+    :Show QR Code;
+    stop
+  else (no)
+    :Display Validation Errors;
+    stop
+  endif
+
+else (Lookup Serial)
+  
+  :Access Serial Lookup;
+  
+  |System|
+  :Display Search Interface;
+  
+  |Staff/Admin|
+  :Enter Serial Number;
+  note right
+    Can lookup by:
+    • Exact serial number
+    • Serial QR scan
+    • Batch number
+    • Product + location
+  end note
+  :Submit Search;
+  
+  |System|
+  :Query Serial Record;
+  
+  if (Serial Found?) then (yes)
+    :Load Serial Details;
+    
+    fork
+      :Load Basic Info;
+      :serial_number, product_id;
+      :status, location;
+    fork again
+      :Load Product Info;
+      :SKU, name, description;
+    fork again
+      :Load Batch Info;
+      :batch_number, expiry_date;
+    fork again
+      :Load Location Info;
+      :warehouse, zone, bin names;
+    fork again
+      :Load Complete History;
+      :All status changes;
+      :All movements;
+      :All events;
+    fork again
+      :Calculate Metrics;
+      :Days in inventory;
+      :Number of moves;
+      :Current age;
+    end fork
+    
+    :Display Serial Dashboard;
+    :Show all information;
+    :Show history timeline;
+    :Display QR code;
+    :Show available actions;
+    
+    stop
+  else (no)
+    :Display "Serial Not Found";
+    :Offer to create new serial;
+    stop
+  endif
+
+else (Move Serial)
+  
+  :Select Serial to Move;
+  :Access Move Interface;
+  
+  |System|
+  :Load Current Serial Location;
+  :Display Move Form;
+  
+  |Staff/Admin|
+  :Select Destination;
+  note right
+    Destination options:
+    • Different warehouse
+    • Different zone
+    • Different bin
+    • Mark for transfer
+    • Mark for shipping
+  end note
+  :Enter Move Reason (optional);
+  :Submit Move;
+  
+  |System|
+  :Validate Move;
+  
+  fork
+    :Check Serial Status;
+    :Must be "available" or "reserved";
+  fork again
+    :Validate Destination;
+    :Warehouse/zone/bin must exist;
+    :Check capacity;
+  fork again
+    :Check Permissions;
+    :User authorized for both locations;
+  end fork
+  
+  if (Validation Passes?) then (yes)
+    :Begin Transaction;
+    
+    :Store Old Location;
+    :old_warehouse, old_zone, old_bin;
+    
+    fork
+      :Update Serial Record;
+      :Set new warehouse_id;
+      :Set new zone_id;
+      :Set new bin_id;
+      :Set updated_at = now;
+      :Set updated_by = user_id;
+    fork again
+      :Create Serial History Entry;
+      :action = "moved";
+      :from_location = old_location;
+      :to_location = new_location;
+      :reason = move_reason;
+      :performed_by = user_id;
+      :timestamp = now;
+    fork again
+      :Create Inventory Log Entry;
+      :action = "serial_moved";
+      :product_id, serial_number;
+      :source/destination locations;
+      :performer = user_id;
+    fork again
+      :Update Location Occupancy;
+      :Decrement old location count;
+      :Increment new location count;
+    end fork
+    
+    :Commit Transaction;
+    :Display Success;
+    :Show updated location;
+    stop
+  else (no)
+    :Display Validation Errors;
+    stop
+  endif
+
+else (Update Serial Status)
+  
+  :Select Serial;
+  :Access Status Update;
+  
+  |System|
+  :Load Current Status;
+  :Display Status Options;
+  
+  |Staff/Admin|
+  :Select New Status;
+  note right
+    Status options:
+    • available
+    • reserved
+    • sold
+    • damaged
+    • lost
+    • returned
+    • in_transit
+    • quarantined
+  end note
+  :Enter Status Change Reason;
+  :Submit Status Update;
+  
+  |System|
+  :Validate Status Transition;
+  :Check valid state transition;
+  note right
+    Valid transitions:
+    available → reserved, sold, damaged, lost
+    reserved → available, sold
+    sold → returned
+    damaged → available (after repair)
+    in_transit → available
+    etc.
+  end note
+  
+  if (Valid Transition?) then (yes)
+    :Begin Transaction;
+    
+    :Store Old Status;
+    
+    fork
+      :Update Serial Record;
+      :Set status = new_status;
+      :Set status_updated_at = now;
+      :Set updated_by = user_id;
+    fork again
+      if (Status = "sold") then (yes)
+        :Set sold_date = now;
+        :Clear location (optional);
+      endif
+    fork again
+      if (Status = "damaged" or "lost") then (yes)
+        :Decrement Available Inventory;
+      endif
+    fork again
+      :Create Serial History Entry;
+      :action = "status_changed";
+      :from_status = old_status;
+      :to_status = new_status;
+      :reason = change_reason;
+      :performed_by = user_id;
+    fork again
+      :Log Inventory Event;
+      :action = "serial_status_changed";
+    end fork
+    
+    :Commit Transaction;
+    :Display Success;
+    stop
+  else (no)
+    :Display Invalid Transition Error;
+    :Show allowed transitions;
+    stop
+  endif
+
+else (Create Batch)
+  
+  :Access Batch Creation;
+  
+  |System|
+  :Display Batch Form;
+  
+  |Staff/Admin|
+  :Enter Batch Details;
+  note right
+    Required:
+    • Batch Number (unique)
+    • Product ID
+    • Lot Number
+    • Initial Quantity
+    • Warehouse/Zone
+    
+    Optional:
+    • Expiry Date
+    • Manufacturing Date
+    • Supplier Batch ID
+    • Notes
+  end note
+  :Submit Form;
+  
+  |System|
+  :Validate Batch Data;
+  
+  fork
+    :Check Batch Number Uniqueness;
+  fork again
+    :Validate Product;
+  fork again
+    :Validate Quantity > 0;
+  fork again
+    :Validate Location;
+  fork again
+    if (Expiry Date Provided?) then (yes)
+      :Check Expiry Date > Today;
+    endif
+  end fork
+  
+  if (Validations Pass?) then (yes)
+    :Begin Transaction;
+    
+    fork
+      :Insert Batch Record;
+      :batch_number, lot_number;
+      :product_id, warehouse_id, zone_id;
+      :initial_quantity, current_quantity;
+      :expiry_date (if applicable);
+      :status = "active";
+      :created_at = now;
+      :created_by = user_id;
+    fork again
+      :Update Inventory Levels;
+      :Add batch quantity to location;
+    fork again
+      :Generate Batch QR Code;
+      :type = "batch";
+      :Embed batch info;
+    fork again
+      if (Expiry Date?) then (yes)
+        :Calculate Days Until Expiry;
+        if (< 30 days?) then (yes)
+          :Create Expiry Alert;
+        endif
+      endif
+    fork again
+      :Log Inventory Event;
+      :action = "batch_created";
+    end fork
+    
+    :Commit Transaction;
+    :Display Success;
+    :Show Batch Details;
+    :Show QR Code;
+    stop
+  else (no)
+    :Display Errors;
+    stop
+  endif
+
+else (Track Batch Movement)
+  
+  :Select Batch;
+  :View Batch Details;
+  
+  |System|
+  :Load Batch Information;
+  
+  fork
+    :Load Basic Batch Info;
+    :batch_number, lot_number;
+    :current_quantity, status;
+  fork again
+    :Load Product Info;
+  fork again
+    :Load Current Location;
+  fork again
+    :Load All Linked Serials;
+    :If product is serializable;
+  fork again
+    :Load Movement History;
+    :All receipts using this batch;
+    :All sales depleting this batch;
+    :All transfers;
+  fork again
+    :Calculate Batch Metrics;
+    :Total received;
+    :Total sold;
+    :Total remaining;
+    :Days in inventory;
+    :Turnover rate;
+  fork again
+    if (Expiry Date?) then (yes)
+      :Calculate Days Until Expiry;
+      :Calculate FEFO priority;
+      if (Expiring Soon?) then (yes)
+        :Highlight expiry warning;
+      endif
+    endif
+  end fork
+  
+  :Display Batch Dashboard;
+  :Show all information;
+  :Show movement timeline;
+  :Show linked transactions;
+  :Show serials (if applicable);
+  :Show analytics charts;
+  
+  stop
+
+endif
+
+@enduml

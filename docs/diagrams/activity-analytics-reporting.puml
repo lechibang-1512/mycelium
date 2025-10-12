@@ -1,0 +1,442 @@
+@startuml activity-analytics-reporting
+title Activity Diagram: Analytics & Reporting
+
+skinparam backgroundColor #f8fafc
+skinparam activityBackgroundColor #dcfce7
+skinparam activityBorderColor #16a34a
+skinparam activityFontColor #0f172a
+
+|User|
+start
+:Navigate to Analytics Section;
+
+|System|
+:Check User Authentication;
+:isAuthenticated middleware;
+
+if (Authenticated?) then (yes)
+  :Display Analytics Navigation;
+  note right
+    Analytics modules:
+    • Dashboard (Overview)
+    • Warehouse Analytics
+    • Receipt Analytics
+    • Stock Alerts
+    • Custom Reports
+  end note
+else (no)
+  :Redirect to Login;
+  stop
+endif
+
+|User|
+if (Analytics Type?) then (Dashboard Overview)
+  
+  |System|
+  :Calculate Dashboard KPIs;
+  
+  fork
+    :Total Inventory Value;
+    :Sum(quantity × unit_cost);
+    :Across all warehouses;
+  fork again
+    :Total Products Count;
+    :Count unique SKUs;
+  fork again
+    :Active Warehouses Count;
+    :Count status = "active";
+  fork again
+    :Low Stock Alerts Count;
+    :Count alerts with type = "low_stock";
+  fork again
+    :Out of Stock Count;
+    :Count products with quantity = 0;
+  fork again
+    :Recent Receipts Count;
+    :Last 7 days;
+  fork again
+    :Top Moving Products;
+    :Query most sold in last 30 days;
+    :Order by total_quantity DESC;
+    :Limit 10;
+  fork again
+    :Warehouse Occupancy;
+    :Calculate % filled;
+    :Per warehouse;
+  fork again
+    :Inventory Turnover Rate;
+    :COGS / Average Inventory;
+  fork again
+    :Expiring Items Count;
+    :Next 30 days;
+  end fork
+  
+  :Render Dashboard Charts;
+  fork
+    :Inventory Value Trend;
+    :Line chart - last 30 days;
+  fork again
+    :Stock Distribution;
+    :Pie chart by warehouse;
+  fork again
+    :Top Products;
+    :Bar chart - top 10;
+  fork again
+    :Receipt Activity;
+    :Line chart - IN vs OUT;
+  fork again
+    :Alert Summary;
+    :Donut chart by type;
+  end fork
+  
+  :Display Dashboard;
+  :Show KPIs in cards;
+  :Show charts;
+  :Show quick actions;
+  :Show recent activity;
+  
+  |User|
+  if (Apply Filters?) then (yes)
+    :Select Date Range;
+    :Select Warehouse(s);
+    :Apply Filters;
+    
+    |System|
+    :Recalculate Metrics;
+    :With filter parameters;
+    :Update Dashboard;
+    stop
+  else (no)
+    stop
+  endif
+
+else (Warehouse Analytics)
+  
+  |User|
+  :Select Warehouse (or All);
+  
+  |System|
+  :Load Warehouse Analytics;
+  
+  fork
+    :Zone Utilization;
+    :For each zone:;
+    :Calculate occupied / total capacity;
+    :Generate utilization %age;
+  fork again
+    :Zone Efficiency;
+    :Calculate throughput per zone;
+    :Receipts + Sales per zone;
+    :Per day/week/month;
+  fork again
+    :Stock Distribution;
+    :Quantity per zone;
+    :Value per zone;
+  fork again
+    :Movement Frequency;
+    :Heatmap of activity;
+    :Identify busy zones;
+  fork again
+    :Batch Expiry Tracking;
+    :List batches by expiry;
+    :Group by warehouse/zone;
+  fork again
+    :Serial Tracking;
+    :Count serials by status;
+    :available, sold, damaged;
+  fork again
+    :Performance Metrics;
+    :Average receipt time;
+    :Average pick time;
+    :Space optimization score;
+  end fork
+  
+  :Render Warehouse Analytics;
+  fork
+    :Zone Utilization Chart;
+    :Horizontal bar chart;
+  fork again
+    :Warehouse Map/Heatmap;
+    :Visual representation;
+  fork again
+    :Throughput Trend;
+    :Line chart over time;
+  fork again
+    :Expiring Batches Table;
+    :Sortable, filterable;
+  fork again
+    :Top Zones by Activity;
+    :Bar chart;
+  end fork
+  
+  :Display Warehouse Analytics Dashboard;
+  
+  |User|
+  if (Drill Down?) then (yes)
+    :Click on Zone;
+    
+    |System|
+    :Load Zone Details;
+    :Show zone-specific analytics;
+    :Show all products in zone;
+    :Show bin-level details;
+    :Show zone history;
+    stop
+  else (no)
+    stop
+  endif
+
+else (Receipt Analytics)
+  
+  |User|
+  :Select Date Range;
+  :Select Receipt Type (IN/OUT/All);
+  
+  |System|
+  :Query Receipt Data;
+  :Filter by parameters;
+  
+  fork
+    :Calculate Volume Metrics;
+    :Total receipts count;
+    :Total items received;
+    :Total items sold;
+    :Net change;
+  fork again
+    :Calculate Value Metrics;
+    :Total value received;
+    :Total value sold;
+    :Average receipt value;
+  fork again
+    :Time-based Analysis;
+    :Group by day/week/month;
+    :Calculate trends;
+  fork again
+    :Supplier Analysis;
+    :Top suppliers by volume;
+    :Top suppliers by value;
+    :Average lead times;
+  fork again
+    :Product Analysis;
+    :Most received products;
+    :Most sold products;
+  fork again
+    :Warehouse Analysis;
+    :Receipts by warehouse;
+    :Sales by warehouse;
+  fork again
+    :Performance Metrics;
+    :Average processing time;
+    :Peak activity periods;
+    :User performance;
+  end fork
+  
+  :Render Receipt Analytics;
+  fork
+    :Volume Trend Chart;
+    :Line chart - IN vs OUT;
+  fork again
+    :Value Trend Chart;
+    :Line chart with $ values;
+  fork again
+    :Top Suppliers Chart;
+    :Bar chart;
+  fork again
+    :Receipt Type Distribution;
+    :Pie chart;
+  fork again
+    :Activity Heatmap;
+    :By day of week / hour;
+  fork again
+    :Receipts Table;
+    :Detailed list;
+    :Sortable, filterable;
+  end fork
+  
+  :Display Receipt Analytics Dashboard;
+  
+  |User|
+  if (Export Data?) then (yes)
+    :Click "Export";
+    :Select Format;
+    note right
+      Export formats:
+      • CSV
+      • Excel (XLSX)
+      • PDF Report
+      • JSON
+    end note
+    
+    |System|
+    :Generate Export File;
+    :Include filtered data;
+    :Include charts (for PDF);
+    :Include summary statistics;
+    
+    :Download File;
+    stop
+  else (no)
+    stop
+  endif
+
+else (Stock Alerts)
+  
+  |System|
+  :Query Stock Alerts;
+  :Filter active alerts;
+  
+  fork
+    :Low Stock Alerts;
+    :quantity <= reorder_level;
+  fork again
+    :Out of Stock Alerts;
+    :quantity = 0;
+  fork again
+    :Expiring Items;
+    :expiry_date <= now + 30 days;
+  fork again
+    :Overstock Alerts;
+    :quantity > max_stock_level;
+  fork again
+    :Slow Moving Items;
+    :no activity > 90 days;
+  fork again
+    :Dead Stock;
+    :no activity > 180 days;
+  end fork
+  
+  :Calculate Alert Statistics;
+  :Count by severity;
+  :Count by type;
+  :Count by warehouse;
+  
+  :Display Alerts Dashboard;
+  :Show alert summary cards;
+  :Show alerts by severity;
+  :Critical (red);
+  :Warning (yellow);
+  :Info (blue);
+  
+  :Display Alerts Table;
+  :Sortable by severity, date, type;
+  :Filterable by warehouse, product;
+  :Show alert details;
+  :Show recommended actions;
+  
+  |User|
+  if (Take Action?) then (yes - Staff/Admin)
+    :Select Alert;
+    :View Recommended Actions;
+    note right
+      Actions based on alert type:
+      
+      Low Stock:
+      • Create purchase order
+      • Transfer from other warehouse
+      • Adjust reorder level
+      
+      Expiring:
+      • Mark for priority sale
+      • Transfer to discount zone
+      • Request return to supplier
+      
+      Overstock:
+      • Create promotion
+      • Transfer to other warehouse
+      • Adjust max level
+    end note
+    
+    :Select Action;
+    :Execute Action;
+    
+    |System|
+    :Process Action;
+    :Update Alert Status;
+    :Log Action Taken;
+    stop
+  else (no)
+    stop
+  endif
+
+else (Custom Reports)
+  
+  |User|
+  :Access Report Builder;
+  
+  |System|
+  :Display Report Builder Interface;
+  
+  |User|
+  :Configure Report Parameters;
+  note right
+    Report configuration:
+    • Report type (inventory, sales, etc.)
+    • Date range
+    • Grouping (by warehouse, product, etc.)
+    • Filters (status, category, etc.)
+    • Metrics to include
+    • Chart types
+    • Sort order
+  end note
+  :Submit Report Request;
+  
+  |System|
+  :Validate Parameters;
+  
+  if (Valid?) then (yes)
+    :Build Dynamic Query;
+    :Apply filters and joins;
+    :Execute query;
+    
+    :Process Results;
+    :Calculate aggregations;
+    :Apply formatting;
+    
+    :Generate Report;
+    fork
+      :Create Data Tables;
+    fork again
+      :Generate Charts;
+    fork again
+      :Calculate Totals;
+    fork again
+      :Add Metadata;
+      :Report date, parameters;
+    end fork
+    
+    :Display Custom Report;
+    :Show data tables;
+    :Show visualizations;
+    :Show summary statistics;
+    
+    |User|
+    if (Save Report Template?) then (yes)
+      :Enter Template Name;
+      :Save Configuration;
+      
+      |System|
+      :Store Report Template;
+      :Link to user_id;
+      :Store all parameters;
+      :Display Success;
+      stop
+    else (no)
+      if (Export Report?) then (yes)
+        :Select Export Format;
+        
+        |System|
+        :Generate Export;
+        :Download File;
+        stop
+      else (no)
+        stop
+      endif
+    endif
+  else (no)
+    :Display Validation Errors;
+    stop
+  endif
+
+endif
+
+@enduml

@@ -1,0 +1,422 @@
+@startuml activity-zone-distribution
+title Activity Diagram: Zone Distribution & Optimization
+
+skinparam backgroundColor #f8fafc
+skinparam activityBackgroundColor #dbeafe
+skinparam activityBorderColor #2b6cb0
+skinparam activityFontColor #0f172a
+
+|Staff/Admin|
+start
+:Access Zone Distribution;
+:Select Warehouse;
+:Select Product;
+
+|System|
+:Load Warehouse Zones;
+:Load Current Distribution;
+
+fork
+  :Load Zone Details;
+  repeat
+    :For each zone;
+    :name, type, capacity;
+    :current_occupancy;
+    :utilization_percent;
+  repeat while (more zones?)
+  
+fork again
+  :Load Current Product Distribution;
+  :Query warehouse_product_locations;
+  :WHERE warehouse_id = ? AND phone_id = ?;
+  
+  repeat
+    :For each zone with product;
+    :zone_id, quantity;
+    :aisle, shelf, bin;
+  repeat while (more zones?)
+  
+fork again
+  :Calculate Distribution Metrics;
+  :total_quantity = SUM(all zones);
+  :zones_used = COUNT(zones with quantity > 0);
+  :average_per_zone = total / zones_used;
+  :max_in_zone = MAX(quantity);
+  :min_in_zone = MIN(quantity > 0);
+  :distribution_variance;
+  
+end fork
+
+:Display Current Distribution;
+
+|Staff/Admin|
+if (Action?) then (View Current Distribution)
+  
+  |System|
+  :Display Distribution Dashboard;
+  
+  fork
+    :Show Zone Map;
+    :Visual representation;
+    :Color-coded by quantity;
+  fork again
+    :Show Distribution Table;
+    :Zone | Type | Quantity | % of Total;
+  fork again
+    :Show Distribution Chart;
+    :Bar chart or pie chart;
+  fork again
+    :Show Utilization Heatmap;
+    :Identify hot/cold zones;
+  fork again
+    :Show Recommendations;
+    :Based on efficiency analysis;
+  end fork
+  
+  stop
+
+else (Optimize Distribution)
+  
+  |Staff/Admin|
+  :Click "Optimize Distribution";
+  :Select Optimization Strategy;
+  
+  |System|
+  if (Strategy?) then (Even Distribution)
+    
+    :Calculate Even Distribution;
+    :target_per_zone = total_quantity / active_zones;
+    
+    repeat
+      :For each zone;
+      :recommended[zone] = target_per_zone;
+    repeat while (more zones?)
+    
+  else (Capacity-Based)
+    
+    :Calculate Capacity-Weighted;
+    :total_capacity = SUM(all zone capacities);
+    
+    repeat
+      :For each zone;
+      :weight = zone.capacity / total_capacity;
+      :recommended[zone] = total_quantity * weight;
+    repeat while (more zones?)
+    
+  else (Type-Based Priority)
+    
+    :Apply Zone Type Priorities;
+    note right
+      Priority hierarchy:
+      1. Storage zones (bulk)
+      2. Picking zones (high turnover)
+      3. Receiving zones (temporary)
+      4. Shipping zones (outgoing)
+      Low priority:
+      • Returns zones
+      • Quarantine zones
+    end note
+    
+    :Calculate Weighted Distribution;
+    repeat
+      :For each zone;
+      :priority_weight = get_priority(zone.type);
+      :recommended[zone] = calculate_by_priority();
+    repeat while (more zones?)
+    
+  else (Turnover-Based)
+    
+    :Analyze Historical Movement;
+    :Query inventory_log for past 90 days;
+    
+    repeat
+      :For each zone;
+      :Calculate pick frequency;
+      :Calculate put-away frequency;
+      :Calculate total throughput;
+    repeat while (more zones?)
+    
+    :Allocate More to High-Throughput Zones;
+    :recommended = f(throughput);
+    
+  else (Custom Rules)
+    
+    |Staff/Admin|
+    :Define Custom Rules;
+    note right
+      Examples:
+      • Min 10% in receiving
+      • Max 60% in main storage
+      • Min 20% in picking
+      • Reserve 10% for returns
+      • Exclude quarantine
+    end note
+    
+    |System|
+    :Apply Custom Rules;
+    :Calculate Distribution;
+    :Validate Constraints;
+    
+  endif
+  
+  |System|
+  :Generate Optimization Plan;
+  
+  fork
+    :Calculate Required Moves;
+    repeat
+      :For each zone;
+      :current = current_quantity[zone];
+      :target = recommended[zone];
+      :difference = target - current;
+      
+      if (difference > 0?) then (yes)
+        :moves[zone] = {
+          action: 'receive',
+          quantity: difference
+        };
+      else (difference < 0?)
+        :moves[zone] = {
+          action: 'remove',
+          quantity: abs(difference)
+        };
+      else (no change)
+        :No action needed;
+      endif
+    repeat while (more zones?)
+    
+  fork again
+    :Calculate Movement Cost;
+    :total_units_to_move = SUM(|difference|) / 2;
+    :estimated_time = units * time_per_unit;
+    :estimated_cost = time * labor_cost;
+    
+  fork again
+    :Calculate Efficiency Gain;
+    :current_efficiency = f(current_distribution);
+    :projected_efficiency = f(recommended);
+    :improvement = projected - current;
+    
+  fork again
+    :Identify Optimal Move Sequence;
+    note right
+      Optimize sequence to:
+      • Minimize double handling
+      • Balance workload
+      • Reduce travel distance
+      • Avoid capacity conflicts
+    end note
+    
+  end fork
+  
+  :Display Optimization Plan;
+  note right
+    Plan includes:
+    • Before/After comparison
+    • Required movements
+    • Estimated time/cost
+    • Expected efficiency gain
+    • Step-by-step instructions
+  end note
+  
+  |Staff/Admin|
+  :Review Optimization Plan;
+  
+  if (Approve Plan?) then (yes)
+    
+    |Staff/Admin|
+    if (Execute Now or Schedule?) then (Execute Now)
+      
+      |System|
+      :Begin Optimization Execution;
+      :Create Task List;
+      
+      repeat
+        :Get Next Move in Sequence;
+        :Display Move Instruction;
+        note right
+          Instruction format:
+          "Move 50 units of [Product]
+          FROM: [Zone A] - Bin [A01-05-03]
+          TO: [Zone B] - Bin [B02-03-01]"
+        end note
+        
+        |Staff/Admin|
+        :Perform Physical Move;
+        :Scan Source Bin QR;
+        :Scan Destination Bin QR;
+        :Confirm Quantity;
+        :Mark Task Complete;
+        
+        |System|
+        :Update Database;
+        
+        fork
+          :Update Source Location;
+          :UPDATE warehouse_product_locations
+            SET quantity = quantity - ?
+            WHERE warehouse_id = ?
+              AND zone_id = ?
+              AND phone_id = ?;
+          
+        fork again
+          :Update Destination Location;
+          :UPDATE warehouse_product_locations
+            SET quantity = quantity + ?
+            WHERE warehouse_id = ?
+              AND zone_id = ?
+              AND phone_id = ?;
+          
+        fork again
+          :Log Movement;
+          :INSERT INTO inventory_log
+            (product_id, transaction_type,
+             quantity_changed, 
+             source_zone, dest_zone,
+             performed_by, notes)
+            VALUES (?, 'zone_transfer', ?,
+                    ?, ?, ?, 'Optimization');
+          
+        fork again
+          if (Serialized Product?) then (yes)
+            :Update Serial Locations;
+            :Move specified serials;
+          endif
+          
+        fork again
+          if (Batch Tracked?) then (yes)
+            :Update Batch Locations;
+            :Maintain FIFO/FEFO order;
+          endif
+          
+        end fork
+        
+        :Update Progress Bar;
+        :completed_moves / total_moves;
+        
+      repeat while (more moves in plan?)
+      
+      :Optimization Complete;
+      :Display Summary;
+      note right
+        Summary shows:
+        • Total units moved
+        • Time taken
+        • Zones affected
+        • New distribution
+        • Efficiency metrics
+      end note
+      
+      stop
+      
+    else (Schedule Later)
+      
+      |System|
+      :Create Scheduled Task;
+      :Store optimization plan;
+      :Set execution date/time;
+      :Assign to user/team;
+      :Send notification;
+      
+      |Staff/Admin|
+      :Receive Notification;
+      :At scheduled time, execute plan;
+      
+      stop
+    endif
+    
+  else (no)
+    :Modify Plan Parameters;
+    :(Return to strategy selection);
+  endif
+
+else (Manual Rebalancing)
+  
+  |Staff/Admin|
+  :Select Zones to Rebalance;
+  :Specify Target Distribution;
+  
+  |System|
+  :Validate Manual Plan;
+  
+  fork
+    :Check Total Quantity Matches;
+    :SUM(manual_targets) = total_quantity;
+  fork again
+    :Check Zone Capacities;
+    :Each target <= zone.capacity;
+  fork again
+    :Check Minimum Stock Rules;
+    :Each zone >= minimum_required;
+  end fork
+  
+  if (Valid?) then (yes)
+    :Generate Movement Plan;
+    :Calculate required transfers;
+    :(Same execution as optimized plan);
+  else (no)
+    :Display Validation Errors;
+    :Allow corrections;
+  endif
+
+else (Single Zone Replacement)
+  
+  |Staff/Admin|
+  :Select Source Zone;
+  :Select Destination Zone;
+  :Specify Quantity to Move;
+  
+  |System|
+  :Validate Single Transfer;
+  
+  fork
+    :Check Source Has Quantity;
+  fork again
+    :Check Destination Has Capacity;
+  fork again
+    :Check No Conflicts;
+  end fork
+  
+  if (Valid?) then (yes)
+    :Execute Single Transfer;
+    :Update both zones;
+    :Log movement;
+    :Display Success;
+    stop
+  else (no)
+    :Display Errors;
+    stop
+  endif
+
+else (View Zone Analytics)
+  
+  |System|
+  :Generate Zone Analytics;
+  
+  fork
+    :Calculate Zone Efficiency;
+    :pick_rate, put_rate;
+    :average_access_time;
+  fork again
+    :Calculate Zone Turnover;
+    :movements per day;
+    :inventory_age;
+  fork again
+    :Generate Heatmap;
+    :Show activity patterns;
+  fork again
+    :Identify Bottlenecks;
+    :overcapacity zones;
+    :underutilized zones;
+  fork again
+    :Show Trends;
+    :Historical distribution;
+    :Utilization over time;
+  end fork
+  
+  :Display Analytics Dashboard;
+  stop
+
+endif
+
+@enduml

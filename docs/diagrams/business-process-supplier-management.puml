@@ -1,0 +1,424 @@
+@startuml business-process-supplier-management
+title Business Process: Supplier Management
+
+skinparam backgroundColor #f8fafc
+skinparam activityBackgroundColor #dbeafe
+skinparam activityBorderColor #2b6cb0
+skinparam activityFontColor #0f172a
+
+|Staff/Admin|
+start
+:Access Supplier Management;
+
+|System|
+:Load Suppliers List;
+:Display filters & search;
+
+|Staff/Admin|
+if (Action?) then (Create New Supplier)
+  
+  |Staff/Admin|
+  :Click "Add Supplier";
+  
+  |System|
+  :Display Supplier Form;
+  
+  |Staff/Admin|
+  :Enter Supplier Details;
+  note right
+    Required:
+    • Name
+    • Contact Person
+    • Email
+    • Phone
+    
+    Optional:
+    • Company Address
+    • Payment Terms
+    • Default Lead Time
+    • Default Shipping Method
+    • Tax ID
+    • Bank Details
+    • Credit Limit
+    • Notes
+  end note
+  :Submit Form;
+  
+  |System|
+  :Validate Input;
+  
+  fork
+    :Check Name Uniqueness;
+    :Query suppliers table;
+  fork again
+    :Validate Email Format;
+  fork again
+    :Validate Phone Format;
+  fork again
+    :Sanitize Input Data;
+    :Prevent XSS/SQL injection;
+  end fork
+  
+  if (Validation Passes?) then (yes)
+    :Begin Transaction;
+    
+    fork
+      :Create Supplier Record;
+      :Generate supplier_id;
+      :Store all details;
+      :Set is_active = TRUE;
+      :Set created_at = now;
+    fork again
+      :Create Supplier Contact;
+      :Link to supplier_id;
+      :Store contact details;
+    fork again
+      if (Payment Terms Specified?) then (yes)
+        :Store Payment Configuration;
+      endif
+    fork again
+      :Log Supplier Creation;
+      :Store performer_user_id;
+      :Store timestamp;
+      :action = "supplier_created";
+    end fork
+    
+    :Commit Transaction;
+    :Display Success Message;
+    :Redirect to Supplier Details;
+    stop
+  else (no)
+    :Display Validation Errors;
+    :Keep form data;
+    :Highlight error fields;
+    stop
+  endif
+
+else (Edit Existing Supplier)
+  
+  |Staff/Admin|
+  :Select Supplier from List;
+  :Click "Edit";
+  
+  |System|
+  :Load Supplier Data;
+  fork
+    :Load basic details;
+  fork again
+    :Load contact info;
+  fork again
+    :Load payment terms;
+  fork again
+    :Load associated products;
+  fork again
+    :Load transaction history;
+  end fork
+  
+  :Display Edit Form;
+  :Pre-populate with current data;
+  
+  |Staff/Admin|
+  :Update Details;
+  :Submit Form;
+  
+  |System|
+  :Validate Changes;
+  
+  if (Name Changed?) then (yes)
+    :Check New Name Uniqueness;
+  endif
+  
+  if (Email Changed?) then (yes)
+    :Validate New Email;
+  endif
+  
+  if (All Valid?) then (yes)
+    :Begin Transaction;
+    
+    fork
+      :Update Supplier Record;
+      :Store modified fields;
+      :Set updated_at = now;
+    fork again
+      :Track Changes;
+      :Compare before/after;
+      :Log modified fields;
+    fork again
+      :Log Supplier Update;
+      :action = "supplier_updated";
+      :Store performer_user_id;
+      :Store change details;
+    end fork
+    
+    :Commit Transaction;
+    :Display Success Message;
+    :Redirect to Supplier Details;
+    stop
+  else (no)
+    :Display Errors;
+    stop
+  endif
+
+else (View Supplier Details)
+  
+  |Staff/Admin|
+  :Select Supplier;
+  :Click "View Details";
+  
+  |System|
+  :Load Complete Supplier Profile;
+  
+  fork
+    :Load Basic Info;
+    :name, contact, email, phone;
+    :address, payment terms;
+  fork again
+    :Load Statistics;
+    :Total orders;
+    :Total value;
+    :Average lead time;
+    :On-time delivery rate;
+  fork again
+    :Load Recent Receipts;
+    :Last 20 receipts;
+    :With product details;
+  fork again
+    :Load Associated Products;
+    :All products from supplier;
+    :Current stock levels;
+  fork again
+    :Load Performance Metrics;
+    :Quality score;
+    :Delivery reliability;
+    :Price competitiveness;
+  fork again
+    :Generate Analytics Charts;
+    :Purchase trends;
+    :Product mix;
+    :Seasonal patterns;
+  end fork
+  
+  :Display Supplier Dashboard;
+  :Show all information;
+  :Show action buttons;
+  
+  |Staff/Admin|
+  :Review Information;
+  
+  if (Action?) then (Generate Report)
+    |System|
+    :Create Supplier Report;
+    :Include all metrics;
+    :Format as PDF/Excel;
+    :Download/Email;
+    stop
+  else (Contact Supplier)
+    |Staff/Admin|
+    :Click Email/Phone;
+    |System|
+    :Open email client;
+    :Or initiate call;
+    stop
+  else (View Transactions)
+    |System|
+    :Load Transaction History;
+    :Filter by date range;
+    :Show receipt details;
+    stop
+  else (No Action)
+    stop
+  endif
+
+else (Toggle Supplier Status)
+  
+  |Staff/Admin|
+  :Select Supplier;
+  :Click "Toggle Status";
+  
+  |System|
+  :Load Current Status;
+  
+  if (Currently Active?) then (yes)
+    :Confirm Deactivation;
+    note right
+      Warning shown:
+      "This will prevent selecting
+      this supplier for new receipts.
+      Existing data will remain."
+    end note
+    
+    |Staff/Admin|
+    if (Confirm?) then (yes)
+      |System|
+      :Update is_active = FALSE;
+      :Log status change;
+      :Display "Supplier Deactivated";
+      stop
+    else (no)
+      :Cancel Action;
+      stop
+    endif
+  else (no)
+    :Confirm Activation;
+    
+    |Staff/Admin|
+    if (Confirm?) then (yes)
+      |System|
+      :Update is_active = TRUE;
+      :Log status change;
+      :Display "Supplier Activated";
+      stop
+    else (no)
+      :Cancel Action;
+      stop
+    endif
+  endif
+
+else (Delete Supplier)
+  
+  |Staff/Admin|
+  :Select Supplier;
+  :Click "Delete";
+  
+  |System|
+  :Check Dependencies;
+  
+  fork
+    :Count Associated Products;
+  fork again
+    :Count Receipt References;
+  fork again
+    :Count Active Orders;
+  end fork
+  
+  if (Has Dependencies?) then (yes)
+    :Show Warning Message;
+    note right
+      "Cannot delete supplier with:
+      • Associated products
+      • Historical receipts
+      • Active orders
+      
+      Consider deactivating instead."
+    end note
+    
+    |Staff/Admin|
+    :Acknowledge Warning;
+    stop
+  else (no)
+    :Show Confirmation Dialog;
+    note right
+      "This action cannot be undone.
+      Supplier data will be permanently deleted."
+    end note
+    
+    |Staff/Admin|
+    if (Confirm Delete?) then (yes)
+      |System|
+      :Begin Transaction;
+      
+      fork
+        :Delete Supplier Contacts;
+      fork again
+        :Delete Payment Terms;
+      fork again
+        :Delete Supplier Record;
+      fork again
+        :Log Supplier Deletion;
+        :action = "supplier_deleted";
+        :Store all details for audit;
+      end fork
+      
+      :Commit Transaction;
+      :Display Success Message;
+      :Redirect to Suppliers List;
+      stop
+    else (no)
+      :Cancel Deletion;
+      stop
+    endif
+  endif
+
+else (Search/Filter Suppliers)
+  
+  |Staff/Admin|
+  :Enter Search Criteria;
+  note right
+    Can search by:
+    • Name
+    • Contact Person
+    • Email
+    • Phone
+    
+    Can filter by:
+    • Active/Inactive
+    • Payment Terms
+    • Location
+    • Date Added
+  end note
+  :Submit Search;
+  
+  |System|
+  :Build Dynamic Query;
+  :Apply search conditions;
+  :Apply filters;
+  :Apply sorting;
+  :Apply pagination;
+  
+  :Execute Query;
+  :Load Matching Suppliers;
+  
+  :Display Results;
+  :Show match count;
+  :Show pagination;
+  
+  if (Results Found?) then (yes)
+    |Staff/Admin|
+    :Review Results;
+    :Select Supplier for action;
+    stop
+  else (no)
+    :Display "No suppliers found";
+    :Suggest clearing filters;
+    stop
+  endif
+
+else (Bulk Operations)
+  
+  |Staff/Admin|
+  :Select Multiple Suppliers;
+  :Choose Bulk Action;
+  note right
+    Available actions:
+    • Activate All
+    • Deactivate All
+    • Export Selected
+    • Update Payment Terms
+    • Send Bulk Email
+  end note
+  :Confirm Action;
+  
+  |System|
+  :Validate Selection;
+  
+  if (Valid?) then (yes)
+    :Begin Transaction;
+    
+    :Process Each Supplier;
+    repeat
+      :Apply Action;
+      :Log Change;
+    repeat while (more suppliers?)
+    
+    :Commit Transaction;
+    :Display Success Summary;
+    :Show count of affected records;
+    stop
+  else (no)
+    :Display Errors;
+    stop
+  endif
+
+endif
+
+@enduml

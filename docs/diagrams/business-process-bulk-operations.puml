@@ -1,0 +1,574 @@
+@startuml business-process-bulk-operations
+title Business Process: Bulk Operations (Users & Inventory)
+
+skinparam backgroundColor #f8fafc
+skinparam activityBackgroundColor #dbeafe
+skinparam activityBorderColor #2b6cb0
+skinparam activityFontColor #0f172a
+
+|Admin/Staff|
+start
+
+if (Operation Type?) then (Bulk User Operations)
+  
+  |Admin|
+  :Navigate to User Management;
+  :Access Users List;
+  
+  |System|
+  :Display Users with Checkboxes;
+  :Display bulk action menu;
+  
+  |Admin|
+  :Select Multiple Users;
+  note right
+    Selection options:
+    • Individual checkboxes
+    • Select All on Page
+    • Select All (all pages)
+    • Filter + Select Filtered
+  end note
+  
+  :Choose Bulk Action;
+  note right
+    Available actions:
+    • Activate Users
+    • Deactivate Users
+    • Unlock Accounts
+    • Delete Users (dangerous)
+    • Export User List
+    • Send Bulk Email
+    • Change Role (future)
+  end note
+  
+  |System|
+  if (Action?) then (Activate Users)
+    
+    :Show Confirmation Dialog;
+    note right
+      "Activate X selected users?
+      
+      This will allow them to log in.
+      
+      [Cancel] [Confirm]"
+    end note
+    
+    |Admin|
+    if (Confirm?) then (yes)
+      
+      |System|
+      :Validate Operation;
+      
+      fork
+        :Check Permissions;
+        :Ensure admin role;
+      fork again
+        :Validate User IDs;
+        :All users exist;
+      fork again
+        :Check for Current User;
+        :Cannot bulk-operate on self;
+      end fork
+      
+      if (Valid?) then (yes)
+        :Begin Transaction;
+        
+        :Initialize Counters;
+        :success_count = 0;
+        :error_count = 0;
+        :errors = [];
+        
+        repeat
+          :Process Next User;
+          :user_id = selected_users[i];
+          
+          fork
+            :Update User Status;
+            :UPDATE users
+              SET is_active = 1,
+                  updated_at = NOW()
+              WHERE id = ?;
+            
+          fork again
+            :Log Security Event;
+            :INSERT INTO security_events
+              (user_id, event_type,
+               details, performed_by)
+              VALUES (?, 'user_activated',
+                      'Bulk operation', ?);
+            
+          fork again
+            :Increment success_count;
+            
+          end fork
+          
+        repeat while (more users?) is (yes)
+        ->no;
+        
+        :Commit Transaction;
+        
+        :Display Success Summary;
+        note right
+          "Bulk activation completed:
+          
+          ✓ {success_count} users activated
+          ✗ {error_count} errors
+          
+          [View Details] [OK]"
+        end note
+        
+        stop
+      else (no)
+        :Display Validation Errors;
+        stop
+      endif
+    else (no)
+      :Cancel Operation;
+      stop
+    endif
+    
+  else (Deactivate Users)
+    
+    :Show Warning Dialog;
+    note right
+      "⚠ Deactivate X users?
+      
+      Deactivated users cannot log in.
+      All active sessions will be terminated.
+      
+      [Cancel] [Deactivate]"
+    end note
+    
+    |Admin|
+    if (Confirm?) then (yes)
+      |System|
+      :Begin Transaction;
+      
+      repeat
+        :Process User;
+        
+        fork
+          :Update Status;
+          :UPDATE users
+            SET is_active = 0
+            WHERE id = ?;
+          
+        fork again
+          :Force Logout;
+          :Call sessionService.forceLogoutUser(user_id);
+          
+        fork again
+          :Log Event;
+          :event_type = 'user_deactivated';
+          
+        end fork
+        
+      repeat while (more users?)
+      
+      :Commit Transaction;
+      :Display Summary;
+      stop
+    else (no)
+      :Cancel;
+      stop
+    endif
+    
+  else (Unlock Accounts)
+    
+    :Confirm Unlock Operation;
+    
+    |Admin|
+    if (Confirm?) then (yes)
+      |System|
+      :Begin Transaction;
+      
+      repeat
+        :Reset Failed Attempts;
+        :UPDATE users
+          SET failed_login_attempts = 0,
+              locked_until = NULL
+          WHERE id = ?;
+        
+        :Log Unlock Event;
+      repeat while (more users?)
+      
+      :Commit Transaction;
+      :Display Summary;
+      stop
+    else (no)
+      :Cancel;
+      stop
+    endif
+    
+  else (Delete Users - Dangerous)
+    
+    :Show Critical Warning;
+    note right
+      "⛔ DANGER: Delete X users?
+      
+      This action CANNOT be undone!
+      User data will be permanently removed.
+      
+      Type 'DELETE' to confirm:
+      [_____________]
+      
+      [Cancel] [Delete]"
+    end note
+    
+    |Admin|
+    :Type Confirmation Text;
+    
+    if (Text = 'DELETE'?) then (yes)
+      |System|
+      :Begin Transaction;
+      
+      repeat
+        :Get User Info;
+        :Load before deletion;
+        
+        fork
+          :Force Logout;
+          :Terminate all sessions;
+        fork again
+          :Delete User;
+          :DELETE FROM users WHERE id = ?;
+        fork again
+          :Log Deletion;
+          :Store full user details in log;
+          :event_type = 'user_deleted';
+          :risk_level = 'high';
+        end fork
+        
+      repeat while (more users?)
+      
+      :Commit Transaction;
+      :Display Summary;
+      stop
+    else (no)
+      :Reject Operation;
+      :Display "Confirmation text incorrect";
+      stop
+    endif
+    
+  else (Export User List)
+    
+    |System|
+    :Gather User Data;
+    
+    repeat
+      :Collect user details;
+      :id, username, email, role;
+      :status, created_at, last_login;
+    repeat while (more users?)
+    
+    :Choose Export Format;
+    
+    if (Format?) then (CSV)
+      :Generate CSV;
+      :Send to browser;
+    else (Excel)
+      :Generate XLSX;
+      :Send to browser;
+    else (JSON)
+      :Generate JSON;
+      :Send to browser;
+    endif
+    
+    stop
+    
+  endif
+
+else (Bulk Inventory Operations)
+  
+  |Staff/Admin|
+  :Navigate to Inventory;
+  :Apply Filters;
+  note right
+    Filter by:
+    • Category
+    • Warehouse
+    • Supplier
+    • Stock level
+    • Date range
+  end note
+  
+  :Select Multiple Products;
+  :Choose Bulk Action;
+  note right
+    Actions:
+    • Update Prices
+    • Update Reorder Levels
+    • Change Supplier
+    • Transfer Warehouses
+    • Export Data
+    • Generate QR Codes
+    • Adjust Stock Levels
+  end note
+  
+  |System|
+  if (Action?) then (Update Prices)
+    
+    :Display Price Update Form;
+    note right
+      Options:
+      • Set fixed price
+      • Increase by amount
+      • Increase by percentage
+      • Decrease by amount
+      • Decrease by percentage
+    end note
+    
+    |Staff/Admin|
+    :Enter Price Change;
+    :Apply to: $X or +Y% or -Z%;
+    :Confirm;
+    
+    |System|
+    :Begin Transaction;
+    
+    repeat
+      :Calculate New Price;
+      :old_price = current price;
+      :new_price = calculate(old_price, change);
+      
+      fork
+        :Update Product;
+        :UPDATE specs_db
+          SET device_price = ?,
+              updated_at = NOW()
+          WHERE product_id = ?;
+        
+      fork again
+        :Log Price Change;
+        :INSERT INTO inventory_log
+          (product_id, transaction_type,
+           old_value, new_value, 
+           performed_by, notes)
+          VALUES (?, 'price_change',
+                  ?, ?, ?, 'Bulk update');
+        
+      end fork
+      
+    repeat while (more products?)
+    
+    :Commit Transaction;
+    :Display Summary;
+    stop
+    
+  else (Transfer Warehouses)
+    
+    :Display Transfer Form;
+    
+    |Staff/Admin|
+    :Select Source Warehouse;
+    :Select Destination Warehouse;
+    :Confirm Transfer;
+    
+    |System|
+    :Validate Transfer;
+    
+    fork
+      repeat
+        :Check source has stock;
+      repeat while (more products?)
+    fork again
+      :Check destination capacity;
+    end fork
+    
+    if (Valid?) then (yes)
+      :Begin Transaction;
+      
+      repeat
+        :Transfer Product;
+        
+        fork
+          :Decrement Source;
+        fork again
+          :Increment Destination;
+        fork again
+          :Log Transfer;
+        fork again
+          if (Serialized?) then (yes)
+            :Update Serial Locations;
+          endif
+        fork again
+          if (Batch Tracked?) then (yes)
+            :Update Batch Locations;
+          endif
+        end fork
+        
+      repeat while (more products?)
+      
+      :Commit Transaction;
+      :Display Summary;
+      stop
+    else (no)
+      :Display Errors;
+      stop
+    endif
+    
+  else (Generate QR Codes)
+    
+    |System|
+    :Generate QR for Each Product;
+    
+    repeat
+      :Create QR Code;
+      :type = 'product';
+      :productId = product_id;
+      :Include SKU and name;
+    repeat while (more products?)
+    
+    :Create PDF with All QR Codes;
+    :Formatted for label printing;
+    :Multiple codes per page;
+    
+    :Send PDF to Browser;
+    
+    |Staff/Admin|
+    :Download QR Codes;
+    :Print Labels;
+    
+    stop
+    
+  else (Export Data)
+    
+    |System|
+    :Gather Product Data;
+    
+    repeat
+      :Collect full details;
+      :product_id, SKU, name;
+      :price, cost, quantity;
+      :supplier, warehouse;
+      :batch info, serials;
+    repeat while (more products?)
+    
+    :Generate Spreadsheet;
+    :Send to browser;
+    
+    stop
+    
+  else (Adjust Stock Levels)
+    
+    :Display Adjustment Form;
+    note right
+      Options:
+      • Increase by X units
+      • Decrease by Y units
+      • Set to specific value
+      • Apply formula
+    end note
+    
+    |Staff/Admin|
+    :Enter Adjustment;
+    :Provide Reason;
+    :Confirm;
+    
+    |System|
+    :Show Warning if Dangerous;
+    
+    if (Large Decrease?) then (yes)
+      :Confirm Again;
+      |Admin|
+      if (Confirmed?) then (yes)
+        :(Continue);
+      else (no)
+        :Cancel;
+        stop
+      endif
+    endif
+    
+    :Begin Transaction;
+    
+    repeat
+      :Calculate New Level;
+      
+      fork
+        :Update Inventory;
+      fork again
+        :Log Adjustment;
+        :transaction_type = 'adjustment';
+        :Include reason;
+      fork again
+        :Check Alerts;
+        if (Below Reorder Level?) then (yes)
+          :Create Low Stock Alert;
+        endif
+      end fork
+      
+    repeat while (more products?)
+    
+    :Commit Transaction;
+    :Display Summary;
+    stop
+    
+  endif
+
+else (Bulk Receipt Operations)
+  
+  |Staff/Admin|
+  :Navigate to Receipts;
+  :Filter/Search Receipts;
+  :Select Multiple Receipts;
+  :Choose Bulk Action;
+  note right
+    Actions:
+    • Bulk Export (PDF/CSV/Excel)
+    • Bulk Delete (Admin only)
+    • Send Bulk Emails
+    • Generate Combined Report
+  end note
+  
+  |System|
+  if (Action?) then (Bulk Export)
+    
+    :Choose Format;
+    
+    if (Format = PDF?) then (yes)
+      :Generate Multi-Page PDF;
+      :One receipt per page;
+      :Add table of contents;
+    else (Excel/CSV)
+      :Create Spreadsheet;
+      :One row per receipt;
+      :Include all details;
+    endif
+    
+    :Send to Browser;
+    stop
+    
+  else (Bulk Delete - Admin Only)
+    
+    |Admin|
+    :Confirm Deletion;
+    note right
+      "⚠ Delete X receipts?
+      This cannot be undone.
+      
+      Type 'DELETE' to confirm:"
+    end note
+    
+    if (Confirmed?) then (yes)
+      |System|
+      :Begin Transaction;
+      
+      repeat
+        :Delete Receipt;
+        :DELETE FROM receipts WHERE receipt_id = ?;
+        :Log deletion;
+      repeat while (more receipts?)
+      
+      :Commit Transaction;
+      :Display Summary;
+      stop
+    else (no)
+      :Cancel;
+      stop
+    endif
+    
+  endif
+
+endif
+
+@enduml

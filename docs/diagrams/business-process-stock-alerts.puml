@@ -1,0 +1,394 @@
+@startuml business-process-stock-alerts
+title Business Process: Stock Alerts & Monitoring
+
+skinparam backgroundColor #f8fafc
+skinparam activityBackgroundColor #dbeafe
+skinparam activityBorderColor #2b6cb0
+skinparam activityFontColor #0f172a
+
+|System (Scheduler)|
+start
+:Trigger Alert Check Job;
+note right
+  Runs on schedule:
+  • Hourly for critical alerts
+  • Daily for warnings
+  • Weekly for analytics
+end note
+
+|System|
+:Load Alert Configuration;
+:Load all products;
+:Load all warehouses;
+
+fork
+  :Check Low Stock Conditions;
+  repeat
+    :For each product/warehouse;
+    :Get current quantity;
+    :Get reorder level;
+    if (quantity <= reorder_level?) then (yes)
+      :Calculate severity;
+      note right
+        Severity levels:
+        • CRITICAL: quantity = 0
+        • HIGH: quantity <= 25% of reorder
+        • MEDIUM: quantity <= 50% of reorder
+        • LOW: quantity <= reorder level
+      end note
+      :Create/Update Alert Record;
+      :alert_type = "low_stock";
+      :Set severity level;
+      :Set product_id, warehouse_id;
+      :Set triggered_at = now;
+    endif
+  repeat while (more products?)
+
+fork again
+  :Check Out of Stock;
+  repeat
+    :For each product/warehouse;
+    :Get current quantity;
+    if (quantity = 0?) then (yes)
+      :Create/Update Alert;
+      :alert_type = "out_of_stock";
+      :severity = "CRITICAL";
+      :Set immediate_action_required = TRUE;
+    endif
+  repeat while (more products?)
+
+fork again
+  :Check Expiring Batches;
+  repeat
+    :For each batch;
+    :Get expiry_date;
+    :Calculate days_until_expiry;
+    if (days_until_expiry <= 30?) then (yes)
+      :Calculate severity;
+      note right
+        • 0-7 days: CRITICAL
+        • 8-14 days: HIGH
+        • 15-30 days: MEDIUM
+      end note
+      :Create/Update Alert;
+      :alert_type = "expiring_soon";
+      :Include batch details;
+      :Include expiry date;
+    endif
+  repeat while (more batches?)
+
+fork again
+  :Check Overstock Conditions;
+  repeat
+    :For each product/warehouse;
+    :Get current quantity;
+    :Get max_stock_level;
+    if (quantity > max_stock_level?) then (yes)
+      :Calculate excess percentage;
+      :Create/Update Alert;
+      :alert_type = "overstock";
+      :severity = "LOW";
+      :Include excess quantity;
+      note right
+        Overstock can indicate:
+        • Ordering errors
+        • Slow-moving inventory
+        • Storage capacity issues
+      end note
+    endif
+  repeat while (more products?)
+
+fork again
+  :Check Slow-Moving Stock;
+  repeat
+    :For each product;
+    :Query last transaction date;
+    :Calculate days_since_movement;
+    if (days_since_movement >= 90?) then (yes)
+      :Create/Update Alert;
+      :alert_type = "slow_moving";
+      :severity = "LOW";
+      :Include last_movement_date;
+      :Calculate inventory_value;
+    endif
+  repeat while (more products?)
+
+fork again
+  :Check Dead Stock;
+  repeat
+    :For each product;
+    :Query last transaction date;
+    :Calculate days_since_movement;
+    if (days_since_movement >= 180?) then (yes)
+      :Create/Update Alert;
+      :alert_type = "dead_stock";
+      :severity = "MEDIUM";
+      :Include inventory_value;
+      :Include days_dormant;
+      note right
+        Dead stock recommendations:
+        • Clearance sale
+        • Return to supplier
+        • Write-off
+        • Donate
+      end note
+    endif
+  repeat while (more products?)
+
+fork again
+  :Check Capacity Warnings;
+  repeat
+    :For each warehouse/zone;
+    :Calculate utilization %;
+    :utilization = occupied / capacity;
+    if (utilization >= 90?) then (yes)
+      :Create/Update Alert;
+      :alert_type = "capacity_warning";
+      :severity = "HIGH";
+      :Include utilization_percent;
+    endif
+  repeat while (more locations?)
+
+end fork
+
+:Aggregate All Alerts;
+:Remove Resolved Alerts;
+:Update Alert Dashboard;
+
+|System|
+:Determine Notification Recipients;
+
+fork
+  if (Critical Alerts Exist?) then (yes)
+    :Prepare Immediate Notifications;
+    
+    fork
+      if (Email Enabled?) then (yes)
+        :Send Critical Alert Emails;
+        :To: Admins + relevant staff;
+        :Subject: URGENT - Critical Stock Alert;
+        :Include alert details;
+        :Include action recommendations;
+      endif
+    fork again
+      if (SMS Enabled?) then (yes)
+        :Send SMS Alerts;
+        :To: On-call staff;
+        :Message: Critical alert summary;
+      endif
+    fork again
+      if (In-App Notifications?) then (yes)
+        :Create In-App Notifications;
+        :Set badge count;
+        :Set notification priority = HIGH;
+      endif
+    end fork
+  endif
+
+fork again
+  if (High Priority Alerts?) then (yes)
+    :Prepare High Priority Notifications;
+    :Send to relevant staff;
+    :Include alert summary;
+    :Include suggested actions;
+  endif
+
+fork again
+  if (Scheduled Digest?) then (yes)
+    :Prepare Daily Digest;
+    :Aggregate all alerts;
+    :Group by type and severity;
+    :Include trend analysis;
+    :Include recommendations;
+    :Schedule email delivery;
+  endif
+
+end fork
+
+|Staff/Admin|
+:Receive Alert Notification;
+
+if (Alert Type?) then (Critical - Out of Stock)
+  
+  :Open Stock Alerts Dashboard;
+  
+  |System|
+  :Display Out of Stock Items;
+  :Show affected products;
+  :Show warehouse locations;
+  :Show last sale date;
+  
+  |Staff/Admin|
+  :Review Alert Details;
+  
+  if (Action?) then (Immediate Reorder)
+    :Navigate to Suppliers;
+    :Select Supplier;
+    :Create Purchase Order;
+    :Mark Alert as "Action Taken";
+    note right
+      Action logged:
+      • Action type: "reorder_initiated"
+      • PO number
+      • Expected delivery
+      • Performer user_id
+    end note
+    stop
+  else (Check Transfer Availability)
+    :Check Other Warehouses;
+    |System|
+    :Query product availability;
+    :Show other warehouse stock;
+    
+    |Staff/Admin|
+    if (Available Elsewhere?) then (yes)
+      :Initiate Transfer;
+      :Mark Alert as "Action Taken";
+      stop
+    else (no)
+      :Create Backorder;
+      :Notify Customer Service;
+      stop
+    endif
+  endif
+
+else (Expiring Batch)
+  
+  :Open Expiring Batches View;
+  
+  |System|
+  :Display Expiring Batches;
+  :Sort by days_until_expiry;
+  :Show batch details;
+  :Show current quantity;
+  
+  |Staff/Admin|
+  :Review Batch Information;
+  
+  if (Action?) then (Discount Promotion)
+    :Create Promotion;
+    :Apply discount to batch;
+    :Update pricing;
+    :Mark Alert as "Action Taken";
+    stop
+  else (Return to Supplier)
+    :Contact Supplier;
+    :Arrange Return;
+    :Create Return Receipt;
+    :Mark Alert as "Action Taken";
+    stop
+  else (Write-Off)
+    :Create Write-Off Record;
+    :Update Inventory;
+    :Mark Batch as "Expired";
+    :Mark Alert as "Resolved";
+    stop
+  endif
+
+else (Low Stock)
+  
+  :Open Low Stock Dashboard;
+  
+  |System|
+  :Display Low Stock Products;
+  :Group by warehouse;
+  :Show reorder levels;
+  :Show suggested order quantities;
+  
+  |Staff/Admin|
+  :Review Recommendations;
+  
+  if (Action?) then (Adjust Reorder Level)
+    :Update Product Settings;
+    :Change reorder_level;
+    :Change reorder_quantity;
+    :Save Changes;
+    :Recalculate Alerts;
+    stop
+  else (Place Order)
+    :Create Purchase Order;
+    :Mark Alert as "Action Taken";
+    stop
+  else (Acknowledge Alert)
+    :Mark as "Acknowledged";
+    :Set follow-up date;
+    stop
+  endif
+
+else (Slow-Moving / Dead Stock)
+  
+  :Open Slow-Moving Stock Report;
+  
+  |System|
+  :Display Slow/Dead Stock Items;
+  :Calculate inventory value;
+  :Calculate storage cost;
+  :Calculate days dormant;
+  :Show historical data;
+  
+  |Staff/Admin|
+  :Review Analytics;
+  
+  if (Action?) then (Clearance Sale)
+    :Create Clearance Promotion;
+    :Apply heavy discount;
+    :Update marketing;
+    :Mark Alert as "Action Taken";
+    stop
+  else (Repurpose/Bundle)
+    :Create Product Bundle;
+    :Adjust pricing strategy;
+    :Update inventory notes;
+    stop
+  else (Return to Supplier)
+    :Negotiate return;
+    :Process return;
+    :Mark Alert as "Resolved";
+    stop
+  else (Write-Off)
+    :Approve write-off;
+    :Update inventory;
+    :Update financials;
+    :Mark Alert as "Resolved";
+    stop
+  endif
+
+else (View Dashboard Only)
+  
+  :Open Stock Alerts Dashboard;
+  
+  |System|
+  :Display Alert Summary;
+  fork
+    :Show Critical Count;
+  fork again
+    :Show High Count;
+  fork again
+    :Show Medium Count;
+  fork again
+    :Show Low Count;
+  fork again
+    :Show Trend Chart;
+    :Compare to previous periods;
+  fork again
+    :Show Top Affected Products;
+  fork again
+    :Show Affected Warehouses;
+  fork again
+    :Show Recommended Actions;
+  end fork
+  
+  |Staff/Admin|
+  :Review Dashboard;
+  :Prioritize Actions;
+  
+  if (Take Action?) then (yes)
+    :Select Alert to Address;
+    :(Navigate to specific alert type);
+  else (no)
+    stop
+  endif
+
+endif
+
+@enduml

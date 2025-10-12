@@ -1,0 +1,194 @@
+@startuml consolidated-usecase
+title Mycelium Inventory Management System - Consolidated Use Case Diagram
+left to right direction
+
+skinparam backgroundColor #f8fafc
+skinparam componentStyle uml2
+skinparam usecase {
+  BackgroundColor #e0f2fe
+  BorderColor #2b6cb0
+  FontColor #0f172a
+  FontSize 10
+}
+skinparam actor {
+  BackgroundColor #ffffff
+  BorderColor #2b6cb0
+  FontColor #0f172a
+}
+
+' Actors
+actor "Warehouse Admin" as Admin #dc2626
+actor "Warehouse Staff" as Staff #2563eb
+actor "All Users" as AllUsers #16a34a
+actor "System" as System #9333ea
+
+' Admin-only use cases (red/yellow)
+rectangle "Admin Operations" #fef3c7 {
+  usecase "Manage Users\n(CRUD)" as UC_ManageUsers
+  usecase "Manage Sessions\n(View, Force Logout)" as UC_ManageSessions
+  usecase "Delete Operations\n(Products, Receipts, Suppliers)" as UC_DeleteOps
+  usecase "System Configuration" as UC_SysConfig
+}
+
+' Staff operations (blue)
+rectangle "Inventory Operations" #dbeafe {
+  usecase "Manage Products\n(CR_U)" as UC_ManageProducts
+  usecase "Receive Stock" as UC_ReceiveStock
+  usecase "Sell Stock" as UC_SellStock
+  usecase "Transfer Inventory" as UC_Transfer
+  usecase "Track Serials & Batches" as UC_TrackSerials
+}
+
+rectangle "Warehouse Management" #dbeafe {
+  usecase "Manage Warehouses\n(CRUD)" as UC_ManageWarehouses
+  usecase "Manage Zones\n(CRUD)" as UC_ManageZones
+  usecase "Manage Bin Locations" as UC_ManageBins
+}
+
+rectangle "Supplier Management" #dbeafe {
+  usecase "Manage Suppliers\n(CR_U)" as UC_ManageSuppliers
+}
+
+rectangle "QR Operations" #dbeafe {
+  usecase "Generate QR Codes" as UC_GenerateQR
+  usecase "Scan QR Codes" as UC_ScanQR
+  usecase "Bulk QR Generation" as UC_BulkQR
+}
+
+' All users operations (green)
+rectangle "Viewing & Analytics" #dcfce7 {
+  usecase "View Dashboard" as UC_ViewDashboard
+  usecase "View Analytics" as UC_ViewAnalytics
+  usecase "View Reports" as UC_ViewReports
+  usecase "View Receipts" as UC_ViewReceipts
+  usecase "View Stock Alerts" as UC_ViewAlerts
+  usecase "Export Data" as UC_Export
+}
+
+rectangle "Authentication & Profile" #dcfce7 {
+  usecase "Login/Logout" as UC_Auth
+  usecase "Update Profile" as UC_UpdateProfile
+  usecase "Reset Password" as UC_ResetPassword
+}
+
+' System operations (purple)
+rectangle "Automated Processes" #f3e8ff {
+  usecase "Generate Alerts" as UC_AutoAlerts
+  usecase "Session Cleanup" as UC_SessionCleanup
+  usecase "Analytics Updates" as UC_AnalyticsUpdate
+  usecase "Security Logging" as UC_SecurityLog
+}
+
+' Relationships
+Admin --> UC_ManageUsers
+Admin --> UC_ManageSessions
+Admin --> UC_DeleteOps
+Admin --> UC_SysConfig
+
+Admin --> UC_ManageProducts
+Admin --> UC_ReceiveStock
+Admin --> UC_SellStock
+Admin --> UC_Transfer
+Admin --> UC_TrackSerials
+Admin --> UC_ManageWarehouses
+Admin --> UC_ManageZones
+Admin --> UC_ManageBins
+Admin --> UC_ManageSuppliers
+Admin --> UC_GenerateQR
+
+Staff --> UC_ManageProducts
+Staff --> UC_ReceiveStock
+Staff --> UC_SellStock
+Staff --> UC_Transfer
+Staff --> UC_TrackSerials
+Staff --> UC_ManageWarehouses
+Staff --> UC_ManageZones
+Staff --> UC_ManageBins
+Staff --> UC_ManageSuppliers
+Staff --> UC_GenerateQR
+
+Admin --> UC_ViewDashboard
+Admin --> UC_ViewAnalytics
+Admin --> UC_ViewReports
+Admin --> UC_ViewReceipts
+Admin --> UC_ViewAlerts
+Admin --> UC_Export
+Admin --> UC_Auth
+Admin --> UC_UpdateProfile
+
+Staff --> UC_ViewDashboard
+Staff --> UC_ViewAnalytics
+Staff --> UC_ViewReports
+Staff --> UC_ViewReceipts
+Staff --> UC_ViewAlerts
+Staff --> UC_Export
+Staff --> UC_Auth
+Staff --> UC_UpdateProfile
+
+AllUsers --> UC_ScanQR
+AllUsers --> UC_ViewDashboard
+AllUsers --> UC_ViewAnalytics
+AllUsers --> UC_ViewReports
+AllUsers --> UC_ViewReceipts
+AllUsers --> UC_ViewAlerts
+AllUsers --> UC_Auth
+AllUsers --> UC_UpdateProfile
+
+System --> UC_AutoAlerts
+System --> UC_SessionCleanup
+System --> UC_AnalyticsUpdate
+System --> UC_SecurityLog
+
+' Key relationships
+UC_ReceiveStock ..> UC_GenerateQR : <<extend>>
+UC_SellStock ..> UC_TrackSerials : <<include>>
+UC_ManageWarehouses ..> UC_ManageZones : <<include>>
+UC_ManageZones ..> UC_ManageBins : <<include>>
+UC_ViewAnalytics ..> UC_Export : <<extend>>
+UC_ManageSessions ..> UC_SecurityLog : <<include>>
+UC_Auth ..> UC_SecurityLog : <<include>>
+
+note right of Admin
+  **Admin Role**
+  • All Staff capabilities
+  • User management (CRUD)
+  • Session management
+  • Delete operations
+  • System configuration
+  
+  **Middleware:** isAdmin
+end note
+
+note right of Staff
+  **Staff Role**
+  • Inventory operations
+  • Warehouse management
+  • Supplier management
+  • QR operations
+  • Cannot delete
+  • Cannot manage users
+  
+  **Middleware:** isStaffOrAdmin
+end note
+
+note bottom of AllUsers
+  **All Authenticated Users**
+  • View dashboards & analytics
+  • View reports & receipts
+  • Scan QR codes
+  • View stock alerts
+  • Update own profile
+  
+  **Middleware:** isAuthenticated
+end note
+
+note bottom of System
+  **Automated System Processes**
+  • Alert generation
+  • Session cleanup
+  • Analytics updates
+  • Security logging
+  • Background jobs
+end note
+
+@enduml

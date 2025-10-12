@@ -1,0 +1,321 @@
+@startuml activity-user-management
+title Activity Diagram: User Management (Admin Only)
+
+skinparam backgroundColor #f8fafc
+skinparam activityBackgroundColor #fef3c7
+skinparam activityBorderColor #dc2626
+skinparam activityFontColor #0f172a
+
+|Admin|
+start
+:Navigate to User Management;
+
+|System|
+:Check Admin Role;
+:isAdmin middleware;
+
+if (Is Admin?) then (yes)
+  :Query All Users from security_db;
+  :Display Users List;
+  :Show user details, roles, status;
+else (no)
+  :Return 403 Forbidden;
+  :Display Access Denied;
+  stop
+endif
+
+|Admin|
+if (Action?) then (Create New User)
+  
+  :Click "Create User";
+  
+  |System|
+  :Display User Form;
+  
+  |Admin|
+  :Enter User Details;
+  note right
+    Required:
+    • Username (unique)
+    • Email (unique)
+    • Password
+    • Role (admin/staff)
+    • First Name
+    • Last Name
+    
+    Optional:
+    • Phone
+    • Department
+    • Notes
+  end note
+  :Submit Form;
+  
+  |System|
+  :Validate Input;
+  
+  fork
+    :Check Username Uniqueness;
+    :Query security_db.users;
+  fork again
+    :Check Email Uniqueness;
+  fork again
+    :Validate Password Strength;
+    :Min 8 chars, complexity rules;
+  fork again
+    :Validate Email Format;
+  fork again
+    :Check CSRF Token;
+  end fork
+  
+  if (All Validations Pass?) then (yes)
+    :Hash Password;
+    :Use bcrypt with cost factor 10;
+    
+    :Insert User Record;
+    :username, email, password_hash;
+    :role, status = "active";
+    :created_at = now;
+    :created_by = current_admin_id;
+    
+    :Log Security Event;
+    :action = "user_created";
+    :performer = admin_user_id;
+    :details = new_user_info;
+    
+    :Display Success Message;
+    :Redirect to Users List;
+    stop
+  else (no)
+    :Display Validation Errors;
+    :Keep Form Data;
+    stop
+  endif
+
+else (Edit Existing User)
+  
+  :Select User;
+  :Click "Edit";
+  
+  |System|
+  :Load User Data;
+  :Exclude password hash;
+  :Display Edit Form;
+  
+  |Admin|
+  :Modify User Details;
+  note right
+    Can modify:
+    • Personal info
+    • Role
+    • Status
+    • Contact details
+    
+    Cannot modify:
+    • Username (immutable)
+    • Created date
+  end note
+  :Submit Changes;
+  
+  |System|
+  :Validate Changes;
+  
+  if (Password Changed?) then (yes)
+    :Validate New Password;
+    :Hash New Password;
+    :Set password_updated_at = now;
+  endif
+  
+  if (Role Changed?) then (yes)
+    :Validate Role Value;
+    :Check authorization to assign role;
+    :Log role change;
+  endif
+  
+  :Update User Record;
+  :updated_at = now;
+  :updated_by = current_admin_id;
+  
+  :Log Security Event;
+  :action = "user_updated";
+  :store before/after values;
+  
+  :Display Success Message;
+  stop
+
+else (Toggle User Status)
+  
+  :Select User;
+  :Click "Toggle Status";
+  
+  |System|
+  :Load Current Status;
+  
+  if (Current Status?) then (active)
+    :Set status = "inactive";
+    :Deactivate account;
+  else (inactive)
+    :Set status = "active";
+    :Activate account;
+  endif
+  
+  :Update User Record;
+  :status_updated_at = now;
+  :updated_by = admin_user_id;
+  
+  :Log Security Event;
+  :action = "status_toggled";
+  
+  if (Deactivated?) then (yes)
+    :Invalidate User's Sessions;
+    :Force logout all devices;
+    :Log security event;
+  endif
+  
+  :Display Success Message;
+  stop
+
+else (Reset Failed Attempts)
+  
+  :Select User;
+  :Click "Reset Failed Attempts";
+  
+  |System|
+  :Update User Record;
+  :failed_login_attempts = 0;
+  :account_locked_until = NULL;
+  :updated_by = admin_user_id;
+  
+  :Log Security Event;
+  :action = "failed_attempts_reset";
+  
+  :Display Success Message;
+  stop
+
+else (Delete User)
+  
+  :Select User;
+  :Click "Delete";
+  
+  |System|
+  :Display Confirmation Dialog;
+  note right
+    Warning:
+    "This action cannot be undone.
+    All user data and audit trails
+    will be preserved but user
+    will be permanently deleted."
+  end note
+  
+  |Admin|
+  :Confirm Deletion;
+  
+  |System|
+  :Check User Permissions;
+  
+  if (Can Delete User?) then (yes)
+    note right
+      Cannot delete:
+      • Own account
+      • Last admin account
+      • System accounts
+    end note
+    
+    :Begin Transaction;
+    
+    fork
+      :Soft Delete User;
+      :Set deleted_at = now;
+      :Set deleted_by = admin_user_id;
+      :Set status = "deleted";
+    fork again
+      :Invalidate All User Sessions;
+      :Clear active tokens;
+    fork again
+      :Log Security Event;
+      :action = "user_deleted";
+      :preserve audit trail;
+    fork again
+      :Update Related Records;
+      :Mark user as deleted in logs;
+      :Preserve data integrity;
+    end fork
+    
+    :Commit Transaction;
+    :Display Success Message;
+    stop
+  else (no)
+    :Display Error Message;
+    :Explain restriction;
+    stop
+  endif
+
+else (View User Details)
+  
+  :Select User;
+  :Click "View Details";
+  
+  |System|
+  :Load User Information;
+  
+  fork
+    :Load User Profile;
+    :Personal info, role, status;
+  fork again
+    :Load User Activity;
+    :Last login, login count;
+  fork again
+    :Load Session History;
+    :Active and past sessions;
+  fork again
+    :Load Audit Trail;
+    :User's actions and changes;
+  fork again
+    :Calculate Statistics;
+    :Login frequency, activity metrics;
+  end fork
+  
+  :Display User Details Page;
+  :Show all information;
+  :Show activity charts;
+  :Show session management options;
+  
+  stop
+
+else (Bulk Actions)
+  
+  :Select Multiple Users;
+  :Click "Bulk Action";
+  
+  |System|
+  :Display Bulk Action Menu;
+  
+  |Admin|
+  :Select Action;
+  note right
+    Bulk actions:
+    • Activate selected users
+    • Deactivate selected users
+    • Reset failed attempts
+    • Export user list
+    • Send notification
+  end note
+  :Confirm Action;
+  
+  |System|
+  :Validate Bulk Operation;
+  
+  repeat
+    :Process Each Selected User;
+    :Apply action;
+    :Log action;
+  repeat while (more users?)
+  
+  :Display Summary;
+  :Show success/failure count;
+  :List any errors;
+  
+  stop
+
+endif
+
+@enduml

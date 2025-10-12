@@ -1,0 +1,530 @@
+@startuml activity-receipt-generation
+title Activity Diagram: Receipt Generation & Multi-Format Export
+
+skinparam backgroundColor #f8fafc
+skinparam activityBackgroundColor #dbeafe
+skinparam activityBorderColor #2b6cb0
+skinparam activityFontColor #0f172a
+
+|Staff/Admin|
+start
+
+if (Trigger?) then (During Transaction)
+  
+  |System|
+  :Transaction Completed;
+  :Capture Transaction Data;
+  
+  fork
+    :Gather Product Information;
+    :product_id, name, SKU;
+    :quantities, prices;
+  fork again
+    :Gather Financial Details;
+    :subtotal, taxes, fees;
+    :discounts, total;
+  fork again
+    :Gather Party Information;
+    if (Purchase Receipt?) then (yes)
+      :supplier_id, supplier_name;
+      :supplier contact info;
+    else (Sales Receipt)
+      :customer_name, customer_email;
+      :customer_phone;
+    endif
+  fork again
+    :Gather Warehouse/Location Data;
+    :warehouse_id, zone_id;
+    :bin location;
+  fork again
+    if (Batch Tracked?) then (yes)
+      :Gather Batch Information;
+      :batch_no, lot_no;
+      :expiry_date;
+    endif
+  fork again
+    if (Serialized?) then (yes)
+      :Gather Serial Numbers;
+      :List of all serials;
+    endif
+  fork again
+    :Capture Metadata;
+    :transaction_date;
+    :performed_by_user_id;
+    :PO_number (if applicable);
+    :notes;
+  end fork
+  
+  |System|
+  :Check Receipt Generation Flag;
+  
+  if (Generate Receipt Enabled?) then (yes)
+    
+    :Create Receipt Record;
+    
+    fork
+      :Generate Receipt ID;
+      note right
+        Format depends on type:
+        • Purchase: PUR-{timestamp}-{random}
+        • Sales: SAL-{timestamp}-{random}
+        • Return: RET-{timestamp}-{random}
+        • Transfer: TRF-{timestamp}-{random}
+      end note
+      
+    fork again
+      :Store Receipt Header;
+      :INSERT INTO receipts
+        (receipt_id, receipt_type,
+         receipt_data, product_id,
+         supplier_id, transaction_date,
+         subtotal, tax_amount, 
+         total_amount, notes,
+         created_by, created_at)
+        VALUES (...);
+      
+    fork again
+      if (Multiple Line Items?) then (yes)
+        :Store Receipt Line Items;
+        repeat
+          :INSERT INTO receipt_line_items
+            (receipt_id, product_id,
+             quantity, unit_price,
+             line_total, batch_no,
+             serial_numbers)
+            VALUES (...);
+        repeat while (more items?)
+      endif
+      
+    fork again
+      :Generate QR Code for Receipt;
+      note right
+        QR Code contains:
+        • Receipt ID
+        • Receipt Type
+        • Date
+        • Total Amount
+        • Verification Hash
+      end note
+      
+    fork again
+      :Log Receipt Creation;
+      :INSERT INTO inventory_log
+        (transaction_type, receipt_id, ...)
+        VALUES ('receipt_generated', ...);
+      
+    end fork
+    
+    :Receipt Record Created;
+    
+  endif
+
+else (Manual Receipt Generation)
+  
+  |Staff/Admin|
+  :Navigate to Receipts;
+  :Select Transaction/Receipt;
+  :Click "Generate/Regenerate Receipt";
+  
+  |System|
+  :Load Transaction Data;
+  :Load Receipt Record;
+  
+else (Bulk Export)
+  
+  |Staff/Admin|
+  :Navigate to Receipts;
+  :Apply Filters;
+  note right
+    Filter options:
+    • Date range
+    • Receipt type
+    • Customer/Supplier
+    • Warehouse
+    • Amount range
+    • Status
+  end note
+  :Select Receipts;
+  :Click "Bulk Export";
+  
+  |System|
+  :Load Multiple Receipts;
+  :Aggregate receipt data;
+  
+endif
+
+|System|
+:Display Format Selection;
+
+|Staff/Admin|
+:Choose Export Format;
+
+|System|
+if (Format?) then (Print View)
+  
+  :Generate HTML Print View;
+  
+  fork
+    :Create Receipt Header;
+    :Company logo & info;
+    :Receipt type & number;
+    :Date & time;
+  fork again
+    :Create Customer/Supplier Section;
+    :Name, address, contact;
+  fork again
+    :Create Line Items Table;
+    :Columns: Item, Qty, Price, Total;
+    :Include batch/serial if applicable;
+  fork again
+    :Create Financial Summary;
+    :Subtotal;
+    :Taxes breakdown;
+    :Discounts;
+    :Fees;
+    :Total (bold/large);
+  fork again
+    :Add QR Code;
+    :Embed as <img> base64;
+  fork again
+    :Add Footer;
+    :Terms & conditions;
+    :Thank you message;
+    :Company contact info;
+  fork again
+    :Apply Print Styles;
+    :CSS for print media;
+    :Page breaks;
+    :Font sizes;
+  end fork
+  
+  :Render in Browser;
+  :Trigger Print Dialog;
+  
+  |Staff/Admin|
+  :Print Receipt;
+  :Or Save as PDF from browser;
+  
+  stop
+
+else (PDF Export)
+  
+  :Initialize PDF Generator;
+  note right
+    Using library like:
+    • PDFKit
+    • pdfmake
+    • html-pdf
+  end note
+  
+  fork
+    :Create PDF Document;
+    :Set page size (A4/Letter);
+    :Set margins;
+    
+  fork again
+    :Add Company Header;
+    :Logo (if available);
+    :Company name & address;
+    :Contact information;
+    
+  fork again
+    :Add Receipt Title;
+    :Receipt type (large);
+    :Receipt number;
+    :Date & time;
+    
+  fork again
+    :Add Party Details;
+    if (Purchase?) then (yes)
+      :Supplier information;
+    else (Sales)
+      :Customer information;
+    endif
+    
+  fork again
+    :Add Warehouse/Location;
+    :Warehouse name;
+    :Zone and bin;
+    
+  fork again
+    :Create Items Table;
+    :Headers: Description, Qty, Unit Price, Total;
+    :Borders and styling;
+    
+    repeat
+      :Add Line Item Row;
+      :Product name & SKU;
+      :Quantity;
+      :Unit price;
+      :Line total;
+      if (Batch/Serial?) then (yes)
+        :Add sub-row with batch/serial info;
+      endif
+    repeat while (more items?)
+    
+  fork again
+    :Add Financial Summary;
+    :Right-aligned;
+    :Subtotal row;
+    if (Taxes?) then (yes)
+      :Tax rows (itemized);
+    endif
+    if (Discounts?) then (yes)
+      :Discount rows;
+    endif
+    if (Fees?) then (yes)
+      :Fee rows;
+    endif
+    :Total row (bold, larger font);
+    
+  fork again
+    :Add QR Code;
+    :Position: bottom right;
+    :Size: 100x100 pixels;
+    
+  fork again
+    :Add Notes Section;
+    if (Notes Exist?) then (yes)
+      :Notes: {note_text};
+    endif
+    
+  fork again
+    :Add Footer;
+    :Terms and conditions;
+    :Authorized signature line;
+    :Page numbers;
+    
+  end fork
+  
+  :Generate PDF Binary;
+  
+  if (Delivery Method?) then (Download)
+    :Set Response Headers;
+    :Content-Type: application/pdf;
+    :Content-Disposition: attachment;
+    :filename: receipt_{receipt_id}.pdf;
+    
+    :Send PDF to Browser;
+    
+    |Staff/Admin|
+    :Download PDF File;
+    stop
+    
+  else (Email)
+    :Prepare Email;
+    :to: customer_email or supplier_email;
+    :subject: Receipt {receipt_id};
+    :body: Professional message;
+    :attachment: PDF file;
+    
+    :Send Email;
+    :Log email sent;
+    
+    :Display Success Message;
+    stop
+    
+  else (Store on Server)
+    :Save to Receipts Directory;
+    :path: /receipts/{year}/{month}/{receipt_id}.pdf;
+    :Set file permissions;
+    
+    :Store File Path in Database;
+    :UPDATE receipts
+      SET pdf_file_path = ?
+      WHERE receipt_id = ?;
+    
+    :Return File URL;
+    stop
+  endif
+
+else (Excel/CSV Export)
+  
+  if (Single Receipt?) then (yes)
+    :Create Receipt Detail Sheet;
+    
+    fork
+      :Sheet 1: Receipt Header;
+      :Key-value pairs;
+      :Receipt ID, Date, Type, Total;
+      
+    fork again
+      :Sheet 2: Line Items;
+      :Tabular format;
+      :Headers: Product, SKU, Qty, Price, Total;
+      
+      repeat
+        :Add row for each line item;
+      repeat while (more items?)
+      
+    fork again
+      :Sheet 3: Financial Summary;
+      :Subtotal;
+      :Taxes (itemized);
+      :Discounts;
+      :Fees;
+      :Grand Total;
+      
+    end fork
+    
+  else (Multiple Receipts)
+    :Create Summary Spreadsheet;
+    
+    fork
+      :Sheet: All Receipts;
+      :Headers: Receipt ID, Date, Type, 
+               Customer/Supplier, Items, 
+               Subtotal, Tax, Total;
+      
+      repeat
+        :Add row for each receipt;
+        :Summarize line items;
+      repeat while (more receipts?)
+      
+    fork again
+      :Sheet: Financial Summary;
+      :Total sales/purchases;
+      :Total tax collected/paid;
+      :Count by type;
+      :Average transaction value;
+      
+    fork again
+      if (Include Details?) then (yes)
+        :Sheet: All Line Items;
+        :Headers: Receipt ID, Product, SKU,
+                 Qty, Price, Total;
+        
+        repeat
+          repeat
+            :Add row for each line item;
+          repeat while (more items in receipt?)
+        repeat while (more receipts?)
+      endif
+      
+    end fork
+    
+  endif
+  
+  if (Format = Excel?) then (yes)
+    :Generate XLSX file;
+    :using xlsx library;
+    :Apply formatting;
+    :Auto-column width;
+    :Freeze header row;
+    :Apply cell formatting;
+    
+    :Set Response Headers;
+    :Content-Type: application/vnd.openxmlformats;
+    
+  else (CSV)
+    :Generate CSV file;
+    :Comma-separated values;
+    :Proper escaping;
+    :UTF-8 encoding;
+    
+    :Set Response Headers;
+    :Content-Type: text/csv;
+  endif
+  
+  :Send File to Browser;
+  
+  |Staff/Admin|
+  :Download Spreadsheet;
+  :Open in Excel/Google Sheets;
+  
+  stop
+
+else (JSON Export)
+  
+  :Generate JSON Structure;
+  
+  if (Single Receipt?) then (yes)
+    :Create receipt object;
+    :Include all nested data;
+    note right
+      {
+        "receipt_id": "...",
+        "receipt_type": "...",
+        "date": "...",
+        "customer": {...},
+        "line_items": [...],
+        "financial": {
+          "subtotal": ...,
+          "tax": ...,
+          "total": ...
+        },
+        "metadata": {...}
+      }
+    end note
+    
+  else (Multiple)
+    :Create array of receipts;
+    :Include summary statistics;
+  endif
+  
+  :Set Response Headers;
+  :Content-Type: application/json;
+  
+  :Send JSON Response;
+  
+  |Staff/Admin|
+  :Receive JSON Data;
+  :Use for API integration;
+  :Or import to other system;
+  
+  stop
+
+else (Email Receipt)
+  
+  :Generate HTML Email Template;
+  
+  fork
+    :Create Responsive HTML;
+    :Inline CSS styles;
+    :Mobile-friendly layout;
+    
+  fork again
+    :Add Company Branding;
+    :Logo and colors;
+    
+  fork again
+    :Add Receipt Content;
+    :All details in clean format;
+    
+  fork again
+    :Add Call-to-Action Buttons;
+    :"View Online";
+    :"Download PDF";
+    :"Contact Support";
+    
+  fork again
+    :Attach PDF Version;
+    :Generate PDF as above;
+    :Add as email attachment;
+    
+  end fork
+  
+  :Send Email;
+  
+  fork
+    :to: customer_email;
+  fork again
+    :subject: Your Receipt #{receipt_id};
+  fork again
+    :body: HTML template;
+  fork again
+    :attachments: [receipt.pdf];
+  fork again
+    :Log email sent;
+    :INSERT INTO email_log
+      (receipt_id, recipient, 
+       sent_at, status)
+      VALUES (...);
+  end fork
+  
+  :Display Success Message;
+  stop
+
+endif
+
+@enduml

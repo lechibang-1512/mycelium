@@ -1,0 +1,400 @@
+@startuml activity-session-management
+title Activity Diagram: Session Management (Admin Only)
+
+skinparam backgroundColor #f8fafc
+skinparam activityBackgroundColor #fef3c7
+skinparam activityBorderColor #dc2626
+skinparam activityFontColor #0f172a
+
+|Admin|
+start
+:Navigate to Session Management;
+
+|System|
+:Check Admin Role;
+:isAdmin middleware;
+
+if (Is Admin?) then (yes)
+  :Query Active Sessions;
+  :Join users and sessions tables;
+  :Include session details;
+else (no)
+  :Return 403 Forbidden;
+  stop
+endif
+
+|System|
+fork
+  :Get Session Data;
+  :session_id, user_id;
+  :created_at, last_accessed;
+  :ip_address, user_agent;
+fork again
+  :Parse User Agent;
+  :Extract device type;
+  :Extract browser;
+  :Extract OS;
+fork again
+  :Calculate Session Age;
+  :Duration since creation;
+fork again
+  :Calculate Idle Time;
+  :Duration since last access;
+fork again
+  :Check Session Status;
+  :active, idle, expired;
+end fork
+
+:Display Sessions List;
+:Group by user (optional);
+:Show session details;
+:Highlight suspicious sessions;
+note right
+  Suspicious indicators:
+  • Multiple locations
+  • Unknown devices
+  • Unusual access patterns
+  • Excessive idle time
+  • Failed authentication attempts
+end note
+
+|Admin|
+if (Action?) then (View All Sessions)
+  
+  |System|
+  :Display All Active Sessions;
+  :Sort by last accessed (default);
+  
+  :Apply Filters (optional);
+  note right
+    Filter options:
+    • By user
+    • By device type
+    • By location/IP
+    • By age
+    • By idle time
+    • Show only suspicious
+  end note
+  
+  :Update View;
+  stop
+
+else (View User Sessions)
+  
+  |Admin|
+  :Select User;
+  :Click "View Sessions";
+  
+  |System|
+  :Load User Session History;
+  
+  fork
+    :Load Active Sessions;
+    :Current active sessions;
+  fork again
+    :Load Session History;
+    :Past 30 days (configurable);
+  fork again
+    :Calculate User Statistics;
+    :Average sessions per day;
+    :Most used devices;
+    :Login patterns;
+  fork again
+    :Identify Anomalies;
+    :Unusual login times;
+    :New devices;
+    :Location changes;
+  end fork
+  
+  :Display User Session Dashboard;
+  :Show active sessions;
+  :Show session history chart;
+  :Show statistics;
+  :Show security alerts;
+  
+  stop
+
+else (Force User Logout)
+  
+  |Admin|
+  :Select User or Session;
+  :Click "Force Logout";
+  
+  |System|
+  :Display Confirmation Dialog;
+  note right
+    Warning:
+    "This will immediately terminate
+    the user's session(s) and force
+    logout from all devices (or
+    selected device)."
+    
+    Options:
+    • Logout all sessions
+    • Logout specific session
+    • Logout with reason
+  end note
+  
+  |Admin|
+  :Confirm Force Logout;
+  :Optionally enter reason;
+  
+  |System|
+  :Begin Transaction;
+  
+  if (Logout Type?) then (All User Sessions)
+    
+    :Query All User Sessions;
+    :Get all session_ids for user;
+    
+    repeat
+      :Invalidate Session;
+      :Delete session from store;
+      :Add to token_invalidation table;
+      :session_id, invalidated_at;
+      :invalidated_by = admin_user_id;
+      :reason = admin_reason;
+    repeat while (more sessions?)
+    
+  else (Specific Session)
+    
+    :Invalidate Specific Session;
+    :Delete session from store;
+    :Add to token_invalidation table;
+    
+  endif
+  
+  :Log Security Event;
+  :action = "forced_logout";
+  :performer = admin_user_id;
+  :target_user = logged_out_user_id;
+  :reason = admin_reason;
+  :affected_sessions_count;
+  
+  :Commit Transaction;
+  
+  :Notify User (optional);
+  note right
+    Send notification:
+    "Your session was terminated
+    by an administrator.
+    Reason: [reason]
+    
+    If this was not expected,
+    please contact support."
+  end note
+  
+  :Display Success Message;
+  :Update sessions list;
+  stop
+
+else (Invalidate Tokens)
+  
+  |Admin|
+  :Click "Invalidate Tokens";
+  
+  |System|
+  :Display Token Invalidation Options;
+  
+  |Admin|
+  :Select Invalidation Scope;
+  note right
+    Scope options:
+    • Specific user
+    • All users
+    • Specific token
+    • By date range
+    • By device type
+    • By IP range
+  end note
+  :Confirm Action;
+  
+  |System|
+  :Display Confirmation Dialog;
+  note right
+    Warning:
+    "This will force logout all
+    affected users. They will need
+    to log in again."
+    
+    Impact summary:
+    • Affected users: X
+    • Affected sessions: Y
+    • Cannot be undone
+  end note
+  
+  |Admin|
+  :Confirm Invalidation;
+  :Enter reason (required);
+  
+  |System|
+  :Begin Transaction;
+  
+  :Query Matching Sessions;
+  :Apply scope filters;
+  
+  repeat
+    :Invalidate Token;
+    :Delete session;
+    :Add to token_invalidation;
+    :Set invalidated_at = now;
+    :Set invalidated_by = admin_user_id;
+    :Set reason = admin_reason;
+  repeat while (more tokens?)
+  
+  :Log Security Event;
+  :action = "mass_token_invalidation";
+  :performer = admin_user_id;
+  :scope = invalidation_scope;
+  :affected_count = session_count;
+  :reason = admin_reason;
+  
+  :Commit Transaction;
+  
+  :Send Notifications;
+  :Notify all affected users;
+  
+  :Display Success Message;
+  :Show invalidation summary;
+  stop
+
+else (Manage Session Secrets)
+  
+  |Admin|
+  :Click "Manage Secrets";
+  
+  |System|
+  :Load Session Secrets;
+  :Query session_secrets table;
+  :Show active and historical secrets;
+  
+  :Display Secrets Management;
+  :Show current secret (masked);
+  :Show secret age;
+  :Show rotation history;
+  :Show next rotation date;
+  
+  |Admin|
+  if (Secret Action?) then (Rotate Secret)
+    
+    |Admin|
+    :Click "Rotate Secret";
+    
+    |System|
+    :Display Rotation Options;
+    note right
+      Options:
+      1. Graceful rotation
+         Keep old secret valid for X days
+         Allow sessions to migrate
+      
+      2. Immediate rotation
+         Invalidate all old sessions
+         Force all users to re-login
+      
+      3. Scheduled rotation
+         Set future rotation date
+    end note
+    
+    |Admin|
+    :Select Rotation Type;
+    :Confirm Rotation;
+    
+    |System|
+    :Generate New Secret;
+    :Use crypto.randomBytes(64);
+    
+    :Begin Transaction;
+    
+    if (Rotation Type?) then (Graceful)
+      
+      :Mark Old Secret as "expiring";
+      :Set expiry_date = now + grace_period;
+      :Keep old secret active;
+      
+      :Insert New Secret;
+      :Set status = "active";
+      :Set created_at = now;
+      :Set created_by = admin_user_id;
+      
+      :Log Security Event;
+      :action = "secret_rotated_graceful";
+      
+      :Schedule Cleanup Job;
+      :Remove old secret after grace period;
+      
+    else (Immediate)
+      
+      :Mark Old Secret as "revoked";
+      :Set revoked_at = now;
+      
+      :Insert New Secret;
+      :Set status = "active";
+      
+      :Invalidate All Sessions;
+      :Signed with old secret;
+      
+      :Log Security Event;
+      :action = "secret_rotated_immediate";
+      
+      :Notify All Users;
+      :Required re-login notification;
+      
+    endif
+    
+    :Commit Transaction;
+    :Display Success Message;
+    :Show new secret details;
+    stop
+    
+  else (View Secret History)
+    
+    |System|
+    :Display Secret History;
+    :Show all past secrets;
+    :Show creation/revocation dates;
+    :Show who created/revoked;
+    :Show rotation reasons;
+    
+    stop
+    
+  endif
+
+else (View Session Statistics)
+  
+  |System|
+  :Calculate Session Metrics;
+  
+  fork
+    :Active Sessions Count;
+    :Total currently active;
+  fork again
+    :Average Session Duration;
+    :Mean time from create to last access;
+  fork again
+    :Peak Concurrent Sessions;
+    :Max sessions in last 24h/7d/30d;
+  fork again
+    :Sessions by Device Type;
+    :Desktop, Mobile, Tablet breakdown;
+  fork again
+    :Sessions by Location;
+    :Geographic distribution;
+  fork again
+    :Suspicious Activity Count;
+    :Flagged sessions;
+  fork again
+    :Failed Login Attempts;
+    :Last 24h count;
+  end fork
+  
+  :Render Session Analytics Dashboard;
+  :Display charts and graphs;
+  :Show trends over time;
+  :Highlight security concerns;
+  
+  stop
+
+endif
+
+@enduml
