@@ -1,244 +1,72 @@
 @startuml activity-analytics-reporting
 title Activity Diagram: Analytics & Reporting
 
-skinparam backgroundColor #f8fafc
-skinparam activityBackgroundColor #dbeafe
-skinparam activityBorderColor #2b6cb0
-skinparam activityFontColor #0f172a
+!include skinparams.puml
 
 |User|
 start
-:Access Analytics;
+:Access Analytics Page;
 
-if (Report Type?) then (Dashboard)
+if (View?) then (Dashboard)
   |System|
-  :Load Dashboard Data;
+  :Load and Display Dashboard;
   note right
-    KPIs loaded in parallel:
-    • Total inventory value
-    • Low stock alerts count
-    • Recent receipts summary
-    • Top products by value/movement
-    • Warehouse occupancy rates
-    • Pending transfers
+    The dashboard shows a high-level overview of key
+    performance indicators (KPIs), such as inventory
+    value, low stock alerts, and recent activity.
+    Users can drill down into specific metrics.
   end note
-  
-  :Render Dashboard;
-  note right
-    • KPI cards
-    • Quick action buttons
-    • Charts & graphs
-    • Alert notifications
-    • Recent activity feed
-  end note
-  
-  |User|
-  if (Drill Down?) then (yes)
-    :Click Chart/Metric;
-    |System|
-    :Load Detailed View;
-    :Display Drill-Down Data;
-    stop
-  else (no)
-    stop
-  endif
+  stop
 
-elseif (Inventory Analytics) then
+else (Analytics Report)
   |User|
-  :Configure Filters;
+  :Select Report Type and Filters;
   note right
-    • Date range
-    • Warehouse(s)
-    • Product category
-    • Status
+    Users can choose from several report types:
+    • Inventory Analytics
+    • Receipt Analytics
+    • Warehouse Analytics
+
+    And apply filters like date range, warehouse,
+    or product category.
   end note
   
   |System|
-  :Query Inventory Data;
-  :Calculate Analytics;
+  :Generate and Display Analytics;
   note right
-    • Stock levels by warehouse
-    • Value distribution
-    • Turnover rates
-    • ABC analysis
-    • Slow/dead stock
-    • Reorder recommendations
+    The system queries the relevant data,
+    calculates the requested analytics, and
+    displays the results using tables, charts,
+    and heatmaps. Users can export the data.
   end note
-  
-  :Display Analytics;
-  note right
-    • Summary tables
-    • Charts (pie, bar, line)
-    • Heatmaps
-    • Trend analysis
-  end note
-  
-  |User|
-  if (Export?) then (yes)
-    :Select Format;
-    |System|
-    :Generate Export;
-    :Send to Browser;
-    stop
-  else (no)
-    stop
-  endif
-
-elseif (Receipt Analytics) then
-  |User|
-  :Configure Parameters;
-  note right
-    • Date range
-    • Receipt type (purchase/sales)
-    • Warehouse
-    • Supplier/customer
-  end note
-  
-  |System|
-  :Query Receipt Data;
-  :Calculate Metrics;
-  note right
-    • Total volume & value
-    • Trends over time
-    • Top products
-    • Top suppliers/customers
-    • Average transaction size
-    • Processing times
-  end note
-  
-  :Display Analytics;
-  note right
-    • Summary cards
-    • Trend charts
-    • Comparison tables
-    • Distribution graphs
-  end note
-  
-  |User|
-  if (Export?) then (yes)
-    :Select Format;
-    |System|
-    :Generate Export;
-    :Send to Browser;
-    stop
-  else (no)
-    stop
-  endif
-
-elseif (Warehouse Analytics) then
-  |User|
-  :Select Warehouse(s);
-  
-  |System|
-  :Load Warehouse Data;
-  :Calculate Analytics;
-  note right
-    • Zone utilization rates
-    • Capacity vs occupancy
-    • Throughput metrics
-    • Pick/put-away rates
-    • Product distribution
-    • Performance trends
-  end note
-  
-  :Display Analytics;
-  note right
-    • Warehouse overview
-    • Zone heatmaps
-    • Utilization charts
-    • Performance metrics
-    • Efficiency scores
-  end note
-  
-  |User|
-  if (Export?) then (yes)
-    :Select Format;
-    |System|
-    :Generate Export;
-    stop
-  else (no)
-    stop
-  endif
+  stop
 
 else (Custom Report)
   |User|
-  :Select Report Template;
+  :Select Template and Configure;
   note right
-    Templates: Inventory Valuation,
-    Stock Movement, Sales Summary,
-    Purchase History, Supplier Performance,
-    ABC Analysis, Aging Report
-  end note
-  
-  :Configure Parameters;
-  note right
-    • Date range
-    • Filters & grouping
-    • Metrics to include
-    • Sort order
+    Users can select a pre-defined template
+    (e.g., Inventory Valuation, Sales Summary)
+    and configure parameters like date range,
+    filters, and metrics.
   end note
   
   |System|
-  :Validate Parameters;
+  :Generate and Display Report;
+  note right
+    After validating the parameters, the system
+    executes the query, processes the data,
+    and displays the final report.
+  end note
   
-  if (Valid?) then (yes)
-    :Execute Report Query;
-    :Process Data;
-    note right
-      • Aggregate data
-      • Calculate metrics
-      • Apply grouping
-      • Generate summaries
-    end note
-    
-    :Display Report;
-    note right
-      • Data tables
-      • Charts & graphs
-      • Summary statistics
-      • Export options
-    end note
-    
-    |User|
-    if (Action?) then (Export)
-      :Select Format;
-      note right
-        Formats: Excel, PDF, CSV, JSON
-      end note
-      
-      |System|
-      :Generate Export File;
-      note right
-        • Format data
-        • Add branding (PDF)
-        • Include charts (Excel/PDF)
-        • Compress if large
-      end note
-      
-      :Send to Browser;
-      stop
-      
-    elseif (Schedule) then
-      :Configure Schedule;
-      note right
-        • Frequency (daily, weekly, monthly)
-        • Recipients
-        • Format
-        • Delivery method
-      end note
-      
-      |System|
-      :Create Scheduled Report;
-      :Send Confirmation;
-      stop
-      
-    else (Modify)
-      backward:Return to parameters;
-    endif
-  else (no)
-    :Show Validation Errors;
-    stop
-  endif
+  |User|
+  :Export or Schedule Report;
+  note right
+    From the report view, users can:
+    • Export the data to various formats (Excel, PDF, etc.)
+    • Schedule the report to run automatically
+  end note
+  stop
 endif
 
 @enduml

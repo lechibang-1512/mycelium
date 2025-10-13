@@ -1,340 +1,60 @@
 @startuml business-process-qr-operations
 title Business Process: QR Code Generation & Scanning
 
-skinparam backgroundColor #f8fafc
-skinparam activityBackgroundColor #dbeafe
-skinparam activityBorderColor #2b6cb0
-skinparam activityFontColor #0f172a
+!include skinparams.puml
 
 |User|
 start
 
 if (Operation Type?) then (Generate QR)
-  
   |Staff/Admin|
-  :Access QR Generator;
-  
-  |System|
-  :Display Generator Options;
+  :Generate QR Code(s);
   note right
-    QR Types:
-    • Product QR
-    • Location QR
-    • Batch QR
-    • Serial QR
-    • Receipt QR
+    Users can generate QR codes for:
+    • Products (single or bulk)
+    • Locations (warehouse, zone, bin)
+    • Batches or individual serial numbers
+    
+    The system creates a secure payload,
+    generates the QR image, and provides
+    options to download or print.
   end note
-  
-  |Staff/Admin|
-  :Select QR Type;
-  
-  if (QR Type?) then (Product QR)
-    
-    |Staff/Admin|
-    :Select Product(s);
-    note right
-      Can select:
-      • Single product
-      • Multiple products
-      • All products in category
-      • Products in specific location
-    end note
-    
-    |System|
-    fork
-      :Generate QR Payload;
-      :type = "product";
-      :id = product_id;
-      :version = current_version;
-      :nonce = random_string;
-      :timestamp = now;
-    fork again
-      :Encode Payload;
-      :Create JSON string;
-      :Optionally encrypt;
-      :Convert to QR data format;
-    end fork
-    
-    :Generate QR Image;
-    :Size: configurable (default 256x256);
-    :Format: PNG/SVG;
-    :Error correction: High;
-    
-    if (Bulk Generation?) then (yes)
-      repeat
-        :Generate QR for each product;
-        :Add product info (SKU, name);
-        :Add to batch;
-      repeat while (more products?)
-      
-      :Create Print Layout;
-      :Arrange QRs on page;
-      :Add labels and text;
-      :Format for label printer;
-      
-      |Staff/Admin|
-      :Download Print File;
-      :Print Labels;
-    else (single)
-      |Staff/Admin|
-      :Display QR Code;
-      :Option to Download;
-      :Option to Print;
-    endif
-    
-  else (Location QR)
-    
-    |Staff/Admin|
-    :Select Location(s);
-    note right
-      Can select:
-      • Warehouse
-      • Zone
-      • Bin location
-      • Multiple locations
-    end note
-    
-    |System|
-    :Generate Location QR;
-    :type = "location";
-    :locationId = location_id;
-    :locationType = warehouse/zone/bin;
-    :version = current_version;
-    :nonce = random_string;
-    
-    :Generate QR Image;
-    
-    |Staff/Admin|
-    :Download/Print Location QR;
-    
-  else (Batch QR)
-    
-    |Staff/Admin|
-    :Select Batch;
-    
-    |System|
-    :Generate Batch QR;
-    :type = "batch";
-    :batchId = batch_id;
-    :batchNumber = batch_number;
-    :expiryDate = expiry_date;
-    :productId = product_id;
-    
-    :Generate QR Image;
-    
-    |Staff/Admin|
-    :Download/Print Batch QR;
-    
-  else (Serial QR)
-    
-    |Staff/Admin|
-    :Select Serial(s);
-    
-    |System|
-    repeat
-      :Generate Serial QR;
-      :type = "serial";
-      :serialNumber = serial_number;
-      :productId = product_id;
-      :batchId = batch_id (optional);
-      :Generate QR Image;
-    repeat while (more serials?)
-    
-    |Staff/Admin|
-    :Download/Print Serial QRs;
-    
-  endif
-  
   stop
 
 else (Scan QR)
-  
   |User|
-  :Access QR Scanner;
+  :Scan QR Code;
   
   |System|
-  :Request Camera Permission;
-  :Initialize Camera;
-  :Display Scanner Interface;
-  
-  |User|
-  :Point Camera at QR Code;
-  
-  |System|
-  :Capture QR Code;
-  :Decode QR Data;
-  :Parse JSON Payload;
-  
-  :Validate QR Code;
-  fork
-    :Check Version;
-    :Verify not outdated;
-  fork again
-    :Check Nonce;
-    :Verify not reused;
-  fork again
-    :Check Timestamp;
-    :Verify not expired;
-    note right
-      QR codes have freshness period
-      (default: 365 days)
-      
-      Prevents use of old/stale QR codes
-    end note
-  end fork
+  :Decode and Validate QR;
+  note right
+    The system captures the QR code via camera,
+    decodes the payload, and validates its
+    freshness, version, and integrity.
+  end note
   
   if (QR Valid?) then (yes)
-    
-    :Determine QR Type;
-    
-    if (QR Type?) then (Product)
-      
-      :Load Product Details;
-      :Query product by id;
-      :Get current stock levels;
-      :Get locations;
-      
-      :Display Product Information;
-      :Show SKU, name, description;
-      :Show current stock;
-      :Show locations;
-      
-      :Display Quick Actions;
-      note right
-        Actions based on user role:
-        
-        **Staff/Admin:**
-        • View Details
-        • Receive Stock
-        • Sell Stock
-        • Move Item
-        • Edit Product
-        • Generate New QR
-        
-        **All Users:**
-        • View Details
-        • Check Stock
-      end note
-      
-      |User|
-      if (Select Action?) then (View Details)
-        :Navigate to Product Page;
-      else (Receive Stock)
-        :Pre-fill Receive Form;
-        :with scanned product;
-      else (Sell Stock)
-        :Pre-fill Sell Form;
-        :with scanned product;
-      else (Move Item)
-        :Open Transfer Form;
-        :pre-select product;
-      endif
-      
-    else (Location)
-      
-      :Load Location Details;
-      :Query location by id;
-      :Get contents;
-      :Get capacity;
-      
-      :Display Location Information;
-      :Show location hierarchy;
-      :Show current contents;
-      :Show capacity utilization;
-      
-      :Display Quick Actions;
-      note right
-        **Staff/Admin:**
-        • View Contents
-        • Receive to Location
-        • Move from Location
-        • View History
-        
-        **All Users:**
-        • View Contents
-        • Check Capacity
-      end note
-      
-      |User|
-      :Select Action;
-      :Execute Corresponding Workflow;
-      
-    else (Batch)
-      
-      :Load Batch Details;
-      :Query batch by id;
-      :Get batch info;
-      :Get expiry status;
-      :Get current quantity;
-      
-      :Display Batch Information;
-      :Highlight if expiring soon;
-      
-      :Display Quick Actions;
-      :View Batch Details;
-      :View Batch History;
-      :Sell from Batch;
-      :Move Batch;
-      
-    else (Serial)
-      
-      :Load Serial Details;
-      :Query serial by number;
-      :Get product info;
-      :Get current status;
-      :Get location;
-      :Get history;
-      
-      :Display Serial Information;
-      :Show serial number;
-      :Show status (available/sold/damaged);
-      :Show current location;
-      
-      :Display Quick Actions;
-      :View Serial History;
-      :Update Serial Status;
-      :Move Serial;
-      :Sell Serial;
-      
-    else (Receipt)
-      
-      :Load Receipt Details;
-      :Query receipt by id;
-      :Get all line items;
-      
-      :Display Receipt Information;
-      :Show receipt type (IN/OUT);
-      :Show date and performer;
-      :Show all items;
-      
-      :Display Quick Actions;
-      :View Full Receipt;
-      :Export Receipt;
-      :Print Receipt;
-      
-    endif
-    
-    stop
-    
-  else (no - QR Invalid)
-    
-    :Display Error Message;
+    :Display Information and Actions;
     note right
-      Error types:
-      • QR code expired
-      • Invalid format
-      • Version mismatch
-      • Item not found
-      • Nonce reuse detected
+      Based on the QR type (product, location, etc.),
+      the system displays relevant information and
+      provides context-aware quick actions based
+      on the user's role.
     end note
     
-    :Log Security Event;
-    :Suggest generating new QR;
-    
+    |User|
+    :Select Action;
     stop
     
+  else (no)
+    :Display Error and Log Event;
+    note right
+      If the QR code is invalid, expired, or
+      unrecognized, an error message is shown
+      and a security event is logged.
+    end note
+    stop
   endif
-
 endif
 
 @enduml

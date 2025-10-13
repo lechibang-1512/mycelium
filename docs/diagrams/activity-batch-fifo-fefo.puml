@@ -1,334 +1,51 @@
 @startuml activity-batch-fifo-fefo
 title Activity Diagram: Batch Tracking with FIFO/FEFO Strategies
 
-skinparam backgroundColor #f8fafc
-skinparam activityBackgroundColor #dbeafe
-skinparam activityBorderColor #2b6cb0
-skinparam activityFontColor #0f172a
+!include skinparams.puml
 
 |Staff/Admin|
 start
-:Initiate Sale Transaction;
-:Select Product;
-:Enter Quantity to Sell;
+:Initiate Sale of Batch-Tracked Product;
 
 |System|
-:Load Product Configuration;
-:Check batch_tracking_enabled;
+:Determine Picking Strategy;
+note right
+  The system checks the product's configuration
+  to determine whether to use FIFO (First In,
+  First Out), FEFO (First Expired, First Out),
+  or allow manual batch selection.
+end note
 
-if (Batch Tracking Enabled?) then (yes)
-  
-  |System|
-  :Determine Picking Strategy;
-  :Load strategy from config;
+:Allocate Stock from Batches;
+note right
+  Based on the selected strategy, the system
+  queries available batches and allocates the
+  requested quantity, starting with the oldest
+  or soonest-to-expire stock. Expired batches
+  are automatically skipped and flagged.
+end note
+
+if (Stock Fully Allocated?) then (yes)
+  :Confirm and Process Sale;
   note right
-    Strategies:
-    • FIFO: First In, First Out
-      (oldest batch first)
-    • FEFO: First Expired, First Out
-      (earliest expiry first)
-    • Manual: User selection
+    The user confirms the allocation, and the
+    system processes the sale. This includes:
+    • Updating batch and inventory records
+    • Logging all transactions
+    • Updating serial numbers if applicable
+    • Creating a sales receipt
   end note
-  
-  if (Strategy?) then (FIFO)
-    
-    |System|
-    :Query Available Batches;
-    note right
-      SELECT * FROM batch_tracking
-      WHERE product_id = ?
-        AND warehouse_id = ?
-        AND zone_id = ?
-        AND status = 'active'
-        AND quantity_remaining > 0
-      ORDER BY received_date ASC, batch_id ASC
-    end note
-    
-    :Load Batches in FIFO Order;
-    :Create Batch Selection List;
-    
-  else (FEFO)
-    
-    |System|
-    :Query Batches with Expiry;
-    note right
-      SELECT * FROM batch_tracking
-      WHERE product_id = ?
-        AND warehouse_id = ?
-        AND zone_id = ?
-        AND status = 'active'
-        AND quantity_remaining > 0
-        AND expiry_date IS NOT NULL
-      ORDER BY expiry_date ASC, received_date ASC
-    end note
-    
-    :Load Batches in FEFO Order;
-    :Prioritize Soon-to-Expire;
-    
-  else (Manual)
-    
-    |System|
-    :Display All Available Batches;
-    :Show batch details:
-      • Batch number
-      • Quantity remaining
-      • Received date
-      • Expiry date
-      • Age;
-    
-    |Staff/Admin|
-    :Select Batch(es) Manually;
-    :Specify quantity from each;
-    
-  endif
-  
-  |System|
-  :Initialize Allocation;
-  :Set remaining_to_allocate = requested_quantity;
-  :Create allocation_list = [];
-  
-  repeat
-    :Get Next Batch from Strategy;
-    
-    if (Batch Has Expiry?) then (yes)
-      :Check if Expired;
-      if (expiry_date < today?) then (yes)
-        :Skip Batch;
-        :Mark Batch as "expired";
-        :Log Expired Batch Alert;
-        note right
-          Expired batches should not
-          be sold. System logs and
-          skips to next batch.
-        end note
-      else (no)
-        :Check Expiry Warning;
-        if (days_until_expiry <= 7?) then (yes)
-          :Flag Warning to User;
-          note right
-            "Warning: This batch expires
-            in X days. Confirm to proceed."
-          end note
-          
-          |Staff/Admin|
-          if (Confirm Use?) then (yes)
-            |System|
-            :Continue with Batch;
-          else (no)
-            :Skip to Next Batch;
-          endif
-        endif
-      endif
-    endif
-    
-    |System|
-    :Calculate Allocation Quantity;
-    :allocate = MIN(remaining_to_allocate, batch.quantity_remaining);
-    
-    :Add to Allocation List;
-    :allocation_list.push({
-      batch_id: batch.batch_id,
-      batch_no: batch.batch_no,
-      lot_no: batch.lot_no,
-      quantity: allocate,
-      unit_cost: batch.purchase_price
-    });
-    
-    :Update remaining_to_allocate;
-    :remaining_to_allocate -= allocate;
-    
-  repeat while (remaining_to_allocate > 0 AND more batches available?)
-  
-  if (Fully Allocated?) then (yes)
-    |System|
-    :Display Allocation Summary;
-    note right
-      Shows:
-      • Batch(es) to be used
-      • Quantity from each batch
-      • Total quantity
-      • Weighted average cost
-      • Any warnings/alerts
-    end note
-    
-    |Staff/Admin|
-    :Review Allocation;
-    
-    if (Approve Allocation?) then (yes)
-      |System|
-      :Begin Transaction;
-      
-      repeat
-        :Process Each Allocated Batch;
-        :batch = allocation_list[i];
-        
-        fork
-          :Update Batch Record;
-          :query = UPDATE batch_tracking
-            SET quantity_remaining = quantity_remaining - ?,
-                quantity_sold = quantity_sold + ?,
-                status = CASE 
-                  WHEN quantity_remaining - ? = 0 
-                  THEN 'depleted' 
-                  ELSE status 
-                END,
-                last_sold_date = NOW(),
-                updated_at = NOW()
-            WHERE batch_id = ?;
-          
-          :Execute Update;
-          :Log rows affected;
-          
-        fork again
-          :Create Batch Transaction Record;
-          :INSERT INTO batch_transactions
-            (batch_id, transaction_type, 
-             quantity, unit_price, 
-             transaction_date, performed_by)
-            VALUES (?, 'sale', ?, ?, NOW(), ?);
-          
-        fork again
-          :Update Inventory Log;
-          :INSERT INTO inventory_log
-            (product_id, batch_id, 
-             transaction_type, quantity_changed,
-             warehouse_id, zone_id,
-             performed_by, notes)
-            VALUES (?, ?, 'outgoing', ?, 
-                    ?, ?, ?, 'FIFO/FEFO sale');
-          
-        fork again
-          if (Batch Depleted?) then (yes)
-            :Log Batch Depletion;
-            :Create alert if needed;
-            
-            if (Part of Multi-Batch?) then (yes)
-              :Note: Sale spanned multiple batches;
-            endif
-          endif
-          
-        fork again
-          if (Serialized Product?) then (yes)
-            :Get Serials from Batch;
-            :SELECT serial_number 
-              FROM serialized_inventory
-              WHERE batch_id = ?
-                AND status = 'available'
-              ORDER BY created_at ASC
-              LIMIT ?;
-            
-            :Mark Serials as Sold;
-            :UPDATE serialized_inventory
-              SET status = 'sold',
-                  sold_date = NOW()
-              WHERE serial_number IN (...);
-            
-            :Create Serial History Entries;
-          endif
-          
-        end fork
-        
-      repeat while (more batches in allocation_list?)
-      
-      :Update Main Inventory Level;
-      :UPDATE specs_db 
-        SET device_inventory = device_inventory - ?
-        WHERE product_id = ?;
-      
-      :Create Receipt Record;
-      :receipt_type = 'SALES_RECEIPT';
-      :Include batch allocation details;
-      :Include COGS calculation;
-      
-      :Commit Transaction;
-      
-      :Generate Receipt;
-      :Include batch traceability info;
-      
-      |Staff/Admin|
-      :Display Success;
-      :Show receipt;
-      :Show batch allocation used;
-      
-      stop
-    else (no)
-      :Cancel Transaction;
-      :Return to batch selection;
-      stop
-    endif
-  else (no)
-    |System|
-    :Calculate Shortfall;
-    :shortfall = remaining_to_allocate;
-    
-    :Display Insufficient Stock Warning;
-    note right
-      "Insufficient stock in available batches
-      
-      Requested: X units
-      Available: Y units
-      Shortfall: Z units
-      
-      Options:
-      1. Reduce sale quantity
-      2. Check other warehouses
-      3. Create backorder
-      4. Cancel transaction"
-    end note
-    
-    |Staff/Admin|
-    if (Action?) then (Reduce Quantity)
-      :Adjust sale quantity;
-      :quantity = available_quantity;
-      :(Restart allocation process);
-    else (Check Other Warehouses)
-      |System|
-      :Query Other Warehouse Stock;
-      :Show availability;
-      
-      |Staff/Admin|
-      if (Transfer Stock?) then (yes)
-        :Initiate Inter-Warehouse Transfer;
-        :(Then restart sale);
-      else (no)
-        :Return to options;
-      endif
-    else (Create Backorder)
-      |System|
-      :Create Backorder Record;
-      :backorder_quantity = shortfall;
-      :Send to procurement;
-      :Notify customer;
-      stop
-    else (Cancel)
-      :Abort Transaction;
-      stop
-    endif
-  endif
-
+  stop
 else (no)
-  |System|
-  :Use Simple Inventory;
+  :Handle Stock Shortfall;
   note right
-    No batch tracking:
-    • Single quantity check
-    • No FIFO/FEFO logic
-    • No batch allocation
-    • Standard inventory decrement
+    If the requested quantity cannot be fulfilled,
+    the system displays a warning and provides options:
+    • Reduce the sale quantity
+    • Transfer stock from another location
+    • Create a backorder
   end note
-  
-  :Check Total Available Quantity;
-  
-  if (Sufficient Stock?) then (yes)
-    :Proceed with Simple Sale;
-    :Decrement inventory;
-    :Create receipt;
-    stop
-  else (no)
-    :Display insufficient stock;
-    :Offer alternatives;
-    stop
-  endif
+  stop
 endif
 
 @enduml
