@@ -1,202 +1,54 @@
 @startuml business-process-sell-stock
 title Business Process: Sell Stock (Outgoing Inventory)
 
-skinparam backgroundColor #f8fafc
-skinparam activityBackgroundColor #dbeafe
-skinparam activityBorderColor #2b6cb0
-skinparam activityFontColor #0f172a
+!include skinparams.puml
 
 |Staff/Admin|
 start
 :Access Sell Stock Page;
 
 |System|
-:Load Warehouses List;
 :Display Sell Form;
 
 |Staff/Admin|
-:Select Warehouse;
-
-|System|
-:Load Zones for Warehouse;
-
-|Staff/Admin|
-:Select Zone;
-:Add Product Line Items;
+:Submit Sell Stock Form;
 note right
-  For each product:
-  • SKU
-  • Requested Quantity
-  • Unit Price
-  • Customer Info (optional)
+  The user provides:
+  • Warehouse and zone info
+  • Product line items, including SKU,
+    quantity, and price.
+  • Optional customer information.
 end note
 
 |System|
-:Validate Input Data;
+:Validate and Process Sale;
+note right
+  The system performs a series of actions:
+  • Validates stock availability
+  • Allocates stock (FIFO/FEFO for batches,
+    or specific serial numbers)
+  • Creates a sales receipt and line items
+  • Decrements inventory levels
+  • Logs the transaction and generates alerts
+  • Updates analytics data
+end note
 
-fork
-  :Check Product Exists;
-  :Validate Quantities > 0;
-fork again
-  :Check Stock Availability;
-  :Query current stock at\nwarehouse-zone level;
-end fork
-
-if (Sufficient Stock?) then (yes)
-  |System|
-  
-  if (Product is Serializable?) then (yes)
-    :Display Serial Selection;
-    
-    |Staff/Admin|
-    :Select Specific Serials;
-    note right
-      Staff can either:
-      • Manually select serials
-      • Auto-select (FIFO)
-      • Scan serial QR codes
-    end note
-    
-    |System|
-    :Validate Serial Selection;
-    :Check serials are "available";
-    :Check serials are at correct location;
-  else (no - Regular Inventory)
-    if (Batch Tracking Enabled?) then (yes)
-      |System|
-      :Apply FIFO/FEFO Strategy;
-      :Select Oldest/Earliest Expiry Batches;
-      :Allocate Quantities from Batches;
-      note right
-        FIFO: First In, First Out
-        FEFO: First Expired, First Out
-        
-        System automatically selects
-        batches based on strategy
-      end note
-    endif
-  endif
-  
-  :Begin Transaction;
-  
-  fork
-    :Create Sale Receipt Record;
-    :Generate Receipt Number;
-    :Set type = "OUT";
-    :Store warehouse_id;
-    :Store zone_id;
-    :Store timestamp;
-    :Store performer_user_id;
-    :Store customer_info (if provided);
-  fork again
-    :Create Receipt Line Items;
-    note right
-      For each product:
-      • Link to receipt_id
-      • Store SKU, quantity, price
-      • Store serial numbers (if applicable)
-      • Store batch allocations (if applicable)
-    end note
-  fork again
-    if (Serialized?) then (yes)
-      :Update Serial Status;
-      repeat
-        :Set status = "sold";
-        :Set sold_date = now;
-        :Clear location;
-        :Create serial_history entry;
-      repeat while (more serials?)
-    endif
-  fork again
-    if (Batch Tracked?) then (yes)
-      :Decrement Batch Quantities;
-      repeat
-        :Reduce batch quantity;
-        if (Batch Depleted?) then (yes)
-          :Set batch status = "depleted";
-        endif
-        :Create batch movement log;
-      repeat while (more batches?)
-    endif
-  fork again
-    :Update Inventory Levels;
-    :Decrement quantity at\nwarehouse-zone level;
-    :Check for negative stock;
-    note right
-      Negative stock is prevented
-      unless explicitly allowed
-      by privileged user
-    end note
-  fork again
-    :Create Inventory Log Entry;
-    :Set action = "sell";
-    :Store before/after quantities;
-    :Store performer_user_id;
-    :Store timestamp;
-    :Store source (warehouse/zone);
-    :Store customer info;
-  fork again
-    :Check Stock Alert Thresholds;
-    if (Low Stock?) then (yes)
-      :Generate Low Stock Alert;
-    endif
-    if (Out of Stock?) then (yes)
-      :Generate Out of Stock Alert;
-    endif
-  fork again
-    :Update Analytics;
-    :Increment sales counters;
-    :Update inventory value;
-    :Update throughput metrics;
-    :Update revenue metrics;
-  end fork
-  
-  :Commit Transaction;
-  
-  |Staff/Admin|
-  :Display Success Message;
-  :Show Receipt Number;
-  :Show Updated Stock Levels;
-  :Option to Print Receipt;
-  
-  if (Print Receipt?) then (yes)
-    |System|
-    :Generate Sale Receipt Document;
-    :Include customer info;
-    :Include all line items;
-    :Include serials/batches;
-    :Include QR code;
-    :Calculate totals;
-    
-    |Staff/Admin|
-    :Print Receipt;
-  endif
-  
+if (Processing Successful?) then (yes)
+  :Display Success and Options;
+  note right
+    A success message with the new receipt
+    number is displayed, along with options
+    to print the sales receipt.
+  end note
   stop
-  
-else (no - Insufficient Stock)
-  |System|
-  :Display Stock Shortage Message;
-  :Show Available Quantity;
-  :Show Required Quantity;
-  
-  |Staff/Admin|
-  if (Create Backorder?) then (yes)
-    |System|
-    :Create Backorder Record;
-    :Set status = "pending";
-    :Store requested quantity;
-    :Store available quantity;
-    :Notify warehouse staff;
-    
-    |Staff/Admin|
-    :Display Backorder Created;
-    stop
-  else (no)
-    :Adjust Quantities;
-    :Resubmit Sale;
-    stop
-  endif
+else (no)
+  :Display Stock Shortage;
+  note right
+    If stock is insufficient, an error
+    is shown, with an option to create a
+    backorder for the missing items.
+  end note
+  stop
 endif
 
 @enduml

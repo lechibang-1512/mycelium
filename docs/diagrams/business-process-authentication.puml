@@ -1,10 +1,7 @@
 @startuml business-process-authentication
 title Business Process: User Authentication & Session Management
 
-skinparam backgroundColor #f8fafc
-skinparam activityBackgroundColor #e0f2fe
-skinparam activityBorderColor #2b6cb0
-skinparam activityFontColor #0f172a
+!include skinparams.puml
 
 |User|
 start
@@ -12,74 +9,46 @@ start
 
 |System|
 :Display Login Form;
-:Enable CSRF Protection;
-:Initialize Rate Limiter;
+note right
+  • CSRF token is generated
+  • Rate limiter is initialized
+end note
 
 |User|
-:Enter Username/Email;
-:Enter Password;
 :Submit Credentials;
 
 |System|
-:Validate CSRF Token;
+:Attempt Login;
+note right
+  A series of security checks are performed:
+  • CSRF token validation
+  • Rate limit check
+  • User and account status lookup
+  • Password verification (bcrypt)
+end note
 
-if (CSRF Valid?) then (yes)
-  :Check Rate Limit;
+if (Login Successful?) then (yes)
+  :Establish Session;
+  note right
+    • Reset failed login attempts
+    • Generate secure session token
+    • Store session in database
+    • Create HttpOnly cookie
+    • Log successful login event
+  end note
   
-  if (Rate Limit OK?) then (yes)
-    :Query User from security_db;
-    
-    if (User Exists?) then (yes)
-      :Check Account Status;
-      
-      if (Account Active?) then (yes)
-        :Verify Password\n(bcrypt compare);
-        
-        if (Password Valid?) then (yes)
-          :Reset Failed Attempts;
-          :Generate Session Token;
-          :Store Session in DB;
-          :Create HttpOnly Cookie;
-          :Log Security Event\n(Successful Login);
-          
-          |User|
-          :Redirect to Dashboard;
-          stop
-        else (no)
-          :Increment Failed Attempts;
-          
-          if (Max Attempts Reached?) then (yes)
-            :Lock Account;
-            :Log Security Event\n(Account Locked);
-            :Notify Admin (optional);
-          endif
-          
-          :Log Security Event\n(Failed Login);
-          :Display Error Message;
-          stop
-        endif
-      else (no)
-        :Log Security Event\n(Inactive Account);
-        :Display "Account Inactive";
-        stop
-      endif
-    else (no)
-      :Log Security Event\n(User Not Found);
-      :Display Generic Error;
-      note right
-        Generic error to prevent
-        user enumeration attacks
-      end note
-      stop
-    endif
-  else (no)
-    :Log Security Event\n(Rate Limited);
-    :Display Rate Limit Error;
-    stop
-  endif
+  |User|
+  :Redirect to Dashboard;
+  stop
 else (no)
-  :Log Security Event\n(CSRF Failed);
-  :Display CSRF Error;
+  :Handle Failed Login;
+  note right
+    On failure, the system will:
+    • Log the security event (e.g., failed CSRF, rate limit, bad password)
+    • Increment failed attempts
+    • Lock account if max attempts is reached
+    • Display a generic error to the user
+  end note
   stop
 endif
 

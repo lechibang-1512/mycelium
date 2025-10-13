@@ -1,158 +1,54 @@
 @startuml business-process-receive-stock
 title Business Process: Receive Stock (Incoming Inventory)
 
-skinparam backgroundColor #f8fafc
-skinparam activityBackgroundColor #dbeafe
-skinparam activityBorderColor #2b6cb0
-skinparam activityFontColor #0f172a
+!include skinparams.puml
 
 |Staff/Admin|
 start
 :Access Receive Stock Page;
 
 |System|
-:Load Warehouses List;
-:Load Suppliers List;
 :Display Receive Form;
 
 |Staff/Admin|
-:Select Supplier;
-:Select Warehouse;
-
-|System|
-:Load Zones for Warehouse;
-
-|Staff/Admin|
-:Select Zone/Bin Location;
-:Add Product Line Items;
+:Submit Receive Stock Form;
 note right
-  For each product:
-  • SKU
-  • Quantity
-  • Unit Cost
-  • Batch Number (optional)
-  • Expiry Date (optional)
-  • Serial Numbers (if serializable)
+  The user provides:
+  • Supplier and warehouse/zone info
+  • Product line items, including SKU,
+    quantity, cost, and optional batch
+    or serial number details.
 end note
 
 |System|
-fork
-  :Validate Product Data;
-  :Check SKU exists;
-  :Validate quantities > 0;
-fork again
-  :Validate Zone Capacity;
-  :Check available space;
-fork again
-  if (Product is Serializable?) then (yes)
-    :Validate Serial Numbers;
-    :Check uniqueness;
-  endif
-end fork
+:Validate and Process Stock;
+note right
+  The system performs a series of actions:
+  • Validates all submitted data
+  • Creates a receipt record and line items
+  • Updates inventory levels, batches, and serials
+  • Logs the transaction
+  • Updates analytics data
+end note
 
-if (All Validations Pass?) then (yes)
-  |System|
-  :Begin Transaction;
-  
-  fork
-    :Create Receipt Record;
-    :Generate Receipt Number;
-    :Set type = "IN";
-    :Store supplier_id;
-    :Store warehouse_id;
-    :Store zone_id;
-    :Store timestamp;
-    :Store performer_user_id;
-  fork again
-    :Create Receipt Line Items;
-    note right
-      For each product:
-      • Link to receipt_id
-      • Store SKU, quantity, cost
-      • Store batch info if applicable
-    end note
-  fork again
-    if (Batch Tracking?) then (yes)
-      :Create/Update Batch Record;
-      :Store batch_number;
-      :Store lot_number;
-      :Store expiry_date;
-      :Store initial_quantity;
-      :Set status = "active";
-    endif
-  fork again
-    if (Serial Numbers?) then (yes)
-      :Create Serial Records;
-      repeat
-        :Insert serial_number;
-        :Link to batch_id;
-        :Set status = "available";
-        :Set location (warehouse/zone/bin);
-        :Create serial_history entry;
-      repeat while (more serials?)
-    endif
-  fork again
-    :Update Inventory Levels;
-    :Increment quantity at\nwarehouse-zone-bin level;
-  fork again
-    :Create Inventory Log Entry;
-    :Set action = "receive";
-    :Store before/after quantities;
-    :Store performer_user_id;
-    :Store timestamp;
-    :Store source (supplier);
-    :Store destination (warehouse/zone/bin);
-  fork again
-    if (Generate QR Codes?) then (yes)
-      :Generate QR for Receipt;
-      :Generate QR for Batch (if applicable);
-      :Generate QR for Serials (if applicable);
-    endif
-  fork again
-    :Update Analytics;
-    :Increment receipt counters;
-    :Update inventory value;
-    :Update warehouse utilization;
-  end fork
-  
-  :Commit Transaction;
-  
-  |Staff/Admin|
-  :Display Success Message;
-  :Show Receipt Number;
-  :Option to Print Receipt;
-  :Option to Generate Labels;
-  
-  if (Print Receipt?) then (yes)
-    |System|
-    :Generate Receipt Document;
-    :Include all line items;
-    :Include QR code;
-    :Format for printing;
+if (Processing Successful?) then (yes)
+  :Display Success and Options;
+  note right
+    A success message with the new receipt
+    number is displayed.
     
-    |Staff/Admin|
-    :Print Receipt;
-  endif
-  
-  if (Generate Labels?) then (yes)
-    |System|
-    :Generate Product Labels;
-    :Generate Location Labels;
-    :Generate Serial Labels;
-    
-    |Staff/Admin|
-    :Print Labels;
-  endif
-  
+    Options are provided to:
+    • Print the receipt
+    • Generate and print labels
+  end note
   stop
 else (no)
-  |System|
-  :Rollback Transaction;
   :Display Validation Errors;
-  
-  |Staff/Admin|
-  :Correct Errors;
-  :Resubmit Form;
+  note right
+    If validation fails, specific errors
+    are shown, allowing the user to
+    correct the form and resubmit.
+  end note
   stop
 endif
 

@@ -1,130 +1,67 @@
 @startuml activity-zone-distribution
 title Activity Diagram: Zone Distribution & Optimization
 
-skinparam backgroundColor #f8fafc
-skinparam activityBackgroundColor #dbeafe
-skinparam activityBorderColor #2b6cb0
-skinparam activityFontColor #0f172a
+!include skinparams.puml
 
 |Staff/Admin|
 start
-:Access Zone Distribution;
-:Select Warehouse & Product;
+:Access Zone Distribution Page;
 
 |System|
-:Load Zones & Current Distribution;
+:Load and Display Distribution;
 note right
-  Parallel loading:
-  • Zone details (name, type, capacity)
-  • Product locations by zone
-  • Distribution metrics
+  The system loads the current distribution
+  of a selected product across all zones
+  in a warehouse, displaying it visually
+  with a zone map and utilization charts.
 end note
-
-:Calculate Metrics;
-note right
-  • Total quantity across zones
-  • Zones in use
-  • Distribution variance
-  • Utilization percentages
-end note
-
-:Display Distribution Dashboard;
 
 |Staff/Admin|
-if (Select Action?) then (View/Analyze)
-  |System|
-  :Show Zone Map & Charts;
+:Choose Action;
+
+if (Action?) then (Optimize Distribution)
+  :Select Optimization Strategy;
   note right
-    • Visual zone map (color-coded)
-    • Distribution table
-    • Utilization heatmap
-    • Recommendations
+    Users can choose from several strategies:
+    • Even Distribution
+    • Capacity-Based
+    • Turnover-Based
+  end note
+  
+  |System|
+  :Generate and Display Movement Plan;
+  note right
+    The system calculates the optimal
+    distribution and presents a clear plan
+    of required inventory movements.
+  end note
+  
+  |Staff/Admin|
+  :Approve and Execute Plan;
+  note right
+    The user can approve the plan to be
+    executed immediately or schedule it
+    to run at a later time.
   end note
   stop
 
-elseif (Optimize) then
-  :Select Optimization Strategy;
+else (Manual Transfer)
+  :Specify and Execute Transfer;
   note right
-    Strategies:
-    • Even Distribution
-    • Capacity-Based
-    • Type-Based Priority
-    • Turnover-Based
-    • Custom Rules
+    Users can perform a simple manual
+    transfer of a specific quantity of a
+    product from one zone to another.
   end note
-  
-  |System|
-  :Calculate Optimized Distribution;
-  :Generate Movement Plan;
-  note right
-    Plan includes:
-    • Required moves (source → destination)
-    • Estimated time & cost
-    • Efficiency improvement
-    • Movement sequence
-  end note
-  
-  :Display Optimization Plan;
-  
-  |Staff/Admin|
-  if (Approve?) then (yes)
-    if (Execute Now?) then (yes)
-      |System|
-      :Begin Execution;
-      
-      repeat
-        :Show Next Move Instruction;
-        |Staff/Admin|
-        :Perform Physical Move;
-        :Scan QR Codes & Confirm;
-        |System|
-        :Update Inventory Locations;
-        :Log Movement;
-        :Update Progress;
-      repeat while (More moves?)
-      
-      :Display Summary;
-      stop
-      
-    else (Schedule)
-      |System|
-      :Create Scheduled Task;
-      :Send Notification;
-      stop
-    endif
-  else (no)
-    :Modify Parameters;
-    backward:Return to strategy;
-  endif
-
-elseif (Manual Transfer) then
-  |Staff/Admin|
-  :Specify Source & Destination;
-  :Enter Quantity;
-  
-  |System|
-  :Validate Transfer;
-  
-  if (Valid?) then (yes)
-    :Execute Transfer;
-    :Update Locations & Log;
-    :Display Success;
-  else (no)
-    :Show Errors;
-  endif
   stop
 
 else (View Analytics)
   |System|
-  :Generate Analytics;
+  :Display Zone Analytics;
   note right
-    • Zone efficiency metrics
-    • Turnover rates
-    • Activity heatmap
-    • Bottleneck identification
-    • Historical trends
+    The system shows detailed analytics,
+    including zone efficiency, turnover rates,
+    and activity heatmaps to identify bottlenecks.
   end note
-  :Display Analytics Dashboard;
   stop
 endif
 
