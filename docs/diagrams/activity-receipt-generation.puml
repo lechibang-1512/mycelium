@@ -1,215 +1,639 @@
-@startuml activity-receipt-generation
-title Activity Diagram: Receipt Generation & Multi-Format Export
+@startuml activity-receipt-generation@startuml activity-receipt-generation@startuml activity-receipt-generation
+
+title Activity Diagram: Receipt Generation & Export
+
+title Activity Diagram: Receipt Generation & Exporttitle Activity Diagram: Receipt Generation & Multi-Format Export
 
 skinparam backgroundColor #f8fafc
-skinparam activityBackgroundColor #dbeafe
-skinparam activityBorderColor #2b6cb0
-skinparam activityFontColor #0f172a
 
-|Staff/Admin|
+skinparam activityBackgroundColor #dbeafe
+
+skinparam activityBorderColor #2b6cb0
+
+skinparam activityFontColor #0f172askinparam backgroundColor #f8fafcskinparam backgroundColor #f8fafc
+
+
+
+|Staff/Admin|skinparam activityBackgroundColor #dbeafeskinparam activityBackgroundColor #dbeafe
+
 start
 
-if (Trigger?) then (During Transaction)
-  
-  |System|
-  :Transaction Completed;
+skinparam activityBorderColor #2b6cb0skinparam activityBorderColor #2b6cb0
+
+if (Trigger?) then (After Transaction)
+
+  |System|skinparam activityFontColor #0f172askinparam activityFontColor #0f172a
+
   :Capture Transaction Data;
-  
-  fork
-    :Gather Product Information;
-    :product_id, name, SKU;
-    :quantities, prices;
-  fork again
-    :Gather Financial Details;
-    :subtotal, taxes, fees;
-    :discounts, total;
-  fork again
-    :Gather Party Information;
-    if (Purchase Receipt?) then (yes)
-      :supplier_id, supplier_name;
-      :supplier contact info;
-    else (Sales Receipt)
-      :customer_name, customer_email;
-      :customer_phone;
-    endif
-  fork again
-    :Gather Warehouse/Location Data;
-    :warehouse_id, zone_id;
-    :bin location;
-  fork again
-    if (Batch Tracked?) then (yes)
-      :Gather Batch Information;
-      :batch_no, lot_no;
-      :expiry_date;
-    endif
-  fork again
-    if (Serialized?) then (yes)
-      :Gather Serial Numbers;
-      :List of all serials;
-    endif
-  fork again
-    :Capture Metadata;
-    :transaction_date;
-    :performed_by_user_id;
-    :PO_number (if applicable);
-    :notes;
-  end fork
-  
-  |System|
-  :Check Receipt Generation Flag;
-  
-  if (Generate Receipt Enabled?) then (yes)
-    
-    :Create Receipt Record;
-    
-    fork
-      :Generate Receipt ID;
-      note right
-        Format depends on type:
-        • Purchase: PUR-{timestamp}-{random}
-        • Sales: SAL-{timestamp}-{random}
-        • Return: RET-{timestamp}-{random}
-        • Transfer: TRF-{timestamp}-{random}
-      end note
-      
-    fork again
-      :Store Receipt Header;
-      :INSERT INTO receipts
-        (receipt_id, receipt_type,
-         receipt_data, product_id,
-         supplier_id, transaction_date,
-         subtotal, tax_amount, 
-         total_amount, notes,
-         created_by, created_at)
-        VALUES (...);
-      
-    fork again
-      if (Multiple Line Items?) then (yes)
-        :Store Receipt Line Items;
-        repeat
-          :INSERT INTO receipt_line_items
-            (receipt_id, product_id,
-             quantity, unit_price,
-             line_total, batch_no,
-             serial_numbers)
-            VALUES (...);
-        repeat while (more items?)
-      endif
-      
-    fork again
-      :Generate QR Code for Receipt;
-      note right
-        QR Code contains:
-        • Receipt ID
-        • Receipt Type
-        • Date
-        • Total Amount
-        • Verification Hash
-      end note
-      
-    fork again
-      :Log Receipt Creation;
-      :INSERT INTO inventory_log
-        (transaction_type, receipt_id, ...)
-        VALUES ('receipt_generated', ...);
-      
-    end fork
-    
-    :Receipt Record Created;
-    
-  endif
 
-else (Manual Receipt Generation)
-  
-  |Staff/Admin|
-  :Navigate to Receipts;
-  :Select Transaction/Receipt;
-  :Click "Generate/Regenerate Receipt";
-  
-  |System|
-  :Load Transaction Data;
-  :Load Receipt Record;
-  
-else (Bulk Export)
-  
-  |Staff/Admin|
-  :Navigate to Receipts;
-  :Apply Filters;
   note right
-    Filter options:
-    • Date range
-    • Receipt type
-    • Customer/Supplier
-    • Warehouse
-    • Amount range
-    • Status
+
+    • Product details (ID, name, SKU, quantities, prices)
+
+    • Financial details (subtotal, taxes, total)|Staff/Admin||Staff/Admin|
+
+    • Party info (supplier or customer)
+
+    • Location (warehouse, zone, bin)startstart
+
+    • Batch/serial numbers (if applicable)
+
+    • Metadata (date, user, PO number, notes)
+
   end note
-  :Select Receipts;
-  :Click "Bulk Export";
-  
-  |System|
-  :Load Multiple Receipts;
-  :Aggregate receipt data;
-  
-endif
 
-|System|
-:Display Format Selection;
+  if (Trigger?) then (After Transaction)if (Trigger?) then (During Transaction)
 
-|Staff/Admin|
-:Choose Export Format;
+  :Generate Receipt ID;
 
-|System|
-if (Format?) then (Print View)
+  note right  |System|  
+
+    Format: {TYPE}-{timestamp}-{random}
+
+    Types: PUR, SAL, RET, TRF  :Capture Transaction Data;  |System|
+
+  end note
+
+    note right  :Transaction Completed;
+
+  :Store Receipt in Database;
+
+  note right    • Product details (ID, name, SKU, quantities, prices)  :Capture Transaction Data;
+
+    • Insert receipt header
+
+    • Insert line items    • Financial details (subtotal, taxes, total)  
+
+    • Generate QR code
+
+  end note    • Party info (supplier or customer)  fork
+
   
-  :Generate HTML Print View;
-  
-  fork
-    :Create Receipt Header;
-    :Company logo & info;
-    :Receipt type & number;
-    :Date & time;
-  fork again
-    :Create Customer/Supplier Section;
-    :Name, address, contact;
-  fork again
-    :Create Line Items Table;
-    :Columns: Item, Qty, Price, Total;
-    :Include batch/serial if applicable;
-  fork again
-    :Create Financial Summary;
-    :Subtotal;
-    :Taxes breakdown;
-    :Discounts;
-    :Fees;
-    :Total (bold/large);
-  fork again
-    :Add QR Code;
-    :Embed as <img> base64;
-  fork again
-    :Add Footer;
-    :Terms & conditions;
-    :Thank you message;
-    :Company contact info;
-  fork again
-    :Apply Print Styles;
-    :CSS for print media;
-    :Page breaks;
-    :Font sizes;
-  end fork
-  
-  :Render in Browser;
-  :Trigger Print Dialog;
-  
-  |Staff/Admin|
-  :Print Receipt;
-  :Or Save as PDF from browser;
-  
+
+  :Auto-Display Receipt;    • Location (warehouse, zone, bin)    :Gather Product Information;
+
   stop
 
-else (PDF Export)
+    • Batch/serial numbers (if applicable)    :product_id, name, SKU;
+
+elseif (Manual Request) then
+
+  |Staff/Admin|    • Metadata (date, user, PO number, notes)    :quantities, prices;
+
+  :Navigate to Receipts;
+
+  :Select Receipt(s);  end note  fork again
+
+  :Choose Export Action;
+
+        :Gather Financial Details;
+
+  |System|
+
+  if (Export Type?) then (Single Receipt)  :Generate Receipt ID;    :subtotal, taxes, fees;
+
+    :Load Receipt Data;
+
+      note right    :discounts, total;
+
+    |Staff/Admin|
+
+    :Select Format;    Format: {TYPE}-{timestamp}-{random}  fork again
+
+    
+
+    |System|    Types: PUR, SAL, RET, TRF    :Gather Party Information;
+
+    if (Format?) then (View/Print)
+
+      :Render HTML Receipt;  end note    if (Purchase Receipt?) then (yes)
+
+      note right
+
+        • Receipt details        :supplier_id, supplier_name;
+
+        • Line items table
+
+        • Totals  :Store Receipt in Database;      :supplier contact info;
+
+        • QR code
+
+        • Print button  note right    else (Sales Receipt)
+
+      end note
+
+      stop    • Insert receipt header      :customer_name, customer_email;
+
+      
+
+    elseif (PDF) then    • Insert line items      :customer_phone;
+
+      :Generate PDF Receipt;
+
+      note right    • Generate QR code    endif
+
+        • Use PDF library
+
+        • Format for printing  end note  fork again
+
+        • Include QR code
+
+        • Add branding/logo      :Gather Warehouse/Location Data;
+
+      end note
+
+      :Send PDF to Browser;  :Auto-Display Receipt;    :warehouse_id, zone_id;
+
+      stop
+
+        stop    :bin location;
+
+    elseif (Email) then
+
+      :Generate PDF Receipt;  fork again
+
+      |Staff/Admin|
+
+      :Enter Email Address;elseif (Manual Request) then    if (Batch Tracked?) then (yes)
+
+      |System|
+
+      :Send Email with PDF;  |Staff/Admin|      :Gather Batch Information;
+
+      note right
+
+        • Attach PDF  :Navigate to Receipts;      :batch_no, lot_no;
+
+        • Professional template
+
+        • Company branding  :Select Receipt(s);      :expiry_date;
+
+      end note
+
+      :Display Success;  :Choose Export Action;    endif
+
+      stop
+
+          fork again
+
+    else (JSON)
+
+      :Generate JSON Export;  |System|    if (Serialized?) then (yes)
+
+      note right
+
+        Complete receipt data  if (Export Type?) then (Single Receipt)      :Gather Serial Numbers;
+
+        in structured format
+
+      end note    :Load Receipt Data;      :List of all serials;
+
+      :Send to Browser;
+
+      stop        endif
+
+    endif
+
+        |Staff/Admin|  fork again
+
+  elseif (Multiple Receipts) then
+
+    :Load Multiple Receipts;    :Select Format;    :Capture Metadata;
+
+    
+
+    |Staff/Admin|        :transaction_date;
+
+    :Select Export Format;
+
+        |System|    :performed_by_user_id;
+
+    |System|
+
+    if (Format?) then (PDF - Combined)    if (Format?) then (View/Print)    :PO_number (if applicable);
+
+      :Generate Multi-Page PDF;
+
+      note right      :Render HTML Receipt;    :notes;
+
+        • One receipt per page
+
+        • Table of contents      note right  end fork
+
+        • Page numbers
+
+      end note        • Receipt details  
+
+      :Send to Browser;
+
+      stop        • Line items table  |System|
+
+      
+
+    elseif (CSV) then        • Totals  :Check Receipt Generation Flag;
+
+      :Generate CSV Export;
+
+      note right        • QR code  
+
+        • One row per receipt
+
+        • Or one row per line item        • Print button  if (Generate Receipt Enabled?) then (yes)
+
+        • All key fields
+
+      end note      end note    
+
+      :Send to Browser;
+
+      stop      stop    :Create Receipt Record;
+
+      
+
+    elseif (Excel) then          
+
+      :Generate Excel Workbook;
+
+      note right    elseif (PDF) then    fork
+
+        • Receipts summary sheet
+
+        • Line items detail sheet      :Generate PDF Receipt;      :Generate Receipt ID;
+
+        • Charts/pivot tables
+
+        • Formatted columns      note right      note right
+
+      end note
+
+      :Send to Browser;        • Use PDF library        Format depends on type:
+
+      stop
+
+              • Format for printing        • Purchase: PUR-{timestamp}-{random}
+
+    else (JSON)
+
+      :Generate JSON Array;        • Include QR code        • Sales: SAL-{timestamp}-{random}
+
+      :Send to Browser;
+
+      stop        • Add branding/logo        • Return: RET-{timestamp}-{random}
+
+    endif
+
+          end note        • Transfer: TRF-{timestamp}-{random}
+
+  else (Bulk Email)
+
+    :Load Selected Receipts;      :Send PDF to Browser;      end note
+
+    
+
+    repeat      stop      
+
+      :Get Receipt;
+
+      :Lookup Recipient Email;          fork again
+
+      
+
+      if (Email Found?) then (yes)    elseif (Email) then      :Store Receipt Header;
+
+        :Generate PDF;
+
+        :Send Email;      :Generate PDF Receipt;      :INSERT INTO receipts
+
+        :Mark as Sent;
+
+      else (no)      |Staff/Admin|        (receipt_id, receipt_type,
+
+        :Log Error;
+
+      endif      :Enter Email Address;         receipt_data, product_id,
+
+    repeat while (More receipts?)
+
+          |System|         supplier_id, transaction_date,
+
+    :Display Summary;
+
+    note right      :Send Email with PDF;         subtotal, tax_amount, 
+
+      X emails sent
+
+      Y failed (list errors)      note right         total_amount, notes,
+
+    end note
+
+    stop        • Attach PDF         created_by, created_at)
+
+  endif
+
+        • Professional template        VALUES (...);
+
+else (Analytics Export)
+
+  |Staff/Admin|        • Company branding      
+
+  :Navigate to Analytics;
+
+  :Configure Report;      end note    fork again
+
+  note right
+
+    • Date range      :Display Success;      if (Multiple Line Items?) then (yes)
+
+    • Filters
+
+    • Metrics to include      stop        :Store Receipt Line Items;
+
+  end note
+
+                repeat
+
+  |System|
+
+  :Query Receipt Data;    else (JSON)          :INSERT INTO receipt_line_items
+
+  :Aggregate Metrics;
+
+        :Generate JSON Export;            (receipt_id, product_id,
+
+  |Staff/Admin|
+
+  :Select Export Format;      note right             quantity, unit_price,
+
   
-  :Initialize PDF Generator;
+
+  |System|        Complete receipt data             line_total, batch_no,
+
+  if (Format?) then (Excel)
+
+    :Generate Analytics Workbook;        in structured format             serial_numbers)
+
+    note right
+
+      • Summary dashboard      end note            VALUES (...);
+
+      • Detailed data
+
+      • Charts & graphs      :Send to Browser;        repeat while (more items?)
+
+      • Pivot tables
+
+    end note      stop      endif
+
+    stop
+
+        endif      
+
+  elseif (PDF) then
+
+    :Generate Report PDF;        fork again
+
+    note right
+
+      • Executive summary  elseif (Multiple Receipts) then      :Generate QR Code for Receipt;
+
+      • Charts & visualizations
+
+      • Data tables    :Load Multiple Receipts;      note right
+
+      • Professional layout
+
+    end note            QR Code contains:
+
+    stop
+
+        |Staff/Admin|        • Receipt ID
+
+  else (CSV/JSON)
+
+    :Generate Data Export;    :Select Export Format;        • Receipt Type
+
+    stop
+
+  endif            • Date
+
+endif
+
+    |System|        • Total Amount
+
+@enduml
+
+    if (Format?) then (PDF - Combined)        • Verification Hash
+
+      :Generate Multi-Page PDF;      end note
+
+      note right      
+
+        • One receipt per page    fork again
+
+        • Table of contents      :Log Receipt Creation;
+
+        • Page numbers      :INSERT INTO inventory_log
+
+      end note        (transaction_type, receipt_id, ...)
+
+      :Send to Browser;        VALUES ('receipt_generated', ...);
+
+      stop      
+
+          end fork
+
+    elseif (CSV) then    
+
+      :Generate CSV Export;    :Receipt Record Created;
+
+      note right    
+
+        • One row per receipt  endif
+
+        • Or one row per line item
+
+        • All key fieldselse (Manual Receipt Generation)
+
+      end note  
+
+      :Send to Browser;  |Staff/Admin|
+
+      stop  :Navigate to Receipts;
+
+        :Select Transaction/Receipt;
+
+    elseif (Excel) then  :Click "Generate/Regenerate Receipt";
+
+      :Generate Excel Workbook;  
+
+      note right  |System|
+
+        • Receipts summary sheet  :Load Transaction Data;
+
+        • Line items detail sheet  :Load Receipt Record;
+
+        • Charts/pivot tables  
+
+        • Formatted columnselse (Bulk Export)
+
+      end note  
+
+      :Send to Browser;  |Staff/Admin|
+
+      stop  :Navigate to Receipts;
+
+        :Apply Filters;
+
+    else (JSON)  note right
+
+      :Generate JSON Array;    Filter options:
+
+      :Send to Browser;    • Date range
+
+      stop    • Receipt type
+
+    endif    • Customer/Supplier
+
+        • Warehouse
+
+  else (Bulk Email)    • Amount range
+
+    :Load Selected Receipts;    • Status
+
+      end note
+
+    repeat  :Select Receipts;
+
+      :Get Receipt;  :Click "Bulk Export";
+
+      :Lookup Recipient Email;  
+
+        |System|
+
+      if (Email Found?) then (yes)  :Load Multiple Receipts;
+
+        :Generate PDF;  :Aggregate receipt data;
+
+        :Send Email;  
+
+        :Mark as Sent;endif
+
+      else (no)
+
+        :Log Error;|System|
+
+      endif:Display Format Selection;
+
+    repeat while (More receipts?)
+
+    |Staff/Admin|
+
+    :Display Summary;:Choose Export Format;
+
+    note right
+
+      X emails sent|System|
+
+      Y failed (list errors)if (Format?) then (Print View)
+
+    end note  
+
+    stop  :Generate HTML Print View;
+
+  endif  
+
+  fork
+
+else (Analytics Export)    :Create Receipt Header;
+
+  |Staff/Admin|    :Company logo & info;
+
+  :Navigate to Analytics;    :Receipt type & number;
+
+  :Configure Report;    :Date & time;
+
+  note right  fork again
+
+    • Date range    :Create Customer/Supplier Section;
+
+    • Filters    :Name, address, contact;
+
+    • Metrics to include  fork again
+
+  end note    :Create Line Items Table;
+
+      :Columns: Item, Qty, Price, Total;
+
+  |System|    :Include batch/serial if applicable;
+
+  :Query Receipt Data;  fork again
+
+  :Aggregate Metrics;    :Create Financial Summary;
+
+      :Subtotal;
+
+  |Staff/Admin|    :Taxes breakdown;
+
+  :Select Export Format;    :Discounts;
+
+      :Fees;
+
+  |System|    :Total (bold/large);
+
+  if (Format?) then (Excel)  fork again
+
+    :Generate Analytics Workbook;    :Add QR Code;
+
+    note right    :Embed as <img> base64;
+
+      • Summary dashboard  fork again
+
+      • Detailed data    :Add Footer;
+
+      • Charts & graphs    :Terms & conditions;
+
+      • Pivot tables    :Thank you message;
+
+    end note    :Company contact info;
+
+    stop  fork again
+
+        :Apply Print Styles;
+
+  elseif (PDF) then    :CSS for print media;
+
+    :Generate Report PDF;    :Page breaks;
+
+    note right    :Font sizes;
+
+      • Executive summary  end fork
+
+      • Charts & visualizations  
+
+      • Data tables  :Render in Browser;
+
+      • Professional layout  :Trigger Print Dialog;
+
+    end note  
+
+    stop  |Staff/Admin|
+
+      :Print Receipt;
+
+  else (CSV/JSON)  :Or Save as PDF from browser;
+
+    :Generate Data Export;  
+
+    stop  stop
+
+  endif
+
+endifelse (PDF Export)
+
+  
+
+@enduml  :Initialize PDF Generator;
+
   note right
     Using library like:
     • PDFKit

@@ -1,0 +1,337 @@
+@startuml system-components
+title Mycelium Inventory Management System - Component Architecture
+
+skinparam backgroundColor #f8fafc
+skinparam component {
+  BackgroundColor #e0f2fe
+  BorderColor #2b6cb0
+  FontColor #0f172a
+}
+skinparam package {
+  BackgroundColor #f0f9ff
+  BorderColor #2563eb
+  FontColor #0f172a
+}
+skinparam database {
+  BackgroundColor #fef3c7
+  BorderColor #dc2626
+}
+
+' ===== Client Layer =====
+package "Client Layer" #dcfce7 {
+  [Browser Client] as Browser
+  component "EJS Templates" as EJS {
+    [dashboard.ejs]
+    [login.ejs]
+    [inventory views]
+    [warehouse views]
+    [partials]
+  }
+  component "Client JavaScript" as ClientJS {
+    [QR Scanner]
+    [Form Validation]
+    [Charts & Analytics]
+    [Interactive UI]
+  }
+  component "Static Assets" as Assets {
+    [style.css]
+    [images]
+    [QR codes]
+  }
+}
+
+' ===== Application Server =====
+package "Application Server (Node.js + Express)" #dbeafe {
+  
+  ' Main Server
+  component "server.js" as Server {
+    [Express App]
+    [Server Config]
+    [Error Handler]
+  }
+  
+  ' Routes Layer
+  package "Routes" #e0f2fe {
+    component [auth.js] as AuthRoute
+    component [users.js] as UsersRoute
+    component [dashboard.js] as DashboardRoute
+    component [inventory.js] as InventoryRoute
+    component [phones.js] as PhonesRoute
+    component [warehouses.js] as WarehousesRoute
+    component [suppliers.js] as SuppliersRoute
+    component [receipts.js] as ReceiptsRoute
+    component [qrcode.js] as QRCodeRoute
+    component [analytics.js] as AnalyticsRoute
+    component [reports.js] as ReportsRoute
+  }
+  
+  ' Middleware Layer
+  package "Middleware" #e0f2fe {
+    component [auth.js] as AuthMW {
+      [isAuthenticated]
+      [isStaffOrAdmin]
+      [isAdmin]
+      [checkOwnership]
+    }
+    component [csrfProtection.js] as CSRF
+    component [rateLimiting.js] as RateLimit
+    component [security.js] as SecurityMW
+    component [inputValidation.js] as Validation
+    component [errorHandler.js] as ErrorHandler
+    component [DynamicSessionMiddleware.js] as SessionMW
+  }
+  
+  ' Services Layer
+  package "Services" #e0f2fe {
+    component "Core Services" as CoreServices {
+      [WarehouseService.js]
+      [ReceiptService.js]
+      [QRCodeService.js]
+    }
+    component "Analytics Services" as AnalyticsServices {
+      [AnalyticsService.js]
+      [SalesAnalyticsService.js]
+      [WarehouseAnalyticsService.js]
+    }
+    component "Security Services" as SecurityServices {
+      [SessionManagementService.js]
+      [DynamicSessionSecretService.js]
+      [TokenInvalidationService.js]
+      [SecurityLogger.js]
+    }
+    component "Validation Services" as ValidationServices {
+      [UserValidationService.js]
+      [BaseValidationService.js]
+      [PasswordValidator.js]
+      [SanitizationService.js]
+    }
+    component "Notification Services" as NotificationServices {
+      [notifications.js]
+    }
+    component "Cleanup Services" as CleanupServices {
+      [CleanupManager.js]
+    }
+  }
+  
+  ' Configuration
+  package "Configuration" #e0f2fe {
+    component [database.js] as DBConfig
+    component [auth-database.js] as AuthDBConfig
+    component [analytics.js] as AnalyticsConfig
+    component [.env] as EnvConfig
+  }
+}
+
+' ===== Data Layer =====
+package "Data Layer (MariaDB)" #fef3c7 {
+  database "master_specs_db" as MasterDB {
+    [specs_db]
+    [warehouses]
+    [zones]
+    [bin_locations]
+    [inventory_batches]
+    [serialized_inventory]
+    [serial_history]
+    [receipts]
+    [receipt_line_items]
+    [transfers]
+    [stock_alerts]
+    [inventory_log]
+    [warehouse_product_locations]
+  }
+  
+  database "suppliers_db" as SuppliersDB {
+    [suppliers]
+    [supplier_contacts]
+  }
+  
+  database "security_db" as SecurityDB {
+    [users]
+    [security_events]
+    [token_invalidation]
+    [session_secrets]
+    [password_reset_tokens]
+  }
+}
+
+' ===== External Services =====
+package "External Services" {
+  component [Email Service] as Email
+  component [SMS Service] as SMS
+  component [QR Code Library] as QRLib
+  component [PDF Generator] as PDF
+  component [Excel Generator] as Excel
+}
+
+' ===== Request Flow =====
+Browser --> Server : HTTPS Request
+Server --> EJS : Render Views
+Server --> ClientJS : Serve JS
+Server --> Assets : Serve Static
+
+' Routes to Middleware
+Server --> AuthRoute
+Server --> UsersRoute
+Server --> DashboardRoute
+Server --> InventoryRoute
+Server --> PhonesRoute
+Server --> WarehousesRoute
+Server --> SuppliersRoute
+Server --> ReceiptsRoute
+Server --> QRCodeRoute
+Server --> AnalyticsRoute
+Server --> ReportsRoute
+
+' Middleware Flow
+AuthRoute --> AuthMW
+AuthRoute --> CSRF
+AuthRoute --> SessionMW
+UsersRoute --> AuthMW
+UsersRoute --> CSRF
+InventoryRoute --> AuthMW
+InventoryRoute --> CSRF
+InventoryRoute --> RateLimit
+WarehousesRoute --> AuthMW
+WarehousesRoute --> CSRF
+SuppliersRoute --> AuthMW
+ReceiptsRoute --> AuthMW
+QRCodeRoute --> AuthMW
+AnalyticsRoute --> AuthMW
+ReportsRoute --> AuthMW
+
+' All routes use error handler
+AuthRoute ..> ErrorHandler : on error
+UsersRoute ..> ErrorHandler : on error
+InventoryRoute ..> ErrorHandler : on error
+
+' Middleware to Services
+AuthMW --> SecurityServices : validate session
+SessionMW --> SecurityServices : manage secrets
+CSRF --> SecurityServices : validate tokens
+RateLimit --> SecurityServices : check limits
+Validation --> ValidationServices : sanitize input
+
+' Services to Configuration
+CoreServices --> DBConfig : connection pool
+AnalyticsServices --> DBConfig : connection pool
+SecurityServices --> AuthDBConfig : security DB
+CoreServices --> EnvConfig : settings
+
+' Routes to Services
+AuthRoute --> SecurityServices : authentication
+UsersRoute --> ValidationServices : user validation
+UsersRoute --> SecurityServices : session mgmt
+InventoryRoute --> CoreServices : warehouse ops
+PhonesRoute --> CoreServices : product mgmt
+WarehousesRoute --> CoreServices : warehouse mgmt
+WarehousesRoute --> AnalyticsServices : analytics
+SuppliersRoute --> CoreServices : supplier mgmt
+ReceiptsRoute --> CoreServices : receipt ops
+QRCodeRoute --> CoreServices : QR generation
+AnalyticsRoute --> AnalyticsServices : reports
+ReportsRoute --> AnalyticsServices : exports
+
+' Services to Database
+CoreServices --> MasterDB : CRUD operations
+CoreServices --> SuppliersDB : supplier data
+AnalyticsServices --> MasterDB : analytics queries
+SecurityServices --> SecurityDB : auth & security
+ValidationServices ..> SecurityDB : check users
+
+' Services to External
+CoreServices --> QRLib : generate QR codes
+ReceiptsRoute --> PDF : generate PDFs
+ReportsRoute --> Excel : generate spreadsheets
+NotificationServices --> Email : send emails
+NotificationServices --> SMS : send SMS
+SecurityServices --> Email : security alerts
+
+' Background Jobs
+CleanupServices ..> SecurityDB : cleanup tokens
+CleanupServices ..> MasterDB : cleanup logs
+AnalyticsServices ..> MasterDB : update metrics
+
+' ===== Notes =====
+note right of Browser
+  **Client Responsibilities:**
+  • Render UI
+  • Handle user interactions
+  • QR code scanning
+  • Form submissions
+  • Display charts/analytics
+  • Client-side validation
+end note
+
+note right of "Routes"
+  **Route Responsibilities:**
+  • Handle HTTP requests
+  • Apply middleware
+  • Call services
+  • Return responses
+  • Render views
+  
+  **Protected by:**
+  • Authentication
+  • CSRF protection
+  • Rate limiting
+  • Input validation
+end note
+
+note right of "Middleware"
+  **Middleware Chain:**
+  1. Session validation
+  2. CSRF check
+  3. Rate limiting
+  4. Authorization
+  5. Input validation
+  6. Error handling
+  
+  **Security First:**
+  All state-changing operations
+  require authentication + CSRF.
+end note
+
+note right of "Services"
+  **Service Layer Benefits:**
+  • Business logic separation
+  • Reusable code
+  • Easier testing
+  • Clear dependencies
+  • Maintainability
+  
+  **No direct DB access from routes**
+  All data operations through services.
+end note
+
+note right of MasterDB
+  **Master Database:**
+  Core inventory operations
+  with multi-level tracking:
+  • Warehouse → Zone → Bin
+  • Batch tracking (FIFO/FEFO)
+  • Serial tracking
+  • Complete audit trail
+end note
+
+note right of SecurityDB
+  **Security Database:**
+  Authentication & authorization
+  • User accounts & roles
+  • Session management
+  • Security events
+  • Token blacklist
+end note
+
+note bottom of Server
+  **Technology Stack:**
+  • Node.js v18+
+  • Express.js 4.x
+  • EJS templating
+  • MariaDB 10.x
+  • bcrypt for passwords
+  • express-session
+  • CSRF protection
+  • Rate limiting
+end note
+
+@enduml

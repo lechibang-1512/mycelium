@@ -1,178 +1,528 @@
-@startuml activity-inventory-tracking
+@startuml activity-inventory-tracking@startuml activity-inventory-tracking@startuml activity-inventory-tracking
+
 title Activity Diagram: Serialized Inventory & Batch Tracking
 
-skinparam backgroundColor #f8fafc
-skinparam activityBackgroundColor #dbeafe
-skinparam activityBorderColor #2b6cb0
-skinparam activityFontColor #0f172a
+title Activity Diagram: Serialized Inventory & Batch Trackingtitle Activity Diagram: Serialized Inventory & Batch Tracking
 
-|Staff/Admin|
+skinparam backgroundColor #f8fafc
+
+skinparam activityBackgroundColor #dbeafe
+
+skinparam activityBorderColor #2b6cb0
+
+skinparam activityFontColor #0f172askinparam backgroundColor #f8fafcskinparam backgroundColor #f8fafc
+
+
+
+|Staff/Admin|skinparam activityBackgroundColor #dbeafeskinparam activityBackgroundColor #dbeafe
+
 start
 
-if (Operation Type?) then (Create Serial Record)
-  
-  :Access Serial Creation;
-  note right
-    Context:
-    • During stock receipt
-    • Standalone serial creation
-    • Batch generation
-  end note
-  
-  |System|
-  :Display Serial Form;
-  
-  |Staff/Admin|
+:Access Inventory Tracking;skinparam activityBorderColor #2b6cb0skinparam activityBorderColor #2b6cb0
+
+
+
+if (Operation?) then (Create Serial)skinparam activityFontColor #0f172askinparam activityFontColor #0f172a
+
   :Enter Serial Details;
+
   note right
-    Required:
-    • Serial Number (unique)
-    • Product ID
-    • Warehouse/Zone/Bin
-    
-    Optional:
-    • Batch ID
-    • Purchase Cost
-    • Warranty Info
-    • Notes
+
+    Required: Serial number, Product ID, Location
+
+    Optional: Batch ID, Cost, Warranty, Notes|Staff/Admin||Staff/Admin|
+
   end note
-  :Submit Form;
-  
+
+  startstart
+
   |System|
-  :Validate Serial Data;
+
+  :Validate Serial Data;:Access Inventory Tracking;
+
+  note right
+
+    • Check serial uniqueness (globally)if (Operation Type?) then (Create Serial Record)
+
+    • Verify product is serializable
+
+    • Validate location existsif (Operation?) then (Create Serial)  
+
+    • Verify batch (if specified)
+
+  end note  :Enter Serial Details;  :Access Serial Creation;
+
   
-  fork
-    :Check Serial Uniqueness;
-    :Query serialized_inventory;
-    :Ensure globally unique;
-  fork again
-    :Validate Product Exists;
-    :Check product.is_serializable = true;
-  fork again
-    :Validate Location;
-    :Verify warehouse/zone/bin exists;
-  fork again
-    if (Batch Specified?) then (yes)
-      :Validate Batch Exists;
-      :Check batch is active;
-    endif
-  end fork
-  
-  if (All Validations Pass?) then (yes)
-    :Begin Transaction;
-    
-    fork
-      :Insert Serial Record;
-      :serial_number, product_id;
-      :batch_id (if applicable);
-      :warehouse_id, zone_id, bin_id;
-      :status = "available";
-      :created_at = now;
-      :created_by = user_id;
-    fork again
-      :Create Serial History Entry;
-      :action = "created";
-      :from_status = null;
-      :to_status = "available";
-      :location = current_location;
-      :performed_by = user_id;
-      :timestamp = now;
-    fork again
-      if (Batch Linked?) then (yes)
-        :Update Batch Serial Count;
-        :Increment serialized_count;
-      endif
-    fork again
-      :Generate Serial QR Code;
-      :type = "serial";
-      :serialNumber = serial_number;
-      :Embed product info;
-    fork again
-      :Log Inventory Event;
-      :action = "serial_created";
-      :details = serial_info;
-    end fork
-    
-    :Commit Transaction;
+
+  if (Valid?) then (yes)  note right  note right
+
+    :Create Serial Record;
+
+    note right    Required: Serial number, Product ID, Location    Context:
+
+      • Insert into serialized_inventory
+
+      • Initial status: "available"    Optional: Batch ID, Cost, Warranty, Notes    • During stock receipt
+
+      • Log creation in serial_history
+
+      • Update batch quantity (if linked)  end note    • Standalone serial creation
+
+    end note
+
+          • Batch generation
+
     :Display Success;
-    :Show Serial Details;
-    :Show QR Code;
-    stop
-  else (no)
-    :Display Validation Errors;
-    stop
-  endif
 
-else (Lookup Serial)
-  
-  :Access Serial Lookup;
-  
-  |System|
-  :Display Search Interface;
-  
-  |Staff/Admin|
+    stop  |System|  end note
+
+  else (no)
+
+    :Show Errors;  :Validate Serial Data;  
+
+    stop
+
+  endif  note right  |System|
+
+
+
+elseif (Lookup Serial) then    • Check serial uniqueness (globally)  :Display Serial Form;
+
   :Enter Serial Number;
-  note right
-    Can lookup by:
-    • Exact serial number
-    • Serial QR scan
-    • Batch number
-    • Product + location
-  end note
-  :Submit Search;
-  
+
+      • Verify product is serializable  
+
   |System|
-  :Query Serial Record;
+
+  :Search Serial Records;    • Validate location exists  |Staff/Admin|
+
   
-  if (Serial Found?) then (yes)
-    :Load Serial Details;
+
+  if (Found?) then (yes)    • Verify batch (if specified)  :Enter Serial Details;
+
+    :Display Serial Information;
+
+    note right  end note  note right
+
+      • Current status & location
+
+      • Product details      Required:
+
+      • Batch association
+
+      • Complete history  if (Valid?) then (yes)    • Serial Number (unique)
+
+      • Warranty information
+
+    end note    :Create Serial Record;    • Product ID
+
     
-    fork
-      :Load Basic Info;
-      :serial_number, product_id;
-      :status, location;
-    fork again
-      :Load Product Info;
-      :SKU, name, description;
-    fork again
-      :Load Batch Info;
-      :batch_number, expiry_date;
-    fork again
-      :Load Location Info;
-      :warehouse, zone, bin names;
-    fork again
-      :Load Complete History;
-      :All status changes;
-      :All movements;
-      :All events;
-    fork again
-      :Calculate Metrics;
-      :Days in inventory;
-      :Number of moves;
-      :Current age;
-    end fork
-    
-    :Display Serial Dashboard;
-    :Show all information;
-    :Show history timeline;
-    :Display QR code;
-    :Show available actions;
-    
-    stop
-  else (no)
-    :Display "Serial Not Found";
-    :Offer to create new serial;
-    stop
+
+    |Staff/Admin|    note right    • Warehouse/Zone/Bin
+
+    if (Take Action?) then (Update Status)
+
+      :Select New Status;      • Insert into serialized_inventory    
+
+      note right
+
+        Statuses: available, sold, damaged,      • Initial status: "available"    Optional:
+
+        in_repair, returned, scrapped
+
+      end note      • Log creation in serial_history    • Batch ID
+
+      
+
+      |System|      • Update batch quantity (if linked)    • Purchase Cost
+
+      :Update Serial Status;
+
+      :Log Status Change;    end note    • Warranty Info
+
+      stop
+
+              • Notes
+
+    elseif (Move Location) then
+
+      :Select New Location;    :Display Success;  end note
+
+      |System|
+
+      :Validate Move;    stop  :Submit Form;
+
+      :Update Serial Location;
+
+      :Log Movement;  else (no)  
+
+      stop
+
+          :Show Errors;  |System|
+
+    else (View Only)
+
+      stop    stop  :Validate Serial Data;
+
+    endif
+
+  else (no)  endif  
+
+    :Show "Serial Not Found";
+
+    stop  fork
+
   endif
 
-else (Move Serial)
+elseif (Lookup Serial) then    :Check Serial Uniqueness;
+
+elseif (Create Batch) then
+
+  :Enter Batch Details;  :Enter Serial Number;    :Query serialized_inventory;
+
+  note right
+
+    Required: Batch number, Product ID, Quantity      :Ensure globally unique;
+
+    Optional: Lot number, Expiry date, Cost
+
+  end note  |System|  fork again
+
   
-  :Select Serial to Move;
-  :Access Move Interface;
+
+  |System|  :Search Serial Records;    :Validate Product Exists;
+
+  :Validate Batch Data;
+
+  note right      :Check product.is_serializable = true;
+
+    • Check batch uniqueness
+
+    • Verify product exists  if (Found?) then (yes)  fork again
+
+    • Validate dates
+
+  end note    :Display Serial Information;    :Validate Location;
+
   
+
+  if (Valid?) then (yes)    note right    :Verify warehouse/zone/bin exists;
+
+    :Create Batch Record;
+
+    note right      • Current status & location  fork again
+
+      • Insert into inventory_batches
+
+      • Set status: "active"      • Product details    if (Batch Specified?) then (yes)
+
+      • Link to product & warehouse
+
+    end note      • Batch association      :Validate Batch Exists;
+
+    
+
+    if (Auto-create Serials?) then (yes)      • Complete history      :Check batch is active;
+
+      :Generate Serial Numbers;
+
+      note right      • Warranty information    endif
+
+        Batch-generate serials
+
+        if product is serializable    end note  end fork
+
+      end note
+
+    endif      
+
+    
+
+    :Display Success;    |Staff/Admin|  if (All Validations Pass?) then (yes)
+
+    stop
+
+  else (no)    if (Take Action?) then (Update Status)    :Begin Transaction;
+
+    :Show Errors;
+
+    stop      :Select New Status;    
+
+  endif
+
+      note right    fork
+
+elseif (Batch Selection) then
+
+  |System|        Statuses: available, sold, damaged,      :Insert Serial Record;
+
+  :Display Available Batches;
+
+  note right        in_repair, returned, scrapped      :serial_number, product_id;
+
+    Show batches for requested product
+
+    with quantities and expiry dates      end note      :batch_id (if applicable);
+
+  end note
+
+              :warehouse_id, zone_id, bin_id;
+
+  |Staff/Admin|
+
+  :Select FIFO/FEFO Strategy;      |System|      :status = "available";
+
+  
+
+  |System|      :Update Serial Status;      :created_at = now;
+
+  if (Strategy?) then (FIFO)
+
+    :Sort by Creation Date (oldest first);      :Log Status Change;      :created_by = user_id;
+
+  elseif (FEFO) then
+
+    :Sort by Expiry Date (earliest first);      stop    fork again
+
+  else (Manual)
+
+    :Allow Manual Selection;            :Create Serial History Entry;
+
+  endif
+
+      elseif (Move Location) then      :action = "created";
+
+  :Select Batches for Sale;
+
+  note right      :Select New Location;      :from_status = null;
+
+    Allocate quantity from batches
+
+    according to strategy      |System|      :to_status = "available";
+
+  end note
+
+        :Validate Move;      :location = current_location;
+
+  :Update Batch Quantities;
+
+  :Log Batch Transactions;      :Update Serial Location;      :performed_by = user_id;
+
+  stop
+
+      :Log Movement;      :timestamp = now;
+
+else (View History)
+
+  |Staff/Admin|      stop    fork again
+
+  :Enter Serial or Batch ID;
+
+              if (Batch Linked?) then (yes)
+
   |System|
+
+  :Load Complete History;    else (View Only)        :Update Batch Serial Count;
+
+  note right
+
+    • All status changes      stop        :Increment serialized_count;
+
+    • All location moves
+
+    • Associated transactions    endif      endif
+
+    • Performed by whom & when
+
+  end note  else (no)    fork again
+
+  
+
+  :Display History Timeline;    :Show "Serial Not Found";      :Generate Serial QR Code;
+
+  stop
+
+endif    stop      :type = "serial";
+
+
+
+@enduml  endif      :serialNumber = serial_number;
+
+
+      :Embed product info;
+
+elseif (Create Batch) then    fork again
+
+  :Enter Batch Details;      :Log Inventory Event;
+
+  note right      :action = "serial_created";
+
+    Required: Batch number, Product ID, Quantity      :details = serial_info;
+
+    Optional: Lot number, Expiry date, Cost    end fork
+
+  end note    
+
+      :Commit Transaction;
+
+  |System|    :Display Success;
+
+  :Validate Batch Data;    :Show Serial Details;
+
+  note right    :Show QR Code;
+
+    • Check batch uniqueness    stop
+
+    • Verify product exists  else (no)
+
+    • Validate dates    :Display Validation Errors;
+
+  end note    stop
+
+    endif
+
+  if (Valid?) then (yes)
+
+    :Create Batch Record;else (Lookup Serial)
+
+    note right  
+
+      • Insert into inventory_batches  :Access Serial Lookup;
+
+      • Set status: "active"  
+
+      • Link to product & warehouse  |System|
+
+    end note  :Display Search Interface;
+
+      
+
+    if (Auto-create Serials?) then (yes)  |Staff/Admin|
+
+      :Generate Serial Numbers;  :Enter Serial Number;
+
+      note right  note right
+
+        Batch-generate serials    Can lookup by:
+
+        if product is serializable    • Exact serial number
+
+      end note    • Serial QR scan
+
+    endif    • Batch number
+
+        • Product + location
+
+    :Display Success;  end note
+
+    stop  :Submit Search;
+
+  else (no)  
+
+    :Show Errors;  |System|
+
+    stop  :Query Serial Record;
+
+  endif  
+
+  if (Serial Found?) then (yes)
+
+elseif (Batch Selection) then    :Load Serial Details;
+
+  |System|    
+
+  :Display Available Batches;    fork
+
+  note right      :Load Basic Info;
+
+    Show batches for requested product      :serial_number, product_id;
+
+    with quantities and expiry dates      :status, location;
+
+  end note    fork again
+
+        :Load Product Info;
+
+  |Staff/Admin|      :SKU, name, description;
+
+  :Select FIFO/FEFO Strategy;    fork again
+
+        :Load Batch Info;
+
+  |System|      :batch_number, expiry_date;
+
+  if (Strategy?) then (FIFO)    fork again
+
+    :Sort by Creation Date (oldest first);      :Load Location Info;
+
+  elseif (FEFO) then      :warehouse, zone, bin names;
+
+    :Sort by Expiry Date (earliest first);    fork again
+
+  else (Manual)      :Load Complete History;
+
+    :Allow Manual Selection;      :All status changes;
+
+  endif      :All movements;
+
+        :All events;
+
+  :Select Batches for Sale;    fork again
+
+  note right      :Calculate Metrics;
+
+    Allocate quantity from batches      :Days in inventory;
+
+    according to strategy      :Number of moves;
+
+  end note      :Current age;
+
+      end fork
+
+  :Update Batch Quantities;    
+
+  :Log Batch Transactions;    :Display Serial Dashboard;
+
+  stop    :Show all information;
+
+    :Show history timeline;
+
+else (View History)    :Display QR code;
+
+  |Staff/Admin|    :Show available actions;
+
+  :Enter Serial or Batch ID;    
+
+      stop
+
+  |System|  else (no)
+
+  :Load Complete History;    :Display "Serial Not Found";
+
+  note right    :Offer to create new serial;
+
+    • All status changes    stop
+
+    • All location moves  endif
+
+    • Associated transactions
+
+    • Performed by whom & whenelse (Move Serial)
+
+  end note  
+
+    :Select Serial to Move;
+
+  :Display History Timeline;  :Access Move Interface;
+
+  stop  
+
+endif  |System|
+
   :Load Current Serial Location;
-  :Display Move Form;
+
+@enduml  :Display Move Form;
+
   
   |Staff/Admin|
   :Select Destination;

@@ -11,9 +11,9 @@ This document provides comprehensive requirements, use cases, and specifications
 1. [Overview](#overview)
 2. [System Architecture](#system-architecture)
 3. [Actors & Roles](#actors--roles)
-4. [Core Functional Requirements](#core-functional-requirements)
-5. [Use Cases by Actor](#use-cases-by-actor)
-6. [Non-Functional Requirements](#non-functional-requirements)
+4. [Functional Requirements](#functional-requirements)
+5. [Non-Functional Requirements](#non-functional-requirements)
+6. [Use Cases by Actor](#use-cases-by-actor)
 7. [Data Model](#data-model)
 8. [Process Diagrams Reference](#process-diagrams-reference)
 9. [Testing & Validation](#testing--validation)
@@ -222,163 +222,114 @@ isAdmin: (req, res, next) => {
 
 ---
 
-## Core Functional Requirements
+## Functional Requirements
 
-### Functional Requirements Summary
+Requirements are organized by domain with unique identifiers (FR-###) for traceability.
 
-Requirements are organized by domain and assigned unique identifiers (FR-###) for traceability.
+### FR-1. Authentication & User Management
+- **FR-1.1** Username/email + password authentication with bcrypt hashing and session management
+- **FR-1.2** Password recovery flow with secure one-time tokens (1-hour expiry)
+- **FR-1.3** Dynamic session secrets with rotation capability and token invalidation
+- **FR-1.4** Admin session management: view/terminate user sessions, force logout
+- **FR-1.5** Account lockout after failed login attempts (configurable, default: 5)
+- **FR-1.6** CSRF protection on all state-changing operations
+- **FR-1.7** Role-based access control (Admin, Staff) with pluggable middleware
 
-#### Authentication & User Management (FR-001 to FR-007)
+### FR-2. Inventory Management
+- **FR-2.1** Product catalog with SKU, name, description, pricing, and supplier references
+- **FR-2.2** CRUD operations for inventory items with soft delete support
+- **FR-2.3** Multi-level tracking: warehouse → zone → bin → batch → serial number
+- **FR-2.4** Serialized inventory with unique serial numbers and complete lifecycle history
+- **FR-2.5** Prevent negative stock levels with configurable overrides
+- **FR-2.6** Batch tracking with FIFO and FEFO selection strategies
 
-| ID | Requirement | Priority | Status |
-|----|-------------|----------|--------|
-| FR-001 | Username/email + password authentication with session management | Critical | ✓ Implemented |
-| FR-002 | Passwords stored using bcrypt (cost factor 12) | Critical | ✓ Implemented |
-| FR-003 | "Forgot password" flow with secure one-time tokens (1-hour expiry) | High | ✓ Implemented |
-| FR-004 | Dynamic session secrets with rotation capability | High | ✓ Implemented |
-| FR-005 | Admin ability to view/terminate user sessions across devices | High | ✓ Implemented |
-| FR-006 | Account lockout after configurable failed login attempts (default: 5) | High | ✓ Implemented |
-| FR-007 | CSRF protection on all state-changing operations | Critical | ✓ Implemented |
+### FR-3. Warehouse & Location Management
+- **FR-3.1** Multi-warehouse support with hierarchical zone structures
+- **FR-3.2** Zone types: receiving, storage, picking, shipping, returns, quarantine
+- **FR-3.3** Bin location management with aisle-shelf-bin addressing
+- **FR-3.4** Capacity validation before stock placement and transfers
+- **FR-3.5** Auto-create default zones when adding new warehouses
+- **FR-3.6** Intra-warehouse and inter-warehouse transfers with status tracking
 
-**Implementation:** `routes/auth.js`, `middleware/auth.js`, `services/SessionManagementService.js`
+### FR-4. Supplier Management
+- **FR-4.1** Supplier master data: contact info, lead times, payment terms
+- **FR-4.2** Supplier performance tracking and status management
+- **FR-4.3** Reference suppliers on receipts and purchase records
 
-#### Inventory Management (FR-010 to FR-014)
+### FR-5. Receipts & Transactions
+- **FR-5.1** Create immutable receipt records for incoming stock with unique identifiers
+- **FR-5.2** Sales/outgoing receipts that decrement inventory
+- **FR-5.3** Receipt line items with quantities, costs, and optional serial numbers
+- **FR-5.4** Multi-format receipt export (PDF, CSV, Excel, JSON, print)
+- **FR-5.5** Bulk receipt operations and document generation
 
-| ID | Requirement | Priority | Status |
-|----|-------------|----------|--------|
-| FR-010 | Inventory data model: SKU, name, description, unit, serializable flag, price, supplier ref, metadata | Critical | ✓ Implemented |
-| FR-011 | CRUD operations for inventory items (soft delete preferred) | Critical | ✓ Implemented |
-| FR-012 | Track inventory quantity at warehouse-zone-bin granularity | Critical | ✓ Implemented |
-| FR-013 | Serialized inventory with individual serial number tracking and history | High | ✓ Implemented |
-| FR-014 | Prevent negative stock levels unless explicitly allowed | High | ✓ Implemented |
+### FR-6. QR Code Integration
+- **FR-6.1** Generate QR codes for products, locations, batches, and serials
+- **FR-6.2** In-browser QR scanner with camera access
+- **FR-6.3** Context-aware actions based on QR type and user permissions
+- **FR-6.4** Bulk QR generation for label printing
+- **FR-6.5** QR metadata with version control and freshness validation
 
-**Implementation:** `routes/inventory.js`, `routes/phones.js`, Table: `specs_db`, `serialized_inventory`
+### FR-7. Auditing & Security
+- **FR-7.1** Comprehensive audit log: actor, timestamp, IP, before/after snapshots
+- **FR-7.2** Security event logging: failed logins, token invalidation, secret rotation
+- **FR-7.3** Admin tools to query, filter, and export audit logs
 
-#### Warehouse & Location Management (FR-020 to FR-026)
+### FR-8. Analytics & Reporting
+- **FR-8.1** Real-time dashboards with KPIs (stock value, alerts, top SKUs, occupancy)
+- **FR-8.2** Warehouse analytics: zone utilization, throughput, performance metrics
+- **FR-8.3** Receipt analytics: volume trends, value trends, processing times
+- **FR-8.4** Exportable reports with date range filters and multiple formats
+- **FR-8.5** Drill-down analysis from summary charts to detailed data
 
-| ID | Requirement | Priority | Status |
-|----|-------------|----------|--------|
-| FR-020 | Support multiple warehouses with logical zones | Critical | ✓ Implemented |
-| FR-021 | Configurable warehouse/zone attributes: name, code, capacity, allowed SKUs | High | ✓ Implemented |
-| FR-022 | Move stock between locations with audit logging | High | ✓ Implemented |
-| FR-023 | Zone types: receiving, storage, picking, shipping, returns, quarantine | High | ✓ Implemented |
-| FR-024 | Bin location management with aisle-shelf-bin structure | Medium | ✓ Implemented |
-| FR-025 | Auto-create default zone structure for new warehouses | Medium | ✓ Implemented |
-| FR-026 | Validate zone capacity before stock placement/transfers | High | ✓ Implemented |
+### FR-9. Stock Alerts & Monitoring
+- **FR-9.1** Automated alerts: low stock, out of stock, expiring items (30-day threshold)
+- **FR-9.2** Identify overstock, slow-moving (90 days), and dead stock (180 days)
+- **FR-9.3** Configurable alert thresholds per product and warehouse
+- **FR-9.4** Multi-channel notifications (email, SMS, in-app)
 
-**Implementation:** `routes/warehouses.js`, `services/WarehouseService.js`, Tables: `warehouses`, `zones`, `bin_locations`
+### FR-10. Import/Export & Schema Tools
+- **FR-10.1** CSV import/export for inventory and supplier data with validation
+- **FR-10.2** Database schema extraction tool with JSON export
+- **FR-10.3** Multi-database support (master_specs_db, suppliers_db, security_db)
 
-#### Supplier Management (FR-030 to FR-031)
+---
 
-| ID | Requirement | Priority | Status |
-|----|-------------|----------|--------|
-| FR-030 | Add supplier records with contact info, lead times, SKU mappings | High | ✓ Implemented |
-| FR-031 | Reference supplier details on receipts and purchase records | High | ✓ Implemented |
+## Non-Functional Requirements
 
-**Implementation:** `routes/suppliers.js`, Database: `suppliers_db`
+### NFR-1. Security
+- **NFR-1.1** HTTPS for all client-server communication with HTTP-to-HTTPS redirection
+- **NFR-1.2** Bcrypt password hashing with appropriate cost factor
+- **NFR-1.3** Secure, HttpOnly, SameSite cookies with environment-based configuration
+- **NFR-1.4** CSRF protection on all state-changing requests
+- **NFR-1.5** Rate limiting on authentication endpoints and sensitive APIs
+- **NFR-1.6** Comprehensive audit logging for security-sensitive events
+- **NFR-1.7** Encrypted sensitive configuration at rest with restricted access
 
-#### Receipts & Sales (FR-040 to FR-047)
+### NFR-2. Performance & Scalability
+- **NFR-2.1** UI page loads under 1 second for typical dashboards
+- **NFR-2.2** Support tens of thousands of SKUs with caching and read replicas
+- **NFR-2.3** Asynchronous execution for long-running analytics jobs
 
-| ID | Requirement | Priority | Status |
-|----|-------------|----------|--------|
-| FR-040 | Create receipts for incoming stock: supplier, items, quantities, serials, costs, destination | Critical | ✓ Implemented |
-| FR-041 | Generate immutable receipt records with unique receipt numbers | Critical | ✓ Implemented |
-| FR-042 | Create sales/outgoing receipts that decrement stock | Critical | ✓ Implemented |
-| FR-043 | Attach documents (PDF/images) to receipts | Medium | ○ Planned |
-| FR-044 | Support provisional receipts from external partners (require staff confirmation) | Low | ○ Future |
-| FR-045 | Batch tracking with FIFO and FEFO strategies | High | ✓ Implemented |
-| FR-046 | Backorder creation when quantity exceeds available stock | Medium | ○ Partial |
-| FR-047 | Generate receipt documents in multiple formats (print, PDF, email) | High | ✓ Implemented |
+### NFR-3. Reliability & Availability
+- **NFR-3.1** Transient database error tolerance with retry mechanisms
+- **NFR-3.2** Scheduled database backups with restore capability
+- **NFR-3.3** Graceful failure handling with meaningful error pages
 
-**Implementation:** `routes/receipts.js`, `services/ReceiptService.js`, Table: `receipts`
+### NFR-4. Maintainability
+- **NFR-4.1** Modular architecture with clear separation of concerns (services, routes, views)
+- **NFR-4.2** Developer tools for schema extraction, testing, and migrations
+- **NFR-4.3** Code quality enforcement via linting and automated testing
 
-#### QR Code Integration (FR-050 to FR-055)
+### NFR-5. Privacy & Compliance
+- **NFR-5.1** Minimal storage of personal data with appropriate protection
+- **NFR-5.2** Support for data export and deletion requests (data subject rights)
 
-| ID | Requirement | Priority | Status |
-|----|-------------|----------|--------|
-| FR-050 | Generate QR codes for items/locations with version/nonce | High | ✓ Implemented |
-| FR-051 | UI QR scanner with camera access for product/location mapping | High | ✓ Implemented |
-| FR-052 | QR scan triggers context-aware action menu based on permissions | Medium | ✓ Implemented |
-| FR-053 | Support multiple QR types: product, location, batch, transaction, serial | High | ✓ Implemented |
-| FR-054 | Bulk QR code generation for label printing | Medium | ✓ Implemented |
-| FR-055 | QR codes include metadata for version control and freshness validation | Medium | ✓ Implemented |
+### NFR-6. Internationalization
+- **NFR-6.1** UI strings prepared for translation with locale-based date/number formatting
 
-**Implementation:** `routes/qrcode.js`, `services/QRCodeService.js`
-
-#### Auditing & Security (FR-060 to FR-062)
-
-| ID | Requirement | Priority | Status |
-|----|-------------|----------|--------|
-| FR-060 | Audit log for all state-changing operations: actor, timestamp, IP, before/after snapshots | Critical | ✓ Implemented |
-| FR-061 | Security events table: failed logins, suspicious activity, token invalidation, secret rotation | Critical | ✓ Implemented |
-| FR-062 | Admin ability to query/filter/export audit logs as CSV | High | ✓ Implemented |
-
-**Implementation:** `services/SecurityLogger.js`, Tables: `security_events`, `inventory_log`
-
-#### Administration & Session Management (FR-070 to FR-072)
-
-| ID | Requirement | Priority | Status |
-|----|-------------|----------|--------|
-| FR-070 | Admin management of session secrets with rotation logging | High | ✓ Implemented |
-| FR-071 | Token invalidation per-user or globally with user notification | High | ✓ Implemented |
-| FR-072 | Role-based permissions (Admin, Staff, System, External Partners) with pluggable middleware | Critical | ✓ Implemented |
-
-**Implementation:** `middleware/auth.js`, `services/DynamicSessionSecretService.js`, `services/TokenInvalidationService.js`
-
-#### Analytics & Reporting (FR-080 to FR-087)
-
-| ID | Requirement | Priority | Status |
-|----|-------------|----------|--------|
-| FR-080 | Generate reports for receipts, sales, inventory levels, warehouse distribution | High | ✓ Implemented |
-| FR-081 | Dashboard with KPIs: stock value, low-stock alerts, recent receipts, top SKUs, occupancy | High | ✓ Implemented |
-| FR-082 | Exportable reports in CSV/PDF/Excel/JSON with date range filters | High | ✓ Implemented |
-| FR-083 | Warehouse-specific analytics: zone utilization, throughput, performance metrics | Medium | ✓ Implemented |
-| FR-084 | Receipt analytics: volume trends, value trends, processing times | Medium | ✓ Implemented |
-| FR-085 | Custom report builder with configurable parameters | Low | ○ Planned |
-| FR-086 | Scheduled reports with automated email delivery | Low | ○ Planned |
-| FR-087 | Drill-down analysis from summary charts to detailed data | Medium | ✓ Implemented |
-
-**Implementation:** `routes/analytics.js`, `routes/reports.js`, `services/AnalyticsService.js`, `services/WarehouseAnalyticsService.js`
-
-#### Import/Export & Schema Tools (FR-090 to FR-093)
-
-| ID | Requirement | Priority | Status |
-|----|-------------|----------|--------|
-| FR-090 | Export/import inventory and supplier data via CSV with validation | Medium | ✓ Implemented |
-| FR-091 | Developer tool to extract database schema and export JSON representation | Low | ✓ Implemented |
-| FR-092 | Schema extraction sanitizes AUTO_INCREMENT for version control | Low | ✓ Implemented |
-| FR-093 | Multi-database extraction support (master_specs_db, suppliers_db, security_db) | Low | ✓ Implemented |
-
-**Implementation:** `scripts/utils-extract-schema.js`
-
-#### Stock Alerts & Monitoring (FR-100 to FR-108)
-
-| ID | Requirement | Priority | Status |
-|----|-------------|----------|--------|
-| FR-100 | Monitor and generate alerts for low stock (quantity <= reorder level) | High | ✓ Implemented |
-| FR-101 | Monitor and generate alerts for out of stock (quantity = 0) | High | ✓ Implemented |
-| FR-102 | Monitor and generate alerts for expiring items (default 30 days) | High | ✓ Implemented |
-| FR-103 | Identify and alert on overstocked items (quantity > max level) | Medium | ✓ Implemented |
-| FR-104 | Identify slow-moving stock (no activity for 90 days) | Medium | ✓ Implemented |
-| FR-105 | Identify dead stock (no activity for 180 days) | Medium | ✓ Implemented |
-| FR-106 | Configurable alert thresholds per product and warehouse | Medium | ○ Partial |
-| FR-107 | Automated alert generation via scheduled jobs | High | ✓ Implemented |
-| FR-108 | Multiple notification channels (email, SMS, in-app) | Low | ○ Partial |
-
-**Implementation:** `routes/inventory.js` (`/stock-alerts`), Table: `stock_alerts`
-
-#### Inventory Transfers (FR-110 to FR-115)
-
-| ID | Requirement | Priority | Status |
-|----|-------------|----------|--------|
-| FR-110 | Support intra-warehouse transfers (zone-to-zone, bin-to-bin) | High | ✓ Implemented |
-| FR-111 | Support inter-warehouse transfers with tracking | High | ✓ Implemented |
-| FR-112 | Validate source availability before allowing transfers | High | ✓ Implemented |
-| FR-113 | Validate destination capacity before completing transfers | Medium | ✓ Implemented |
-| FR-114 | Log all transfers in inventory_log for audit trail | Critical | ✓ Implemented |
-| FR-115 | Transfer status tracking (initiated, in-transit, completed, cancelled) | Medium | ✓ Implemented |
-
-**Implementation:** `services/WarehouseService.js` (`transferInventory`), Table: `transfers`
+### NFR-7. Accessibility
+- **NFR-7.1** WCAG 2.1 AA conformance with keyboard navigation, ARIA attributes, and color contrast
 
 ---
 
@@ -633,91 +584,61 @@ This section provides condensed use case descriptions. For detailed visual workf
 - **Implementation:** Middleware (auth.js), Security services
 - **Postconditions:** Invalid sessions cleared, security maintained, events logged
 
+---
 
-## Non-Functional Requirements
+## Data Model
 
-### Security
+The system uses three logical databases for separation of concerns:
 
-- NFR-001: Use HTTPS for all client-server communication. Redirect HTTP to HTTPS.
-- NFR-002: Store passwords hashed with bcrypt and a sufficiently strong cost factor.
-- NFR-003: Use secure, HttpOnly, SameSite cookies for session cookies. Support cookie attributes configurable by environment.
-- NFR-004: CSRF protection must be enabled for all state-changing requests.
-- NFR-005: Implement rate-limiting for authentication endpoints and sensitive APIs.
-- NFR-006: Provide audit logging for security-sensitive events.
-- NFR-007: Encrypt sensitive configuration like session secrets at rest where feasible and restrict access.
+### Database Architecture
 
-### Performance and Scalability
+| Database | Purpose | Key Tables |
+|----------|---------|------------|
+| **master_specs_db** | Inventory & warehouse operations | specs_db, warehouses, zones, bin_locations, inventory_batches, serialized_inventory, receipts, inventory_log, stock_alerts, transfers |
+| **suppliers_db** | Supplier management | suppliers, supplier_contacts |
+| **security_db** | Authentication & security | users, security_events, token_invalidation, session_secrets |
 
-- NFR-010: The system should respond to UI page loads under 1 second for typical dashboards (subject to data size).
-- NFR-011: The system should support tens of thousands of SKUs and scale read-heavy analytics via caching or separate read replicas.
-- NFR-012: Long-running analytics jobs should run asynchronously and not block UI requests.
+### Key Table Descriptions
 
-### Reliability and Availability
+**master_specs_db:**
+- `specs_db`: Product catalog with SKU, pricing, and reorder levels
+- `warehouses`: Warehouse master data with capacity and location info
+- `zones`: Zone definitions (receiving, storage, picking, shipping, returns, quarantine)
+- `bin_locations`: Aisle-shelf-bin structure for precise inventory placement
+- `inventory_batches`: Batch tracking with expiry dates and quantities
+- `serialized_inventory`: Individual serial number tracking with status and location
+- `serial_history`: Complete movement and status change history
+- `receipts`: Immutable transaction records (incoming/outgoing)
+- `inventory_log`: Comprehensive audit trail of all inventory movements
+- `stock_alerts`: Active alerts with type, severity, and status
+- `transfers`: Inter-warehouse movement records with status tracking
 
-- NFR-020: The system should tolerate transient DB connection errors and retry critical operations.
-- NFR-021: Scheduled backups for databases should be available and restorable.
-- NFR-022: The system should fail gracefully, providing meaningful error pages rather than stack traces.
+**suppliers_db:**
+- `suppliers`: Master data with contact info, lead times, payment terms
+- `supplier_contacts`: Contact persons for each supplier
 
-### Maintainability
+**security_db:**
+- `users`: User accounts with roles, status, and authentication data
+- `security_events`: Security event log (authentication, failures, violations)
+- `token_invalidation`: Session token blacklist
+- `session_secrets`: Dynamic secrets with rotation history
 
-- NFR-030: Keep code modular with clear separation between services, routes, and views.
-- NFR-031: Provide developer tools (schema extraction, tests) to ease upgrades and migrations.
-- NFR-032: Use linting and unit tests to maintain code quality.
+### Data Relationships
 
-### Privacy and Compliance
-
-- NFR-040: Personal data (user emails, contact info) must be stored minimally and protected.
-- NFR-041: Support data export and deletion requests to comply with data subject rights.
-
-### Internationalization and Localization
-
-- NFR-050: Prepare UI strings for translation. Support date and number formats based on locale.
-
-### Accessibility
-
-- NFR-060: UI should conform to WCAG 2.1 AA where feasible (keyboard navigation, ARIA attributes, color contrast).
-
-
-## Data Model Notes
-
-- The system uses three databases (logical separation): `master_specs_db` for inventory and warehouses, `suppliers_db` for supplier master data, and `security_db` for users, sessions, and security events.
-
-### master_specs_db Tables:
-- **specs_db**: Product catalog with SKU, name, description, price, serializable flag, reorder levels.
-- **warehouses**: Warehouse master data with name, code, capacity, address.
-- **zones**: Zone definitions within warehouses (receiving, storage, picking, shipping, returns, quarantine).
-- **bin_locations**: Bin location structure with aisle-shelf-bin format for precise inventory placement.
-- **inventory_batches**: Batch tracking with batch number, lot number, expiry date, quantity, status.
-- **serialized_inventory**: Individual serial number tracking with status, location, batch association.
-- **serial_history**: Complete history of serial number movements and status changes.
-- **receipts**: Immutable receipt records for all incoming and outgoing transactions.
-- **inventory_log**: Comprehensive audit log of all inventory movements and changes.
-- **stock_alerts**: Active stock alerts with type, severity, and status tracking.
-- **transfers**: Transfer records for inter-warehouse movements with status tracking.
-
-### suppliers_db Tables:
-- **suppliers**: Supplier master data with contact info, lead times, payment terms.
-- **supplier_contacts**: Contact persons for each supplier.
-
-### security_db Tables:
-- **users**: User accounts with username, email, hashed password, role, status.
-- **security_events**: Security event log for authentication, failed logins, suspicious activity.
-- **token_invalidation**: Token blacklist for session management and security.
-- **session_secrets**: Dynamic session secrets with rotation history.
-
-### Key Relationships:
-- Inventory tables store per-location quantities at warehouse-zone-bin granularity.
-- Serialized item rows are linked to inventory batches via batch_id foreign key.
-- Receipts have header records with line items that reference SKUs and may contain serial numbers.
-- All movements are logged in inventory_log with source/destination details and performer tracking.
-- Stock alerts reference products and warehouses with configurable thresholds.
-- Transfers link source and destination warehouses with in-transit status tracking.
+- Inventory tracked at **warehouse → zone → bin** granularity
+- Serialized items linked to inventory batches via `batch_id`
+- Receipts contain header records with line items referencing SKUs and serial numbers
+- All movements logged in `inventory_log` with source/destination and performer tracking
+- Stock alerts reference products and warehouses with configurable thresholds
+- Transfers link source and destination warehouses with in-transit status
 
 ---
 
 ## Process Diagrams Reference
 
 The system includes comprehensive PlantUML diagrams documenting business processes and activity flows. These diagrams provide visual representations of the workflows described in the use cases.
+
+> **Note:** Diagrams are being consolidated to improve maintainability and clarity. See `DIAGRAM-CONSOLIDATION-PLAN.md` for details. Complex diagrams (>400 lines) are being simplified to focus on business logic rather than implementation details.
 
 ### Business Process Diagrams
 
@@ -787,59 +708,31 @@ Use case diagrams show actor-system interactions and capability boundaries for e
 
 ---
 
-## Error Handling and Edge Cases
+---
 
-- When connectivity to a DB fails, the system should log the error, surface a graceful message to the operator, and allow retrying or working in read-only mode where possible.
-- For concurrent updates, the system should use optimistic locking (version numbers or timestamps) on stock-modifying operations to prevent lost updates.
-- When importing CSV data, validate rows and provide a dry-run validation mode.
+## Testing & Validation
 
+### Test Coverage Strategy
 
-## Appendix: Acceptance Criteria and Test Ideas
+- **User Authentication**: Verify login flows, password hashing, rate limiting, and account lockout
+- **Receipt Creation**: Integration tests for stock updates and immutable receipt persistence
+- **Schema Extraction**: Automated smoke tests with database connectivity validation
+- **Zone Management**: Test default zone creation and custom zone configuration
+- **Serialized Inventory**: Verify unique serial enforcement and complete history tracking
+- **Batch Tracking**: Test FIFO/FEFO selection logic and expiry alert generation
+- **QR Operations**: Validate QR generation, payload structure, and scanning resolution
+- **Stock Alerts**: Verify alert generation for all configured conditions
+- **Inventory Transfers**: Test capacity validation, inventory updates, and audit logging
+- **Analytics**: Verify KPI calculations, report generation, and drill-down functionality
+- **Session Management**: Test session listing, force logout, and secret rotation
 
-- User Authentication
-  - AC: Users can log in and their session is created; failed logins are rate-limited.
-  - Tests: Unit tests for password hashing; integration tests for login flows and lockout.
+### Error Handling
 
-- Receipt Creation
-  - AC: Creating a receipt updates stock and stores an immutable receipt.
-  - Tests: Integration test that posts a receipt and asserts stock levels and receipt persistence.
+- **Database Connectivity**: Graceful degradation with retry mechanisms and read-only fallback
+- **Concurrent Updates**: Optimistic locking using version numbers or timestamps
+- **CSV Import**: Row-level validation with dry-run mode
+- **User Input**: Comprehensive validation and sanitization at all entry points
 
-- Schema Extraction
-  - AC: Running `npm run schema-extract` successfully writes `*-schema.sql` files for configured DBs.
-  - Tests: Manual run with sane `.env` values and automated smoke test in CI that mocks DB connectivity.
+---
 
-- Zone Management
-  - AC: Creating a warehouse automatically creates default zones; zones can be customized.
-  - Tests: Integration test that creates warehouse and verifies default zones; test custom zone creation.
-
-- Serialized Inventory Tracking
-  - AC: Serial numbers are unique across all warehouses; each serial has complete history.
-  - Tests: Test duplicate serial rejection; verify serial history logging on status changes and movements.
-
-- Batch Tracking
-  - AC: FIFO and FEFO strategies correctly select batches for sales; expiry dates are tracked.
-  - Tests: Create multiple batches with different dates; verify FIFO/FEFO selection logic; test expiry alerts.
-
-- QR Code Generation and Scanning
-  - AC: QR codes are generated with valid payloads; scanning resolves to correct objects.
-  - Tests: Generate QR for each type; verify payload structure; test scanning and resolution.
-
-- Stock Alerts
-  - AC: Alerts are generated for all configured conditions; notifications are sent.
-  - Tests: Create conditions that trigger each alert type; verify alert creation; test notification delivery.
-
-- Inventory Transfers
-  - AC: Transfers update both source and destination; movements are logged; capacity is validated.
-  - Tests: Test intra-warehouse and inter-warehouse transfers; verify inventory updates; test capacity validation.
-
-- Analytics and Reports
-  - AC: Dashboards display accurate KPIs; reports export in multiple formats; drill-down works.
-  - Tests: Verify KPI calculations against database; test report generation in each format; test drill-down navigation.
-
-- Session Management
-  - AC: Admins can view active sessions; force logout terminates sessions; secret rotation works.
-  - Tests: Test session listing; verify force logout clears sessions; test secret rotation with and without invalidation.
-
-- Custom Report Builder
-  - AC: Users can create custom reports with filters; reports execute without errors.
-  - Tests: Create reports with various filter combinations; verify query execution and result accuracy.
+## Appendices

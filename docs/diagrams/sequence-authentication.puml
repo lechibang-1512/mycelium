@@ -1,0 +1,344 @@
+@startuml sequence-authentication
+title Authentication & Session Management - Sequence Diagram
+
+skinparam backgroundColor #f8fafc
+skinparam sequenceArrowColor #2b6cb0
+skinparam sequenceLifeLineBackgroundColor #e0f2fe
+skinparam sequenceLifeLineBorderColor #2b6cb0
+skinparam sequenceParticipantBackgroundColor #dbeafe
+skinparam sequenceParticipantBorderColor #2b6cb0
+
+actor User
+participant "Browser" as Browser
+participant "auth.js\n(Route)" as AuthRoute
+participant "rateLimiting.js\n(Middleware)" as RateLimit
+participant "csrfProtection.js\n(Middleware)" as CSRF
+participant "SessionManagement\nService" as SessionSvc
+participant "SecurityLogger" as Logger
+database "security_db" as DB
+
+== Login Request ==
+
+User -> Browser: Enter credentials\n(username, password)
+activate Browser
+
+Browser -> AuthRoute: POST /login\n{username, password, csrf_token}
+activate AuthRoute
+
+AuthRoute -> RateLimit: Check rate limit
+activate RateLimit
+RateLimit -> RateLimit: Count requests\nfrom IP address
+alt Rate limit exceeded
+    RateLimit --> AuthRoute: 429 Too Many Requests
+    AuthRoute --> Browser: Error: Rate limited
+    Browser --> User: Display error\n"Too many attempts"
+    deactivate RateLimit
+    deactivate AuthRoute
+    deactivate Browser
+else Rate limit OK
+    RateLimit --> AuthRoute: Continue
+    deactivate RateLimit
+    
+    AuthRoute -> CSRF: Validate CSRF token
+    activate CSRF
+    CSRF -> CSRF: Compare token\nwith session
+    alt CSRF invalid
+        CSRF --> AuthRoute: 403 Forbidden
+        AuthRoute -> Logger: Log CSRF failure
+        activate Logger
+        Logger -> DB: INSERT security_events\n(event_type='csrf_failed')
+        deactivate Logger
+        AuthRoute --> Browser: Error: Invalid CSRF
+        Browser --> User: Display error
+        deactivate CSRF
+        deactivate AuthRoute
+        deactivate Browser
+    else CSRF valid
+        CSRF --> AuthRoute: Continue
+        deactivate CSRF
+        
+        AuthRoute -> DB: SELECT * FROM users\nWHERE username=? OR email=?
+        activate DB
+        DB --> AuthRoute: user record
+        deactivate DB
+        
+        alt User not found
+            AuthRoute -> Logger: Log failed login\n(user_not_found)
+            activate Logger
+            Logger -> DB: INSERT security_events
+            deactivate Logger
+            AuthRoute --> Browser: Generic error
+            Browser --> User: "Invalid credentials"
+            note right of Browser
+                Generic error prevents
+                user enumeration attacks
+            end note
+            deactivate AuthRoute
+            deactivate Browser
+        else User found
+            AuthRoute -> AuthRoute: Check is_active flag
+            
+            alt Account inactive
+                AuthRoute -> Logger: Log inactive attempt
+                activate Logger
+                Logger -> DB: INSERT security_events
+                deactivate Logger
+                AuthRoute --> Browser: Error
+                Browser --> User: "Account inactive"
+                deactivate AuthRoute
+                deactivate Browser
+            else Account active
+                AuthRoute -> AuthRoute: Check account_locked_until
+                
+                alt Account locked
+                    AuthRoute -> Logger: Log locked attempt
+                    activate Logger
+                    Logger -> DB: INSERT security_events
+                    deactivate Logger
+                    AuthRoute --> Browser: Error
+                    Browser --> User: "Account locked until {time}"
+                    deactivate AuthRoute
+                    deactivate Browser
+                else Account not locked
+                    AuthRoute -> AuthRoute: bcrypt.compare(password, hash)
+                    
+                    alt Password invalid
+                        AuthRoute -> DB: UPDATE users\nSET failed_login_attempts += 1
+                        activate DB
+                        DB --> AuthRoute: updated
+                        deactivate DB
+                        
+                        AuthRoute -> AuthRoute: Check if max attempts reached
+                        
+                        alt Max attempts reached
+                            AuthRoute -> DB: UPDATE users\nSET locked_until = NOW() + INTERVAL 30 MINUTE
+                            activate DB
+                            DB --> AuthRoute: locked
+                            deactivate DB
+                            
+                            AuthRoute -> Logger: Log account locked
+                            activate Logger
+                            Logger -> DB: INSERT security_events\n(event_type='account_locked')
+                            deactivate Logger
+                            
+                            AuthRoute --> Browser: Error
+                            Browser --> User: "Account locked\ndue to failed attempts"
+                            deactivate AuthRoute
+                            deactivate Browser
+                        else Not max attempts
+                            AuthRoute -> Logger: Log failed login
+                            activate Logger
+                            Logger -> DB: INSERT security_events\n(event_type='failed_login')
+                            deactivate Logger
+                            
+                            AuthRoute --> Browser: Generic error
+                            Browser --> User: "Invalid credentials"
+                            deactivate AuthRoute
+                            deactivate Browser
+                        end
+                    else Password valid
+                        ' ===== Successful Authentication =====
+                        
+                        AuthRoute -> DB: UPDATE users\nSET failed_login_attempts = 0,\nlast_login = NOW()
+                        activate DB
+                        DB --> AuthRoute: updated
+                        deactivate DB
+                        
+                        AuthRoute -> SessionSvc: createSession(userId, sessionData)
+                        activate SessionSvc
+                        
+                        SessionSvc -> SessionSvc: Generate session token\ncrypto.randomBytes(32)
+                        
+                        SessionSvc -> SessionSvc: Load active session secret
+                        
+                        SessionSvc -> SessionSvc: Sign session with secret
+                        
+                        SessionSvc -> DB: INSERT INTO express_sessions\n(session_id, user_id, data, expires_at)
+                        activate DB
+                        DB --> SessionSvc: session created
+                        deactivate DB
+                        
+                        SessionSvc --> AuthRoute: sessionToken
+                        deactivate SessionSvc
+                        
+                        AuthRoute -> Logger: Log successful login
+                        activate Logger
+                        Logger -> DB: INSERT security_events\n(event_type='login_success',\nuser_id, ip_address, user_agent)
+                        deactivate Logger
+                        
+                        AuthRoute --> Browser: Set-Cookie: sessionToken\n(HttpOnly, Secure, SameSite)\nRedirect: /dashboard
+                        
+                        Browser -> Browser: Store session cookie
+                        Browser --> User: Redirect to dashboard
+                        deactivate AuthRoute
+                        deactivate Browser
+                    end
+                end
+            end
+        end
+    end
+end
+
+== Subsequent Authenticated Request ==
+
+User -> Browser: Click "View Inventory"
+activate Browser
+
+Browser -> AuthRoute: GET /inventory\nCookie: sessionToken
+activate AuthRoute
+
+AuthRoute -> SessionSvc: validateSession(sessionToken)
+activate SessionSvc
+
+SessionSvc -> SessionSvc: Parse session token
+
+SessionSvc -> DB: SELECT * FROM express_sessions\nWHERE session_id = ?\nAND expires_at > NOW()
+activate DB
+DB --> SessionSvc: session record
+deactivate DB
+
+alt Session not found or expired
+    SessionSvc --> AuthRoute: null
+    deactivate SessionSvc
+    AuthRoute --> Browser: 401 Unauthorized\nRedirect: /login
+    Browser --> User: Redirect to login
+    deactivate AuthRoute
+    deactivate Browser
+else Session valid
+    SessionSvc -> SessionSvc: Load session secret
+    
+    SessionSvc -> SessionSvc: Verify signature
+    
+    alt Signature invalid
+        SessionSvc -> Logger: Log invalid signature
+        activate Logger
+        Logger -> DB: INSERT security_events\n(event_type='invalid_signature')
+        deactivate Logger
+        
+        SessionSvc --> AuthRoute: null
+        deactivate SessionSvc
+        AuthRoute --> Browser: 401 Unauthorized
+        Browser --> User: Redirect to login
+        deactivate AuthRoute
+        deactivate Browser
+    else Signature valid
+        SessionSvc -> DB: Check token_invalidation\nWHERE token_hash = ?
+        activate DB
+        DB --> SessionSvc: not invalidated
+        deactivate DB
+        
+        SessionSvc -> DB: UPDATE express_sessions\nSET last_accessed = NOW()
+        activate DB
+        DB --> SessionSvc: updated
+        deactivate DB
+        
+        SessionSvc --> AuthRoute: {userId, role, ...}
+        deactivate SessionSvc
+        
+        AuthRoute -> AuthRoute: Check role permissions\n(isStaffOrAdmin)
+        
+        alt Insufficient permissions
+            AuthRoute --> Browser: 403 Forbidden
+            Browser --> User: Access denied
+            deactivate AuthRoute
+            deactivate Browser
+        else Sufficient permissions
+            AuthRoute -> AuthRoute: Process request\n(retrieve inventory data)
+            
+            AuthRoute --> Browser: 200 OK\nRender inventory view
+            Browser --> User: Display inventory
+            deactivate AuthRoute
+            deactivate Browser
+        end
+    end
+end
+
+== Logout ==
+
+User -> Browser: Click "Logout"
+activate Browser
+
+Browser -> AuthRoute: POST /logout\nCookie: sessionToken\nCSRF: token
+activate AuthRoute
+
+AuthRoute -> SessionSvc: invalidateSession(sessionToken)
+activate SessionSvc
+
+SessionSvc -> DB: DELETE FROM express_sessions\nWHERE session_id = ?
+activate DB
+DB --> SessionSvc: deleted
+deactivate DB
+
+SessionSvc -> DB: INSERT INTO token_invalidation\n(token_hash, invalidated_at, reason)
+activate DB
+DB --> SessionSvc: logged
+deactivate DB
+
+SessionSvc --> AuthRoute: success
+deactivate SessionSvc
+
+AuthRoute -> Logger: Log logout
+activate Logger
+Logger -> DB: INSERT security_events\n(event_type='logout')
+deactivate Logger
+
+AuthRoute --> Browser: Clear-Cookie: sessionToken\nRedirect: /login
+Browser -> Browser: Remove cookie
+Browser --> User: Redirect to login page
+deactivate AuthRoute
+deactivate Browser
+
+== Admin Force Logout (Another User) ==
+
+actor Admin
+participant "Browser" as AdminBrowser
+participant "users.js\n(Route)" as UsersRoute
+
+Admin -> AdminBrowser: Click "Force Logout User"
+activate AdminBrowser
+
+AdminBrowser -> UsersRoute: POST /admin/sessions/logout-user/:userId\nCSRF: token
+activate UsersRoute
+
+UsersRoute -> UsersRoute: Check isAdmin middleware
+
+UsersRoute -> SessionSvc: forceLogoutUser(targetUserId, reason)
+activate SessionSvc
+
+SessionSvc -> DB: SELECT session_id FROM express_sessions\nWHERE user_id = ?
+activate DB
+DB --> SessionSvc: [session1, session2, ...]
+deactivate DB
+
+loop For each session
+    SessionSvc -> DB: DELETE FROM express_sessions\nWHERE session_id = ?
+    activate DB
+    DB --> SessionSvc: deleted
+    deactivate DB
+    
+    SessionSvc -> DB: INSERT INTO token_invalidation\n(token_hash, invalidated_by, reason)
+    activate DB
+    DB --> SessionSvc: logged
+    deactivate DB
+end
+
+SessionSvc --> UsersRoute: {sessionsTerminated: count}
+deactivate SessionSvc
+
+UsersRoute -> Logger: Log force logout
+activate Logger
+Logger -> DB: INSERT security_events\n(event_type='forced_logout',\nperformed_by=adminUserId,\ntarget_user=targetUserId)
+deactivate Logger
+
+UsersRoute --> AdminBrowser: 200 OK\n{message: "User logged out"}
+AdminBrowser --> Admin: Display success
+deactivate UsersRoute
+deactivate AdminBrowser
+
+note over User, Browser
+    Target user's next request
+    will fail session validation
+    and redirect to login
+end note
+
+@enduml

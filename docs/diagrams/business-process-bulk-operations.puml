@@ -1,179 +1,631 @@
-@startuml business-process-bulk-operations
-title Business Process: Bulk Operations (Users & Inventory)
+@startuml business-process-bulk-operations@startuml business-process-bulk-operations@startuml business-process-bulk-operations
+
+title Business Process: Bulk Operations
+
+title Business Process: Bulk Operationstitle Business Process: Bulk Operations
 
 skinparam backgroundColor #f8fafc
-skinparam activityBackgroundColor #dbeafe
-skinparam activityBorderColor #2b6cb0
-skinparam activityFontColor #0f172a
 
-|Admin/Staff|
+skinparam activityBackgroundColor #dbeafe
+
+skinparam activityBorderColor #2b6cb0
+
+skinparam activityFontColor #0f172askinparam backgroundColor #f8fafcskinparam backgroundColor #f8fafc
+
+
+
+|Admin/Staff|skinparam activityBackgroundColor #dbeafeskinparam activityBackgroundColor #dbeafe
+
 start
 
-if (Operation Type?) then (Bulk User Operations)
-  
+:Access Bulk Operations;skinparam activityBorderColor #2b6cb0skinparam activityBorderColor #2b6cb0
+
+
+
+if (Operation Type?) then (User Management)skinparam activityFontColor #0f172askinparam activityFontColor #0f172a
+
   |Admin|
+
   :Navigate to User Management;
-  :Access Users List;
-  
-  |System|
-  :Display Users with Checkboxes;
-  :Display bulk action menu;
-  
-  |Admin|
+
   :Select Multiple Users;
+
+  note right|Admin/Staff||Admin/Staff|
+
+    Selection: checkboxes, select all,
+
+    or filter + select filteredstartstart
+
+  end note
+
+  :Access Bulk Operations;:Access Bulk Operations;
+
+  :Choose Bulk Action;
+
   note right
-    Selection options:
-    • Individual checkboxes
-    • Select All on Page
-    • Select All (all pages)
-    • Filter + Select Filtered
+
+    Actions: Activate, Deactivate, Unlock,
+
+    Delete, Export, Send Emailif (Operation Type?) then (User Management)if (Operation Type?) then (User Management)
+
+  end note
+
+    |Admin|  |Admin|
+
+  |System|
+
+  :Show Confirmation Dialog;  :Navigate to User Management;  :Navigate to User Management;
+
+  
+
+  |Admin|  :Select Multiple Users;  :Select Multiple Users;
+
+  if (Confirm?) then (yes)
+
+    |System|  note right  note right
+
+    :Validate Operation;
+
+    note right    Selection: checkboxes, select all,    Selection: checkboxes, select all,
+
+      • Check permissions
+
+      • Validate user IDs    or filter + select filtered    or filter + select filtered
+
+      • Prevent self-operation
+
+    end note  end note  end note
+
+    
+
+    if (Valid?) then (yes)    
+
+      :Process Bulk Operation;
+
+      note right  :Choose Bulk Action;  :Choose Bulk Action;
+
+        For each user:
+
+        • Update database  note right  note right
+
+        • Log security event
+
+        • Force logout (if deactivate)    Actions: Activate, Deactivate, Unlock,    Actions: Activate, Deactivate, Unlock,
+
+        • Track success/errors
+
+      end note    Delete, Export, Send Email    Delete, Export, Send Email
+
+      
+
+      :Display Results Summary;  end note  end note
+
+      note right
+
+        Show: X succeeded, Y failed    
+
+        with error details if any
+
+      end note  |System|  |System|
+
+      stop
+
+    else (no)  :Show Confirmation Dialog;  :Show Confirmation Dialog;
+
+      :Show Validation Errors;
+
+      stop    
+
+    endif
+
+  else (no)  |Admin|  |Admin|
+
+    :Cancel Operation;
+
+    stop  if (Confirm?) then (yes)  if (Confirm?) then (yes)
+
+  endif
+
+    |System|    |System|
+
+elseif (Inventory Operations) then
+
+  |Staff/Admin|    :Validate Operation;    :Validate Operation;
+
+  :Navigate to Inventory;
+
+  :Filter & Select Items;    note right    note right
+
+  note right
+
+    Filter by: warehouse, zone,      • Check permissions      • Check permissions
+
+    category, status, supplier
+
+  end note      • Validate user IDs      • Validate user IDs
+
+  
+
+  :Choose Bulk Action;      • Prevent self-operation      • Prevent self-operation
+
+  note right
+
+    Actions: Update Prices, Change Supplier,    end note    end note
+
+    Transfer Location, Export, Generate QR,
+
+    Adjust Stock Levels        
+
+  end note
+
+      if (Valid?) then (yes)    if (Valid?) then (yes)
+
+  |System|
+
+  :Show Confirmation Dialog;      :Process Bulk Operation;      :Process Bulk Operation;
+
+  
+
+  |Staff/Admin|      note right      note right
+
+  if (Confirm?) then (yes)
+
+    |System|        For each user:        For each user:
+
+    :Validate Operation;
+
+    note right        • Update database        • Update database
+
+      • Check permissions
+
+      • Validate item IDs        • Log security event        • Log security event
+
+      • Check stock levels
+
+      • Verify destinations (if transfer)        • Force logout (if deactivate)        • Track success/errors
+
+    end note
+
+            • Track success/errors      end note
+
+    if (Valid?) then (yes)
+
+      :Process Bulk Operation;      end note      
+
+      note right
+
+        For each item:            :Display Results;
+
+        • Update inventory records
+
+        • Update locations (if transfer)      :Display Results Summary;      note right
+
+        • Log changes
+
+        • Update serials/batches (if applicable)      note right        Summary: X succeeded, Y failed
+
+        • Generate alerts (if needed)
+
+      end note        Show: X succeeded, Y failed        Error details if any
+
+      
+
+      :Display Results Summary;        with error details if any      end note
+
+      stop
+
+    else (no)      end note      stop
+
+      :Show Validation Errors;
+
+      stop      stop    else (no)
+
+    endif
+
+  else (no)    else (no)      :Show Validation Errors;
+
+    :Cancel Operation;
+
+    stop      :Show Validation Errors;      stop
+
+  endif
+
+      stop    endif
+
+elseif (Receipt Operations) then
+
+  |Staff/Admin|    endif  else (no)
+
+  :Navigate to Receipts;
+
+  :Select Multiple Receipts;  else (no)    :Cancel Operation;
+
+  
+
+  :Choose Bulk Action;    :Cancel Operation;    stop
+
+  note right
+
+    Actions: Export (PDF/CSV/Excel/JSON),    stop  endif
+
+    Print, Email, Delete (Admin only)
+
+  end note  endif            
+
+  
+
+  |System|          end fork
+
+  :Show Confirmation Dialog;
+
+  elseif (Inventory Operations) then          
+
+  |Staff/Admin|
+
+  if (Confirm?) then (yes)  |Staff/Admin|        repeat while (more users?) is (yes)
+
+    |System|
+
+    :Validate Operation;  :Navigate to Inventory;        ->no;
+
+    
+
+    if (Valid?) then (yes)  :Filter & Select Items;        
+
+      :Process Bulk Operation;
+
+      note right  note right        :Commit Transaction;
+
+        • Generate documents/exports
+
+        • Send notifications (if email)    Filter by: warehouse, zone,        
+
+        • Log operations
+
+        • Track results    category, status, supplier        :Display Success Summary;
+
+      end note
+
+        end note        note right
+
+      :Provide Output;
+
+      note right            "Bulk activation completed:
+
+        Download file or show
+
+        success confirmation  :Choose Bulk Action;          
+
+      end note
+
+      stop  note right          ✓ {success_count} users activated
+
+    else (no)
+
+      :Show Validation Errors;    Actions: Update Prices, Change Supplier,          ✗ {error_count} errors
+
+      stop
+
+    endif    Transfer Location, Export, Generate QR,          
+
+  else (no)
+
+    :Cancel Operation;    Adjust Stock Levels          [View Details] [OK]"
+
+    stop
+
+  endif  end note        end note
+
+
+
+else (Export Operations)          
+
+  |Staff/Admin|
+
+  :Select Export Type;  |System|        stop
+
+  note right
+
+    Types: Users, Inventory, Receipts,  :Show Confirmation Dialog;      else (no)
+
+    Suppliers, Analytics, Audit Logs
+
+  end note          :Display Validation Errors;
+
+  
+
+  :Configure Export Options;  |Staff/Admin|        stop
+
+  note right
+
+    • Format (CSV, Excel, JSON, PDF)  if (Confirm?) then (yes)      endif
+
+    • Date range
+
+    • Filters    |System|    else (no)
+
+    • Columns to include
+
+  end note    :Validate Operation;      :Cancel Operation;
+
+  
+
+  |System|    note right      stop
+
+  :Validate Export Request;
+
+        • Check permissions    endif
+
+  if (Valid?) then (yes)
+
+    :Generate Export File;      • Validate item IDs    
+
+    note right
+
+      • Query database      • Check stock levels  else (Deactivate Users)
+
+      • Format data
+
+      • Create file      • Verify destinations (if transfer)    
+
+      • Log export activity
+
+    end note    end note    :Show Warning Dialog;
+
+    
+
+    :Provide Download Link;        note right
+
+    stop
+
+  else (no)    if (Valid?) then (yes)      "⚠ Deactivate X users?
+
+    :Show Validation Errors;
+
+    stop      :Process Bulk Operation;      
+
+  endif
+
+endif      note right      Deactivated users cannot log in.
+
+
+
+@enduml        For each item:      All active sessions will be terminated.
+
+
+        • Update inventory records  else (no)
+
+        • Update locations (if transfer)    :Cancel Operation;
+
+        • Log changes    stop
+
+        • Update serials/batches (if applicable)  endif
+
+        • Generate alerts (if needed)
+
+      end noteelseif (Inventory Operations) then
+
+        |Staff/Admin|
+
+      :Display Results Summary;  :Navigate to Inventory;
+
+      stop  :Select Multiple Items;
+
+    else (no)  note right
+
+      :Show Validation Errors;    Filter by: warehouse, zone,
+
+      stop    category, status, etc.
+
+    endif  end note
+
+  else (no)  
+
+    :Cancel Operation;  :Choose Bulk Action;
+
+    stop  note right
+
+  endif    Actions: Export, Update Status,
+
+    Move Location, Delete, Generate QR
+
+elseif (Receipt Operations) then  end note
+
+  |Staff/Admin|  
+
+  :Navigate to Receipts;  |System|
+
+  :Select Multiple Receipts;  :Show Confirmation Dialog;
+
+    
+
+  :Choose Bulk Action;  |Staff/Admin|
+
+  note right  if (Confirm?) then (yes)
+
+    Actions: Export (PDF/CSV/Excel/JSON),    |System|
+
+    Print, Email, Delete (Admin only)    :Validate Operation;
+
+  end note    note right
+
+        • Check permissions
+
+  |System|      • Validate item IDs
+
+  :Show Confirmation Dialog;      • Check stock levels
+
+        • Verify destinations
+
+  |Staff/Admin|    end note
+
+  if (Confirm?) then (yes)    
+
+    |System|    if (Valid?) then (yes)
+
+    :Validate Operation;      :Process Bulk Operation;
+
+          note right
+
+    if (Valid?) then (yes)        For each item:
+
+      :Process Bulk Operation;        • Update inventory
+
+      note right        • Log changes
+
+        • Generate documents/exports        • Update locations
+
+        • Send notifications (if email)        • Track results
+
+        • Log operations      end note
+
+        • Track results      
+
+      end note      :Display Results;
+
+            note right
+
+      :Provide Output;        Summary with success/error counts
+
+      note right      end note
+
+        Download file or show      stop
+
+        success confirmation    else (no)
+
+      end note      :Show Validation Errors;
+
+      stop      stop
+
+    else (no)    endif
+
+      :Show Validation Errors;  else (no)
+
+      stop    :Cancel Operation;
+
+    endif    stop
+
+  else (no)  endif
+
+    :Cancel Operation;
+
+    stopelseif (Receipt Operations) then
+
+  endif  |Staff/Admin|
+
+  :Navigate to Receipts;
+
+else (Export Operations)  :Select Multiple Receipts;
+
+  |Staff/Admin|  
+
+  :Select Export Type;  :Choose Bulk Action;
+
+  note right  note right
+
+    Types: Users, Inventory, Receipts,    Actions: Export (PDF/CSV/Excel),
+
+    Suppliers, Analytics, Audit Logs    Print, Email, Archive, Delete (Admin)
+
+  end note  end note
+
+    
+
+  :Configure Export Options;  |System|
+
+  note right  :Show Confirmation Dialog;
+
+    • Format (CSV, Excel, JSON, PDF)  
+
+    • Date range  |Staff/Admin|
+
+    • Filters  if (Confirm?) then (yes)
+
+    • Columns to include    |System|
+
+  end note    :Validate Operation;
+
+      
+
+  |System|    if (Valid?) then (yes)
+
+  :Validate Export Request;      :Process Bulk Operation;
+
+        note right
+
+  if (Valid?) then (yes)        • Generate documents
+
+    :Generate Export File;        • Send notifications
+
+    note right        • Log operations
+
+      • Query database        • Track results
+
+      • Format data      end note
+
+      • Create file      
+
+      • Log export activity      :Display Results;
+
+    end note      stop
+
+        else (no)
+
+    :Provide Download Link;      :Show Validation Errors;
+
+    stop      stop
+
+  else (no)    endif
+
+    :Show Validation Errors;  else (no)
+
+    stop    :Cancel Operation;
+
+  endif    stop
+
+endif  endif
+
+
+
+@endumlelse (Export Operations)
+
+  |Staff/Admin|
+  :Select Export Type;
+  note right
+    Export: Users, Inventory, Receipts,
+    Suppliers, Analytics, Audit Logs
   end note
   
-  :Choose Bulk Action;
+  :Configure Export Options;
   note right
-    Available actions:
-    • Activate Users
-    • Deactivate Users
-    • Unlock Accounts
-    • Delete Users (dangerous)
-    • Export User List
-    • Send Bulk Email
-    • Change Role (future)
+    • Format (CSV, Excel, JSON, PDF)
+    • Date range
+    • Filters
+    • Columns to include
   end note
   
   |System|
-  if (Action?) then (Activate Users)
-    
-    :Show Confirmation Dialog;
+  :Validate Export Request;
+  
+  if (Valid?) then (yes)
+    :Generate Export File;
     note right
-      "Activate X selected users?
-      
-      This will allow them to log in.
-      
-      [Cancel] [Confirm]"
+      • Query database
+      • Format data
+      • Create file
+      • Log export
     end note
     
-    |Admin|
-    if (Confirm?) then (yes)
-      
-      |System|
-      :Validate Operation;
-      
-      fork
-        :Check Permissions;
-        :Ensure admin role;
-      fork again
-        :Validate User IDs;
-        :All users exist;
-      fork again
-        :Check for Current User;
-        :Cannot bulk-operate on self;
-      end fork
-      
-      if (Valid?) then (yes)
-        :Begin Transaction;
-        
-        :Initialize Counters;
-        :success_count = 0;
-        :error_count = 0;
-        :errors = [];
-        
-        repeat
-          :Process Next User;
-          :user_id = selected_users[i];
-          
-          fork
-            :Update User Status;
-            :UPDATE users
-              SET is_active = 1,
-                  updated_at = NOW()
-              WHERE id = ?;
-            
-          fork again
-            :Log Security Event;
-            :INSERT INTO security_events
-              (user_id, event_type,
-               details, performed_by)
-              VALUES (?, 'user_activated',
-                      'Bulk operation', ?);
-            
-          fork again
-            :Increment success_count;
-            
-          end fork
-          
-        repeat while (more users?) is (yes)
-        ->no;
-        
-        :Commit Transaction;
-        
-        :Display Success Summary;
-        note right
-          "Bulk activation completed:
-          
-          ✓ {success_count} users activated
-          ✗ {error_count} errors
-          
-          [View Details] [OK]"
-        end note
-        
-        stop
-      else (no)
-        :Display Validation Errors;
-        stop
-      endif
-    else (no)
-      :Cancel Operation;
-      stop
-    endif
-    
-  else (Deactivate Users)
-    
-    :Show Warning Dialog;
-    note right
-      "⚠ Deactivate X users?
-      
-      Deactivated users cannot log in.
-      All active sessions will be terminated.
-      
-      [Cancel] [Deactivate]"
-    end note
-    
-    |Admin|
-    if (Confirm?) then (yes)
-      |System|
-      :Begin Transaction;
-      
-      repeat
-        :Process User;
-        
-        fork
-          :Update Status;
-          :UPDATE users
-            SET is_active = 0
-            WHERE id = ?;
-          
-        fork again
-          :Force Logout;
-          :Call sessionService.forceLogoutUser(user_id);
-          
-        fork again
-          :Log Event;
-          :event_type = 'user_deactivated';
-          
-        end fork
-        
-      repeat while (more users?)
-      
-      :Commit Transaction;
-      :Display Summary;
-      stop
-    else (no)
-      :Cancel;
-      stop
-    endif
-    
-  else (Unlock Accounts)
+    :Provide Download Link;
+    :Log Export Activity;
+    stop
+  else (no)
+    :Show Validation Errors;
+    stop
+  endif
+endif
+
+@enduml
     
     :Confirm Unlock Operation;
     

@@ -1,0 +1,483 @@
+@startuml data-model-erd
+title Mycelium Inventory Management System - Entity Relationship Diagram
+
+skinparam backgroundColor #f8fafc
+skinparam class {
+  BackgroundColor #e0f2fe
+  BorderColor #2b6cb0
+  FontColor #0f172a
+  ArrowColor #2b6cb0
+}
+
+skinparam note {
+  BackgroundColor #fef3c7
+  BorderColor #dc2626
+}
+
+' ========== SECURITY_DB ==========
+package "security_db" #dcfce7 {
+  
+  class users {
+    **PK** id : INT(11)
+    --
+    username : VARCHAR(50) <<UNIQUE>>
+    email : VARCHAR(100) <<UNIQUE>>
+    password : VARCHAR(255)
+    role : ENUM('admin', 'staff')
+    first_name : VARCHAR(50)
+    last_name : VARCHAR(50)
+    phone : VARCHAR(20)
+    is_active : TINYINT(1)
+    failed_login_attempts : INT(11)
+    locked_until : DATETIME
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+  }
+  
+  class security_events {
+    **PK** id : INT(11)
+    --
+    **FK** user_id : INT(11)
+    event_type : VARCHAR(50)
+    ip_address : VARCHAR(45)
+    user_agent : TEXT
+    details : TEXT
+    risk_level : ENUM('low','medium','high')
+    created_at : TIMESTAMP
+  }
+  
+  class token_invalidation {
+    **PK** id : INT(11)
+    --
+    **FK** user_id : INT(11)
+    token_hash : VARCHAR(255)
+    invalidated_at : TIMESTAMP
+    invalidated_by : INT(11)
+    reason : VARCHAR(255)
+  }
+  
+  class session_secrets {
+    **PK** id : INT(11)
+    --
+    secret_key : VARCHAR(255)
+    status : ENUM('active','expiring','revoked')
+    created_at : TIMESTAMP
+    created_by : INT(11)
+    expires_at : DATETIME
+    revoked_at : DATETIME
+  }
+  
+  class password_reset_tokens {
+    **PK** id : INT(11)
+    --
+    **FK** user_id : INT(11)
+    token_hash : VARCHAR(255)
+    expires_at : DATETIME
+    ip_address : VARCHAR(45)
+    user_agent : TEXT
+    created_at : TIMESTAMP
+  }
+  
+  users ||--o{ security_events : "generates"
+  users ||--o{ token_invalidation : "has"
+  users ||--o{ password_reset_tokens : "requests"
+}
+
+' ========== SUPPLIERS_DB ==========
+package "suppliers_db" #fef3c7 {
+  
+  class suppliers {
+    **PK** id : INT(11)
+    --
+    name : VARCHAR(100) <<UNIQUE>>
+    contact_person : VARCHAR(100)
+    email : VARCHAR(100)
+    phone : VARCHAR(20)
+    address : TEXT
+    city : VARCHAR(50)
+    state : VARCHAR(50)
+    zip_code : VARCHAR(20)
+    country : VARCHAR(50)
+    payment_terms : VARCHAR(100)
+    default_lead_time : INT(11)
+    tax_id : VARCHAR(50)
+    is_active : TINYINT(1)
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+  }
+  
+  class supplier_contacts {
+    **PK** id : INT(11)
+    --
+    **FK** supplier_id : INT(11)
+    contact_name : VARCHAR(100)
+    contact_title : VARCHAR(50)
+    contact_email : VARCHAR(100)
+    contact_phone : VARCHAR(20)
+    is_primary : TINYINT(1)
+    created_at : TIMESTAMP
+  }
+  
+  suppliers ||--o{ supplier_contacts : "has"
+}
+
+' ========== MASTER_SPECS_DB ==========
+package "master_specs_db" #dbeafe {
+  
+  ' ===== Products =====
+  class specs_db {
+    **PK** phone_id : INT(11)
+    --
+    device_name : VARCHAR(255)
+    device_sku : VARCHAR(50) <<UNIQUE>>
+    device_description : TEXT
+    device_category : VARCHAR(50)
+    device_unit : VARCHAR(20)
+    device_price : DECIMAL(10,2)
+    device_cost : DECIMAL(10,2)
+    device_inventory : INT(11)
+    reorder_level : INT(11)
+    max_stock_level : INT(11)
+    is_serializable : TINYINT(1)
+    **FK** supplier_id : INT(11)
+    metadata : JSON
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+  }
+  
+  ' ===== Warehouses =====
+  class warehouses {
+    **PK** warehouse_id : INT(11)
+    --
+    warehouse_name : VARCHAR(100)
+    warehouse_code : VARCHAR(20) <<UNIQUE>>
+    address : TEXT
+    city : VARCHAR(50)
+    state : VARCHAR(50)
+    capacity : INT(11)
+    status : ENUM('active','inactive')
+    manager_name : VARCHAR(100)
+    manager_phone : VARCHAR(20)
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+  }
+  
+  class zones {
+    **PK** zone_id : INT(11)
+    --
+    **FK** warehouse_id : INT(11)
+    zone_name : VARCHAR(100)
+    zone_code : VARCHAR(20)
+    zone_type : ENUM('receiving','storage','picking','shipping','returns','quarantine')
+    capacity : INT(11)
+    current_occupancy : INT(11)
+    temperature_controlled : TINYINT(1)
+    security_level : VARCHAR(20)
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+  }
+  
+  class bin_locations {
+    **PK** bin_id : INT(11)
+    --
+    **FK** zone_id : INT(11)
+    **FK** warehouse_id : INT(11)
+    aisle : VARCHAR(10)
+    shelf : VARCHAR(10)
+    bin : VARCHAR(10)
+    bin_code : VARCHAR(50) <<UNIQUE>>
+    capacity : INT(11)
+    status : ENUM('empty','partial','full')
+    created_at : TIMESTAMP
+  }
+  
+  ' ===== Inventory Tracking =====
+  class inventory_batches {
+    **PK** batch_id : INT(11)
+    --
+    **FK** product_id : INT(11)
+    **FK** warehouse_id : INT(11)
+    **FK** zone_id : INT(11)
+    batch_number : VARCHAR(100) <<UNIQUE>>
+    lot_number : VARCHAR(100)
+    initial_quantity : INT(11)
+    current_quantity : INT(11)
+    quantity_sold : INT(11)
+    manufacturing_date : DATE
+    expiry_date : DATE
+    purchase_price : DECIMAL(10,2)
+    status : ENUM('active','depleted','expired')
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+  }
+  
+  class serialized_inventory {
+    **PK** serial_id : INT(11)
+    --
+    **FK** product_id : INT(11)
+    **FK** batch_id : INT(11)
+    **FK** warehouse_id : INT(11)
+    **FK** zone_id : INT(11)
+    **FK** bin_id : INT(11)
+    serial_number : VARCHAR(100) <<UNIQUE>>
+    status : ENUM('available','reserved','sold','damaged','lost','returned','in_transit','quarantined')
+    purchase_cost : DECIMAL(10,2)
+    warranty_info : TEXT
+    sold_date : DATETIME
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+  }
+  
+  class serial_history {
+    **PK** history_id : INT(11)
+    --
+    **FK** serial_id : INT(11)
+    serial_number : VARCHAR(100)
+    action : VARCHAR(50)
+    from_status : VARCHAR(50)
+    to_status : VARCHAR(50)
+    from_location : VARCHAR(255)
+    to_location : VARCHAR(255)
+    **FK** performed_by : INT(11)
+    reason : TEXT
+    timestamp : TIMESTAMP
+  }
+  
+  ' ===== Receipts =====
+  class receipts {
+    **PK** receipt_id : INT(11)
+    --
+    receipt_number : VARCHAR(50) <<UNIQUE>>
+    receipt_type : ENUM('IN','OUT','TRANSFER','RETURN')
+    **FK** product_id : INT(11)
+    **FK** supplier_id : INT(11)
+    **FK** warehouse_id : INT(11)
+    **FK** zone_id : INT(11)
+    transaction_date : DATETIME
+    quantity : INT(11)
+    unit_cost : DECIMAL(10,2)
+    subtotal : DECIMAL(10,2)
+    tax_amount : DECIMAL(10,2)
+    total_amount : DECIMAL(10,2)
+    customer_name : VARCHAR(100)
+    customer_email : VARCHAR(100)
+    notes : TEXT
+    receipt_data : JSON
+    **FK** created_by : INT(11)
+    created_at : TIMESTAMP
+  }
+  
+  class receipt_line_items {
+    **PK** line_id : INT(11)
+    --
+    **FK** receipt_id : INT(11)
+    **FK** product_id : INT(11)
+    **FK** batch_id : INT(11)
+    quantity : INT(11)
+    unit_price : DECIMAL(10,2)
+    line_total : DECIMAL(10,2)
+    serial_numbers : TEXT
+    created_at : TIMESTAMP
+  }
+  
+  ' ===== Transfers =====
+  class transfers {
+    **PK** transfer_id : INT(11)
+    --
+    **FK** product_id : INT(11)
+    **FK** source_warehouse_id : INT(11)
+    **FK** source_zone_id : INT(11)
+    **FK** dest_warehouse_id : INT(11)
+    **FK** dest_zone_id : INT(11)
+    quantity : INT(11)
+    status : ENUM('initiated','in_transit','completed','cancelled')
+    **FK** initiated_by : INT(11)
+    transfer_date : DATETIME
+    completed_date : DATETIME
+    notes : TEXT
+    created_at : TIMESTAMP
+  }
+  
+  ' ===== Alerts =====
+  class stock_alerts {
+    **PK** alert_id : INT(11)
+    --
+    **FK** product_id : INT(11)
+    **FK** warehouse_id : INT(11)
+    alert_type : ENUM('low_stock','out_of_stock','expiring_soon','overstock','slow_moving','dead_stock','capacity_warning')
+    severity : ENUM('LOW','MEDIUM','HIGH','CRITICAL')
+    current_quantity : INT(11)
+    threshold : INT(11)
+    days_until_expiry : INT(11)
+    status : ENUM('active','acknowledged','resolved','dismissed')
+    action_taken : TEXT
+    triggered_at : TIMESTAMP
+    resolved_at : TIMESTAMP
+  }
+  
+  ' ===== Audit Log =====
+  class inventory_log {
+    **PK** log_id : INT(11)
+    --
+    **FK** product_id : INT(11)
+    **FK** batch_id : INT(11)
+    **FK** receipt_id : INT(11)
+    transaction_type : VARCHAR(50)
+    quantity_before : INT(11)
+    quantity_after : INT(11)
+    quantity_changed : INT(11)
+    **FK** warehouse_id : INT(11)
+    **FK** zone_id : INT(11)
+    source_location : VARCHAR(255)
+    dest_location : VARCHAR(255)
+    **FK** performed_by : INT(11)
+    ip_address : VARCHAR(45)
+    notes : TEXT
+    timestamp : TIMESTAMP
+  }
+  
+  ' ===== Location Inventory =====
+  class warehouse_product_locations {
+    **PK** location_id : INT(11)
+    --
+    **FK** product_id : INT(11)
+    **FK** warehouse_id : INT(11)
+    **FK** zone_id : INT(11)
+    **FK** bin_id : INT(11)
+    quantity : INT(11)
+    updated_at : TIMESTAMP
+  }
+  
+  ' ===== Relationships within master_specs_db =====
+  
+  ' Warehouse structure
+  warehouses ||--o{ zones : "contains"
+  zones ||--o{ bin_locations : "contains"
+  warehouses ||--o{ bin_locations : "has"
+  
+  ' Product location tracking
+  specs_db ||--o{ warehouse_product_locations : "stored in"
+  warehouses ||--o{ warehouse_product_locations : "stores"
+  zones ||--o{ warehouse_product_locations : "contains"
+  bin_locations ||--o{ warehouse_product_locations : "holds"
+  
+  ' Batch tracking
+  specs_db ||--o{ inventory_batches : "has batches"
+  warehouses ||--o{ inventory_batches : "stores"
+  zones ||--o{ inventory_batches : "contains"
+  
+  ' Serial tracking
+  specs_db ||--o{ serialized_inventory : "has serials"
+  inventory_batches ||--o{ serialized_inventory : "contains"
+  warehouses ||--o{ serialized_inventory : "stores"
+  zones ||--o{ serialized_inventory : "in"
+  bin_locations ||--o{ serialized_inventory : "at"
+  serialized_inventory ||--o{ serial_history : "has history"
+  
+  ' Receipts
+  specs_db ||--o{ receipts : "referenced in"
+  warehouses ||--o{ receipts : "received at"
+  zones ||--o{ receipts : "assigned to"
+  receipts ||--o{ receipt_line_items : "contains"
+  specs_db ||--o{ receipt_line_items : "line item"
+  inventory_batches ||--o{ receipt_line_items : "uses"
+  
+  ' Transfers
+  specs_db ||--o{ transfers : "transferred"
+  warehouses ||--o{ transfers : "source"
+  warehouses ||--o{ transfers : "destination"
+  zones ||--o{ transfers : "from zone"
+  zones ||--o{ transfers : "to zone"
+  
+  ' Alerts
+  specs_db ||--o{ stock_alerts : "triggers"
+  warehouses ||--o{ stock_alerts : "for warehouse"
+  
+  ' Audit logging
+  specs_db ||--o{ inventory_log : "logged"
+  inventory_batches ||--o{ inventory_log : "tracked"
+  receipts ||--o{ inventory_log : "logged"
+  warehouses ||--o{ inventory_log : "at warehouse"
+  zones ||--o{ inventory_log : "at zone"
+}
+
+' ===== Cross-database relationships =====
+suppliers ||--o{ specs_db : "supplies"
+suppliers ||--o{ receipts : "supplies to"
+supplier_contacts ||.. receipts : "contact for"
+
+users ||--o{ receipts : "creates"
+users ||--o{ transfers : "initiates"
+users ||--o{ inventory_log : "performs"
+users ||--o{ serial_history : "performs"
+
+' ===== Notes =====
+note top of "security_db"
+  **Security Database**
+  Handles authentication, authorization,
+  and security audit logging.
+  
+  - User accounts and roles
+  - Security events tracking
+  - Session management
+  - Token invalidation
+end note
+
+note top of "suppliers_db"
+  **Suppliers Database**
+  Manages supplier master data
+  and contact information.
+  
+  - Supplier details
+  - Multiple contacts per supplier
+  - Payment terms and lead times
+end note
+
+note top of "master_specs_db"
+  **Master Inventory Database**
+  Core inventory management with
+  multi-level tracking.
+  
+  - Product catalog
+  - Warehouse/Zone/Bin structure
+  - Batch and serial tracking
+  - Receipts and transfers
+  - Alerts and audit logs
+end note
+
+note bottom of specs_db
+  **Product Master**
+  - is_serializable flag determines
+    if serial tracking is required
+  - Reorder levels trigger alerts
+  - Links to supplier
+end note
+
+note bottom of serialized_inventory
+  **Serial Tracking**
+  Each unit has unique serial number
+  with complete lifecycle history.
+  
+  States: available, reserved, sold,
+  damaged, lost, returned, in_transit,
+  quarantined
+end note
+
+note bottom of inventory_batches
+  **Batch Tracking**
+  FIFO/FEFO strategies use:
+  - manufacturing_date (FIFO)
+  - expiry_date (FEFO)
+  
+  Tracks quantities and depletion
+end note
+
+note bottom of warehouses
+  **Multi-Warehouse Support**
+  Each warehouse can have:
+  - Multiple zones by type
+  - Configurable capacity
+  - Manager assignment
+end note
+
+@enduml
