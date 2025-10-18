@@ -12,7 +12,7 @@ const doc = {
   schemes: ['http'],
 };
 
-const outputFile = path.join(__dirname, '../../swagger-output.json');
+const outputFile = path.join(__dirname, '../../config/swagger-output.json');
 const endpointsFiles = [path.join(__dirname, '../../backend/server.cjs')];
 
 swaggerAutogen(outputFile, endpointsFiles, doc).then(() => {

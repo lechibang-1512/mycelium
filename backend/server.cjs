@@ -94,7 +94,7 @@ async function startServer() {
 
         // Swagger API Documentation
         try {
-            const swaggerDocument = require('../swagger-output.json');
+            const swaggerDocument = require('../config/swagger-output.json');
             app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
         } catch (_e) {
             console.warn('⚠️ Swagger documentation not found. Run npm run generate:docs to create it.');
