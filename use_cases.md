@@ -1,7 +1,7 @@
 # Mycelium Inventory Management System - Use Case Description
 
-> **Version:** 1.0  
-> **Created:** October 22, 2025  
+> **Version:** 1.1  
+> **Updated:** October 23, 2025  
 > **System:** Mycelium Inventory Management System
 
 ## Table of Contents
@@ -20,7 +20,7 @@
 
 ### What is Mycelium?
 
-**Mycelium** is a secure, web-based inventory management system designed for small-to-medium businesses managing complex warehouse operations. The system is built as a **software application** using Node.js, Express, and MySQL, providing a comprehensive solution for inventory tracking, warehouse management, and business analytics.
+**Mycelium** is a secure, web-based inventory management system designed for small-to-medium businesses managing complex warehouse operations. The system is built as a **software application** using N[...]
 
 ### Core Features
 
@@ -34,6 +34,10 @@ The system offers the following key features:
 - **Advanced Analytics**: Real-time dashboards with KPIs and business intelligence
 - **Role-based Access Control**: Secure authentication with Admin and Staff roles
 - **Session Security**: Dynamic session management with token invalidation
+- **Inventory Audit**: Periodic verification of physical inventory against system records
+- **Equipment Condition Assessment**: Track and manage equipment status and maintenance needs
+- **Consumable Components Management**: Special tracking for consumable inventory items
+- **High-Value Item Controls**: Enhanced security and tracking for valuable components
 
 ### Goals and Objectives
 
@@ -45,6 +49,9 @@ The system accomplishes the following business goals:
 4. **Business Intelligence**: Provide real-time insights through comprehensive analytics and reporting
 5. **Security and Control**: Implement robust access controls and session management for data protection
 6. **Scalability**: Support growth from single warehouse to multi-warehouse operations
+7. **Data Integrity**: Regular verification processes ensure system data matches physical reality
+8. **Asset Lifecycle Management**: Track equipment condition and manage maintenance needs
+9. **Expendable Inventory Control**: Manage consumable components with specialized workflows
 
 ### How It Meets These Goals
 
@@ -54,6 +61,8 @@ The system accomplishes the following business goals:
 - **Automated Alerts**: System monitors stock levels and generates alerts for low stock, expiry, and other conditions
 - **Multi-database Architecture**: Separate databases for inventory, suppliers, and security ensure data integrity
 - **Service-oriented Design**: Modular architecture with dedicated services for different business functions
+- **Periodic Verification**: Scheduled audits and data validation processes maintain accuracy
+- **Specialized Workflows**: Different handling for durable assets vs. consumable inventory
 
 ### System Architecture
 
@@ -86,12 +95,7 @@ The system follows a three-tier architecture:
 
 ### Secondary Actors
 
-#### 2.3 System (Automated Processes)
-- **Type**: Automated background processes
-- **Behavior**: Scheduled monitoring, alert generation, session cleanup, and analytics updates
-- **Integration**: Internal system processes that support primary actor workflows
-
-#### 2.4 External Systems (Future Integration)
+#### 2.3 External Systems (Future Integration)
 - **Type**: Third-party systems and APIs
 - **Behavior**: Potential integration points for ERP systems, shipping providers, and external databases
 - **Current Status**: Not implemented but architecture supports future integration
@@ -120,12 +124,15 @@ The system follows a three-tier architecture:
 3. **Configuration Management**: Set up warehouses, zones, and system parameters
 4. **Data Integrity**: Ensure accurate inventory data and resolve discrepancies
 5. **Compliance Management**: Maintain audit trails and ensure regulatory compliance
+6. **Inventory Verification**: Oversee periodic inventory audits and approve reconciliations
+7. **Asset Management**: Monitor equipment condition and approve maintenance decisions
 
 #### Secondary Goals
 1. **Business Intelligence**: Access comprehensive analytics and generate reports
 2. **Security Management**: Manage sessions, force logouts, and handle security incidents
 3. **Bulk Operations**: Perform mass updates and data management tasks
 4. **System Maintenance**: Handle system configuration changes and troubleshooting
+5. **Special Inventory Control**: Establish policies for high-value and consumable items
 
 ### 3.2 Warehouse Staff Goals
 
@@ -135,29 +142,103 @@ The system follows a three-tier architecture:
 3. **Supplier Coordination**: Maintain supplier information and track performance
 4. **Transaction Processing**: Create and manage receipts for all inventory movements
 5. **Quality Control**: Ensure accurate data entry and proper inventory handling
+6. **Physical Verification**: Perform physical counts and resolve inventory discrepancies
+7. **Equipment Maintenance**: Assess equipment condition and record maintenance needs
 
 #### Secondary Goals
 1. **Efficiency Enhancement**: Use QR codes and automation to speed up operations
 2. **Information Access**: View analytics and reports relevant to their operations
 3. **Problem Resolution**: Identify and report inventory discrepancies or issues
 4. **Process Improvement**: Suggest improvements based on operational experience
-
-### 3.3 System (Automated) Goals
-
-#### Primary Goals
-1. **Monitoring and Alerting**: Continuously monitor inventory levels and generate alerts
-2. **Data Integrity**: Maintain consistent data across all databases and transactions
-3. **Security Enforcement**: Validate sessions, enforce access controls, and log security events
-4. **Performance Optimization**: Maintain system responsiveness and data accuracy
-
-#### Secondary Goals
-1. **Analytics Processing**: Generate reports and calculate KPIs automatically
-2. **Maintenance Tasks**: Clean up expired sessions and maintain database performance
-3. **Audit Trail Management**: Ensure complete logging of all system activities
+5. **Component Management**: Track consumable parts and high-value items
 
 ---
 
 ## 4. Use Case Scenarios
+
+### Use Case Diagram
+
+```plantuml
+@startuml Mycelium Inventory Management System
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Warehouse Admin" as admin
+actor "Warehouse Staff" as staff
+
+rectangle "Mycelium Inventory Management System" {
+  ' Authentication
+  usecase "Login/Logout" as UC1
+  usecase "Manage User Accounts" as UC2
+  
+  ' Inventory Management
+  usecase "Manage Products" as UC3
+  usecase "Receive Stock" as UC4
+  usecase "Sell Stock" as UC5
+  usecase "Transfer Inventory" as UC6
+  usecase "Perform Inventory Audit" as UC7
+  
+  ' Warehouse Management
+  usecase "Manage Warehouses" as UC8
+  usecase "Manage Zones and Bins" as UC9
+  
+  ' Supplier Management
+  usecase "Manage Suppliers" as UC10
+  
+  ' QR Code Operations
+  usecase "Generate QR Codes" as UC11
+  usecase "Scan QR Codes" as UC12
+  
+  ' Reporting
+  usecase "View Analytics Dashboard" as UC13
+  usecase "Generate Reports" as UC14
+  
+  ' New use cases based on feedback
+  usecase "Verify Data Periodically" as UC15
+  usecase "Assess Equipment Condition" as UC16
+  usecase "Manage Consumable Components" as UC17
+  usecase "Track High-Value Components" as UC18
+}
+
+' Admin relationships
+admin --> UC1
+admin --> UC2
+admin --> UC3
+admin --> UC4
+admin --> UC5
+admin --> UC6
+admin --> UC7
+admin --> UC8
+admin --> UC9
+admin --> UC10
+admin --> UC11
+admin --> UC12
+admin --> UC13
+admin --> UC14
+admin --> UC15
+admin --> UC16
+admin --> UC17
+admin --> UC18
+
+' Staff relationships
+staff --> UC1
+staff --> UC3
+staff --> UC4
+staff --> UC5
+staff --> UC6
+staff --> UC7
+staff --> UC9
+staff --> UC10
+staff --> UC11
+staff --> UC12
+staff --> UC13
+staff --> UC14
+staff --> UC16
+staff --> UC17
+staff --> UC18
+
+@enduml
+```
 
 ### UC-A1: User Management (Warehouse Admin)
 
@@ -191,6 +272,41 @@ The system follows a three-tier architecture:
    - System displays confirmation message
 4. **Postconditions**: User sessions terminated, security event logged
 5. **Routes**: GET `/admin/sessions`, POST `/admin/sessions/logout-user/:userId`
+
+#### Activity Diagram - User Management
+
+```plantuml
+@startuml User Management
+start
+:Admin navigates to User Management;
+:System displays user list;
+
+if (Action type?) then (Create new user)
+  :Admin clicks "Add New User";
+  :System displays user creation form;
+  :Admin enters user details;
+  :Admin submits form;
+  
+  if (Input valid?) then (yes)
+    :System hashes password;
+    :System creates user record;
+    :System logs creation event;
+    :System displays success message;
+  else (no)
+    :System displays validation errors;
+    :Admin corrects input;
+  endif
+else (Manage sessions)
+  :Admin navigates to Session Management;
+  :System displays active sessions;
+  :Admin selects session to terminate;
+  :System invalidates user tokens;
+  :System logs security event;
+  :System confirms session termination;
+endif
+stop
+@enduml
+```
 
 ### UC-S1: Product Management (Warehouse Staff)
 
@@ -238,6 +354,38 @@ The system follows a three-tier architecture:
 4. **Postconditions**: Inventory increased, receipt created, audit trail logged
 5. **Routes**: GET `/inventory/receive`, POST `/inventory/receive`
 
+#### Activity Diagram - Receive Stock
+
+```plantuml
+@startuml Receive Stock Process
+start
+:Staff navigates to Receive Stock page;
+:System displays receive form;
+:Staff selects supplier, product, warehouse/zone;
+:Staff enters quantity, unit cost, batch number, expiry date;
+:Staff submits form;
+
+if (Input valid?) then (yes)
+  if (Warehouse has capacity?) then (yes)
+    :System calculates total cost;
+    :System updates inventory levels;
+    :System creates receipt record;
+    :System logs inventory movement;
+    :System generates QR code for batch;
+    :System displays success confirmation;
+  else (no)
+    :System displays capacity error;
+    :Staff chooses alternative action;
+    note right: Split shipment, override capacity,\nor defer receipt
+  endif
+else (no)
+  :System displays validation errors;
+  :Staff corrects input;
+endif
+stop
+@enduml
+```
+
 #### Basic Flow - Batch and Serial Tracking
 1. **Preconditions**: Product requires batch/serial tracking
 2. **Extended Scenario**:
@@ -248,7 +396,7 @@ The system follows a three-tier architecture:
    - System creates individual serial records linked to batch
    - System generates QR codes for batch and each serial number
    - System sets up automatic expiry alerts based on expiry date
-4. **Postconditions**: Batch and serial records created, QR codes generated, alerts configured
+3. **Postconditions**: Batch and serial records created, QR codes generated, alerts configured
 
 ### UC-S3: Sell Stock (Warehouse Staff)
 
@@ -271,6 +419,47 @@ The system follows a three-tier architecture:
    - System displays transaction confirmation
 4. **Postconditions**: Inventory decreased, sales receipt created, stock alerts updated
 5. **Routes**: GET `/inventory/sell`, POST `/inventory/sell`
+
+#### Activity Diagram - Sell Stock
+
+```plantuml
+@startuml Sell Stock Process
+start
+:Staff navigates to Sell Stock page;
+:System displays product inventory;
+:Staff selects product and quantity;
+:Staff selects source warehouse/zone;
+:Staff submits transaction;
+
+if (Sufficient stock available?) then (yes)
+  :System applies FIFO/FEFO logic;
+  :System displays batch selection;
+  if (Accept automatic selection?) then (yes)
+    :System proceeds with selected batches;
+  else (no)
+    :Staff manually selects batches;
+    :System validates manual selection;
+  endif
+  
+  :System decrements inventory;
+  :System creates sales receipt;
+  :System logs transaction;
+  :System checks stock levels;
+  
+  if (Stock below threshold?) then (yes)
+    :System generates low stock alert;
+  else (no)
+    :System updates inventory normally;
+  endif
+  
+  :System displays transaction confirmation;
+else (no)
+  :System displays insufficient stock error;
+  :Staff modifies quantity or checks other locations;
+endif
+stop
+@enduml
+```
 
 ### UC-S4: Warehouse Management (Warehouse Staff)
 
@@ -358,6 +547,232 @@ The system follows a three-tier architecture:
 4. **Postconditions**: New supplier created and available for transactions
 5. **Routes**: GET `/suppliers`, GET `/suppliers/add`, POST `/suppliers`
 
+### UC-S7: Perform Inventory Audit (Staff/Admin)
+
+#### Basic Flow - Conduct Regular Inventory Audit
+1. **Preconditions**: Staff is authenticated, audit schedule determined
+2. **Trigger**: Scheduled audit or discrepancy investigation
+3. **Main Success Scenario**:
+   - Staff navigates to Inventory Audit module (`/inventory/audit`)
+   - System generates audit worksheets by location
+   - Staff counts physical inventory or uses QR scanning
+   - System compares counts to recorded inventory
+   - System identifies discrepancies
+   - Staff investigates and resolves discrepancies
+   - Staff provides justification for any adjustments
+   - System records all adjustments with audit trail
+   - System generates reconciliation report
+   - Admin approves final audit results
+4. **Postconditions**: Inventory records verified and corrected
+5. **Routes**: GET/POST `/inventory/audit`, GET/POST `/inventory/audit/reconciliation`
+
+#### Activity Diagram - Inventory Audit
+
+```plantuml
+@startuml Inventory Audit Process
+start
+:Admin/Staff initiates inventory audit;
+:System generates audit checklist by location;
+:Staff scans or manually enters inventory counts;
+
+fork
+  :Count physical items at location;
+  :Enter count in system;
+fork again
+  :Scan QR codes for batches/serials;
+  :System automatically records counts;
+end fork
+
+:System compares physical counts to system records;
+if (Discrepancies found?) then (yes)
+  :System highlights discrepancies;
+  :Staff investigates discrepancies;
+  if (Adjustments needed?) then (yes)
+    :Staff enters adjustment reason;
+    :System records inventory adjustment;
+    :System creates audit trail entry;
+  else (no)
+    :Staff marks as verified with notes;
+  endif
+else (no)
+  :System marks inventory as verified;
+endif
+
+:System generates audit completion report;
+:Admin reviews and approves audit results;
+:System updates last audit date for locations;
+stop
+@enduml
+```
+
+### UC-S8: Equipment Condition Assessment (Staff/Admin)
+
+#### Basic Flow - Assess and Update Equipment Condition
+1. **Preconditions**: Staff is authenticated, equipment exists in system
+2. **Trigger**: Scheduled assessment or reported issue
+3. **Main Success Scenario**:
+   - Staff navigates to Equipment module (`/equipment`)
+   - Staff selects equipment for assessment
+   - System displays equipment history and previous conditions
+   - Staff performs physical inspection
+   - Staff records condition details: operational status, physical condition, maintenance needs
+   - Staff updates estimated remaining useful life
+   - System updates condition history
+   - If maintenance needed, staff creates maintenance request
+   - If non-operational, staff initiates repair or retirement process
+   - System logs all condition changes in equipment history
+4. **Postconditions**: Equipment condition updated, maintenance scheduled if needed
+5. **Routes**: GET/POST `/equipment/:id/assess`, GET/POST `/equipment/maintenance`
+
+#### Activity Diagram - Equipment Condition Assessment
+
+```plantuml
+@startuml Equipment Condition Assessment
+start
+:Staff selects equipment for assessment;
+:System displays equipment details and history;
+:Staff performs physical inspection;
+:Staff enters condition assessment:
+- Operational status
+- Physical condition
+- Maintenance needs
+- Estimated remaining life;
+
+if (Equipment operational?) then (yes)
+  if (Maintenance needed?) then (yes)
+    :Staff schedules maintenance;
+    :System creates maintenance record;
+  else (no)
+    :Staff records normal condition;
+  endif
+else (no)
+  :Staff marks equipment as non-operational;
+  :Staff enters reason and details;
+  if (Repairable?) then (yes)
+    :Staff creates repair request;
+    :System updates equipment status;
+  else (no)
+    :Staff initiates equipment retirement process;
+    :System moves equipment to obsolete inventory;
+  endif
+endif
+
+:System updates equipment condition record;
+:System logs assessment in equipment history;
+stop
+@enduml
+```
+
+### UC-S9: Manage Consumable Components (Staff/Admin)
+
+#### Basic Flow - Track Consumable Inventory
+1. **Preconditions**: Staff is authenticated
+2. **Trigger**: Need to manage consumable components separate from durable assets
+3. **Main Success Scenario**:
+   - Staff navigates to Consumables module (`/inventory/consumables`)
+   - System displays consumable components with usage rates
+   - Staff manages consumption events and replenishments
+   - System calculates burn rate and estimated depletion date
+   - System alerts on low stock based on consumption patterns
+   - Staff generates consumption reports by department/project
+   - System tracks cost allocation for consumables
+4. **Postconditions**: Consumable inventory accurately tracked
+5. **Routes**: GET/POST `/inventory/consumables`, GET `/reports/consumption`
+
+#### Activity Diagram - Consumable Components Management
+
+```plantuml
+@startuml Consumable Components Management
+start
+:Staff navigates to Consumables module;
+:System displays consumable inventory;
+
+if (Action type?) then (Record consumption)
+  :Staff selects consumable item;
+  :Staff enters consumption quantity;
+  :Staff associates with project/department;
+  :Staff submits consumption record;
+  
+  :System decrements inventory;
+  :System updates usage statistics;
+  :System calculates new burn rate;
+  
+  if (Inventory below threshold?) then (yes)
+    :System generates replenishment alert;
+  endif
+else (Replenish stock)
+  :Staff selects consumable to replenish;
+  :Staff enters received quantity and cost;
+  :Staff submits replenishment record;
+  
+  :System increases inventory;
+  :System updates average cost;
+  :System adjusts reorder thresholds;
+endif
+
+:System logs transaction in audit trail;
+:System updates dashboard with current data;
+stop
+@enduml
+```
+
+### UC-S10: Track High-Value Components (Staff/Admin)
+
+#### Basic Flow - Special Handling for High-Value Items
+1. **Preconditions**: Staff is authenticated, high-value thresholds configured
+2. **Trigger**: High-value item transactions
+3. **Main Success Scenario**:
+   - System identifies components above threshold value
+   - High-value items require additional approval for transactions
+   - System enforces special tracking with verified chain of custody
+   - Staff assigns individual accountability for high-value items
+   - System provides separate high-value inventory reports
+   - System enforces more frequent auditing of high-value items
+   - Admin can adjust high-value thresholds and policies
+4. **Postconditions**: High-value items securely tracked with additional controls
+5. **Routes**: GET/POST `/inventory/high-value`, GET `/reports/high-value`
+
+#### Activity Diagram - High-Value Component Tracking
+
+```plantuml
+@startuml High-Value Component Tracking
+start
+:System identifies high-value item transaction;
+:System applies special handling rules;
+
+if (Transaction type?) then (Issue/Transfer)
+  :System requires secondary approval;
+  :Staff selects responsible individual;
+  :Staff records transfer reason;
+  :Staff initiates transfer request;
+  
+  if (Approver available?) then (yes)
+    :Approver reviews request;
+    if (Request approved?) then (yes)
+      :System records chain of custody;
+      :System completes transfer;
+      :System notifies all parties;
+    else (no)
+      :System cancels request;
+      :System notifies requestor;
+    endif
+  else (no)
+    :System holds request pending approval;
+    :System sends notification to approvers;
+  endif
+else (Receive/Return)
+  :Staff validates item condition;
+  :Staff records receipt details;
+  :System updates custody record;
+  :System schedules next audit date;
+endif
+
+:System logs transaction with special audit flag;
+:System updates high-value inventory report;
+stop
+@enduml
+```
+
 ### UC-U1: View Analytics Dashboard (All Authenticated Users)
 
 #### Basic Flow - Access Business Intelligence
@@ -377,6 +792,43 @@ The system follows a three-tier architecture:
 4. **Postconditions**: User has current business intelligence information
 5. **Routes**: GET `/dashboard`, GET `/analytics`, GET `/warehouses/analytics`
 
+#### Activity Diagram - Reports and Statistics
+
+```plantuml
+@startuml Reports and Statistics Process
+start
+:User navigates to analytics/reports section;
+:System displays report options;
+
+fork
+  :User selects inventory reports;
+  :System generates inventory status report;
+fork again
+  :User selects sales analysis;
+  :System calculates sales metrics;
+fork again
+  :User selects supplier performance;
+  :System generates supplier metrics;
+fork again
+  :User selects warehouse utilization;
+  :System calculates space usage statistics;
+end fork
+
+:User selects filters (date range, location, categories);
+:System applies filters and refreshes data;
+:User views interactive dashboard;
+
+if (Export needed?) then (yes)
+  :User selects export format (PDF, CSV, Excel);
+  :System generates export file;
+  :User downloads report;
+else (no)
+  :User interacts with dashboard visualizations;
+endif
+stop
+@enduml
+```
+
 #### Key Dashboard Metrics Implemented:
 - **Product Statistics**: Total products, total inventory, low stock alerts (≤5 units)
 - **Supplier Management**: Active supplier count and relationship status
@@ -384,6 +836,8 @@ The system follows a three-tier architecture:
 - **Performance Analytics**: Top-selling products by transaction volume
 - **Financial Metrics**: Revenue calculations, average order value, growth rates
 - **Inventory Health**: Low stock products list, inventory value, turnover analysis
+- **Consumables Analysis**: Usage rates, burn rate calculations, depletion forecasts
+- **Equipment Status**: Condition summaries, maintenance schedules, utilization rates
 
 ---
 
@@ -455,6 +909,31 @@ The system follows a three-tier architecture:
 6. System logs concurrent access attempt
 7. User completes transaction with current data
 
+### AF-S5: Inventory Audit - Major Discrepancy
+**Trigger**: Significant inventory count discrepancy discovered
+**Alternate Flow**:
+1. During audit, staff discovers major discrepancy (>10%)
+2. System flags discrepancy for special handling
+3. Staff enters preliminary explanation for investigation
+4. System notifies warehouse admin of major discrepancy
+5. Admin initiates formal investigation process
+6. System maintains separate reconciliation record
+7. Admin must approve final adjustment with documented explanation
+8. System applies adjustment with special audit flag
+9. System schedules follow-up audit for affected inventory
+
+### AF-S6: Equipment Condition - Critical Failure
+**Trigger**: Equipment assessed as critically failed/dangerous
+**Alternate Flow**:
+1. Staff identifies critical equipment failure during assessment
+2. Staff marks equipment as "Critical - Do Not Use"
+3. System generates immediate high-priority alert
+4. System notifies maintenance team and administrators
+5. System automatically creates urgent maintenance request
+6. System applies visual indicators to equipment in system
+7. Admin reviews and authorizes emergency replacement if needed
+8. System tracks incident in equipment history permanently
+
 ### AF-U1: Dashboard Access - Database Connectivity Issues
 **Trigger**: Database connection fails during dashboard load
 **Alternate Flow**:
@@ -512,6 +991,12 @@ The system follows a three-tier architecture:
 - **Implementation**: Transaction-based updates with validation
 - **Validation**: Stock availability checks before sales
 - **Use Cases**: UC-S2 (sell stock), AF-S2 (insufficient inventory)
+
+#### FR-2.4: Inventory Verification
+- **Requirement**: System shall support periodic inventory audits with reconciliation
+- **Implementation**: Audit module with count sheets, variance reporting, and approval workflows
+- **Validation**: Audit trail for all adjustments, mandatory approval for significant variances
+- **Use Cases**: UC-S7 (inventory audit), AF-S5 (major discrepancy)
 
 ### FR-3: Warehouse Operations
 
@@ -589,6 +1074,34 @@ The system follows a three-tier architecture:
 - **Implementation**: Scheduled processes, alert generation services
 - **Validation**: Alert thresholds, notification delivery
 - **Use Cases**: Automated monitoring, proactive management
+
+### FR-8: Equipment Management
+
+#### FR-8.1: Equipment Condition Tracking
+- **Requirement**: System shall track equipment condition and maintenance history
+- **Implementation**: Equipment master with condition logs and maintenance records
+- **Validation**: Complete history, mandatory fields for condition assessment
+- **Use Cases**: UC-S8 (equipment condition assessment)
+
+#### FR-8.2: Maintenance Scheduling
+- **Requirement**: System shall support maintenance scheduling and tracking
+- **Implementation**: Maintenance calendar, task assignment, completion tracking
+- **Validation**: Overdue maintenance alerts, service history logging
+- **Use Cases**: UC-S8 (equipment maintenance)
+
+### FR-9: Specialized Inventory
+
+#### FR-9.1: Consumable Tracking
+- **Requirement**: System shall support specialized tracking for consumable components
+- **Implementation**: Consumption records, usage rate calculation, depletion forecasting
+- **Validation**: Accurate consumption tracking, timely reorder alerts
+- **Use Cases**: UC-S9 (consumable components)
+
+#### FR-9.2: High-Value Item Security
+- **Requirement**: System shall enforce additional controls for high-value items
+- **Implementation**: Approval workflows, chain of custody tracking, enhanced audit frequency
+- **Validation**: Complete chain of custody, additional verification steps
+- **Use Cases**: UC-S10 (high-value components)
 
 ---
 
@@ -712,6 +1225,17 @@ The system follows a three-tier architecture:
 
 ## Conclusion
 
-This use case description provides a comprehensive overview of the Mycelium Inventory Management System, detailing how Warehouse Admins and Warehouse Staff interact with the system to achieve their operational goals. The system's modular architecture, robust security model, and comprehensive feature set make it suitable for businesses requiring sophisticated inventory management with strong audit capabilities and real-time visibility.
+This use case description provides a comprehensive overview of the Mycelium Inventory Management System, detailing how Warehouse Admins and Warehouse Staff interact with the system to achieve their operational goals. The document outlines the primary and secondary goals for each actor, provides detailed use case scenarios with activity diagrams, and defines functional and non-functional requirements.
+
+The system addresses key inventory management challenges including:
+- Multi-warehouse inventory tracking with zone-level granularity
+- Batch and serial number tracking for complete traceability
+- QR code integration for efficient operations
+- Supplier management and performance tracking
+- Immutable transaction records for audit compliance
+- Advanced analytics and reporting capabilities
+- Periodic inventory verification and data validation
+- Equipment condition assessment and maintenance tracking
+- Specialized handling for consumable and high-value components
 
 The functional and non-functional requirements ensure that the system meets both operational needs and quality standards, providing a solid foundation for business growth and regulatory compliance.
