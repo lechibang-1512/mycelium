@@ -3,6 +3,8 @@
  * Handles CSRF errors, database errors, and general application errors
  */
 
+const { safeRedirect } = require('./csrfProtection');
+
 const errorHandler = (err, req, res, next) => {
     console.error(err.stack);
 
@@ -15,10 +17,10 @@ const errorHandler = (err, req, res, next) => {
         res.locals.isAuthenticated = !!(req.session?.user);
     }
 
-    // Handle CSRF token errors
+    // Handle CSRF token errors with safe redirect
     if (err.code === 'EBADCSRFTOKEN') {
         req.flash('error', 'Invalid form submission. Please try again.');
-        return res.redirect(req.get('Referer') || '/');
+        return res.redirect(safeRedirect(req.get('Referer'), '/'));
     }
 
     // Handle database connection errors

@@ -25,6 +25,16 @@ class DynamicSessionSecretService {
             autoRotation: process.env.AUTO_ROTATE_SESSION_SECRET === 'true',
             backupToFile: process.env.BACKUP_SESSION_SECRETS === 'true'
         };
+        
+        // File encryption key used to protect secrets at rest when backupToFile is enabled.
+        // This should be a 32-byte key provided via environment variable and kept out of source control.
+        this.fileEncryptionKey = process.env.SESSION_SECRETS_FILE_KEY || null;
+
+        // If backups to file are enabled but no encryption key is supplied, disable backups and warn.
+        if (this.config.backupToFile && !this.fileEncryptionKey) {
+            console.warn('⚠️  BACKUP_SESSION_SECRETS enabled but SESSION_SECRETS_FILE_KEY is not set. Disabling file backups to avoid storing plaintext secrets.');
+            this.config.backupToFile = false;
+        }
     }
 
     /**
@@ -160,14 +170,28 @@ class DynamicSessionSecretService {
      */
     async loadSecretsFromFile() {
         try {
-            const data = await fs.readFile(this.secretFile, 'utf8');
-            const parsed = JSON.parse(data);
-            
-            this.currentSecret = parsed.currentSecret;
-            this.previousSecret = parsed.previousSecret;
-            this.secretHistory = parsed.secretHistory || [];
-            
-            console.log('📂 Session secrets loaded from file');
+            const raw = await fs.readFile(this.secretFile, 'utf8');
+            const parsed = JSON.parse(raw);
+
+            // If the file looks encrypted (has ciphertext/iv/authTag), decrypt it first
+            if (parsed.ciphertext && parsed.iv && parsed.authTag) {
+                try {
+                    const plaintext = this._decryptFromFile(parsed);
+                    const payload = JSON.parse(plaintext);
+                    this.currentSecret = payload.currentSecret;
+                    this.previousSecret = payload.previousSecret;
+                    this.secretHistory = payload.secretHistory || [];
+                    console.log('📂 Encrypted session secrets loaded from file');
+                } catch (err) {
+                    console.warn('⚠️  Failed to decrypt session secrets file; it may be corrupted or the key is invalid:', err.message);
+                }
+            } else {
+                // Backwards compatibility: if file contains plaintext JSON, load it but warn
+                console.warn('⚠️  Loading session secrets from plaintext file. Consider enabling file encryption via SESSION_SECRETS_FILE_KEY.');
+                this.currentSecret = parsed.currentSecret;
+                this.previousSecret = parsed.previousSecret;
+                this.secretHistory = parsed.secretHistory || [];
+            }
         } catch (error) {
             if (error.code !== 'ENOENT') {
                 console.warn('⚠️  Failed to load session secrets from file:', error.message);
@@ -186,15 +210,55 @@ class DynamicSessionSecretService {
                 secretHistory: this.secretHistory,
                 lastUpdated: new Date().toISOString()
             };
-            
-            await fs.writeFile(this.secretFile, JSON.stringify(data, null, 2), {
-                mode: 0o600 // Read/write for owner only
-            });
-            
-            console.log('💾 Session secrets saved to file');
+
+            if (this.config.backupToFile) {
+                // Encrypt and write file
+                const filePayload = this._encryptForFile(JSON.stringify(data));
+                await fs.writeFile(this.secretFile, JSON.stringify(filePayload, null, 2), { mode: 0o600 });
+                console.log('💾 Encrypted session secrets saved to file');
+            } else {
+                // Should rarely happen - keep behavior safe: do not write plaintext
+                console.warn('⚠️  File backups disabled; skipping saving session secrets to disk to avoid plaintext at rest.');
+            }
         } catch (error) {
             console.error('❌ Failed to save session secrets to file:', error);
         }
+    }
+
+    /**
+     * Encrypt plaintext using AES-256-GCM and return an object suitable for writing to disk.
+     */
+    _encryptForFile(plaintext) {
+        if (!this.fileEncryptionKey) throw new Error('File encryption key not configured');
+
+        // Derive a 32-byte key from the provided passphrase (allow short env values)
+        const key = crypto.scryptSync(this.fileEncryptionKey, 'session-file-salt', 32);
+        const iv = crypto.randomBytes(12); // 96-bit IV for GCM
+        const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+        const ciphertext = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+        const authTag = cipher.getAuthTag();
+
+        return {
+            iv: iv.toString('hex'),
+            authTag: authTag.toString('hex'),
+            ciphertext: ciphertext.toString('hex')
+        };
+    }
+
+    /**
+     * Decrypt an object read from file (expects iv, authTag, ciphertext) and return plaintext string.
+     */
+    _decryptFromFile(parsed) {
+        if (!this.fileEncryptionKey) throw new Error('File encryption key not configured');
+
+        const key = crypto.scryptSync(this.fileEncryptionKey, 'session-file-salt', 32);
+        const iv = Buffer.from(parsed.iv, 'hex');
+        const authTag = Buffer.from(parsed.authTag, 'hex');
+        const ciphertext = Buffer.from(parsed.ciphertext, 'hex');
+        const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+        decipher.setAuthTag(authTag);
+        const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+        return plaintext.toString('utf8');
     }
 
     /**

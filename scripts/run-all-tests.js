@@ -77,6 +77,13 @@ const TEST_CONFIGS = [
         description: 'Test warehouse management functionality',
         required: false,
         timeout: 30000
+    },
+    {
+        name: 'URL Validation Security',
+        script: 'test-url-validation.js',
+        description: 'Test secure URL validation (CVE: GHSA-9965-vmph-33xx)',
+        required: true,
+        timeout: 10000
     }
 ];
 

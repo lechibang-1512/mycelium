@@ -10,6 +10,38 @@ const csrfProtection = csrf({
     cookie: false // Use session-based storage instead of cookies
 });
 
+/**
+ * Safely validate and sanitize redirect URLs to prevent open redirect attacks.
+ * Only allows relative paths or same-origin URLs.
+ */
+function safeRedirect(referer, fallback = '/') {
+    if (!referer) return fallback;
+    
+    try {
+        // If referer is a relative path, validate it starts with /
+        if (referer.startsWith('/') && !referer.startsWith('//')) {
+            return referer;
+        }
+        
+        // If referer is a full URL, check if it's same-origin
+        const refererUrl = new URL(referer);
+        const currentOrigin = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
+        const currentUrl = new URL(currentOrigin);
+        
+        if (refererUrl.origin === currentUrl.origin) {
+            return refererUrl.pathname + refererUrl.search;
+        }
+        
+        // External URL - reject and use fallback
+        console.warn(`Rejected external redirect to: ${referer}`);
+        return fallback;
+    } catch (e) {
+        // Invalid URL - use fallback
+        console.warn(`Invalid redirect URL: ${referer}`, e.message);
+        return fallback;
+    }
+}
+
 // Middleware to make CSRF token available to all views and handle CSRF errors
 const csrfMiddleware = (req, res, next) => {
     // Make CSRF token available to all templates
@@ -46,9 +78,9 @@ const csrfErrorHandler = (err, req, res, next) => {
             });
         }
 
-        // For regular form submissions, flash message and redirect
+        // For regular form submissions, flash message and redirect safely
         req.flash('error', 'Invalid form submission. Your session may have expired. Please try again.');
-        return res.redirect(req.get('Referer') || '/');
+        return res.redirect(safeRedirect(req.get('Referer'), '/'));
     }
 
     // Pass other errors to the next error handler
@@ -58,5 +90,6 @@ const csrfErrorHandler = (err, req, res, next) => {
 module.exports = {
     csrfProtection,
     csrfMiddleware,
-    csrfErrorHandler
+    csrfErrorHandler,
+    safeRedirect
 };

@@ -15,6 +15,59 @@ class BaseValidationService {
     }
 
     /**
+     * Custom secure URL validation to mitigate validator.isURL vulnerability (GHSA-9965-vmph-33xx)
+     * Implements stricter validation than validator.isURL
+     * @param {string} value - URL to validate
+     * @param {boolean} requireProtocol - Whether protocol is required
+     * @returns {boolean} Whether URL is valid
+     */
+    isSecureURL(value, requireProtocol = true) {
+        if (!value || typeof value !== 'string') {
+            return false;
+        }
+
+        try {
+            // Use native URL constructor for validation
+            const url = new URL(value);
+            
+            // Only allow http and https protocols
+            if (!['http:', 'https:'].includes(url.protocol)) {
+                return false;
+            }
+            
+            // Check if protocol is required
+            if (requireProtocol && !value.match(/^https?:\/\//i)) {
+                return false;
+            }
+            
+            // Ensure hostname exists and is valid
+            if (!url.hostname || url.hostname.length === 0) {
+                return false;
+            }
+            
+            // Reject URLs with suspicious characters in hostname
+            if (url.hostname.match(/[<>"'`\s]/)) {
+                return false;
+            }
+            
+            // Reject URLs with credentials in them (security risk)
+            if (url.username || url.password) {
+                return false;
+            }
+            
+            // Basic hostname validation (must contain at least one dot or be localhost)
+            if (!url.hostname.includes('.') && url.hostname !== 'localhost') {
+                return false;
+            }
+            
+            return true;
+        } catch (error) {
+            // Invalid URL format
+            return false;
+        }
+    }
+
+    /**
      * Setup default validation rules
      */
     setupDefaultRules() {
@@ -80,12 +133,12 @@ class BaseValidationService {
             }
         });
 
-        // URL validation rule
+        // URL validation rule - Custom implementation to avoid validator.isURL vulnerability (GHSA-9965-vmph-33xx)
         this.addValidationRule('url', {
             required: false,
             validator: (value, options = {}) => {
                 const { requireProtocol = true } = options;
-                return validator.isURL(value, { require_protocol: requireProtocol });
+                return this.isSecureURL(value, requireProtocol);
             },
             message: 'Must be a valid URL'
         });
