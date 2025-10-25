@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const { isAdmin, isAuthenticated, SessionSecurity } = require('../middleware/auth');
 const PasswordValidator = require('../services/PasswordValidator');
+const PasswordResetService = require('../services/PasswordResetService');
 
 // Initialize password validator
 const passwordValidator = new PasswordValidator();
@@ -234,27 +235,136 @@ module.exports = (authPool, convertBigIntToNumber) => {
         const { email } = req.body;
         
         try {
-            const conn = await authPool.getConnection();
-            const result = await conn.query('SELECT * FROM users WHERE email = ?', [email]);
-            conn.end();
+            // Find user by email
+            const user = await PasswordResetService.getUserByIdentifier(email);
             
-            if (result.length === 0) {
-                req.flash('error', 'No user found with that email address');
-                return res.redirect('/forgot-password');
+            if (!user) {
+                // Don't reveal if email exists for security (timing attack prevention)
+                req.flash('success', 'If your email is registered in our system, you will receive password reset instructions shortly.');
+                return res.redirect('/login');
             }
             
-            // In a real application, you would:
-            // 1. Generate a reset token
-            // 2. Save it to the database with an expiration date
-            // 3. Send an email to the user with a reset link
+            // Generate and save reset token
+            const { token } = await PasswordResetService.createResetToken(user.id, 60); // 60 minutes expiration
             
-            // For now, just show a success message
+            // Build reset URL
+            const resetUrl = `${req.protocol}://${req.get('host')}/reset-password/${token}`;
+            
+            // TODO: Send email with reset link
+            // When EmailService is implemented, uncomment:
+            // await EmailService.sendPasswordResetEmail(user.email, user.fullName, resetUrl);
+            
+            // For now, log the reset URL to console (DEVELOPMENT ONLY)
+            console.log('='.repeat(80));
+            console.log('PASSWORD RESET REQUEST');
+            console.log('='.repeat(80));
+            console.log(`User: ${user.fullName} (${user.email})`);
+            console.log(`Reset URL: ${resetUrl}`);
+            console.log(`Token expires in: 60 minutes`);
+            console.log('='.repeat(80));
+            
+            // Always show success message (don't reveal if email exists)
             req.flash('success', 'If your email is registered in our system, you will receive password reset instructions shortly.');
             res.redirect('/login');
         } catch (err) {
             console.error('Forgot password error:', err);
             req.flash('error', 'An error occurred while processing your request');
             res.redirect('/forgot-password');
+        }
+    });
+
+    // Display password reset form
+    router.get('/reset-password/:token', async (req, res) => {
+        const { token } = req.params;
+        
+        try {
+            // Validate the token
+            const validation = await PasswordResetService.validateResetToken(token);
+            
+            if (!validation.valid) {
+                req.flash('error', validation.error);
+                return res.redirect('/login');
+            }
+            
+            // Token is valid, show reset form
+            res.render('reset-password', {
+                title: 'Reset Password',
+                token: token,
+                messages: {
+                    error: req.flash('error'),
+                    success: req.flash('success')
+                },
+                isAuthenticated: false,
+                csrfToken: req.csrfToken()
+            });
+        } catch (err) {
+            console.error('Reset password page error:', err);
+            req.flash('error', 'An error occurred while loading the password reset form');
+            res.redirect('/login');
+        }
+    });
+
+    // Process password reset
+    router.post('/reset-password/:token', async (req, res) => {
+        const { token } = req.params;
+        const { password, confirmPassword } = req.body;
+        
+        try {
+            // Validate passwords match
+            if (password !== confirmPassword) {
+                req.flash('error', 'Passwords do not match');
+                return res.redirect(`/reset-password/${token}`);
+            }
+            
+            // Validate password strength
+            const passwordValidation = passwordValidator.validatePassword(password);
+            if (!passwordValidation.isValid) {
+                req.flash('error', passwordValidation.errors.join(', '));
+                return res.redirect(`/reset-password/${token}`);
+            }
+            
+            // Validate the token
+            const validation = await PasswordResetService.validateResetToken(token);
+            
+            if (!validation.valid) {
+                req.flash('error', validation.error);
+                return res.redirect('/login');
+            }
+            
+            // Hash the new password
+            const hashedPassword = await bcrypt.hash(password, 10);
+            
+            // Update user password
+            const conn = await authPool.getConnection();
+            await conn.query(
+                'UPDATE users SET password = ?, updated_at = NOW() WHERE id = ?',
+                [hashedPassword, validation.userId]
+            );
+            conn.release();
+            
+            // Mark token as used
+            await PasswordResetService.markTokenAsUsed(token);
+            
+            // Invalidate all existing sessions for security
+            await SessionSecurity.invalidateAllUserTokens(validation.userId, 'password_reset');
+            
+            // Log security event
+            await SessionSecurity.logSecurityEvent({
+                event_type: 'password_change',
+                user_id: validation.userId,
+                details: JSON.stringify({ 
+                    method: 'reset_token',
+                    timestamp: new Date().toISOString()
+                }),
+                risk_level: 'medium'
+            });
+            
+            req.flash('success', 'Your password has been successfully reset. Please log in with your new password.');
+            res.redirect('/login');
+        } catch (err) {
+            console.error('Reset password error:', err);
+            req.flash('error', 'An error occurred while resetting your password');
+            res.redirect(`/reset-password/${token}`);
         }
     });
 

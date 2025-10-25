@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+    <title><%= title %> - Inventory Management</title>
+</head>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="display-4">
+                        <i class="fas fa-clipboard-check me-3"></i>
+                        Inventory Audit
+                    </h1>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createAuditModal">
+                        <i class="fas fa-plus me-2"></i>
+                        Create New Audit
+                    </button>
+                </div>
+
+                <!-- Alert Messages -->
+                <% if (messages.success) { %>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i><%= messages.success %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+                <% if (messages.error) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i><%= messages.error %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+                <% if (messages.warning) { %>
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i><%= messages.warning %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <!-- Active Audits Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tasks me-2"></i>
+                            Active Audits
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <% if (activeAudits && activeAudits.length > 0) { %>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Audit ID</th>
+                                            <th>Warehouse</th>
+                                            <th>Type</th>
+                                            <th>Status</th>
+                                            <th>Created By</th>
+                                            <th>Progress</th>
+                                            <th>Discrepancies</th>
+                                            <th>Created</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% activeAudits.forEach(audit => { %>
+                                            <tr>
+                                                <td><strong>#<%= audit.audit_id %></strong></td>
+                                                <td><%= audit.warehouse_name %></td>
+                                                <td>
+                                                    <span class="badge bg-info">
+                                                        <%= audit.audit_type.toUpperCase() %>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <% if (audit.status === 'in_progress') { %>
+                                                        <span class="badge bg-warning">In Progress</span>
+                                                    <% } else if (audit.status === 'pending_approval') { %>
+                                                        <span class="badge bg-secondary">Pending Approval</span>
+                                                    <% } %>
+                                                </td>
+                                                <td><%= audit.created_by_name %></td>
+                                                <td>
+                                                    <div class="progress" style="height: 20px;">
+                                                        <% const progress = audit.discrepancy_count > 0 ? Math.round((audit.resolved_count / audit.discrepancy_count) * 100) : 0; %>
+                                                        <div class="progress-bar" role="progressbar" 
+                                                             style="width: <%= progress %>%;">
+                                                            <%= audit.resolved_count || 0 %>/<%= audit.discrepancy_count || 0 %>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <% if (audit.discrepancy_count > 0) { %>
+                                                        <span class="badge bg-danger">
+                                                            <%= audit.discrepancy_count %>
+                                                        </span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-success">0</span>
+                                                    <% } %>
+                                                </td>
+                                                <td><%= new Date(audit.created_at).toLocaleDateString() %></td>
+                                                <td>
+                                                    <a href="/inventory/audit/<%= audit.audit_id %>" 
+                                                       class="btn btn-sm btn-primary">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <% } else { %>
+                            <div class="text-center py-5">
+                                <i class="fas fa-clipboard-check fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No active audits. Create a new audit to begin.</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Completed Audits Section -->
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-check-double me-2"></i>
+                            Recent Completed Audits
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <% if (completedAudits && completedAudits.length > 0) { %>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Audit ID</th>
+                                            <th>Warehouse</th>
+                                            <th>Type</th>
+                                            <th>Created By</th>
+                                            <th>Approved By</th>
+                                            <th>Discrepancies</th>
+                                            <th>Completed</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% completedAudits.forEach(audit => { %>
+                                            <tr>
+                                                <td><strong>#<%= audit.audit_id %></strong></td>
+                                                <td><%= audit.warehouse_name %></td>
+                                                <td>
+                                                    <span class="badge bg-info">
+                                                        <%= audit.audit_type.toUpperCase() %>
+                                                    </span>
+                                                </td>
+                                                <td><%= audit.created_by_name %></td>
+                                                <td><%= audit.approved_by_name || 'N/A' %></td>
+                                                <td>
+                                                    <% if (audit.discrepancy_count > 0) { %>
+                                                        <span class="badge bg-warning">
+                                                            <%= audit.discrepancy_count %>
+                                                        </span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-success">0</span>
+                                                    <% } %>
+                                                </td>
+                                                <td><%= new Date(audit.completed_at).toLocaleDateString() %></td>
+                                                <td>
+                                                    <a href="/inventory/audit/<%= audit.audit_id %>" 
+                                                       class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <% } else { %>
+                            <div class="text-center py-4">
+                                <p class="text-muted">No completed audits yet.</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Audit Modal -->
+    <div class="modal fade" id="createAuditModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="/inventory/audit" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            Create New Audit
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="warehouse_id" class="form-label">
+                                Warehouse <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="warehouse_id" name="warehouse_id" required 
+                                    onchange="loadWarehouseZones(this.value)">
+                                <option value="">Select Warehouse</option>
+                                <% warehouses.forEach(warehouse => { %>
+                                    <option value="<%= warehouse.warehouse_id %>">
+                                        <%= warehouse.name %> - <%= warehouse.city %>
+                                    </option>
+                                <% }) %>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="zone_id" class="form-label">
+                                Zone (Optional)
+                            </label>
+                            <select class="form-select" id="zone_id" name="zone_id">
+                                <option value="">All Zones (Full Audit)</option>
+                            </select>
+                            <small class="text-muted">Leave empty to audit entire warehouse</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="audit_type" class="form-label">
+                                Audit Type <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="audit_type" name="audit_type" required>
+                                <option value="full">Full Audit - Count all items</option>
+                                <option value="cycle">Cycle Count - Rotating inventory count</option>
+                                <option value="partial">Partial - Specific items or zones</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                      placeholder="Enter any notes about this audit..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check me-2"></i>
+                            Create Audit
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <%- include('../partials/footer') %>
+
+    <script>
+        // Load zones for selected warehouse
+        async function loadWarehouseZones(warehouseId) {
+            const zoneSelect = document.getElementById('zone_id');
+            
+            if (!warehouseId) {
+                zoneSelect.innerHTML = '<option value="">All Zones (Full Audit)</option>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/warehouses/${warehouseId}/zones`);
+                const zones = await response.json();
+                
+                let options = '<option value="">All Zones (Full Audit)</option>';
+                zones.forEach(zone => {
+                    options += `<option value="${zone.zone_id}">${zone.name}</option>`;
+                });
+                
+                zoneSelect.innerHTML = options;
+            } catch (error) {
+                console.error('Error loading zones:', error);
+                zoneSelect.innerHTML = '<option value="">All Zones (Full Audit)</option>';
+            }
+        }
+    </script>
+</body>
+</html>

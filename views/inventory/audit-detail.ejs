@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+    <title><%= title %> - Inventory Management</title>
+    <style>
+        .counted { background-color: #d4edda; }
+        .major-discrepancy { background-color: #f8d7da; }
+        .minor-discrepancy { background-color: #fff3cd; }
+    </style>
+</head>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="display-5">
+                            <i class="fas fa-clipboard-check me-3"></i>
+                            Audit #<%= audit.audit_id %>
+                        </h1>
+                        <p class="text-muted">
+                            <%= audit.warehouse_name %> 
+                            <% if (audit.zone_name) { %>
+                                - <%= audit.zone_name %>
+                            <% } %>
+                        </p>
+                    </div>
+                    <div>
+                        <a href="/inventory/audit" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Back to Audits
+                        </a>
+                        <% if (audit.status === 'in_progress') { %>
+                            <form action="/inventory/audit/<%= audit.audit_id %>/complete" method="POST" 
+                                  class="d-inline" onsubmit="return confirm('Complete this audit? All items must be counted.')">
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-check me-2"></i>
+                                    Complete Audit
+                                </button>
+                            </form>
+                        <% } else if (audit.status === 'pending_approval' && user.role === 'admin') { %>
+                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveModal">
+                                <i class="fas fa-thumbs-up me-2"></i>
+                                Approve Audit
+                            </button>
+                            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                                <i class="fas fa-times me-2"></i>
+                                Reject
+                            </button>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Alert Messages -->
+                <% if (messages.success) { %>
+                    <div class="alert alert-success alert-dismissible fade show">
+                        <i class="fas fa-check-circle me-2"></i><%= messages.success %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+                <% if (messages.error) { %>
+                    <div class="alert alert-danger alert-dismissible fade show">
+                        <i class="fas fa-exclamation-circle me-2"></i><%= messages.error %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <!-- Audit Info Card -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted">Status</h6>
+                                <% if (audit.status === 'in_progress') { %>
+                                    <span class="badge bg-warning fs-6">In Progress</span>
+                                <% } else if (audit.status === 'pending_approval') { %>
+                                    <span class="badge bg-secondary fs-6">Pending Approval</span>
+                                <% } else if (audit.status === 'completed') { %>
+                                    <span class="badge bg-success fs-6">Completed</span>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted">Progress</h6>
+                                <h3><%= stats.percentComplete %>%</h3>
+                                <small><%= stats.countedItems %> / <%= stats.totalItems %> items</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted">Discrepancies</h6>
+                                <h3 class="<%= stats.discrepancyCount > 0 ? 'text-danger' : 'text-success' %>">
+                                    <%= stats.discrepancyCount %>
+                                </h3>
+                                <small>
+                                    <span class="text-danger"><%= stats.majorDiscrepancyCount %> major</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted">Created By</h6>
+                                <p class="mb-0"><%= audit.created_by_name %></p>
+                                <small class="text-muted"><%= new Date(audit.created_at).toLocaleDateString() %></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audit Worksheet -->
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Audit Worksheet
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover" id="worksheetTable">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Bin Location</th>
+                                        <th>System Qty</th>
+                                        <th>Counted Qty</th>
+                                        <th>Variance</th>
+                                        <th>Counted By</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% worksheetItems.forEach(item => { 
+                                        let rowClass = '';
+                                        if (item.counted_quantity !== null) {
+                                            if (item.is_major_discrepancy) {
+                                                rowClass = 'major-discrepancy';
+                                            } else if (item.variance !== 0) {
+                                                rowClass = 'minor-discrepancy';
+                                            } else {
+                                                rowClass = 'counted';
+                                            }
+                                        }
+                                    %>
+                                        <tr class="<%= rowClass %>">
+                                            <td>
+                                                <strong><%= item.device_name %></strong><br>
+                                                <small class="text-muted"><%= item.device_maker %></small>
+                                            </td>
+                                            <td><%= item.bin_location || 'N/A' %></td>
+                                            <td><strong><%= item.system_quantity %></strong></td>
+                                            <td>
+                                                <% if (item.counted_quantity !== null) { %>
+                                                    <strong><%= item.counted_quantity %></strong>
+                                                <% } else { %>
+                                                    <span class="text-muted">-</span>
+                                                <% } %>
+                                            </td>
+                                            <td>
+                                                <% if (item.variance !== null) { %>
+                                                    <% if (item.variance > 0) { %>
+                                                        <span class="text-success">+<%= item.variance %></span>
+                                                    <% } else if (item.variance < 0) { %>
+                                                        <span class="text-danger"><%= item.variance %></span>
+                                                    <% } else { %>
+                                                        <span class="text-muted">0</span>
+                                                    <% } %>
+                                                    <% if (item.is_major_discrepancy) { %>
+                                                        <i class="fas fa-exclamation-triangle text-danger ms-1"></i>
+                                                    <% } %>
+                                                <% } else { %>
+                                                    <span class="text-muted">-</span>
+                                                <% } %>
+                                            </td>
+                                            <td>
+                                                <% if (item.counted_at) { %>
+                                                    <small><%= new Date(item.counted_at).toLocaleString() %></small>
+                                                <% } else { %>
+                                                    <span class="text-muted">-</span>
+                                                <% } %>
+                                            </td>
+                                            <td>
+                                                <% if (audit.status === 'in_progress') { %>
+                                                    <button class="btn btn-sm btn-primary count-btn" 
+                                                            data-item-id="<%= item.id %>"
+                                                            data-device-name="<%= item.device_name %>"
+                                                            data-system-qty="<%= item.system_quantity %>">
+                                                        <i class="fas fa-edit"></i> Count
+                                                    </button>
+                                                <% } else { %>
+                                                    <button class="btn btn-sm btn-secondary" disabled>
+                                                        <i class="fas fa-lock"></i>
+                                                    </button>
+                                                <% } %>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Discrepancies Section -->
+                <% if (discrepancies && discrepancies.length > 0) { %>
+                    <div class="card mt-4">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Major Discrepancies (>10% Variance)
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>System</th>
+                                            <th>Counted</th>
+                                            <th>Variance</th>
+                                            <th>Status</th>
+                                            <th>Notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% discrepancies.forEach(disc => { %>
+                                            <tr>
+                                                <td>
+                                                    <strong><%= disc.device_name %></strong><br>
+                                                    <small class="text-muted"><%= disc.device_maker %></small>
+                                                </td>
+                                                <td><%= disc.system_quantity %></td>
+                                                <td><%= disc.counted_quantity %></td>
+                                                <td>
+                                                    <% if (disc.variance > 0) { %>
+                                                        <span class="badge bg-success">+<%= disc.variance %></span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-danger"><%= disc.variance %></span>
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <% if (disc.status === 'pending') { %>
+                                                        <span class="badge bg-warning">Pending</span>
+                                                    <% } else if (disc.status === 'resolved') { %>
+                                                        <span class="badge bg-success">Resolved</span>
+                                                    <% } %>
+                                                </td>
+                                                <td><%= disc.resolution_notes || 'No notes' %></td>
+                                            </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <% if (audit.status === 'in_progress') { %>
+                                <a href="/inventory/audit/<%= audit.audit_id %>/reconciliation" 
+                                   class="btn btn-warning">
+                                    <i class="fas fa-balance-scale me-2"></i>
+                                    Resolve Discrepancies
+                                </a>
+                            <% } %>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Count Modal -->
+    <div class="modal fade" id="countModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Record Physical Count</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="countProduct" class="mb-3">
+                        <strong>Product:</strong> <span id="productName"></span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>System Quantity:</strong> <span id="systemQty"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label for="countedQty" class="form-label">Physical Count</label>
+                        <input type="number" class="form-control" id="countedQty" required min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label for="countNotes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="countNotes" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitCount()">
+                        <i class="fas fa-save me-2"></i>Save Count
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approve Modal -->
+    <div class="modal fade" id="approveModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="/inventory/audit/<%= audit.audit_id %>/approve" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">Approve Audit</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to approve this audit? This will:</p>
+                        <ul>
+                            <li>Mark the audit as completed</li>
+                            <li>Update last audit dates for all counted items</li>
+                            <li>Create permanent audit record</li>
+                        </ul>
+                        <div class="mb-3">
+                            <label for="approval_notes" class="form-label">Approval Notes</label>
+                            <textarea class="form-control" id="approval_notes" name="approval_notes" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check me-2"></i>Approve
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <%- include('../partials/footer') %>
+
+    <script>
+        let currentWorksheetId = null;
+
+        // Add event listeners to count buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.count-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const itemId = this.getAttribute('data-item-id');
+                    const deviceName = this.getAttribute('data-device-name');
+                    const systemQty = this.getAttribute('data-system-qty');
+                    showCountModal(itemId, deviceName, systemQty);
+                });
+            });
+        });
+
+        function showCountModal(worksheetId, productName, systemQty) {
+            currentWorksheetId = worksheetId;
+            document.getElementById('productName').textContent = productName;
+            document.getElementById('systemQty').textContent = systemQty;
+            document.getElementById('countedQty').value = '';
+            document.getElementById('countNotes').value = '';
+            new bootstrap.Modal(document.getElementById('countModal')).show();
+        }
+
+        async function submitCount() {
+            const countedQty = document.getElementById('countedQty').value;
+            const countNotes = document.getElementById('countNotes').value;
+
+            if (!countedQty) {
+                alert('Please enter the counted quantity');
+                return;
+            }
+
+            try {
+                const response = await fetch('/inventory/audit/<%= audit.audit_id %>/count', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'CSRF-Token': '<%= csrfToken %>'
+                    },
+                    body: JSON.stringify({
+                        worksheet_id: currentWorksheetId,
+                        counted_quantity: parseInt(countedQty),
+                        count_notes: countNotes,
+                        _csrf: '<%= csrfToken %>'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Close modal and reload page
+                    bootstrap.Modal.getInstance(document.getElementById('countModal')).hide();
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error submitting count:', error);
+                alert('Failed to submit count');
+            }
+        }
+    </script>
+</body>
+</html>

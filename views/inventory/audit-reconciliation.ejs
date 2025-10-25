@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+    <title><%= title %> - Inventory Management</title>
+</head>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="display-5">
+                        <i class="fas fa-balance-scale me-3"></i>
+                        Reconciliation - Audit #<%= audit.audit_id %>
+                    </h1>
+                    <a href="/inventory/audit/<%= audit.audit_id %>" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Back to Audit
+                    </a>
+                </div>
+
+                <!-- Alert Messages -->
+                <% if (messages.success) { %>
+                    <div class="alert alert-success alert-dismissible fade show">
+                        <i class="fas fa-check-circle me-2"></i><%= messages.success %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+                <% if (messages.error) { %>
+                    <div class="alert alert-danger alert-dismissible fade show">
+                        <i class="fas fa-exclamation-circle me-2"></i><%= messages.error %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <!-- Instructions -->
+                <div class="alert alert-info mb-4">
+                    <h5 class="alert-heading">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Reconciliation Instructions
+                    </h5>
+                    <p class="mb-0">
+                        Review each major discrepancy (>10% variance) below. For each item, you can:
+                    </p>
+                    <ul class="mb-0 mt-2">
+                        <li><strong>Adjust Inventory:</strong> Update system quantity to match physical count</li>
+                        <li><strong>Accept System Quantity:</strong> Keep system quantity (physical count was incorrect)</li>
+                    </ul>
+                </div>
+
+                <!-- Discrepancies List -->
+                <% if (discrepancies && discrepancies.length > 0) { %>
+                    <% discrepancies.forEach((disc, index) => { %>
+                        <div class="card mb-3 <%= disc.status === 'resolved' ? 'border-success' : 'border-danger' %>">
+                            <div class="card-header <%= disc.status === 'resolved' ? 'bg-success text-white' : 'bg-danger text-white' %>">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">
+                                        Discrepancy #<%= index + 1 %>
+                                        <% if (disc.status === 'resolved') { %>
+                                            <span class="badge bg-light text-success">✓ Resolved</span>
+                                        <% } else { %>
+                                            <span class="badge bg-light text-danger">⚠ Pending</span>
+                                        <% } %>
+                                    </h5>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5><%= disc.device_name %></h5>
+                                        <p class="text-muted mb-3"><%= disc.device_maker %></p>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-4">
+                                                <div class="p-3 bg-light rounded text-center">
+                                                    <small class="text-muted">System Quantity</small>
+                                                    <h3 class="mb-0"><%= disc.system_quantity %></h3>
+                                                </div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="p-3 bg-primary text-white rounded text-center">
+                                                    <small>Counted</small>
+                                                    <h3 class="mb-0"><%= disc.counted_quantity %></h3>
+                                                </div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="p-3 <%= disc.variance > 0 ? 'bg-success' : 'bg-danger' %> text-white rounded text-center">
+                                                    <small>Variance</small>
+                                                    <h3 class="mb-0">
+                                                        <%= disc.variance > 0 ? '+' : '' %><%= disc.variance %>
+                                                    </h3>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-2">
+                                            <strong>Location:</strong> <%= disc.zone_name || 'General' %>
+                                        </div>
+                                        <div class="mb-2">
+                                            <strong>Variance Percentage:</strong> 
+                                            <span class="badge bg-danger">
+                                                <%= Math.abs(Math.round((disc.variance / disc.system_quantity) * 100)) %>%
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <% if (disc.status === 'resolved') { %>
+                                            <!-- Resolved Information -->
+                                            <div class="alert alert-success">
+                                                <h6><i class="fas fa-check-circle me-2"></i>Resolution Details</h6>
+                                                <p class="mb-2">
+                                                    <strong>Action:</strong> 
+                                                    <%= disc.adjustment_applied ? 'Inventory Adjusted' : 'System Quantity Accepted' %>
+                                                </p>
+                                                <% if (disc.adjustment_reason) { %>
+                                                    <p class="mb-2">
+                                                        <strong>Reason:</strong> <%= disc.adjustment_reason %>
+                                                    </p>
+                                                <% } %>
+                                                <% if (disc.resolution_notes) { %>
+                                                    <p class="mb-2">
+                                                        <strong>Notes:</strong> <%= disc.resolution_notes %>
+                                                    </p>
+                                                <% } %>
+                                                <p class="mb-0">
+                                                    <small class="text-muted">
+                                                        Resolved by <%= disc.investigated_by_name %> on 
+                                                        <%= new Date(disc.resolved_at).toLocaleString() %>
+                                                    </small>
+                                                </p>
+                                            </div>
+                                        <% } else { %>
+                                            <!-- Resolution Form -->
+                                            <h6 class="mb-3">Resolve This Discrepancy</h6>
+                                            <form id="resolveForm<%= disc.id %>">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Resolution Action</label>
+                                                    <select class="form-select action-select" name="action" required 
+                                                            data-disc-id="<%= disc.id %>">
+                                                        <option value="">Select action...</option>
+                                                        <option value="adjust">Adjust Inventory to Match Count</option>
+                                                        <option value="accept_system">Accept System Quantity</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <div class="mb-3" id="reasonField<%= disc.id %>" style="display: none;">
+                                                    <label class="form-label">Adjustment Reason</label>
+                                                    <select class="form-select" name="adjustment_reason">
+                                                        <option value="damaged_goods">Damaged Goods</option>
+                                                        <option value="theft">Theft/Loss</option>
+                                                        <option value="miscounting">Miscounting Error</option>
+                                                        <option value="system_error">System Entry Error</option>
+                                                        <option value="unreported_usage">Unreported Usage</option>
+                                                        <option value="other">Other (explain in notes)</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Resolution Notes</label>
+                                                    <textarea class="form-control" name="resolution_notes" 
+                                                              rows="3" placeholder="Enter detailed explanation..."></textarea>
+                                                </div>
+                                                
+                                                <button type="button" class="btn btn-success w-100 resolve-btn" 
+                                                        data-disc-id="<%= disc.id %>"
+                                                        data-audit-id="<%= audit.audit_id %>">
+                                                    <i class="fas fa-check me-2"></i>
+                                                    Resolve Discrepancy
+                                                </button>
+                                            </form>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="card">
+                        <div class="card-body text-center py-5">
+                            <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                            <h3>No Discrepancies Found</h3>
+                            <p class="text-muted">All counted items match the system quantities.</p>
+                            <a href="/inventory/audit/<%= audit.audit_id %>" class="btn btn-primary">
+                                Back to Audit
+                            </a>
+                        </div>
+                    </div>
+                <% } %>
+
+                <!-- Summary -->
+                <% if (discrepancies && discrepancies.length > 0) { %>
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                Summary
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <h3><%= discrepancies.length %></h3>
+                                    <p class="text-muted">Total Discrepancies</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <h3 class="text-success">
+                                        <%= discrepancies.filter(d => d.status === 'resolved').length %>
+                                    </h3>
+                                    <p class="text-muted">Resolved</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <h3 class="text-danger">
+                                        <%= discrepancies.filter(d => d.status === 'pending').length %>
+                                    </h3>
+                                    <p class="text-muted">Pending</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <%- include('../partials/footer') %>
+
+    <script>
+        // Add event listeners when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle action select changes
+            document.querySelectorAll('.action-select').forEach(select => {
+                select.addEventListener('change', function() {
+                    const discId = this.getAttribute('data-disc-id');
+                    toggleReasonField(discId, this.value);
+                });
+            });
+
+            // Handle resolve button clicks
+            document.querySelectorAll('.resolve-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const discId = this.getAttribute('data-disc-id');
+                    const auditId = this.getAttribute('data-audit-id');
+                    submitResolution(discId, auditId);
+                });
+            });
+        });
+
+        function toggleReasonField(discId, action) {
+            const reasonField = document.getElementById('reasonField' + discId);
+            if (action === 'adjust') {
+                reasonField.style.display = 'block';
+                reasonField.querySelector('select').required = true;
+            } else {
+                reasonField.style.display = 'none';
+                reasonField.querySelector('select').required = false;
+            }
+        }
+
+        async function submitResolution(discrepancyId, auditId) {
+            const form = document.getElementById('resolveForm' + discrepancyId);
+            const formData = new FormData(form);
+            
+            if (!formData.get('action')) {
+                alert('Please select a resolution action');
+                return;
+            }
+
+            const data = {
+                discrepancy_id: discrepancyId,
+                action: formData.get('action'),
+                adjustment_reason: formData.get('adjustment_reason'),
+                resolution_notes: formData.get('resolution_notes'),
+                _csrf: '<%= csrfToken %>'
+            };
+
+            try {
+                const response = await fetch(`/inventory/audit/${auditId}/reconciliation`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'CSRF-Token': '<%= csrfToken %>'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Reload page to show updated status
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error submitting resolution:', error);
+                alert('Failed to submit resolution');
+            }
+        }
+    </script>
+</body>
+</html>
