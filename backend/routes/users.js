@@ -106,7 +106,7 @@ module.exports = () => {
             }
 
             // Validate email format if provided
-            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            if (email && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
                 return res.status(400).json({
                     error: 'Invalid email',
                     message: 'Please provide a valid email address'

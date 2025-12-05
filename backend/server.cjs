@@ -110,7 +110,8 @@ async function startServer() {
             app.use((req, res, next) => {
                 if (req.path.endsWith('.html') && req.path !== '/index.html') {
                     const cleanPath = req.path.replace(/\.html$/, '');
-                    return res.redirect(301, cleanPath === '' ? '/' : cleanPath);
+                    const safePath = '/' + cleanPath.replace(/^\/+/, '');
+                    return res.redirect(301, safePath === '/' ? '/' : safePath);
                 }
                 next();
             });
