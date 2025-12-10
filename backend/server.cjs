@@ -43,6 +43,8 @@ async function startServer() {
         console.info('🚀 Starting Mycelium ERP Server (SQL Edition)...');
         await ensureSingleInstance(PORT);
 
+        setupMiddleware(app);
+
         // Request logging middleware - logs to file, not console
         const logFile = path.join(__dirname, '../server.log');
         app.use((req, res, next) => {
@@ -54,8 +56,6 @@ async function startServer() {
             }
             next();
         });
-
-        setupMiddleware(app);
 
         // Static Files
         const distPath = path.join(__dirname, '../dist');
@@ -110,8 +110,14 @@ async function startServer() {
             app.use((req, res, next) => {
                 if (req.path.endsWith('.html') && req.path !== '/index.html') {
                     const cleanPath = req.path.replace(/\.html$/, '');
-                    const safePath = '/' + cleanPath.replace(/^\/+/, '');
-                    return res.redirect(301, safePath === '/' ? '/' : safePath);
+                    let safePath = '/';
+                    try {
+                        const parsed = new URL(cleanPath, 'http://localhost');
+                        safePath = parsed.pathname;
+                    } catch (e) {
+                        safePath = '/';
+                    }
+                    return res.redirect(301, safePath === '' ? '/' : safePath);
                 }
                 next();
             });

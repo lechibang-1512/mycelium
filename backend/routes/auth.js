@@ -5,8 +5,18 @@ const asyncHandler = require('../utils/asyncHandler');
  */
 
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const AuthService = require('../services/AuthService');
+
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 50,
+    skipSuccessfulRequests: true,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, error: 'Too many login attempts.' }
+});
 
 module.exports = () => {
     const authService = new AuthService();
@@ -15,7 +25,7 @@ module.exports = () => {
      * POST /api/auth/login
      * Authenticate user and create session
      */
-    router.post('/login', asyncHandler(async (req, res) => {
+    router.post('/login', loginLimiter, asyncHandler(async (req, res) => {
         try {
             const { username, password } = req.body;
 
