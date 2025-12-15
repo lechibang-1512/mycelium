@@ -1,38 +1,28 @@
-/*M!999999\- enable the sandbox mode */
--- MariaDB dump 10.19-11.8.3-MariaDB, for debian-linux-gnu (x86_64)
+/*M!999999\- enable the sandbox mode */ 
+-- MariaDB dump 10.19-12.3.2-MariaDB, for debian-linux-gnu (x86_64)
 --
 -- Host: localhost    Database: pc_components
 -- ------------------------------------------------------
--- Server version	11.8.3-MariaDB-0+deb13u1 from Debian
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */
-;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */
-;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */
-;
-/*!40101 SET NAMES utf8mb4 */
-;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */
-;
-/*!40103 SET TIME_ZONE='+00:00' */
-;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */
-;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */
-;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */
-;
-/*M!100616 SET @OLD_NOTE_VERBOSITY=@@NOTE_VERBOSITY, NOTE_VERBOSITY=0 */
-;
+-- Server version	12.3.2-MariaDB-deb13
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*M!100616 SET @OLD_NOTE_VERBOSITY=@@NOTE_VERBOSITY, NOTE_VERBOSITY=0 */;
+
 --
 -- Table structure for table `builds`
 --
 
 DROP TABLE IF EXISTS `builds`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */
-;
-/*!40101 SET character_set_client = utf8mb4 */
-;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `builds` (
   `build_id` char(36) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -54,8 +44,8 @@ CREATE TABLE `builds` (
   `cable_ids` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Array of Cable IDs' CHECK (json_valid(`cable_ids`)),
   `peripheral_ids` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Array of peripheral IDs (mouse, keyboard, etc.)' CHECK (json_valid(`peripheral_ids`)),
   `total_tdp_watts` int(11) DEFAULT NULL,
-  `estimated_price` decimal(10, 2) DEFAULT NULL,
-  `total_price` decimal(10, 2) DEFAULT NULL COMMENT 'Sum of all component prices',
+  `estimated_price` decimal(10,2) DEFAULT NULL,
+  `total_price` decimal(10,2) DEFAULT NULL COMMENT 'Sum of all component prices',
   `currency` varchar(10) DEFAULT 'VND',
   `image_url` varchar(500) DEFAULT NULL,
   `notes` text DEFAULT NULL,
@@ -71,41 +61,36 @@ CREATE TABLE `builds` (
   KEY `idx_build_status` (`status`),
   KEY `idx_build_created` (`created_at`),
   KEY `idx_build_active` (`is_active`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */
-;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
 -- Dumping data for table `builds`
 --
 
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `builds` WRITE;
-/*!40000 ALTER TABLE `builds` DISABLE KEYS */
-;
-set autocommit = 0;
-/*!40000 ALTER TABLE `builds` ENABLE KEYS */
-;
+/*!40000 ALTER TABLE `builds` DISABLE KEYS */;
+/*!40000 ALTER TABLE `builds` ENABLE KEYS */;
 UNLOCK TABLES;
-commit;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
 --
--- Table structure for table `cables`
+-- Table structure for table `cables_specs`
 --
 
-DROP TABLE IF EXISTS `cables`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */
-;
-/*!40101 SET character_set_client = utf8mb4 */
-;
-CREATE TABLE `cables` (
+DROP TABLE IF EXISTS `cables_specs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `cables_specs` (
+  `product_id` char(36) NOT NULL,
   `cable_id` char(36) NOT NULL,
-  `part_code` varchar(100) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `manufacturer` varchar(100) DEFAULT NULL,
   `cable_category` varchar(20) NOT NULL COMMENT 'Power, Data, Display',
   `cable_type` varchar(30) NOT NULL COMMENT 'SATA, PCIe, HDMI, DP, USB',
   `connector_end_a` varchar(50) DEFAULT NULL,
   `connector_end_b` varchar(50) DEFAULT NULL,
-  `length_m` decimal(4, 2) DEFAULT NULL,
+  `length_m` decimal(4,2) DEFAULT NULL,
   `bandwidth` varchar(30) DEFAULT NULL COMMENT 'e.g., 48Gbps for HDMI 2.1',
   `version` varchar(20) DEFAULT NULL COMMENT 'HDMI 2.1, DP 1.4, USB 3.2 Gen2',
   `gauge` varchar(10) DEFAULT NULL COMMENT 'AWG rating for power cables',
@@ -114,51 +99,35 @@ CREATE TABLE `cables` (
   `sleeved` tinyint(1) DEFAULT 0,
   `color` varchar(30) DEFAULT NULL,
   `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attributes`)),
-  `msrp` decimal(10, 2) DEFAULT NULL,
-  `supplier_id` char(36) DEFAULT NULL,
-  `unit_cost` decimal(10, 2) DEFAULT NULL,
-  `unit_price` decimal(10, 2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT 'VND',
-  `image_url` varchar(500) DEFAULT NULL,
-  `reorder_point` int(11) DEFAULT 0,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`cable_id`),
-  UNIQUE KEY `part_code` (`part_code`),
+  PRIMARY KEY (`product_id`),
   KEY `idx_cable_category` (`cable_category`),
   KEY `idx_cable_type` (`cable_type`),
-  KEY `idx_cable_active` (`is_active`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */
-;
+  CONSTRAINT `fk_cables_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
--- Dumping data for table `cables`
+-- Dumping data for table `cables_specs`
 --
 
-LOCK TABLES `cables` WRITE;
-/*!40000 ALTER TABLE `cables` DISABLE KEYS */
-;
-set autocommit = 0;
-/*!40000 ALTER TABLE `cables` ENABLE KEYS */
-;
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `cables_specs` WRITE;
+/*!40000 ALTER TABLE `cables_specs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `cables_specs` ENABLE KEYS */;
 UNLOCK TABLES;
-commit;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
 --
--- Table structure for table `case_fans`
+-- Table structure for table `case_fans_specs`
 --
 
-DROP TABLE IF EXISTS `case_fans`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */
-;
-/*!40101 SET character_set_client = utf8mb4 */
-;
-CREATE TABLE `case_fans` (
+DROP TABLE IF EXISTS `case_fans_specs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `case_fans_specs` (
+  `product_id` char(36) NOT NULL,
   `fan_id` char(36) NOT NULL,
-  `part_code` varchar(100) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `manufacturer` varchar(100) DEFAULT NULL,
   `size_mm` int(11) NOT NULL COMMENT '120, 140, etc.',
   `quantity_in_pack` int(11) DEFAULT 1,
   `rgb_type` varchar(20) DEFAULT NULL COMMENT 'ARGB 5V, RGB 12V, None',
@@ -166,163 +135,45 @@ CREATE TABLE `case_fans` (
   `daisy_chain` tinyint(1) DEFAULT 0,
   `rpm_min` int(11) DEFAULT NULL,
   `rpm_max` int(11) DEFAULT NULL,
-  `airflow_cfm` decimal(5, 1) DEFAULT NULL,
-  `static_pressure_mmh2o` decimal(4, 2) DEFAULT NULL,
-  `noise_dba` decimal(4, 1) DEFAULT NULL,
+  `airflow_cfm` decimal(5,1) DEFAULT NULL,
+  `static_pressure_mmh2o` decimal(4,2) DEFAULT NULL,
+  `noise_dba` decimal(4,1) DEFAULT NULL,
   `bearing_type` varchar(50) DEFAULT NULL,
   `pwm` tinyint(1) DEFAULT 1,
   `blade_count` int(11) DEFAULT NULL,
   `anti_vibration` tinyint(1) DEFAULT 0,
   `fan_curve_profiles` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Predefined fan curves from software' CHECK (json_valid(`fan_curve_profiles`)),
-  `thickness_mm` decimal(4, 1) DEFAULT 25.0,
+  `thickness_mm` decimal(4,1) DEFAULT 25.0,
   `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attributes`)),
-  `msrp` decimal(10, 2) DEFAULT NULL,
-  `supplier_id` char(36) DEFAULT NULL,
-  `unit_cost` decimal(10, 2) DEFAULT NULL,
-  `unit_price` decimal(10, 2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT 'VND',
-  `image_url` varchar(500) DEFAULT NULL,
-  `warranty_months` int(11) DEFAULT 24,
-  `reorder_point` int(11) DEFAULT 0,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`fan_id`),
-  UNIQUE KEY `part_code` (`part_code`),
+  PRIMARY KEY (`product_id`),
   KEY `idx_fan_size` (`size_mm`),
   KEY `idx_fan_rgb` (`rgb_type`),
-  KEY `idx_fan_active` (`is_active`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */
-;
+  CONSTRAINT `fk_case_fans_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
--- Dumping data for table `case_fans`
+-- Dumping data for table `case_fans_specs`
 --
 
-LOCK TABLES `case_fans` WRITE;
-/*!40000 ALTER TABLE `case_fans` DISABLE KEYS */
-;
-set autocommit = 0;
-/*!40000 ALTER TABLE `case_fans` ENABLE KEYS */
-;
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `case_fans_specs` WRITE;
+/*!40000 ALTER TABLE `case_fans_specs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `case_fans_specs` ENABLE KEYS */;
 UNLOCK TABLES;
-commit;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
 --
--- Table structure for table `cpu`
+-- Table structure for table `cpu_coolers_specs`
 --
 
-DROP TABLE IF EXISTS `cpu`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */
-;
-/*!40101 SET character_set_client = utf8mb4 */
-;
-CREATE TABLE `cpu` (
-  `cpu_id` char(36) NOT NULL,
-  `part_code` varchar(100) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `manufacturer` varchar(100) NOT NULL,
-  `socket` varchar(30) NOT NULL COMMENT 'AM5, LGA1700, LGA1200, AM4, LGA2066, TR4, sWRX8',
-  `tdp` int(11) NOT NULL,
-  `memory_type` varchar(20) NOT NULL,
-  `integrated_graphics` tinyint(1) DEFAULT 0,
-  `includes_cooler` tinyint(1) DEFAULT 0,
-  `microarchitecture` varchar(100) DEFAULT NULL COMMENT 'Core microarch: Zen 4, Raptor Lake, Skylake, K7, NetBurst, Sandy Bridge',
-  `family` varchar(50) DEFAULT NULL COMMENT 'Product family: Ryzen, Core, Pentium, Athlon, Xeon, Celeron, EPYC, Threadripper',
-  `generation` varchar(20) DEFAULT NULL COMMENT 'Generation: 14th Gen, 7000 Series, etc.',
-  `series` varchar(30) DEFAULT NULL COMMENT 'Tier: i9, i7, i5, i3, Ryzen 9, Ryzen 7, etc.',
-  `codename` varchar(50) DEFAULT NULL COMMENT 'Die codename: Raphael, Meteor Lake, Vermeer, Prescott, Barton',
-  `isa` varchar(20) DEFAULT 'x86-64' COMMENT 'ISA: x86, x86-64, ARM, RISC-V',
-  `design_type` varchar(20) DEFAULT 'monolithic' COMMENT 'monolithic, chiplet, hybrid, MCM',
-  `hybrid_architecture` tinyint(1) DEFAULT 0 COMMENT 'TRUE for P-core/E-core hybrid designs',
-  `p_core_arch` varchar(50) DEFAULT NULL COMMENT 'Performance core arch: Raptor Cove, Golden Cove',
-  `e_core_arch` varchar(50) DEFAULT NULL COMMENT 'Efficiency core arch: Gracemont, Crestmont',
-  `p_core_base_ghz` decimal(5, 2) DEFAULT NULL COMMENT 'P-core base clock',
-  `p_core_boost_ghz` decimal(5, 2) DEFAULT NULL COMMENT 'P-core max boost clock',
-  `e_core_base_ghz` decimal(5, 2) DEFAULT NULL COMMENT 'E-core base clock',
-  `e_core_boost_ghz` decimal(5, 2) DEFAULT NULL COMMENT 'E-core max boost clock',
-  `vcache` tinyint(1) DEFAULT 0 COMMENT 'Has 3D V-Cache or similar stacked cache',
-  `vcache_size_mb` int(11) DEFAULT NULL COMMENT 'Extra stacked cache size in MB',
-  `die_count` int(11) DEFAULT 1 COMMENT 'Number of dies: 1 for monolithic, 2+ for chiplet/MCM',
-  `ccd_count` int(11) DEFAULT NULL COMMENT 'Core Complex Die count (AMD chiplet)',
-  `iod_type` varchar(30) DEFAULT NULL COMMENT 'I/O Die type: separate IOD, integrated, none',
-  `instruction_extensions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'SSE, SSE2, SSE4.1, AVX, AVX2, AVX-512, AMX, MMX, 3DNow!' CHECK (json_valid(`instruction_extensions`)),
-  `unlocked_multiplier` tinyint(1) DEFAULT 0 COMMENT 'K/X/unlocked SKU',
-  `max_overclock_temp_c` int(11) DEFAULT NULL COMMENT 'Tjunction max temperature',
-  `lithography` varchar(20) DEFAULT NULL,
-  `process_node_manufacturer` varchar(30) DEFAULT NULL COMMENT 'Fab: TSMC, Intel, Samsung, GlobalFoundries',
-  `cores_performance` int(11) DEFAULT NULL,
-  `cores_efficiency` int(11) DEFAULT NULL,
-  `cores_total` int(11) DEFAULT NULL,
-  `threads` int(11) DEFAULT NULL,
-  `base_clock_ghz` decimal(5, 2) DEFAULT NULL,
-  `boost_clock_ghz` decimal(5, 2) DEFAULT NULL,
-  `cache_l2_mb` decimal(5, 1) DEFAULT NULL,
-  `cache_l3_mb` decimal(5, 1) DEFAULT NULL,
-  `max_tdp_watts` int(11) DEFAULT NULL,
-  `igpu_name` varchar(100) DEFAULT NULL,
-  `igpu_execution_units` int(11) DEFAULT NULL,
-  `igpu_max_frequency_mhz` int(11) DEFAULT NULL,
-  `max_memory_speed_mhz` int(11) DEFAULT NULL,
-  `max_memory_capacity_gb` int(11) DEFAULT NULL,
-  `memory_channels` int(11) DEFAULT NULL,
-  `ecc_support` tinyint(1) DEFAULT 0,
-  `pcie_lanes_total` int(11) DEFAULT NULL,
-  `pcie_version` varchar(10) DEFAULT NULL,
-  `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attributes`)),
-  `msrp` decimal(10, 2) DEFAULT NULL,
-  `supplier_id` char(36) DEFAULT NULL,
-  `unit_cost` decimal(10, 2) DEFAULT NULL,
-  `unit_price` decimal(10, 2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT 'VND',
-  `image_url` varchar(500) DEFAULT NULL,
-  `datasheet_url` varchar(500) DEFAULT NULL,
-  `warranty_months` int(11) DEFAULT 36,
-  `reorder_point` int(11) DEFAULT 0,
-  `launch_date` date DEFAULT NULL,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`cpu_id`),
-  UNIQUE KEY `part_code` (`part_code`),
-  KEY `idx_cpu_socket` (`socket`),
-  KEY `idx_cpu_manufacturer` (`manufacturer`),
-  KEY `idx_cpu_socket_memory` (`socket`, `memory_type`),
-  KEY `idx_cpu_active` (`is_active`),
-  KEY `idx_cpu_family` (`family`),
-  KEY `idx_cpu_microarch` (`microarchitecture`),
-  KEY `idx_cpu_generation` (`generation`),
-  KEY `idx_cpu_design` (`design_type`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */
-;
---
--- Dumping data for table `cpu`
---
-
-LOCK TABLES `cpu` WRITE;
-/*!40000 ALTER TABLE `cpu` DISABLE KEYS */
-;
-set autocommit = 0;
-/*!40000 ALTER TABLE `cpu` ENABLE KEYS */
-;
-UNLOCK TABLES;
-commit;
---
--- Table structure for table `cpu_coolers`
---
-
-DROP TABLE IF EXISTS `cpu_coolers`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */
-;
-/*!40101 SET character_set_client = utf8mb4 */
-;
-CREATE TABLE `cpu_coolers` (
+DROP TABLE IF EXISTS `cpu_coolers_specs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `cpu_coolers_specs` (
+  `product_id` char(36) NOT NULL,
   `cooler_id` char(36) NOT NULL,
-  `part_code` varchar(100) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `manufacturer` varchar(100) DEFAULT NULL,
   `type` varchar(10) NOT NULL COMMENT 'Air or AIO',
   `socket_compatibility` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`socket_compatibility`)),
   `tdp_rating_watts` int(11) DEFAULT NULL,
@@ -347,62 +198,126 @@ CREATE TABLE `cpu_coolers` (
   `fan_size_mm` int(11) DEFAULT NULL,
   `fan_rpm_min` int(11) DEFAULT NULL,
   `fan_rpm_max` int(11) DEFAULT NULL,
-  `fan_airflow_cfm` decimal(5, 1) DEFAULT NULL,
-  `fan_static_pressure_mmh2o` decimal(4, 2) DEFAULT NULL,
-  `fan_noise_dba` decimal(4, 1) DEFAULT NULL,
+  `fan_airflow_cfm` decimal(5,1) DEFAULT NULL,
+  `fan_static_pressure_mmh2o` decimal(4,2) DEFAULT NULL,
+  `fan_noise_dba` decimal(4,1) DEFAULT NULL,
   `fan_bearing_type` varchar(50) DEFAULT NULL,
   `fan_pwm` tinyint(1) DEFAULT 1,
   `fan_rgb` tinyint(1) DEFAULT 0,
   `lcd_display` tinyint(1) DEFAULT 0,
   `software_control` varchar(100) DEFAULT NULL,
   `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attributes`)),
-  `msrp` decimal(10, 2) DEFAULT NULL,
-  `supplier_id` char(36) DEFAULT NULL,
-  `unit_cost` decimal(10, 2) DEFAULT NULL,
-  `unit_price` decimal(10, 2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT 'VND',
-  `image_url` varchar(500) DEFAULT NULL,
-  `warranty_months` int(11) DEFAULT 72 COMMENT '6yr for premium coolers',
   `warranty_includes_mounting` tinyint(1) DEFAULT 1,
-  `reorder_point` int(11) DEFAULT 0,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`cooler_id`),
-  UNIQUE KEY `part_code` (`part_code`),
+  PRIMARY KEY (`product_id`),
   KEY `idx_cooler_type` (`type`),
   KEY `idx_cooler_socket` (`socket_compatibility`(255)),
-  KEY `idx_cooler_active` (`is_active`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */
-;
+  CONSTRAINT `fk_cpu_coolers_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
--- Dumping data for table `cpu_coolers`
+-- Dumping data for table `cpu_coolers_specs`
 --
 
-LOCK TABLES `cpu_coolers` WRITE;
-/*!40000 ALTER TABLE `cpu_coolers` DISABLE KEYS */
-;
-set autocommit = 0;
-/*!40000 ALTER TABLE `cpu_coolers` ENABLE KEYS */
-;
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `cpu_coolers_specs` WRITE;
+/*!40000 ALTER TABLE `cpu_coolers_specs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `cpu_coolers_specs` ENABLE KEYS */;
 UNLOCK TABLES;
-commit;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
 --
--- Table structure for table `expansion_cards`
+-- Table structure for table `cpu_specs`
 --
 
-DROP TABLE IF EXISTS `expansion_cards`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */
-;
-/*!40101 SET character_set_client = utf8mb4 */
-;
-CREATE TABLE `expansion_cards` (
+DROP TABLE IF EXISTS `cpu_specs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `cpu_specs` (
+  `product_id` char(36) NOT NULL,
+  `socket` varchar(30) NOT NULL COMMENT 'AM5, LGA1700, LGA1200, AM4, LGA2066, TR4, sWRX8',
+  `tdp` int(11) NOT NULL,
+  `memory_type` varchar(20) NOT NULL,
+  `integrated_graphics` tinyint(1) DEFAULT 0,
+  `includes_cooler` tinyint(1) DEFAULT 0,
+  `microarchitecture` varchar(100) DEFAULT NULL COMMENT 'Core microarch: Zen 4, Raptor Lake, Skylake, K7, NetBurst, Sandy Bridge',
+  `family` varchar(50) DEFAULT NULL COMMENT 'Product family: Ryzen, Core, Pentium, Athlon, Xeon, Celeron, EPYC, Threadripper',
+  `generation` varchar(20) DEFAULT NULL COMMENT 'Generation: 14th Gen, 7000 Series, etc.',
+  `series` varchar(30) DEFAULT NULL COMMENT 'Tier: i9, i7, i5, i3, Ryzen 9, Ryzen 7, etc.',
+  `codename` varchar(50) DEFAULT NULL COMMENT 'Die codename: Raphael, Meteor Lake, Vermeer, Prescott, Barton',
+  `isa` varchar(20) DEFAULT 'x86-64' COMMENT 'ISA: x86, x86-64, ARM, RISC-V',
+  `design_type` varchar(20) DEFAULT 'monolithic' COMMENT 'monolithic, chiplet, hybrid, MCM',
+  `hybrid_architecture` tinyint(1) DEFAULT 0 COMMENT 'TRUE for P-core/E-core hybrid designs',
+  `p_core_arch` varchar(50) DEFAULT NULL COMMENT 'Performance core arch: Raptor Cove, Golden Cove',
+  `e_core_arch` varchar(50) DEFAULT NULL COMMENT 'Efficiency core arch: Gracemont, Crestmont',
+  `p_core_base_ghz` decimal(5,2) DEFAULT NULL COMMENT 'P-core base clock',
+  `p_core_boost_ghz` decimal(5,2) DEFAULT NULL COMMENT 'P-core max boost clock',
+  `e_core_base_ghz` decimal(5,2) DEFAULT NULL COMMENT 'E-core base clock',
+  `e_core_boost_ghz` decimal(5,2) DEFAULT NULL COMMENT 'E-core max boost clock',
+  `vcache` tinyint(1) DEFAULT 0 COMMENT 'Has 3D V-Cache or similar stacked cache',
+  `vcache_size_mb` int(11) DEFAULT NULL COMMENT 'Extra stacked cache size in MB',
+  `die_count` int(11) DEFAULT 1 COMMENT 'Number of dies: 1 for monolithic, 2+ for chiplet/MCM',
+  `ccd_count` int(11) DEFAULT NULL COMMENT 'Core Complex Die count (AMD chiplet)',
+  `iod_type` varchar(30) DEFAULT NULL COMMENT 'I/O Die type: separate IOD, integrated, none',
+  `instruction_extensions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'SSE, SSE2, SSE4.1, AVX, AVX2, AVX-512, AMX, MMX, 3DNow!' CHECK (json_valid(`instruction_extensions`)),
+  `unlocked_multiplier` tinyint(1) DEFAULT 0 COMMENT 'K/X/unlocked SKU',
+  `max_overclock_temp_c` int(11) DEFAULT NULL COMMENT 'Tjunction max temperature',
+  `lithography` varchar(20) DEFAULT NULL,
+  `process_node_manufacturer` varchar(30) DEFAULT NULL COMMENT 'Fab: TSMC, Intel, Samsung, GlobalFoundries',
+  `cores_performance` int(11) DEFAULT NULL,
+  `cores_efficiency` int(11) DEFAULT NULL,
+  `cores_total` int(11) DEFAULT NULL,
+  `threads` int(11) DEFAULT NULL,
+  `base_clock_ghz` decimal(5,2) DEFAULT NULL,
+  `boost_clock_ghz` decimal(5,2) DEFAULT NULL,
+  `cache_l2_mb` decimal(5,1) DEFAULT NULL,
+  `cache_l3_mb` decimal(5,1) DEFAULT NULL,
+  `max_tdp_watts` int(11) DEFAULT NULL,
+  `igpu_name` varchar(100) DEFAULT NULL,
+  `igpu_execution_units` int(11) DEFAULT NULL,
+  `igpu_max_frequency_mhz` int(11) DEFAULT NULL,
+  `max_memory_speed_mhz` int(11) DEFAULT NULL,
+  `max_memory_capacity_gb` int(11) DEFAULT NULL,
+  `memory_channels` int(11) DEFAULT NULL,
+  `ecc_support` tinyint(1) DEFAULT 0,
+  `pcie_lanes_total` int(11) DEFAULT NULL,
+  `pcie_version` varchar(10) DEFAULT NULL,
+  `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attributes`)),
+  `launch_date` date DEFAULT NULL,
+  PRIMARY KEY (`product_id`),
+  KEY `idx_cpu_socket` (`socket`),
+  KEY `idx_cpu_socket_memory` (`socket`,`memory_type`),
+  KEY `idx_cpu_family` (`family`),
+  KEY `idx_cpu_microarch` (`microarchitecture`),
+  KEY `idx_cpu_generation` (`generation`),
+  KEY `idx_cpu_design` (`design_type`),
+  CONSTRAINT `fk_cpu_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `cpu_specs`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `cpu_specs` WRITE;
+/*!40000 ALTER TABLE `cpu_specs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `cpu_specs` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
+-- Table structure for table `expansion_cards_specs`
+--
+
+DROP TABLE IF EXISTS `expansion_cards_specs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `expansion_cards_specs` (
+  `product_id` char(36) NOT NULL,
   `expansion_card_id` char(36) NOT NULL,
-  `part_code` varchar(100) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `manufacturer` varchar(100) DEFAULT NULL,
   `category` varchar(30) NOT NULL COMMENT 'Network, Storage, Sound, USB, Capture',
   `slot_type` varchar(20) NOT NULL COMMENT 'PCIe x1, x4, x8, x16',
   `pcie_version` varchar(10) DEFAULT NULL,
@@ -422,60 +337,42 @@ CREATE TABLE `expansion_cards` (
   `power_connector` varchar(30) DEFAULT NULL,
   `bracket_type` varchar(20) DEFAULT NULL,
   `length_mm` int(11) DEFAULT NULL COMMENT 'Physical card length',
-  `slot_width` decimal(3, 1) DEFAULT 1.0 COMMENT 'How many slots wide',
+  `slot_width` decimal(3,1) DEFAULT 1.0 COMMENT 'How many slots wide',
   `low_profile_available` tinyint(1) DEFAULT 0,
   `driver_support` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`driver_support`)),
   `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attributes`)),
-  `msrp` decimal(10, 2) DEFAULT NULL,
-  `supplier_id` char(36) DEFAULT NULL,
-  `unit_cost` decimal(10, 2) DEFAULT NULL,
-  `unit_price` decimal(10, 2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT 'VND',
-  `image_url` varchar(500) DEFAULT NULL,
-  `warranty_months` int(11) DEFAULT 36,
-  `reorder_point` int(11) DEFAULT 0,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`expansion_card_id`),
-  UNIQUE KEY `part_code` (`part_code`),
+  PRIMARY KEY (`product_id`),
   KEY `idx_expcard_category` (`category`),
   KEY `idx_expcard_slot` (`slot_type`),
-  KEY `idx_expcard_active` (`is_active`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */
-;
+  CONSTRAINT `fk_expansion_cards_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
--- Dumping data for table `expansion_cards`
+-- Dumping data for table `expansion_cards_specs`
 --
 
-LOCK TABLES `expansion_cards` WRITE;
-/*!40000 ALTER TABLE `expansion_cards` DISABLE KEYS */
-;
-set autocommit = 0;
-/*!40000 ALTER TABLE `expansion_cards` ENABLE KEYS */
-;
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `expansion_cards_specs` WRITE;
+/*!40000 ALTER TABLE `expansion_cards_specs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `expansion_cards_specs` ENABLE KEYS */;
 UNLOCK TABLES;
-commit;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
 --
--- Table structure for table `gpu`
+-- Table structure for table `gpu_specs`
 --
 
-DROP TABLE IF EXISTS `gpu`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */
-;
-/*!40101 SET character_set_client = utf8mb4 */
-;
-CREATE TABLE `gpu` (
-  `gpu_id` char(36) NOT NULL,
-  `part_code` varchar(100) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `manufacturer` varchar(100) NOT NULL,
+DROP TABLE IF EXISTS `gpu_specs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `gpu_specs` (
+  `product_id` char(36) NOT NULL,
   `gpu_chipset` varchar(100) DEFAULT NULL,
   `gpu_chip_manufacturer` varchar(50) DEFAULT NULL,
   `length_mm` int(11) DEFAULT NULL,
-  `slot_width` decimal(3, 1) DEFAULT NULL,
+  `slot_width` decimal(3,1) DEFAULT NULL,
   `slot_blocking_count` int(11) DEFAULT 2,
   `tdp` int(11) NOT NULL,
   `power_connectors` varchar(255) DEFAULT NULL COMMENT 'e.g., 2x 8-pin, 1x 16-pin 12VHPWR',
@@ -490,10 +387,10 @@ CREATE TABLE `gpu` (
   `memory_size_gb` int(11) DEFAULT NULL,
   `memory_type` varchar(20) DEFAULT NULL,
   `memory_bus_width_bit` int(11) DEFAULT NULL,
-  `memory_bandwidth_gbps` decimal(8, 1) DEFAULT NULL,
+  `memory_bandwidth_gbps` decimal(8,1) DEFAULT NULL,
   `vram_ecc` tinyint(1) DEFAULT 0 COMMENT 'ECC VRAM for workstation cards',
   `recommended_psu_watts` int(11) DEFAULT NULL,
-  `height_mm` decimal(6, 1) DEFAULT NULL,
+  `height_mm` decimal(6,1) DEFAULT NULL,
   `hdmi_version` varchar(10) DEFAULT NULL,
   `displayport_version` varchar(10) DEFAULT NULL,
   `outputs` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`outputs`)),
@@ -512,65 +409,47 @@ CREATE TABLE `gpu` (
   `decode_engines` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'AV1 HW decode support' CHECK (json_valid(`decode_engines`)),
   `pcie_version` varchar(10) DEFAULT NULL,
   `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attributes`)),
-  `msrp` decimal(10, 2) DEFAULT NULL,
-  `supplier_id` char(36) DEFAULT NULL,
-  `unit_cost` decimal(10, 2) DEFAULT NULL,
-  `unit_price` decimal(10, 2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT 'VND',
-  `image_url` varchar(500) DEFAULT NULL,
-  `datasheet_url` varchar(500) DEFAULT NULL,
-  `warranty_months` int(11) DEFAULT 36,
-  `reorder_point` int(11) DEFAULT 0,
   `launch_date` date DEFAULT NULL,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`gpu_id`),
-  UNIQUE KEY `part_code` (`part_code`),
+  PRIMARY KEY (`product_id`),
   KEY `idx_gpu_manufacturer` (`gpu_chip_manufacturer`),
-  KEY `idx_gpu_chipset` (`gpu_chip_manufacturer`, `gpu_chipset`),
+  KEY `idx_gpu_chipset` (`gpu_chip_manufacturer`,`gpu_chipset`),
   KEY `idx_gpu_length` (`length_mm`),
   KEY `idx_gpu_tdp` (`tdp`),
-  KEY `idx_gpu_active` (`is_active`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */
-;
+  CONSTRAINT `fk_gpu_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
--- Dumping data for table `gpu`
+-- Dumping data for table `gpu_specs`
 --
 
-LOCK TABLES `gpu` WRITE;
-/*!40000 ALTER TABLE `gpu` DISABLE KEYS */
-;
-set autocommit = 0;
-/*!40000 ALTER TABLE `gpu` ENABLE KEYS */
-;
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `gpu_specs` WRITE;
+/*!40000 ALTER TABLE `gpu_specs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `gpu_specs` ENABLE KEYS */;
 UNLOCK TABLES;
-commit;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
 --
--- Table structure for table `headphones`
+-- Table structure for table `headphones_specs`
 --
 
-DROP TABLE IF EXISTS `headphones`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */
-;
-/*!40101 SET character_set_client = utf8mb4 */
-;
-CREATE TABLE `headphones` (
+DROP TABLE IF EXISTS `headphones_specs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `headphones_specs` (
+  `product_id` char(36) NOT NULL,
   `headphone_id` char(36) NOT NULL,
-  `part_code` varchar(100) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `manufacturer` varchar(100) DEFAULT NULL,
   `type` varchar(20) NOT NULL COMMENT 'Over-ear, On-ear, In-ear, Earbuds',
   `driver_type` varchar(30) DEFAULT NULL COMMENT 'Dynamic, Planar Magnetic, Electrostatic, BA',
-  `driver_size_mm` decimal(5, 1) DEFAULT NULL,
+  `driver_size_mm` decimal(5,1) DEFAULT NULL,
   `driver_count` int(11) DEFAULT 1 COMMENT 'Multiple drivers for IEMs',
   `crossover` varchar(30) DEFAULT NULL COMMENT 'For multi-driver IEMs',
   `frequency_response` varchar(30) DEFAULT NULL COMMENT '20Hz-20kHz etc.',
   `impedance_ohms` int(11) DEFAULT NULL,
-  `sensitivity_db` decimal(5, 1) DEFAULT NULL,
-  `thd_percent` decimal(4, 2) DEFAULT NULL COMMENT 'Total Harmonic Distortion',
+  `sensitivity_db` decimal(5,1) DEFAULT NULL,
+  `thd_percent` decimal(4,2) DEFAULT NULL COMMENT 'Total Harmonic Distortion',
   `connectivity` varchar(20) NOT NULL COMMENT 'Wired, Wireless, Both',
   `wireless_bluetooth_version` varchar(10) DEFAULT NULL,
   `wireless_bluetooth_codecs` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'SBC, AAC, aptX, LDAC' CHECK (json_valid(`wireless_bluetooth_codecs`)),
@@ -584,9 +463,9 @@ CREATE TABLE `headphones` (
   `open_back` tinyint(1) DEFAULT 0,
   `foldable` tinyint(1) DEFAULT 0,
   `detachable_cable` tinyint(1) DEFAULT 0,
-  `cable_length_m` decimal(3, 1) DEFAULT NULL,
+  `cable_length_m` decimal(3,1) DEFAULT NULL,
   `cable_connector` varchar(20) DEFAULT NULL COMMENT '3.5mm, 6.35mm, USB-C, Lightning',
-  `weight_g` decimal(5, 1) DEFAULT NULL,
+  `weight_g` decimal(5,1) DEFAULT NULL,
   `ear_pad_material` varchar(30) DEFAULT NULL COMMENT 'Leather, Velour, Memory Foam, Mesh',
   `replaceable_pads` tinyint(1) DEFAULT 1,
   `carrying_case` tinyint(1) DEFAULT 0,
@@ -597,59 +476,41 @@ CREATE TABLE `headphones` (
   `spatial_audio` tinyint(1) DEFAULT 0,
   `app_support` varchar(100) DEFAULT NULL,
   `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attributes`)),
-  `msrp` decimal(10, 2) DEFAULT NULL,
-  `supplier_id` char(36) DEFAULT NULL,
-  `unit_cost` decimal(10, 2) DEFAULT NULL,
-  `unit_price` decimal(10, 2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT 'VND',
-  `image_url` varchar(500) DEFAULT NULL,
-  `warranty_months` int(11) DEFAULT 24,
-  `reorder_point` int(11) DEFAULT 0,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`headphone_id`),
-  UNIQUE KEY `part_code` (`part_code`),
+  PRIMARY KEY (`product_id`),
   KEY `idx_hp_type` (`type`),
   KEY `idx_hp_connectivity` (`connectivity`),
-  KEY `idx_hp_manufacturer` (`manufacturer`),
-  KEY `idx_hp_active` (`is_active`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */
-;
+  CONSTRAINT `fk_headphones_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
--- Dumping data for table `headphones`
+-- Dumping data for table `headphones_specs`
 --
 
-LOCK TABLES `headphones` WRITE;
-/*!40000 ALTER TABLE `headphones` DISABLE KEYS */
-;
-set autocommit = 0;
-/*!40000 ALTER TABLE `headphones` ENABLE KEYS */
-;
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `headphones_specs` WRITE;
+/*!40000 ALTER TABLE `headphones_specs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `headphones_specs` ENABLE KEYS */;
 UNLOCK TABLES;
-commit;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
 --
--- Table structure for table `headsets`
+-- Table structure for table `headsets_specs`
 --
 
-DROP TABLE IF EXISTS `headsets`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */
-;
-/*!40101 SET character_set_client = utf8mb4 */
-;
-CREATE TABLE `headsets` (
+DROP TABLE IF EXISTS `headsets_specs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `headsets_specs` (
+  `product_id` char(36) NOT NULL,
   `headset_id` char(36) NOT NULL,
-  `part_code` varchar(100) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `manufacturer` varchar(100) DEFAULT NULL,
   `type` varchar(20) NOT NULL COMMENT 'Over-ear, On-ear',
   `driver_type` varchar(30) DEFAULT NULL COMMENT 'Dynamic, Planar Magnetic',
-  `driver_size_mm` decimal(5, 1) DEFAULT NULL,
+  `driver_size_mm` decimal(5,1) DEFAULT NULL,
   `frequency_response` varchar(30) DEFAULT NULL,
   `impedance_ohms` int(11) DEFAULT NULL,
-  `sensitivity_db` decimal(5, 1) DEFAULT NULL,
+  `sensitivity_db` decimal(5,1) DEFAULT NULL,
   `connectivity` varchar(20) NOT NULL COMMENT 'Wired, Wireless, Both',
   `wireless_dongle` tinyint(1) DEFAULT 0,
   `wireless_dongle_type` varchar(20) DEFAULT NULL COMMENT 'USB-A, USB-C',
@@ -665,7 +526,7 @@ CREATE TABLE `headsets` (
   `boom_arm_flexible` tinyint(1) DEFAULT 0,
   `mic_pattern` varchar(30) DEFAULT NULL COMMENT 'Cardioid, Omnidirectional, Bidirectional',
   `mic_frequency_response` varchar(30) DEFAULT NULL,
-  `mic_sensitivity_db` decimal(5, 1) DEFAULT NULL COMMENT 'Mic sensitivity in dB',
+  `mic_sensitivity_db` decimal(5,1) DEFAULT NULL COMMENT 'Mic sensitivity in dB',
   `mic_noise_cancellation` tinyint(1) DEFAULT 0,
   `mic_mute_button` tinyint(1) DEFAULT 1,
   `mic_led_indicator` tinyint(1) DEFAULT 0,
@@ -679,9 +540,9 @@ CREATE TABLE `headsets` (
   `volume_wheel` tinyint(1) DEFAULT 0,
   `eq_presets` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`eq_presets`)),
   `platform_compatibility` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'PC, PS5, Xbox, Switch, Mobile' CHECK (json_valid(`platform_compatibility`)),
-  `cable_length_m` decimal(3, 1) DEFAULT NULL,
+  `cable_length_m` decimal(3,1) DEFAULT NULL,
   `cable_connector` varchar(20) DEFAULT NULL COMMENT '3.5mm, USB-A, USB-C',
-  `weight_g` decimal(5, 1) DEFAULT NULL,
+  `weight_g` decimal(5,1) DEFAULT NULL,
   `ear_pad_material` varchar(30) DEFAULT NULL,
   `headband_material` varchar(30) DEFAULT NULL,
   `rgb` tinyint(1) DEFAULT 0,
@@ -691,53 +552,34 @@ CREATE TABLE `headsets` (
   `replaceable_pads` tinyint(1) DEFAULT 1,
   `ip_rating` varchar(10) DEFAULT NULL,
   `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attributes`)),
-  `msrp` decimal(10, 2) DEFAULT NULL,
-  `supplier_id` char(36) DEFAULT NULL,
-  `unit_cost` decimal(10, 2) DEFAULT NULL,
-  `unit_price` decimal(10, 2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT 'VND',
-  `image_url` varchar(500) DEFAULT NULL,
-  `warranty_months` int(11) DEFAULT 24,
-  `reorder_point` int(11) DEFAULT 0,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`headset_id`),
-  UNIQUE KEY `part_code` (`part_code`),
+  PRIMARY KEY (`product_id`),
   KEY `idx_hs_type` (`type`),
   KEY `idx_hs_connectivity` (`connectivity`),
-  KEY `idx_hs_manufacturer` (`manufacturer`),
-  KEY `idx_hs_active` (`is_active`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */
-;
+  CONSTRAINT `fk_headsets_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
--- Dumping data for table `headsets`
+-- Dumping data for table `headsets_specs`
 --
 
-LOCK TABLES `headsets` WRITE;
-/*!40000 ALTER TABLE `headsets` DISABLE KEYS */
-;
-set autocommit = 0;
-/*!40000 ALTER TABLE `headsets` ENABLE KEYS */
-;
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `headsets_specs` WRITE;
+/*!40000 ALTER TABLE `headsets_specs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `headsets_specs` ENABLE KEYS */;
 UNLOCK TABLES;
-commit;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
 --
--- Table structure for table `keyboard`
+-- Table structure for table `keyboard_specs`
 --
 
-DROP TABLE IF EXISTS `keyboard`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */
-;
-/*!40101 SET character_set_client = utf8mb4 */
-;
-CREATE TABLE `keyboard` (
-  `keyboard_id` char(36) NOT NULL,
-  `part_code` varchar(100) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `manufacturer` varchar(100) DEFAULT NULL,
+DROP TABLE IF EXISTS `keyboard_specs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `keyboard_specs` (
+  `product_id` char(36) NOT NULL,
   `type` varchar(20) NOT NULL COMMENT 'Mechanical, Membrane, Optical, Topre',
   `size` varchar(20) NOT NULL COMMENT 'Full, TKL, 75pct, 65pct, 60pct, 40pct',
   `layout` varchar(30) DEFAULT 'ANSI' COMMENT 'ANSI, ISO, JIS',
@@ -746,7 +588,7 @@ CREATE TABLE `keyboard` (
   `switch_model` varchar(100) DEFAULT NULL,
   `switch_type` varchar(20) DEFAULT NULL COMMENT 'Linear, Tactile, Clicky',
   `switch_actuation_force_g` int(11) DEFAULT NULL,
-  `switch_travel_mm` decimal(3, 1) DEFAULT NULL,
+  `switch_travel_mm` decimal(3,1) DEFAULT NULL,
   `hot_swappable` tinyint(1) DEFAULT 0,
   `south_facing_leds` tinyint(1) DEFAULT 0 COMMENT 'Better keycap compatibility',
   `switch_socket_type` varchar(30) DEFAULT NULL COMMENT '3-pin, 5-pin, optical',
@@ -759,7 +601,7 @@ CREATE TABLE `keyboard` (
   `gasket_mount` tinyint(1) DEFAULT 0,
   `dampening` varchar(50) DEFAULT NULL COMMENT 'Foam, Silicone, Tape-mod',
   `foam_layers` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'PE foam, silicone, IXPE, case foam' CHECK (json_valid(`foam_layers`)),
-  `typing_angle_degrees` decimal(3, 1) DEFAULT NULL,
+  `typing_angle_degrees` decimal(3,1) DEFAULT NULL,
   `n_key_rollover` tinyint(1) DEFAULT 1,
   `anti_ghosting` tinyint(1) DEFAULT 1,
   `rapid_trigger` tinyint(1) DEFAULT 0 COMMENT 'Analog rapid trigger support',
@@ -781,55 +623,38 @@ CREATE TABLE `keyboard` (
   `dimensions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'length, width, height in mm' CHECK (json_valid(`dimensions`)),
   `color` varchar(50) DEFAULT NULL,
   `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attributes`)),
-  `msrp` decimal(10, 2) DEFAULT NULL,
-  `supplier_id` char(36) DEFAULT NULL,
-  `unit_cost` decimal(10, 2) DEFAULT NULL,
-  `unit_price` decimal(10, 2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT 'VND',
-  `image_url` varchar(500) DEFAULT NULL,
-  `warranty_months` int(11) DEFAULT 24,
-  `reorder_point` int(11) DEFAULT 0,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`keyboard_id`),
-  UNIQUE KEY `part_code` (`part_code`),
+  PRIMARY KEY (`product_id`),
   KEY `idx_kb_type` (`type`),
   KEY `idx_kb_size` (`size`),
-  KEY `idx_kb_switch` (`switch_brand`, `switch_model`),
+  KEY `idx_kb_switch` (`switch_brand`,`switch_model`),
   KEY `idx_kb_connectivity` (`connectivity`),
-  KEY `idx_kb_active` (`is_active`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */
-;
+  CONSTRAINT `fk_keyboard_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
--- Dumping data for table `keyboard`
+-- Dumping data for table `keyboard_specs`
 --
 
-LOCK TABLES `keyboard` WRITE;
-/*!40000 ALTER TABLE `keyboard` DISABLE KEYS */
-;
-set autocommit = 0;
-/*!40000 ALTER TABLE `keyboard` ENABLE KEYS */
-;
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `keyboard_specs` WRITE;
+/*!40000 ALTER TABLE `keyboard_specs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `keyboard_specs` ENABLE KEYS */;
 UNLOCK TABLES;
-commit;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
 --
--- Table structure for table `monitors`
+-- Table structure for table `monitors_specs`
 --
 
-DROP TABLE IF EXISTS `monitors`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */
-;
-/*!40101 SET character_set_client = utf8mb4 */
-;
-CREATE TABLE `monitors` (
+DROP TABLE IF EXISTS `monitors_specs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `monitors_specs` (
+  `product_id` char(36) NOT NULL,
   `monitor_id` char(36) NOT NULL,
-  `part_code` varchar(100) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `manufacturer` varchar(100) DEFAULT NULL,
-  `screen_size_inches` decimal(4, 1) NOT NULL,
+  `screen_size_inches` decimal(4,1) NOT NULL,
   `resolution_h` int(11) NOT NULL,
   `resolution_v` int(11) NOT NULL,
   `refresh_rate_hz` int(11) NOT NULL,
@@ -840,7 +665,7 @@ CREATE TABLE `monitors` (
   `backlight_type` varchar(30) DEFAULT NULL COMMENT 'LED, Mini-LED, OLED, QD-OLED, FALD',
   `dimming_zones` int(11) DEFAULT NULL COMMENT 'FALD/Mini-LED zone count',
   `aspect_ratio` varchar(10) DEFAULT NULL COMMENT '16:9, 21:9, 32:9',
-  `response_time_ms` decimal(4, 1) DEFAULT NULL,
+  `response_time_ms` decimal(4,1) DEFAULT NULL,
   `brightness_nits` int(11) DEFAULT NULL,
   `contrast_ratio` varchar(30) DEFAULT NULL,
   `hdr_support` varchar(30) DEFAULT NULL COMMENT 'HDR10, HDR400, HDR600, HDR1000',
@@ -859,7 +684,7 @@ CREATE TABLE `monitors` (
   `kvm_switch` tinyint(1) DEFAULT 0,
   `daisy_chain` varchar(20) DEFAULT NULL COMMENT 'DP Out for daisy-chaining',
   `speakers` tinyint(1) DEFAULT 0,
-  `speaker_watts` decimal(4, 1) DEFAULT NULL,
+  `speaker_watts` decimal(4,1) DEFAULT NULL,
   `vesa_mount` varchar(20) DEFAULT NULL,
   `height_adjustable` tinyint(1) DEFAULT 0,
   `pivot` tinyint(1) DEFAULT 0,
@@ -867,59 +692,41 @@ CREATE TABLE `monitors` (
   `tilt` tinyint(1) DEFAULT 1,
   `curved` tinyint(1) DEFAULT 0,
   `curvature` varchar(10) DEFAULT NULL COMMENT '1000R, 1500R, 1800R',
-  `weight_kg` decimal(5, 2) DEFAULT NULL,
+  `weight_kg` decimal(5,2) DEFAULT NULL,
   `power_consumption_watts` int(11) DEFAULT NULL,
   `energy_rating` varchar(10) DEFAULT NULL COMMENT 'Energy Star, EU energy label',
   `dimensions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'with and without stand' CHECK (json_valid(`dimensions`)),
   `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attributes`)),
-  `msrp` decimal(10, 2) DEFAULT NULL,
-  `supplier_id` char(36) DEFAULT NULL,
-  `unit_cost` decimal(10, 2) DEFAULT NULL,
-  `unit_price` decimal(10, 2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT 'VND',
-  `image_url` varchar(500) DEFAULT NULL,
-  `warranty_months` int(11) DEFAULT 36,
-  `reorder_point` int(11) DEFAULT 0,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`monitor_id`),
-  UNIQUE KEY `part_code` (`part_code`),
+  PRIMARY KEY (`product_id`),
   KEY `idx_monitor_size` (`screen_size_inches`),
-  KEY `idx_monitor_resolution` (`resolution_h`, `resolution_v`),
+  KEY `idx_monitor_resolution` (`resolution_h`,`resolution_v`),
   KEY `idx_monitor_refresh` (`refresh_rate_hz`),
   KEY `idx_monitor_panel` (`panel_type`),
-  KEY `idx_monitor_active` (`is_active`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */
-;
+  CONSTRAINT `fk_monitors_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
--- Dumping data for table `monitors`
+-- Dumping data for table `monitors_specs`
 --
 
-LOCK TABLES `monitors` WRITE;
-/*!40000 ALTER TABLE `monitors` DISABLE KEYS */
-;
-set autocommit = 0;
-/*!40000 ALTER TABLE `monitors` ENABLE KEYS */
-;
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `monitors_specs` WRITE;
+/*!40000 ALTER TABLE `monitors_specs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `monitors_specs` ENABLE KEYS */;
 UNLOCK TABLES;
-commit;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
 --
--- Table structure for table `motherboard`
+-- Table structure for table `motherboard_specs`
 --
 
-DROP TABLE IF EXISTS `motherboard`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */
-;
-/*!40101 SET character_set_client = utf8mb4 */
-;
-CREATE TABLE `motherboard` (
-  `motherboard_id` char(36) NOT NULL,
-  `part_code` varchar(100) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `manufacturer` varchar(100) NOT NULL,
+DROP TABLE IF EXISTS `motherboard_specs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `motherboard_specs` (
+  `product_id` char(36) NOT NULL,
   `socket` varchar(50) NOT NULL,
   `form_factor` varchar(20) NOT NULL,
   `memory_type` varchar(20) NOT NULL,
@@ -951,57 +758,38 @@ CREATE TABLE `motherboard` (
   `bios_flashback` tinyint(1) DEFAULT 0,
   `debug_led` tinyint(1) DEFAULT 0,
   `internal_headers` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`internal_headers`)),
-  `length_mm` decimal(6, 1) DEFAULT NULL,
-  `width_mm` decimal(6, 1) DEFAULT NULL,
+  `length_mm` decimal(6,1) DEFAULT NULL,
+  `width_mm` decimal(6,1) DEFAULT NULL,
   `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attributes`)),
-  `msrp` decimal(10, 2) DEFAULT NULL,
-  `supplier_id` char(36) DEFAULT NULL,
-  `unit_cost` decimal(10, 2) DEFAULT NULL,
-  `unit_price` decimal(10, 2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT 'VND',
-  `image_url` varchar(500) DEFAULT NULL,
-  `datasheet_url` varchar(500) DEFAULT NULL,
-  `warranty_months` int(11) DEFAULT 36,
-  `reorder_point` int(11) DEFAULT 0,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`motherboard_id`),
-  UNIQUE KEY `part_code` (`part_code`),
+  PRIMARY KEY (`product_id`),
   KEY `idx_mobo_socket` (`socket`),
-  KEY `idx_mobo_socket_ff` (`socket`, `form_factor`),
+  KEY `idx_mobo_socket_ff` (`socket`,`form_factor`),
   KEY `idx_mobo_chipset` (`chipset`),
-  KEY `idx_mobo_active` (`is_active`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */
-;
+  CONSTRAINT `fk_motherboard_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
--- Dumping data for table `motherboard`
+-- Dumping data for table `motherboard_specs`
 --
 
-LOCK TABLES `motherboard` WRITE;
-/*!40000 ALTER TABLE `motherboard` DISABLE KEYS */
-;
-set autocommit = 0;
-/*!40000 ALTER TABLE `motherboard` ENABLE KEYS */
-;
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `motherboard_specs` WRITE;
+/*!40000 ALTER TABLE `motherboard_specs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `motherboard_specs` ENABLE KEYS */;
 UNLOCK TABLES;
-commit;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
 --
--- Table structure for table `mouse`
+-- Table structure for table `mouse_specs`
 --
 
-DROP TABLE IF EXISTS `mouse`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */
-;
-/*!40101 SET character_set_client = utf8mb4 */
-;
-CREATE TABLE `mouse` (
-  `mouse_id` char(36) NOT NULL,
-  `part_code` varchar(100) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `manufacturer` varchar(100) DEFAULT NULL,
+DROP TABLE IF EXISTS `mouse_specs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mouse_specs` (
+  `product_id` char(36) NOT NULL,
   `type` varchar(20) NOT NULL COMMENT 'Wired, Wireless, Both',
   `sensor_type` varchar(50) DEFAULT NULL COMMENT 'Optical, Laser',
   `sensor_model` varchar(100) DEFAULT NULL,
@@ -1011,7 +799,7 @@ CREATE TABLE `mouse` (
   `polling_rate_hz` int(11) DEFAULT 1000,
   `max_tracking_speed_ips` int(11) DEFAULT NULL,
   `max_acceleration_g` int(11) DEFAULT NULL,
-  `lod_mm` decimal(3, 1) DEFAULT NULL COMMENT 'Lift-Off Distance in mm',
+  `lod_mm` decimal(3,1) DEFAULT NULL COMMENT 'Lift-Off Distance in mm',
   `buttons` int(11) DEFAULT 5,
   `programmable_buttons` int(11) DEFAULT NULL,
   `side_buttons` int(11) DEFAULT 0,
@@ -1025,11 +813,11 @@ CREATE TABLE `mouse` (
   `wireless_battery_life_hours` int(11) DEFAULT NULL,
   `wireless_charging` tinyint(1) DEFAULT 0,
   `cable_type` varchar(30) DEFAULT NULL COMMENT 'Paracord, Braided, Rubber',
-  `cable_length_m` decimal(3, 1) DEFAULT NULL,
-  `weight_g` decimal(5, 1) DEFAULT NULL,
-  `length_mm` decimal(5, 1) DEFAULT NULL,
-  `width_mm` decimal(5, 1) DEFAULT NULL,
-  `height_mm` decimal(5, 1) DEFAULT NULL,
+  `cable_length_m` decimal(3,1) DEFAULT NULL,
+  `weight_g` decimal(5,1) DEFAULT NULL,
+  `length_mm` decimal(5,1) DEFAULT NULL,
+  `width_mm` decimal(5,1) DEFAULT NULL,
+  `height_mm` decimal(5,1) DEFAULT NULL,
   `grip_style` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Palm, Claw, Fingertip' CHECK (json_valid(`grip_style`)),
   `hand` varchar(15) DEFAULT 'ambidextrous' COMMENT 'right, left, ambidextrous',
   `rgb` tinyint(1) DEFAULT 0,
@@ -1040,52 +828,34 @@ CREATE TABLE `mouse` (
   `feet_area` varchar(30) DEFAULT NULL COMMENT 'Large, Medium, Small dot skates',
   `color` varchar(50) DEFAULT NULL,
   `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attributes`)),
-  `msrp` decimal(10, 2) DEFAULT NULL,
-  `supplier_id` char(36) DEFAULT NULL,
-  `unit_cost` decimal(10, 2) DEFAULT NULL,
-  `unit_price` decimal(10, 2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT 'VND',
-  `image_url` varchar(500) DEFAULT NULL,
-  `warranty_months` int(11) DEFAULT 24,
-  `reorder_point` int(11) DEFAULT 0,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`mouse_id`),
-  UNIQUE KEY `part_code` (`part_code`),
+  PRIMARY KEY (`product_id`),
   KEY `idx_mouse_type` (`type`),
-  KEY `idx_mouse_manufacturer` (`manufacturer`),
-  KEY `idx_mouse_active` (`is_active`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */
-;
+  CONSTRAINT `fk_mouse_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
--- Dumping data for table `mouse`
+-- Dumping data for table `mouse_specs`
 --
 
-LOCK TABLES `mouse` WRITE;
-/*!40000 ALTER TABLE `mouse` DISABLE KEYS */
-;
-set autocommit = 0;
-/*!40000 ALTER TABLE `mouse` ENABLE KEYS */
-;
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `mouse_specs` WRITE;
+/*!40000 ALTER TABLE `mouse_specs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `mouse_specs` ENABLE KEYS */;
 UNLOCK TABLES;
-commit;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
 --
--- Table structure for table `pc_cases`
+-- Table structure for table `pc_cases_specs`
 --
 
-DROP TABLE IF EXISTS `pc_cases`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */
-;
-/*!40101 SET character_set_client = utf8mb4 */
-;
-CREATE TABLE `pc_cases` (
+DROP TABLE IF EXISTS `pc_cases_specs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `pc_cases_specs` (
+  `product_id` char(36) NOT NULL,
   `case_id` char(36) NOT NULL,
-  `part_code` varchar(100) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `manufacturer` varchar(100) DEFAULT NULL,
   `form_factor` varchar(30) NOT NULL,
   `airflow_type` varchar(30) DEFAULT NULL COMMENT 'Mesh, Solid, Perforated, Hybrid',
   `supported_motherboards` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'ATX, mATX, ITX etc.' CHECK (json_valid(`supported_motherboards`)),
@@ -1104,10 +874,10 @@ CREATE TABLE `pc_cases` (
   `front_panel_usb_2` int(11) DEFAULT 0,
   `front_panel_audio` tinyint(1) DEFAULT 1,
   `cable_management_depth_mm` int(11) DEFAULT NULL,
-  `height_mm` decimal(6, 1) DEFAULT NULL,
-  `width_mm` decimal(6, 1) DEFAULT NULL,
-  `depth_mm` decimal(6, 1) DEFAULT NULL,
-  `volume_liters` decimal(5, 1) DEFAULT NULL,
+  `height_mm` decimal(6,1) DEFAULT NULL,
+  `width_mm` decimal(6,1) DEFAULT NULL,
+  `depth_mm` decimal(6,1) DEFAULT NULL,
+  `volume_liters` decimal(5,1) DEFAULT NULL,
   `fan_mounts` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fan_mounts`)),
   `included_fans` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`included_fans`)),
   `tempered_glass` tinyint(1) DEFAULT 0,
@@ -1121,54 +891,37 @@ CREATE TABLE `pc_cases` (
   `side_panel_type` varchar(30) DEFAULT NULL COMMENT 'Tempered Glass, Acrylic, Steel, Mesh',
   `material` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`material`)),
   `color` varchar(50) DEFAULT NULL,
-  `weight_kg` decimal(5, 2) DEFAULT NULL,
+  `weight_kg` decimal(5,2) DEFAULT NULL,
   `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attributes`)),
-  `msrp` decimal(10, 2) DEFAULT NULL,
-  `supplier_id` char(36) DEFAULT NULL,
-  `unit_cost` decimal(10, 2) DEFAULT NULL,
-  `unit_price` decimal(10, 2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT 'VND',
-  `image_url` varchar(500) DEFAULT NULL,
-  `warranty_months` int(11) DEFAULT 24,
-  `reorder_point` int(11) DEFAULT 0,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`case_id`),
-  UNIQUE KEY `part_code` (`part_code`),
+  PRIMARY KEY (`product_id`),
   KEY `idx_case_ff` (`form_factor`),
   KEY `idx_case_gpu_len` (`max_gpu_length_mm`),
-  KEY `idx_case_active` (`is_active`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */
-;
+  CONSTRAINT `fk_pc_cases_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
--- Dumping data for table `pc_cases`
+-- Dumping data for table `pc_cases_specs`
 --
 
-LOCK TABLES `pc_cases` WRITE;
-/*!40000 ALTER TABLE `pc_cases` DISABLE KEYS */
-;
-set autocommit = 0;
-/*!40000 ALTER TABLE `pc_cases` ENABLE KEYS */
-;
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `pc_cases_specs` WRITE;
+/*!40000 ALTER TABLE `pc_cases_specs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pc_cases_specs` ENABLE KEYS */;
 UNLOCK TABLES;
-commit;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
 --
--- Table structure for table `power_supply`
+-- Table structure for table `power_supply_specs`
 --
 
-DROP TABLE IF EXISTS `power_supply`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */
-;
-/*!40101 SET character_set_client = utf8mb4 */
-;
-CREATE TABLE `power_supply` (
+DROP TABLE IF EXISTS `power_supply_specs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `power_supply_specs` (
+  `product_id` char(36) NOT NULL,
   `psu_id` char(36) NOT NULL,
-  `part_code` varchar(100) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `manufacturer` varchar(100) DEFAULT NULL,
   `wattage` int(11) NOT NULL,
   `total_continuous_watts` int(11) DEFAULT NULL,
   `peak_watts` int(11) DEFAULT NULL COMMENT 'Transient peak capacity',
@@ -1202,66 +955,48 @@ CREATE TABLE `power_supply` (
   `zero_rpm_mode` tinyint(1) DEFAULT 0,
   `fanless` tinyint(1) DEFAULT 0,
   `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attributes`)),
-  `msrp` decimal(10, 2) DEFAULT NULL,
-  `supplier_id` char(36) DEFAULT NULL,
-  `unit_cost` decimal(10, 2) DEFAULT NULL,
-  `unit_price` decimal(10, 2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT 'VND',
-  `image_url` varchar(500) DEFAULT NULL,
-  `warranty_months` int(11) DEFAULT 120 COMMENT '10yr for premium PSUs',
-  `reorder_point` int(11) DEFAULT 0,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`psu_id`),
-  UNIQUE KEY `part_code` (`part_code`),
+  PRIMARY KEY (`product_id`),
   KEY `idx_psu_wattage` (`wattage`),
   KEY `idx_psu_type` (`type`),
   KEY `idx_psu_length` (`length_mm`),
-  KEY `idx_psu_active` (`is_active`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */
-;
+  CONSTRAINT `fk_power_supply_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
--- Dumping data for table `power_supply`
+-- Dumping data for table `power_supply_specs`
 --
 
-LOCK TABLES `power_supply` WRITE;
-/*!40000 ALTER TABLE `power_supply` DISABLE KEYS */
-;
-set autocommit = 0;
-/*!40000 ALTER TABLE `power_supply` ENABLE KEYS */
-;
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `power_supply_specs` WRITE;
+/*!40000 ALTER TABLE `power_supply_specs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `power_supply_specs` ENABLE KEYS */;
 UNLOCK TABLES;
-commit;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
 --
--- Table structure for table `ram`
+-- Table structure for table `ram_specs`
 --
 
-DROP TABLE IF EXISTS `ram`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */
-;
-/*!40101 SET character_set_client = utf8mb4 */
-;
-CREATE TABLE `ram` (
-  `ram_id` char(36) NOT NULL,
-  `part_code` varchar(100) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `manufacturer` varchar(100) DEFAULT NULL,
+DROP TABLE IF EXISTS `ram_specs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ram_specs` (
+  `product_id` char(36) NOT NULL,
   `type` varchar(10) NOT NULL,
   `speed_mhz` int(11) NOT NULL,
   `xmp_expo` varchar(20) DEFAULT NULL COMMENT 'XMP 3.0, EXPO, DOCP',
   `base_speed_mhz` int(11) DEFAULT NULL COMMENT 'JEDEC base speed',
   `modules` int(11) DEFAULT 1,
-  `height_mm` decimal(5, 1) DEFAULT NULL,
+  `height_mm` decimal(5,1) DEFAULT NULL,
   `capacity_per_module_gb` int(11) DEFAULT NULL,
   `capacity_total_gb` int(11) DEFAULT NULL,
   `cas_latency` int(11) DEFAULT NULL,
   `trcd` int(11) DEFAULT NULL,
   `trp` int(11) DEFAULT NULL,
   `tras` int(11) DEFAULT NULL,
-  `voltage` decimal(4, 2) DEFAULT NULL,
+  `voltage` decimal(4,2) DEFAULT NULL,
   `die_type` varchar(30) DEFAULT NULL COMMENT 'Samsung B-die, Hynix A-die, Micron A-die',
   `ranks_per_module` int(11) DEFAULT 1 COMMENT 'Single-rank or Dual-rank',
   `ecc` tinyint(1) DEFAULT 0,
@@ -1269,58 +1004,40 @@ CREATE TABLE `ram` (
   `pmic` varchar(30) DEFAULT NULL COMMENT 'DDR5 PMIC: integrated or external',
   `has_heatspreader` tinyint(1) DEFAULT 1,
   `rgb` tinyint(1) DEFAULT 0,
-  `heat_spreader_height_mm` decimal(5, 1) DEFAULT NULL COMMENT 'Total height with heatspreader for clearance check',
+  `heat_spreader_height_mm` decimal(5,1) DEFAULT NULL COMMENT 'Total height with heatspreader for clearance check',
   `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attributes`)),
-  `msrp` decimal(10, 2) DEFAULT NULL,
-  `supplier_id` char(36) DEFAULT NULL,
-  `unit_cost` decimal(10, 2) DEFAULT NULL,
-  `unit_price` decimal(10, 2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT 'VND',
-  `image_url` varchar(500) DEFAULT NULL,
-  `warranty_months` int(11) DEFAULT 0 COMMENT 'Lifetime = 0',
-  `reorder_point` int(11) DEFAULT 0,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`ram_id`),
-  UNIQUE KEY `part_code` (`part_code`),
+  PRIMARY KEY (`product_id`),
   KEY `idx_ram_type` (`type`),
-  KEY `idx_ram_type_speed` (`type`, `speed_mhz`),
-  KEY `idx_ram_active` (`is_active`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */
-;
+  KEY `idx_ram_type_speed` (`type`,`speed_mhz`),
+  CONSTRAINT `fk_ram_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
--- Dumping data for table `ram`
+-- Dumping data for table `ram_specs`
 --
 
-LOCK TABLES `ram` WRITE;
-/*!40000 ALTER TABLE `ram` DISABLE KEYS */
-;
-set autocommit = 0;
-/*!40000 ALTER TABLE `ram` ENABLE KEYS */
-;
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `ram_specs` WRITE;
+/*!40000 ALTER TABLE `ram_specs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ram_specs` ENABLE KEYS */;
 UNLOCK TABLES;
-commit;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
 --
--- Table structure for table `storage`
+-- Table structure for table `storage_specs`
 --
 
-DROP TABLE IF EXISTS `storage`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */
-;
-/*!40101 SET character_set_client = utf8mb4 */
-;
-CREATE TABLE `storage` (
-  `storage_id` char(36) NOT NULL,
-  `part_code` varchar(100) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `manufacturer` varchar(100) DEFAULT NULL,
+DROP TABLE IF EXISTS `storage_specs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `storage_specs` (
+  `product_id` char(36) NOT NULL,
   `type` varchar(10) NOT NULL COMMENT 'SSD or HDD',
   `interface_type` varchar(20) NOT NULL COMMENT 'M.2, SATA',
   `form_factor` varchar(30) DEFAULT NULL COMMENT 'M.2 2280, 2.5 inch, 3.5 inch',
-  `height_mm` decimal(5, 1) DEFAULT NULL COMMENT 'Physical height for 2.5/3.5 drives',
+  `height_mm` decimal(5,1) DEFAULT NULL COMMENT 'Physical height for 2.5/3.5 drives',
   `pcie_gen` int(11) DEFAULT NULL,
   `capacity_gb` int(11) NOT NULL,
   `protocol` varchar(20) DEFAULT NULL COMMENT 'NVMe, AHCI, SATA',
@@ -1336,63 +1053,44 @@ CREATE TABLE `storage` (
   `dram_size_mb` int(11) DEFAULT NULL,
   `slc_cache_gb` int(11) DEFAULT NULL COMMENT 'SLC cache size in GB',
   `tbw` int(11) DEFAULT NULL,
-  `endurance_dwpd` decimal(4, 2) DEFAULT NULL COMMENT 'Drive Writes Per Day rating',
+  `endurance_dwpd` decimal(4,2) DEFAULT NULL COMMENT 'Drive Writes Per Day rating',
   `mtbf_hours` int(11) DEFAULT NULL COMMENT 'Mean Time Between Failures',
   `rpm` int(11) DEFAULT NULL COMMENT 'HDD only',
   `cache_mb` int(11) DEFAULT NULL COMMENT 'HDD only',
   `recording_tech` varchar(10) DEFAULT NULL COMMENT 'CMR, SMR - HDD only',
   `helium_sealed` tinyint(1) DEFAULT 0,
   `use_case` varchar(30) DEFAULT NULL COMMENT 'Consumer, Prosumer, Enterprise, NAS',
-  `active_watts` decimal(5, 1) DEFAULT NULL,
-  `idle_watts` decimal(5, 1) DEFAULT NULL,
+  `active_watts` decimal(5,1) DEFAULT NULL,
+  `idle_watts` decimal(5,1) DEFAULT NULL,
   `encryption` varchar(50) DEFAULT NULL COMMENT 'AES-256, TCG Opal 2.0, None',
   `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attributes`)),
-  `msrp` decimal(10, 2) DEFAULT NULL,
-  `supplier_id` char(36) DEFAULT NULL,
-  `unit_cost` decimal(10, 2) DEFAULT NULL,
-  `unit_price` decimal(10, 2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT 'VND',
-  `image_url` varchar(500) DEFAULT NULL,
-  `warranty_months` int(11) DEFAULT 60,
-  `reorder_point` int(11) DEFAULT 0,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`storage_id`),
-  UNIQUE KEY `part_code` (`part_code`),
+  PRIMARY KEY (`product_id`),
   KEY `idx_storage_type` (`type`),
   KEY `idx_storage_interface` (`interface_type`),
   KEY `idx_storage_capacity` (`capacity_gb`),
-  KEY `idx_storage_active` (`is_active`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */
-;
+  CONSTRAINT `fk_storage_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
--- Dumping data for table `storage`
+-- Dumping data for table `storage_specs`
 --
 
-LOCK TABLES `storage` WRITE;
-/*!40000 ALTER TABLE `storage` DISABLE KEYS */
-;
-set autocommit = 0;
-/*!40000 ALTER TABLE `storage` ENABLE KEYS */
-;
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `storage_specs` WRITE;
+/*!40000 ALTER TABLE `storage_specs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `storage_specs` ENABLE KEYS */;
 UNLOCK TABLES;
-commit;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */
-;
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */
-;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */
-;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */
-;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */
-;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */
-;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */
-;
-/*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */
-;
--- Dump completed on 2026-02-09  2:15:04
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
+
+-- Dump completed on 2026-06-08  2:12:11

@@ -6,7 +6,8 @@ import { Card } from '../components/ui/Card.jsx';
 import { Badge } from '../components/ui/Badge.jsx';
 import { Spinner } from '../components/ui/Spinner.jsx';
 import { PageHeader } from '../components/ui/PageHeader.jsx';
-import { FileText, Plus, Eye, Send } from 'lucide-react';
+import { FileText, Plus, Eye, Send, Save } from 'lucide-react';
+import { Modal, ModalFooter } from '../components/ui/Modal.jsx';
 
 const IC = 'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-colors shadow-sm';
 
@@ -28,6 +29,7 @@ export default function Invoices() {
     const [suppliers, setSuppliers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [filters, setFilters] = useState({ search: '', supplier_id: '', status: '', date_from: '', date_to: '' });
+    const [activeModal, setActiveModal] = useState({ type: null, data: null });
     const searchTimer = useRef(null);
 
     const fetchInvoices = useCallback(async (f = filters) => {
@@ -47,6 +49,13 @@ export default function Invoices() {
         api.get('/suppliers').then(r => setSuppliers(r.data?.suppliers || [])).catch(() => {});
         fetchInvoices();
     }, [fetchInvoices]);
+
+    const handleCreateInvoice = async (formData) => {
+        // Mock API call for creating Invoice
+        console.log('Creating Invoice with data:', formData);
+        setActiveModal({ type: null, data: null });
+        fetchInvoices();
+    };
 
     const handleFilter = (key, val) => {
         const next = { ...filters, [key]: val };
@@ -73,7 +82,10 @@ export default function Invoices() {
                 icon={FileText}
                 action={
                     canWrite && (
-                        <button className="flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm">
+                        <button 
+                            onClick={() => setActiveModal({ type: 'create', data: null })}
+                            className="flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm"
+                        >
                             <Plus className="w-4 h-4" /> Create Invoice
                         </button>
                     )
@@ -164,6 +176,7 @@ export default function Invoices() {
                                         <td className="px-5 py-4 text-right">
                                             <div className="flex justify-end gap-2">
                                                 <button 
+                                                    onClick={() => setActiveModal({ type: 'view', data: inv })}
                                                     className="p-1.5 rounded-md border border-slate-200 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 transition-colors" 
                                                     title="View"
                                                 >
@@ -187,6 +200,115 @@ export default function Invoices() {
                     </div>
                 )}
             </Card>
+
+            {/* Create Invoice Modal */}
+            <Modal isOpen={activeModal.type === 'create'} onClose={() => setActiveModal({ type: null, data: null })} title="Create Invoice" wide>
+                <div className="p-6 space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Supplier</label>
+                            <select className={IC}>
+                                <option value="">Select a supplier...</option>
+                                {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Due Date</label>
+                            <input type="date" className={IC} />
+                        </div>
+                    </div>
+                    <div className="border border-slate-200 rounded-lg overflow-hidden">
+                        <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 font-medium text-sm text-slate-700 flex justify-between items-center">
+                            <span>Line Items</span>
+                            <button className="text-indigo-600 hover:text-indigo-700 text-sm font-semibold flex items-center gap-1">
+                                <Plus className="w-4 h-4" /> Add Item
+                            </button>
+                        </div>
+                        <div className="p-8 text-center text-slate-400">
+                            <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">No items added to this invoice yet.</p>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Tax Rate (%)</label>
+                            <input type="number" className={IC} defaultValue="10" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Shipping Fee</label>
+                            <input type="number" className={IC} defaultValue="0" />
+                        </div>
+                    </div>
+                </div>
+                <ModalFooter>
+                    <button onClick={() => setActiveModal({ type: null, data: null })} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">Cancel</button>
+                    <button onClick={() => handleCreateInvoice({})} className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors flex items-center gap-2">
+                        <Save className="w-4 h-4" /> Save Invoice
+                    </button>
+                </ModalFooter>
+            </Modal>
+
+            {/* View Detail Modal */}
+            <Modal isOpen={activeModal.type === 'view'} onClose={() => setActiveModal({ type: null, data: null })} title={`Invoice Details: ${activeModal.data?.invoice_number}`} wide>
+                <div className="p-6">
+                    <div className="flex items-start justify-between mb-8">
+                        <div>
+                            <h2 className="text-2xl font-bold text-slate-900 mb-1">{activeModal.data?.invoice_number}</h2>
+                            <p className="text-slate-500">Dated {formatDate(activeModal.data?.invoice_date || activeModal.data?.created_at)}</p>
+                        </div>
+                        <Badge variant={getStatusVariant(activeModal.data?.status)} className="text-sm px-3 py-1">
+                            {(activeModal.data?.status || 'UNKNOWN').replace('_', ' ').toUpperCase()}
+                        </Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-8 mb-8">
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Supplier Info</h4>
+                            <p className="font-medium text-slate-900">{activeModal.data?.supplier_name}</p>
+                            <p className="text-sm text-slate-600 mt-1">Payment Method: {activeModal.data?.payment_method || 'TM/CK'}</p>
+                        </div>
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Invoice Summary</h4>
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-sm text-slate-600">Subtotal:</span>
+                                <span className="font-medium text-slate-900">{formatCurrency(activeModal.data?.subtotal || 0)}</span>
+                            </div>
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-sm text-slate-600">Tax Amount:</span>
+                                <span className="font-medium text-slate-900">{formatCurrency(activeModal.data?.tax_amount || 0)}</span>
+                            </div>
+                            <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-200">
+                                <span className="text-sm font-bold text-slate-900">Total Value:</span>
+                                <span className="font-bold text-indigo-700">{formatCurrency(activeModal.data?.total_amount_cache)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="border border-slate-200 rounded-lg overflow-hidden">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th className="px-4 py-3 font-semibold text-slate-600">Item</th>
+                                    <th className="px-4 py-3 font-semibold text-slate-600 text-right">Qty</th>
+                                    <th className="px-4 py-3 font-semibold text-slate-600 text-right">Unit Price</th>
+                                    <th className="px-4 py-3 font-semibold text-slate-600 text-right">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                <tr>
+                                    <td colSpan="4" className="px-4 py-8 text-center text-slate-500 bg-white">
+                                        Line items will be displayed here.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <ModalFooter>
+                    <button onClick={() => setActiveModal({ type: null, data: null })} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">Close</button>
+                    <button className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors flex items-center gap-2">
+                        <FileText className="w-4 h-4" /> Download PDF
+                    </button>
+                </ModalFooter>
+            </Modal>
         </div>
     );
 }

@@ -5,7 +5,8 @@ import { Card } from '../components/ui/Card.jsx';
 import { Badge } from '../components/ui/Badge.jsx';
 import { Spinner } from '../components/ui/Spinner.jsx';
 import { PageHeader } from '../components/ui/PageHeader.jsx';
-import { Receipt, Eye } from 'lucide-react';
+import { Receipt, Eye, FileText } from 'lucide-react';
+import { Modal, ModalFooter } from '../components/ui/Modal.jsx';
 
 const IC = 'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-colors shadow-sm';
 
@@ -23,6 +24,7 @@ export default function Receipts() {
     const [receipts, setReceipts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [filters, setFilters] = useState({ search: '', source: '', date_from: '', date_to: '' });
+    const [activeModal, setActiveModal] = useState({ type: null, data: null });
     const searchTimer = useRef(null);
 
     const fetchReceipts = useCallback(async (f = filters) => {
@@ -141,6 +143,7 @@ export default function Receipts() {
                                             </td>
                                             <td className="px-5 py-4 text-right">
                                                 <button 
+                                                    onClick={() => setActiveModal({ type: 'view', data: rec })}
                                                     className="p-1.5 rounded-md border border-slate-200 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 transition-colors" 
                                                     title="View Detail"
                                                 >
@@ -155,6 +158,62 @@ export default function Receipts() {
                     </div>
                 )}
             </Card>
+
+            {/* View Detail Modal */}
+            <Modal isOpen={activeModal.type === 'view'} onClose={() => setActiveModal({ type: null, data: null })} title="Receipt Details" wide>
+                <div className="p-6">
+                    <div className="flex items-start justify-between mb-8">
+                        <div>
+                            <h2 className="text-2xl font-bold text-slate-900 mb-1">{activeModal.data?.component_name || activeModal.data?.part_number || 'Unknown Component'}</h2>
+                            <p className="text-slate-500">Received on {formatDate(activeModal.data?.transaction_date || activeModal.data?.created_at)}</p>
+                        </div>
+                        {activeModal.data?.condition && (
+                            <Badge variant={getConditionVariant(activeModal.data?.condition)} className="text-sm px-3 py-1">
+                                {activeModal.data.condition.replace('_', ' ').toUpperCase()}
+                            </Badge>
+                        )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-8 mb-8">
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Transaction Info</h4>
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-sm text-slate-600">Quantity:</span>
+                                <span className="font-semibold text-emerald-600">+{activeModal.data?.quantity}</span>
+                            </div>
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-sm text-slate-600">Unit Cost:</span>
+                                <span className="font-medium text-slate-900">{activeModal.data?.unit_cost ? formatCurrency(activeModal.data?.unit_cost) : '-'}</span>
+                            </div>
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-sm text-slate-600">Total Value:</span>
+                                <span className="font-medium text-slate-900">
+                                    {activeModal.data?.unit_cost ? formatCurrency(activeModal.data?.unit_cost * activeModal.data?.quantity) : '-'}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Source Document</h4>
+                            <p className="font-mono font-medium text-slate-900 mb-2">
+                                {activeModal.data?.source_document || activeModal.data?.invoice_number || activeModal.data?.po_number || 'N/A'}
+                            </p>
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 mt-4">Received By</h4>
+                            <p className="text-sm font-medium text-slate-700">{activeModal.data?.created_by_name || 'System'}</p>
+                        </div>
+                    </div>
+                    {activeModal.data?.notes && (
+                        <div className="mb-4">
+                            <h4 className="text-sm font-semibold text-slate-800 mb-2">Notes</h4>
+                            <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">{activeModal.data.notes}</p>
+                        </div>
+                    )}
+                </div>
+                <ModalFooter>
+                    <button onClick={() => setActiveModal({ type: null, data: null })} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">Close</button>
+                    <button className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors flex items-center gap-2">
+                        <FileText className="w-4 h-4" /> View Source Document
+                    </button>
+                </ModalFooter>
+            </Modal>
         </div>
     );
 }
