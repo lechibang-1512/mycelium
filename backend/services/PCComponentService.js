@@ -10,55 +10,36 @@ function isValidIdentifier(name) {
     return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name);
 }
 
+const PRODUCT_COLUMNS = [
+    'part_code', 'product_type', 'name', 'description', 'manufacturer', 
+    'category', 'unit_cost', 'unit_price', 'currency', 'image_url', 
+    'warranty_months', 'reorder_point', 'is_active'
+];
+
 class PCComponentService {
     /**
-     * Get the primary key column name for a given type
-     */
-    _getPrimaryKey(type) {
-        const mapping = {
-            'cpu': 'cpu_id',
-            'gpu': 'gpu_id',
-            'motherboard': 'motherboard_id',
-            'ram': 'ram_id',
-            'storage': 'storage_id',
-            'psu': 'psu_id',
-            'case': 'case_id',
-            'cooling': 'cooler_id',
-            'fan': 'fan_id',
-            'monitor': 'monitor_id',
-            'keyboard': 'keyboard_id',
-            'mouse': 'mouse_id',
-            'headphone': 'headphone_id',
-            'headset': 'headset_id',
-            'cable': 'cable_id',
-            'expansion': 'expansion_card_id'
-        };
-        return mapping[type] || `${type}_id`;
-    }
-
-    /**
-     * Get the table name for a given type
+     * Get the table name for a given type in pc_components DB
      */
     _getTableName(type) {
         const mapping = {
-            'cpu': 'cpu',
-            'gpu': 'gpu',
-            'motherboard': 'motherboard',
-            'ram': 'ram',
-            'storage': 'storage',
-            'psu': 'power_supply',
-            'case': 'pc_cases',
-            'cooling': 'cpu_coolers',
-            'fan': 'case_fans',
-            'monitor': 'monitors',
-            'keyboard': 'keyboard',
-            'mouse': 'mouse',
-            'headphone': 'headphones',
-            'headset': 'headsets',
-            'cable': 'cables',
-            'expansion': 'expansion_cards'
+            'cpu': 'cpu_specs',
+            'gpu': 'gpu_specs',
+            'motherboard': 'motherboard_specs',
+            'ram': 'ram_specs',
+            'storage': 'storage_specs',
+            'psu': 'power_supply_specs',
+            'case': 'pc_cases_specs',
+            'cooling': 'cpu_coolers_specs',
+            'fan': 'case_fans_specs',
+            'monitor': 'monitors_specs',
+            'keyboard': 'keyboard_specs',
+            'mouse': 'mouse_specs',
+            'headphone': 'headphones_specs',
+            'headset': 'headsets_specs',
+            'cable': 'cables_specs',
+            'expansion': 'expansion_cards_specs'
         };
-        return mapping[type] || type;
+        return mapping[type] || `${type}_specs`;
     }
 
     /**
@@ -69,29 +50,46 @@ class PCComponentService {
     }
 
     /**
-     * Validate and resolve table/pk names for a given type.
+     * Validate and resolve table name for a given type.
      */
     _resolveType(type) {
         const tableName = this._getTableName(type);
-        const pk = this._getPrimaryKey(type);
-        if (!isValidIdentifier(tableName) || !isValidIdentifier(pk)) {
+        if (!isValidIdentifier(tableName)) {
             throw new ValidationError(`Invalid component type: '${type}'`);
         }
-        return { tableName, pk };
+        return { tableName };
     }
 
     /**
-     * Get the schema columns for a component type
+     * Get the schema columns for a component type (Base product + Specs)
      */
     async getSchema(type) {
         if (this.schemaCache && this.schemaCache[type]) return this.schemaCache[type];
         const { tableName } = this._resolveType(type);
-        const schema = await sequelizeMaster.query(`SHOW COLUMNS FROM pc_components.${tableName}`, {
+        
+        // Base schema from products
+        const baseSchema = await sequelizeMaster.query(`SHOW COLUMNS FROM master_db.products`, {
             type: QueryTypes.SELECT
         });
+        
+        // Spec schema from pc_components
+        const specSchema = await sequelizeMaster.query(`SHOW COLUMNS FROM pc_components.${tableName}`, {
+            type: QueryTypes.SELECT
+        });
+        
+        // Merge schemas, removing duplicates (product_id)
+        const allColumns = [...baseSchema];
+        const baseColumnNames = baseSchema.map(c => c.Field);
+        
+        for (const col of specSchema) {
+            if (!baseColumnNames.includes(col.Field)) {
+                allColumns.push(col);
+            }
+        }
+
         if (!this.schemaCache) this.schemaCache = {};
-        this.schemaCache[type] = schema;
-        return schema;
+        this.schemaCache[type] = allColumns;
+        return allColumns;
     }
 
     /**
@@ -99,7 +97,14 @@ class PCComponentService {
      */
     async getAll(type) {
         const { tableName } = this._resolveType(type);
-        return sequelizeMaster.query(`SELECT * FROM pc_components.${tableName} WHERE is_active = 1 ORDER BY created_at DESC`, {
+        return sequelizeMaster.query(`
+            SELECT p.*, s.* 
+            FROM master_db.products p
+            JOIN pc_components.${tableName} s ON p.product_id = s.product_id
+            WHERE p.is_active = 1 AND p.product_type = ?
+            ORDER BY p.created_at DESC
+        `, {
+            replacements: [type.toUpperCase()],
             type: QueryTypes.SELECT
         });
     }
@@ -108,9 +113,15 @@ class PCComponentService {
      * Get component by ID
      */
     async getById(type, id) {
-        const { tableName, pk } = this._resolveType(type);
-        const rows = await sequelizeMaster.query(`SELECT * FROM pc_components.${tableName} WHERE ${pk} = ?`, {
-            replacements: [id], type: QueryTypes.SELECT
+        const { tableName } = this._resolveType(type);
+        const rows = await sequelizeMaster.query(`
+            SELECT p.*, s.* 
+            FROM master_db.products p
+            JOIN pc_components.${tableName} s ON p.product_id = s.product_id
+            WHERE p.product_id = ? AND p.product_type = ?
+        `, {
+            replacements: [id, type.toUpperCase()], 
+            type: QueryTypes.SELECT
         });
         return rows[0] || null;
     }
@@ -119,78 +130,140 @@ class PCComponentService {
      * Create a new component
      */
     async create(type, data) {
-        const { tableName, pk } = this._resolveType(type);
+        const { tableName } = this._resolveType(type);
         const id = generateId();
 
         const schema = await this.getSchema(type);
         const validColumns = schema.map(c => c.Field);
 
-        const keys = Object.keys(data).filter(k => 
-            data[k] !== undefined && validColumns.includes(k) && k !== pk && k !== 'created_at' && k !== 'updated_at'
-        );
-        const values = keys.map(k => data[k]);
+        // Separate base product columns from spec columns
+        const baseKeys = [];
+        const baseValues = [];
+        const specKeys = [];
+        const specValues = [];
 
-        // Validate all column names
-        for (const key of keys) {
-            if (!isValidIdentifier(key)) {
-                throw new ValidationError(`Invalid column name: '${key}'`);
+        for (const key of Object.keys(data)) {
+            if (data[key] !== undefined && validColumns.includes(key) && key !== 'product_id' && key !== 'created_at' && key !== 'updated_at') {
+                if (!isValidIdentifier(key)) {
+                    throw new ValidationError(`Invalid column name: '${key}'`);
+                }
+                if (PRODUCT_COLUMNS.includes(key)) {
+                    baseKeys.push(key);
+                    baseValues.push(data[key]);
+                } else {
+                    specKeys.push(key);
+                    specValues.push(data[key]);
+                }
             }
         }
 
-        keys.unshift(pk);
-        values.unshift(id);
+        // Add mandatory base columns
+        baseKeys.push('product_id');
+        baseValues.push(id);
+        
+        if (!baseKeys.includes('product_type')) {
+            baseKeys.push('product_type');
+            baseValues.push(type.toUpperCase());
+        }
 
-        const placeholders = keys.map(() => '?').join(', ');
-        const sql = `INSERT INTO pc_components.${tableName} (${keys.map(k => `\`${k}\``).join(', ')}) VALUES (${placeholders})`;
+        // Add mandatory spec columns
+        specKeys.push('product_id');
+        specValues.push(id);
+        
+        // Provide backwards compatibility for type_id fields if present in specs schema
+        const typeIdField = type === 'expansion' ? 'expansion_card_id' : (type === 'cooling' ? 'cooler_id' : (type === 'psu' ? 'psu_id' : (type === 'case' ? 'case_id' : type + '_id')));
+        if (validColumns.includes(typeIdField) && !specKeys.includes(typeIdField)) {
+            specKeys.push(typeIdField);
+            specValues.push(id);
+        }
 
-        await sequelizeMaster.query(sql, { replacements: values, type: QueryTypes.INSERT });
-        const rows = await sequelizeMaster.query(`SELECT * FROM pc_components.${tableName} WHERE ${pk} = ?`, {
-            replacements: [id], type: QueryTypes.SELECT
-        });
-        return rows[0] || null;
+        const t = await sequelizeMaster.transaction();
+        
+        try {
+            // 1. Insert into products
+            const basePlaceholders = baseKeys.map(() => '?').join(', ');
+            const baseSql = `INSERT INTO master_db.products (${baseKeys.map(k => '`' + k + '`').join(', ')}) VALUES (${basePlaceholders})`;
+            await sequelizeMaster.query(baseSql, { replacements: baseValues, type: QueryTypes.INSERT, transaction: t });
+
+            // 2. Insert into specs table
+            const specPlaceholders = specKeys.map(() => '?').join(', ');
+            const specSql = `INSERT INTO pc_components.${tableName} (${specKeys.map(k => '`' + k + '`').join(', ')}) VALUES (${specPlaceholders})`;
+            await sequelizeMaster.query(specSql, { replacements: specValues, type: QueryTypes.INSERT, transaction: t });
+
+            await t.commit();
+            
+            return await this.getById(type, id);
+        } catch (error) {
+            await t.rollback();
+            throw error;
+        }
     }
 
     /**
      * Update a component
      */
     async update(type, id, data) {
-        const { tableName, pk } = this._resolveType(type);
+        const { tableName } = this._resolveType(type);
 
         const schema = await this.getSchema(type);
         const validColumns = schema.map(c => c.Field);
 
-        const keys = Object.keys(data).filter(k => 
-            data[k] !== undefined && validColumns.includes(k) && k !== pk && k !== 'created_at' && k !== 'updated_at'
-        );
-        if (keys.length === 0) return null;
+        const baseKeys = [];
+        const baseValues = [];
+        const specKeys = [];
+        const specValues = [];
 
-        // Validate all column names
-        for (const key of keys) {
-            if (!isValidIdentifier(key)) {
-                throw new ValidationError(`Invalid column name: '${key}'`);
+        for (const key of Object.keys(data)) {
+            if (data[key] !== undefined && validColumns.includes(key) && key !== 'product_id' && key !== 'created_at' && key !== 'updated_at') {
+                if (!isValidIdentifier(key)) {
+                    throw new ValidationError(`Invalid column name: '${key}'`);
+                }
+                if (PRODUCT_COLUMNS.includes(key)) {
+                    baseKeys.push(key);
+                    baseValues.push(data[key]);
+                } else {
+                    specKeys.push(key);
+                    specValues.push(data[key]);
+                }
             }
         }
 
-        const setClause = keys.map(k => `\`${k}\` = ?`).join(', ');
-        const values = keys.map(k => data[k]);
-        values.push(id);
+        if (baseKeys.length === 0 && specKeys.length === 0) return null;
 
-        const sql = `UPDATE pc_components.${tableName} SET ${setClause} WHERE ${pk} = ?`;
+        const t = await sequelizeMaster.transaction();
+        
+        try {
+            // 1. Update products table
+            if (baseKeys.length > 0) {
+                const baseSetClause = baseKeys.map(k => '`' + k + '` = ?').join(', ');
+                const baseSql = `UPDATE master_db.products SET ${baseSetClause} WHERE product_id = ? AND product_type = ?`;
+                await sequelizeMaster.query(baseSql, { replacements: [...baseValues, id, type.toUpperCase()], type: QueryTypes.UPDATE, transaction: t });
+            }
 
-        await sequelizeMaster.query(sql, { replacements: values, type: QueryTypes.UPDATE });
-        const rows = await sequelizeMaster.query(`SELECT * FROM pc_components.${tableName} WHERE ${pk} = ?`, {
-            replacements: [id], type: QueryTypes.SELECT
-        });
-        return rows[0] || null;
+            // 2. Update specs table
+            if (specKeys.length > 0) {
+                const specSetClause = specKeys.map(k => '`' + k + '` = ?').join(', ');
+                const specSql = `UPDATE pc_components.${tableName} SET ${specSetClause} WHERE product_id = ?`;
+                await sequelizeMaster.query(specSql, { replacements: [...specValues, id], type: QueryTypes.UPDATE, transaction: t });
+            }
+
+            await t.commit();
+            
+            return await this.getById(type, id);
+        } catch (error) {
+            await t.rollback();
+            throw error;
+        }
     }
 
     /**
      * Delete (soft delete) a component
      */
     async delete(type, id) {
-        const { tableName, pk } = this._resolveType(type);
-        await sequelizeMaster.query(`UPDATE pc_components.${tableName} SET is_active = 0 WHERE ${pk} = ?`, {
-            replacements: [id], type: QueryTypes.UPDATE
+        const { tableName } = this._resolveType(type);
+        // Soft delete the base product record
+        await sequelizeMaster.query(`UPDATE master_db.products SET is_active = 0 WHERE product_id = ? AND product_type = ?`, {
+            replacements: [id, type.toUpperCase()], type: QueryTypes.UPDATE
         });
         return true;
     }

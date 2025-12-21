@@ -4,7 +4,7 @@ const path = require('path');
 const masterDbPath = path.join(__dirname, '..', 'sql', 'master_db.sql');
 const pcComponentsPath = path.join(__dirname, '..', 'sql', 'pc_components.sql');
 
-let masterSql = fs.readFileSync(masterDbPath, 'utf8');
+let _masterSql = fs.readFileSync(masterDbPath, 'utf8');
 
 // The rest of the master_db logic is correct and already done, but to be safe we'll skip or just re-run.
 // Since master_db.sql was already refactored correctly and unifiedInventory was injected, we will only do pc_components.

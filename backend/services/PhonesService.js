@@ -3,90 +3,69 @@
  * Handles phone (Product) queries and CRUD operations
  */
 
-const { QueryTypes, Op } = require('sequelize');
+const { QueryTypes } = require('sequelize');
 const { sequelizeMaster } = require('../config/sequelize');
-const { PhoneSpec, Inventory } = require('../models/master');
 const { generateId } = require('../utils/generateId');
 const { ValidationError } = require('../utils/errors');
-
 
 class PhonesService {
     constructor() { }
 
     async getAllPhones(filters = {}) {
-        if (filters.category) {
-            let sql = `SELECT * FROM phone_specs WHERE device_type IN ('smartphone', 'phone', 'tablet')`;
-            const params = [];
+        let sql = `
+            SELECT p.*, s.* 
+            FROM master_db.products p
+            JOIN master_db.phone_specs s ON p.product_id = s.product_id
+            WHERE p.product_type = 'PHONE'
+        `;
+        const params = [];
 
-            if (!filters.include_inactive) sql += ` AND is_active = 1`;
-            if (filters.search) {
-                sql += ` AND (device_name LIKE ? OR device_maker LIKE ?)`;
-                params.push(`%${filters.search}%`, `%${filters.search}%`);
-            }
-            if (filters.brand) {
-                sql += ` AND device_maker = ?`;
-                params.push(filters.brand);
-            }
-            if (filters.category) {
-                sql += ` AND JSON_EXTRACT(attributes, '$.category') = ?`;
-                params.push(filters.category);
-            }
-            sql += ` ORDER BY device_name ASC LIMIT ?`;
-            params.push(parseInt(filters.limit || 500));
-
-            const rows = await sequelizeMaster.query(sql, { replacements: params, type: QueryTypes.SELECT });
-            return rows.map(p => this._mapPhone(p));
-        }
-
-        const where = {
-            device_type: { [Op.in]: ['smartphone', 'phone', 'tablet'] }
-        };
-
-        if (!filters.include_inactive) {
-            where.is_active = 1;
-        }
-
+        if (!filters.include_inactive) sql += ` AND p.is_active = 1`;
         if (filters.search) {
-            where[Op.or] = [
-                { device_name: { [Op.like]: `%${filters.search}%` } },
-                { device_maker: { [Op.like]: `%${filters.search}%` } }
-            ];
+            sql += ` AND (p.name LIKE ? OR p.manufacturer LIKE ?)`;
+            params.push(`%${filters.search}%`, `%${filters.search}%`);
         }
-
         if (filters.brand) {
-            where.device_maker = filters.brand;
+            sql += ` AND p.manufacturer = ?`;
+            params.push(filters.brand);
         }
+        if (filters.category) {
+            sql += ` AND p.category = ?`;
+            params.push(filters.category);
+        }
+        sql += ` ORDER BY p.name ASC LIMIT ?`;
+        params.push(parseInt(filters.limit || 500));
 
-        const phones = await PhoneSpec.findAll({
-            where,
-            order: [['device_name', 'ASC']],
-            limit: parseInt(filters.limit || 500)
-        });
-
-        return phones.map(p => this._mapPhone(p.toJSON()));
+        const rows = await sequelizeMaster.query(sql, { replacements: params, type: QueryTypes.SELECT });
+        return rows.map(p => this._mapPhone(p));
     }
 
     async getPhoneById(phoneId) {
         if (!phoneId) return null;
 
-        const phoneModel = await PhoneSpec.findByPk(phoneId);
-        if (!phoneModel) return null;
-        const phone = phoneModel.toJSON();
+        const [phone] = await sequelizeMaster.query(`
+            SELECT p.*, s.* 
+            FROM master_db.products p
+            JOIN master_db.phone_specs s ON p.product_id = s.product_id
+            WHERE p.product_id = ?
+        `, { replacements: [phoneId], type: QueryTypes.SELECT });
+
+        if (!phone) return null;
 
         const [inv] = await sequelizeMaster.query(`
             SELECT 
                 SUM(CASE WHEN condition_status = 'NEW' AND inventory_type = 'bulk' THEN quantity ELSE 0 END) as available,
                 SUM(reserved_quantity) as reserved,
-                0 as sold,
-                0 as in_repair,
+                SUM(CASE WHEN status = 'sold' THEN 1 ELSE 0 END) as sold,
+                SUM(CASE WHEN status = 'in_repair' THEN 1 ELSE 0 END) as in_repair,
                 SUM(quantity) as total
-            FROM inventory
+            FROM master_db.inventory
             WHERE product_id = ?
         `, { replacements: [phoneId], type: QueryTypes.SELECT });
 
         const serialInv = await sequelizeMaster.query(`
             SELECT status, COUNT(*) as count 
-            FROM inventory 
+            FROM master_db.inventory 
             WHERE product_id = ? AND inventory_type = 'serialized'
             GROUP BY status
         `, { replacements: [phoneId], type: QueryTypes.SELECT });
@@ -116,113 +95,180 @@ class PhonesService {
             color, ram, rom, processor, display_size, resolution,
             refresh_rate, battery_capacity, fast_charging,
             rear_camera_main, front_camera, operating_system,
-            water_and_dust_rating, nfc,
-            warranty_months = 12, warranty_type = 'MANUFACTURER'
+            water_and_dust_rating, nfc, category,
+            warranty_months = 12
         } = phoneData;
 
         if (!device_name) throw new ValidationError('device name is required');
 
         const productId = generateId();
         const price = device_price || base_price;
+        const t = await sequelizeMaster.transaction();
 
-        await PhoneSpec.create({
-            product_id: productId,
-            device_name,
-            device_maker,
-            device_price: price,
-            device_type,
-            attributes: JSON.stringify(attributes),
-            is_active: is_active ? 1 : 0,
-            color: color || null,
-            ram: ram || null,
-            rom: rom || null,
-            processor: processor || null,
-            display_size: display_size || null,
-            resolution: resolution || null,
-            refresh_rate: refresh_rate || null,
-            battery_capacity: battery_capacity || null,
-            fast_charging: fast_charging || null,
-            rear_camera_main: rear_camera_main || null,
-            front_camera: front_camera || null,
-            operating_system: operating_system || null,
-            water_and_dust_rating: water_and_dust_rating || null,
-            nfc: nfc || null,
-            warranty_months,
-            warranty_type
-        });
+        try {
+            await sequelizeMaster.query(`
+                INSERT INTO master_db.products 
+                (product_id, part_code, product_type, name, manufacturer, unit_price, is_active, warranty_months, category)
+                VALUES (?, ?, 'PHONE', ?, ?, ?, ?, ?, ?)
+            `, {
+                replacements: [
+                    productId, 
+                    `PHONE-${Date.now()}`, 
+                    device_name, 
+                    device_maker || null, 
+                    price, 
+                    is_active ? 1 : 0, 
+                    warranty_months,
+                    category || null
+                ],
+                type: QueryTypes.INSERT,
+                transaction: t
+            });
 
-        return { product_id: productId, success: true };
+            await sequelizeMaster.query(`
+                INSERT INTO master_db.phone_specs
+                (product_id, device_type, attributes, color, ram, rom, processor, display_size, resolution, refresh_rate, battery_capacity, fast_charging, rear_camera_main, front_camera, operating_system, water_and_dust_rating, nfc)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, {
+                replacements: [
+                    productId,
+                    device_type,
+                    JSON.stringify(attributes),
+                    color || null,
+                    ram || null,
+                    rom || null,
+                    processor || null,
+                    display_size || null,
+                    resolution || null,
+                    refresh_rate || null,
+                    battery_capacity || null,
+                    fast_charging || null,
+                    rear_camera_main || null,
+                    front_camera || null,
+                    operating_system || null,
+                    water_and_dust_rating || null,
+                    nfc || null
+                ],
+                type: QueryTypes.INSERT,
+                transaction: t
+            });
+
+            await t.commit();
+            return { product_id: productId, success: true };
+        } catch (error) {
+            await t.rollback();
+            throw error;
+        }
     }
 
     async updatePhone(phoneId, phoneData) {
-        const phoneModel = await PhoneSpec.findByPk(phoneId);
-        if (!phoneModel) return { success: false, error: 'Phone not found' };
-        const existing = phoneModel.toJSON();
+        const [phone] = await sequelizeMaster.query(`SELECT * FROM master_db.products WHERE product_id = ?`, {
+            replacements: [phoneId], type: QueryTypes.SELECT
+        });
+        if (!phone) return { success: false, error: 'Phone not found' };
 
-        const allowed = [
-            'device_name', 'device_maker', 'device_price',
-            'device_type', 'is_active',
-            'color', 'ram', 'rom', 'processor', 'display_size', 'resolution',
-            'refresh_rate', 'battery_capacity', 'fast_charging',
-            'rear_camera_main', 'front_camera', 'operating_system',
-            'water_and_dust_rating', 'nfc', 'warranty_months', 'warranty_type'
-        ];
+        const t = await sequelizeMaster.transaction();
+        
+        try {
+            // Update products table
+            const productUpdates = [];
+            const productValues = [];
+            
+            if (phoneData.device_name !== undefined) { productUpdates.push('name = ?'); productValues.push(phoneData.device_name); }
+            if (phoneData.device_maker !== undefined) { productUpdates.push('manufacturer = ?'); productValues.push(phoneData.device_maker); }
+            if (phoneData.device_price !== undefined || phoneData.base_price !== undefined) { 
+                productUpdates.push('unit_price = ?'); 
+                productValues.push(phoneData.device_price !== undefined ? phoneData.device_price : phoneData.base_price); 
+            }
+            if (phoneData.is_active !== undefined) { productUpdates.push('is_active = ?'); productValues.push(phoneData.is_active ? 1 : 0); }
+            if (phoneData.warranty_months !== undefined) { productUpdates.push('warranty_months = ?'); productValues.push(phoneData.warranty_months); }
+            if (phoneData.category !== undefined) { productUpdates.push('category = ?'); productValues.push(phoneData.category); }
 
-        const updateData = {};
+            if (productUpdates.length > 0) {
+                await sequelizeMaster.query(`
+                    UPDATE master_db.products SET ${productUpdates.join(', ')} WHERE product_id = ?
+                `, {
+                    replacements: [...productValues, phoneId],
+                    type: QueryTypes.UPDATE,
+                    transaction: t
+                });
+            }
 
-        allowed.forEach(f => {
-            if (phoneData[f] !== undefined) {
-                if (f === 'device_price' && phoneData.base_price !== undefined) {
-                    updateData.device_price = phoneData.base_price;
-                } else if (f === 'is_active') {
-                    updateData.is_active = phoneData.is_active ? 1 : 0;
-                } else {
-                    const val = phoneData[f];
-                    updateData[f] = val === '' ? null : val;
+            // Update phone_specs table
+            const specUpdates = [];
+            const specValues = [];
+            
+            const specFields = [
+                'device_type', 'color', 'ram', 'rom', 'processor', 'display_size', 'resolution',
+                'refresh_rate', 'battery_capacity', 'fast_charging', 'rear_camera_main', 'front_camera', 
+                'operating_system', 'water_and_dust_rating', 'nfc'
+            ];
+
+            for (const field of specFields) {
+                if (phoneData[field] !== undefined) {
+                    specUpdates.push(`${field} = ?`);
+                    specValues.push(phoneData[field] === '' ? null : phoneData[field]);
                 }
             }
-        });
 
-        if (phoneData.base_price !== undefined && updateData.device_price === undefined) {
-            updateData.device_price = phoneData.base_price;
+            if (phoneData.attributes !== undefined) {
+                const [existingSpec] = await sequelizeMaster.query(`SELECT attributes FROM master_db.phone_specs WHERE product_id = ?`, {
+                    replacements: [phoneId], type: QueryTypes.SELECT, transaction: t
+                });
+                
+                let currentAttrs = {};
+                if (existingSpec && existingSpec.attributes) {
+                    try { currentAttrs = typeof existingSpec.attributes === 'string' ? JSON.parse(existingSpec.attributes) : existingSpec.attributes; } catch(_e){ /* ignore */ }
+                }
+                
+                specUpdates.push(`attributes = ?`);
+                specValues.push(JSON.stringify({ ...currentAttrs, ...phoneData.attributes }));
+            }
+
+            if (specUpdates.length > 0) {
+                await sequelizeMaster.query(`
+                    UPDATE master_db.phone_specs SET ${specUpdates.join(', ')} WHERE product_id = ?
+                `, {
+                    replacements: [...specValues, phoneId],
+                    type: QueryTypes.UPDATE,
+                    transaction: t
+                });
+            }
+
+            await t.commit();
+            return { success: true };
+        } catch (error) {
+            await t.rollback();
+            throw error;
         }
-
-        let currentAttrs = {};
-        try { currentAttrs = typeof existing.attributes === 'string' ? JSON.parse(existing.attributes) : existing.attributes || {}; } catch (_e) { /* intentional */ }
-
-        if (phoneData.attributes) {
-            const newAttrs = { ...currentAttrs, ...phoneData.attributes };
-            updateData.attributes = JSON.stringify(newAttrs);
-        }
-
-        if (Object.keys(updateData).length === 0) return { success: true };
-
-        await PhoneSpec.update(updateData, { where: { product_id: phoneId } });
-        return { success: true };
     }
 
     async deletePhone(phoneId) {
-        const invCount = await Inventory.count({ where: { product_id: phoneId } });
-        if (invCount > 0) return { success: false, error: 'Cannot delete: inventory exists' };
+        const [{ count }] = await sequelizeMaster.query(`SELECT COUNT(*) as count FROM master_db.inventory WHERE product_id = ?`, {
+            replacements: [phoneId], type: QueryTypes.SELECT
+        });
+        if (count > 0) return { success: false, error: 'Cannot delete: inventory exists' };
 
-        await PhoneSpec.destroy({ where: { product_id: phoneId } });
+        await sequelizeMaster.query(`UPDATE master_db.products SET is_active = 0 WHERE product_id = ?`, {
+            replacements: [phoneId], type: QueryTypes.UPDATE
+        });
         return { success: true };
     }
 
     async getBrands() {
         const rows = await sequelizeMaster.query(`
-            SELECT DISTINCT device_maker FROM phone_specs 
-            WHERE device_type IN ('smartphone', 'phone', 'tablet') AND is_active = 1
-            ORDER BY device_maker ASC
+            SELECT DISTINCT manufacturer as device_maker FROM master_db.products 
+            WHERE product_type = 'PHONE' AND is_active = 1
+            ORDER BY manufacturer ASC
         `, { type: QueryTypes.SELECT });
         return rows.map(r => r.device_maker).filter(Boolean);
     }
 
     async getCategories() {
         const rows = await sequelizeMaster.query(`
-            SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(attributes, '$.category')) as category 
-            FROM phone_specs 
-            WHERE device_type IN ('smartphone', 'phone', 'tablet')
+            SELECT DISTINCT category 
+            FROM master_db.products 
+            WHERE product_type = 'PHONE' AND is_active = 1
         `, { type: QueryTypes.SELECT });
         return rows.map(r => r.category).filter(Boolean);
     }
@@ -233,10 +279,10 @@ class PhonesService {
 
         return {
             product_id: p.product_id,
-            device_name: p.device_name,
-            device_maker: p.device_maker,
-            device_price: Number(p.device_price),
-            base_price: Number(p.device_price),
+            device_name: p.name,
+            device_maker: p.manufacturer,
+            device_price: Number(p.unit_price),
+            base_price: Number(p.unit_price),
             is_active: !!p.is_active,
             device_type: p.device_type,
             color: p.color || null,
@@ -254,7 +300,6 @@ class PhonesService {
             water_and_dust_rating: p.water_and_dust_rating || null,
             nfc: p.nfc || null,
             warranty_months: p.warranty_months,
-            warranty_type: p.warranty_type,
             attributes: attrs,
             created_at: p.created_at,
             updated_at: p.updated_at

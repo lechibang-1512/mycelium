@@ -114,7 +114,7 @@ async function startServer() {
                     try {
                         const parsed = new URL(cleanPath, 'http://localhost');
                         safePath = parsed.pathname;
-                    } catch (e) {
+                    } catch (_e) {
                         safePath = '/';
                     }
                     return res.redirect(301, safePath === '' ? '/' : safePath);

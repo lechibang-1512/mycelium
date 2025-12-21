@@ -68,10 +68,10 @@ class InventoryService {
 
         let query = `
             SELECT 
-                p.product_id, p.device_name, p.device_maker, p.device_price, 
-                p.color, p.ram, p.rom, p.is_active,
+                p.product_id, p.name as device_name, p.manufacturer as device_maker, p.unit_price as device_price, 
+                NULL as color, NULL as ram, NULL as rom, p.is_active,
                 COALESCE(inv.total, 0) as total_inventory
-            FROM phone_specs p
+            FROM master_db.products p
             LEFT JOIN (
                 SELECT product_id, SUM(quantity) as total 
                 FROM inventory 
@@ -100,11 +100,11 @@ class InventoryService {
             mainParams.push(product_id);
         }
         if (search) {
-            query += ` AND (p.device_name LIKE ? OR p.device_maker LIKE ?)`;
+            query += ` AND (p.name LIKE ? OR p.manufacturer LIKE ?)`;
             mainParams.push(`%${search}%`, `%${search}%`);
         }
 
-        query += ` ORDER BY p.device_maker ASC, p.device_name ASC LIMIT ? OFFSET ?`;
+        query += ` ORDER BY p.manufacturer ASC, p.name ASC LIMIT ? OFFSET ?`;
         mainParams.push(parseInt(limit), parseInt(offset));
 
         return await sequelizeMaster.query(query, {
@@ -115,10 +115,10 @@ class InventoryService {
 
     async getWarehouseInventory(warehouseId) {
         const rows = await sequelizeMaster.query(`
-            SELECT i.*, p.device_name, sp.part_name
-            FROM inventory i
-            LEFT JOIN phone_specs p ON i.product_id = p.product_id
-            LEFT JOIN spare_parts sp ON i.spare_part_id = sp.spare_part_id
+            SELECT i.*, p.name as device_name, sp.name as part_name
+            FROM master_db.inventory i
+            LEFT JOIN master_db.products p ON i.product_id = p.product_id
+            LEFT JOIN master_db.products sp ON i.spare_part_id = sp.product_id
             WHERE i.warehouse_id = ? AND i.quantity > 0
         `, {
             replacements: [warehouseId],
@@ -139,7 +139,7 @@ class InventoryService {
     async getProductById(productId) {
         if (!productId) return null;
 
-        const [product] = await sequelizeMaster.query('SELECT * FROM phone_specs WHERE product_id = ?', {
+        const [product] = await sequelizeMaster.query('SELECT * FROM master_db.products WHERE product_id = ?', {
             replacements: [productId], type: QueryTypes.SELECT
         });
         if (!product) return null;
@@ -169,8 +169,8 @@ class InventoryService {
 
     async getProductPrice(productId, _options = {}) {
         const [product] = await sequelizeMaster.query(`
-            SELECT product_id, device_name, device_price 
-            FROM phone_specs WHERE product_id = ?
+            SELECT product_id, name as device_name, unit_price as device_price 
+            FROM master_db.products WHERE product_id = ?
         `, { replacements: [productId], type: QueryTypes.SELECT });
 
         if (!product) return null;
@@ -308,9 +308,9 @@ class InventoryService {
                    t.product_id, t.spare_part_id, t.quantity_changed, t.condition_status,
                    t.unit_cost, t.total_value,
                    t.from_bin_id, t.transaction_group_id,
-                   p.device_name, p.device_maker
+                   p.name as device_name, p.manufacturer as device_maker
             FROM transactions t
-            LEFT JOIN phone_specs p ON t.product_id = p.product_id
+            LEFT JOIN master_db.products p ON t.product_id = p.product_id
             WHERE 1=1
         `;
         const params = [];
@@ -363,11 +363,11 @@ class InventoryService {
     async getReceiptDetails(receiptId) {
         const rows = await sequelizeMaster.query(`
             SELECT t.*, w.name as warehouse_name, w.location as warehouse_location,
-                   p.device_name, p.device_maker, s.part_name
+                   p.name as device_name, p.manufacturer as device_maker, s.name as part_name
             FROM transactions t
             LEFT JOIN warehouses w ON t.warehouse_id = w.warehouse_id
-            LEFT JOIN phone_specs p ON t.product_id = p.product_id
-            LEFT JOIN spare_parts s ON t.spare_part_id = s.spare_part_id
+            LEFT JOIN master_db.products p ON t.product_id = p.product_id
+            LEFT JOIN master_db.products s ON t.spare_part_id = s.product_id
             WHERE t.transaction_group_id = ? OR t.receipt_id = ?
             ORDER BY t.created_at ASC
         `, { replacements: [receiptId, receiptId], type: QueryTypes.SELECT });
@@ -916,7 +916,7 @@ class InventoryService {
         const quantityNum = parseInt(quantity, 10);
 
         return await sequelizeMaster.transaction(async (t) => {
-            const [product] = await sequelizeMaster.query('SELECT device_name, device_maker, device_price FROM phone_specs WHERE product_id = ?', {
+            const [product] = await sequelizeMaster.query('SELECT device_name, device_maker, device_price FROM master_db.products WHERE product_id = ?', {
                 replacements: [productId], type: QueryTypes.SELECT, transaction: t
             });
             if (!product) throw new NotFoundError('product not found');

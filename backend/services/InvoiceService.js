@@ -77,9 +77,9 @@ class InvoiceService {
         if (!invoice) return null;
 
         const items = await sequelizeMaster.query(`
-            SELECT ii.*, p.device_name 
-            FROM invoice_items ii 
-            LEFT JOIN phone_specs p ON ii.product_id = p.product_id
+            SELECT ii.*, p.name as device_name 
+            FROM invoice_items ii
+            LEFT JOIN master_db.products p ON ii.product_id = p.product_id
             WHERE ii.invoice_id = ?
         `, { replacements: [invoice.id], type: QueryTypes.SELECT });
 

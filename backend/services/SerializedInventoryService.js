@@ -136,7 +136,7 @@ class SerializedInventoryService {
 
             let unitCost = 0;
             if (item.product_id) {
-                const [product] = await sequelizeMaster.query('SELECT device_price FROM phone_specs WHERE product_id = ?', {
+                const [product] = await sequelizeMaster.query('SELECT unit_price as device_price FROM master_db.products WHERE product_id = ?', {
                     replacements: [item.product_id], type: QueryTypes.SELECT, transaction: t
                 });
                 if (product) unitCost = parseFloat(product.device_price) || 0;

@@ -64,9 +64,9 @@ class RepairService {
         if (!job) return null;
 
         const parts = await sequelizeMaster.query(`
-            SELECT rp.*, sp.part_name, sp.part_code
-            FROM repair_job_parts rp
-            LEFT JOIN spare_parts sp ON rp.spare_part_id = sp.spare_part_id
+            SELECT rp.*, sp.name as part_name, sp.part_code
+            FROM repair_parts rp
+            LEFT JOIN master_db.products sp ON rp.spare_part_id = sp.product_id
             WHERE rp.repair_job_id = ?
         `, {
             replacements: [job.repair_job_id],
