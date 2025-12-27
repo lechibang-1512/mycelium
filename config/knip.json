@@ -3,7 +3,6 @@
     "entry": [
         "backend/jobs/*.js",
         "scripts/tools/utils-*.js",
-        "scripts/reports/*.js",
         "scripts/tools/seed-db.js",
         "frontend/components/ui/Card.jsx"
     ],
