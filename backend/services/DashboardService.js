@@ -20,7 +20,7 @@ class DashboardService {
             SELECT
                 COUNT(DISTINCT i.product_id) AS total_skus,
                 COALESCE(SUM(i.quantity), 0) AS total_stock_quantity,
-                COALESCE(SUM(i.quantity * COALESCE(p.base_price, 0)), 0) AS total_stock_value
+                COALESCE(SUM(i.quantity * COALESCE(p.unit_price, 0)), 0) AS total_stock_value
             FROM inventory i
             JOIN products p ON p.product_id = i.product_id
         `, { type: QueryTypes.SELECT });

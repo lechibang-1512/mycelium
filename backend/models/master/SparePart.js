@@ -3,241 +3,122 @@ const { sequelizeMaster } = require('../../config/sequelize');
 
 const SparePart = sequelizeMaster.define('SparePart', {
             part_code: {
-                type: DataTypes.STRING(255),
-                allowNull: true,
-                
-                
-                
+                type: DataTypes.VIRTUAL,
             },
             part_name: {
-                type: DataTypes.STRING(255),
-                allowNull: true,
-                
-                
-                
+                type: DataTypes.VIRTUAL,
             },
             part_category: {
                 type: DataTypes.STRING(100),
                 allowNull: true,
-                
-                
-                
             },
             part_type: {
                 type: DataTypes.STRING(100),
                 allowNull: true,
-                
-                
-                
             },
             description: {
-                type: DataTypes.TEXT,
-                allowNull: true,
-                
-                
-                
+                type: DataTypes.VIRTUAL,
             },
             compatible_product_id: {
                 type: DataTypes.STRING(36),
                 allowNull: true,
-        primaryKey: true,
-                
-                
-                
             },
             compatible_device_category: {
                 type: DataTypes.STRING(100),
                 allowNull: true,
-                
-                
-                
             },
             compatible_brands: {
                 type: DataTypes.TEXT,
                 allowNull: true,
-                
-                
-                
             },
             compatible_models: {
                 type: DataTypes.TEXT,
                 allowNull: true,
-                
-                
-                
             },
             dimensions: {
                 type: DataTypes.STRING(100),
                 allowNull: true,
-                
-                
-                
             },
             weight_g: {
                 type: DataTypes.DECIMAL,
                 allowNull: true,
-                
-                
-                
             },
             color_variants: {
                 type: DataTypes.TEXT,
                 allowNull: true,
-                
-                
-                
             },
             quality_grade: {
                 type: DataTypes.STRING(50),
                 allowNull: true,
-                
-                
                 defaultValue: 'STANDARD',
             },
             warranty_months: {
-                type: DataTypes.INTEGER,
-                allowNull: true,
-                
-                
-                defaultValue: 3,
+                type: DataTypes.VIRTUAL,
             },
             manufacturer: {
-                type: DataTypes.STRING(255),
-                allowNull: true,
-                
-                
-                
+                type: DataTypes.VIRTUAL,
             },
             manufacturer_part_number: {
-                type: DataTypes.STRING(255),
-                allowNull: true,
-                
-                
-                
+                type: DataTypes.VIRTUAL,
             },
             default_supplier_id: {
-                type: DataTypes.INTEGER,
-                allowNull: true,
-        primaryKey: true,
-                
-                
-                
+                type: DataTypes.VIRTUAL,
             },
             unit_cost: {
-                type: DataTypes.DECIMAL,
-                allowNull: true,
-                
-                
-                defaultValue: '0.00',
+                type: DataTypes.VIRTUAL,
             },
             unit_price: {
-                type: DataTypes.DECIMAL,
-                allowNull: true,
-                
-                
-                defaultValue: '0.00',
+                type: DataTypes.VIRTUAL,
             },
             currency: {
-                type: DataTypes.STRING(10),
-                allowNull: true,
-                
-                
-                defaultValue: 'USD',
+                type: DataTypes.VIRTUAL,
             },
             min_stock_level: {
-                type: DataTypes.INTEGER,
-                allowNull: true,
-                
-                
-                defaultValue: 5,
+                type: DataTypes.VIRTUAL,
             },
             max_stock_level: {
-                type: DataTypes.INTEGER,
-                allowNull: true,
-                
-                
-                defaultValue: 50,
+                type: DataTypes.VIRTUAL,
             },
             reorder_point: {
-                type: DataTypes.INTEGER,
-                allowNull: true,
-                
-                
-                defaultValue: 10,
+                type: DataTypes.VIRTUAL,
             },
             reorder_quantity: {
-                type: DataTypes.INTEGER,
-                allowNull: true,
-                
-                
-                defaultValue: 20,
+                type: DataTypes.VIRTUAL,
             },
             lead_time_days: {
-                type: DataTypes.INTEGER,
-                allowNull: true,
-                
-                
-                
+                type: DataTypes.VIRTUAL,
             },
             is_active: {
-                type: DataTypes.TINYINT,
-                allowNull: true,
-                
-                
-                defaultValue: 1,
+                type: DataTypes.VIRTUAL,
             },
             is_hazardous: {
                 type: DataTypes.TINYINT,
                 allowNull: true,
-                
-                
-                
             },
             requires_serial_tracking: {
                 type: DataTypes.TINYINT,
                 allowNull: true,
-                
-                
-                
             },
             notes: {
-                type: DataTypes.TEXT,
-                allowNull: true,
-                
-                
-                
+                type: DataTypes.VIRTUAL,
             },
             created_by: {
-                type: DataTypes.STRING(255),
-                allowNull: true,
-                
-                
-                
+                type: DataTypes.VIRTUAL,
             },
             created_at: {
-                type: DataTypes.DATE,
-                allowNull: true,
-                
-                
-                
+                type: DataTypes.VIRTUAL,
             },
             updated_at: {
-                type: DataTypes.DATE,
-                allowNull: true,
-                
-                
-                
+                type: DataTypes.VIRTUAL,
             },
             spare_part_id: {
                 type: DataTypes.CHAR(36),
                 allowNull: true,
-        primaryKey: true,
-                
-                
-                
+                primaryKey: true,
+                field: 'product_id'
             },
 }, {
-    tableName: 'spare_parts',
+    tableName: 'spare_part_specs',
     timestamps: false
 });
 

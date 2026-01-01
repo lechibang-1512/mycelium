@@ -99,10 +99,10 @@ class ReportsService {
                 w.warehouse_id, w.name as warehouse_name,
                 COUNT(DISTINCT i.product_id) as unique_products,
                 COALESCE(SUM(i.quantity), 0) as total_quantity,
-                COALESCE(SUM(i.quantity * COALESCE(p.base_price, 0)), 0) as total_value
+                COALESCE(SUM(i.quantity * COALESCE(p.unit_price, 0)), 0) as total_value
             FROM warehouses w
             LEFT JOIN inventory i ON w.warehouse_id = i.warehouse_id AND i.quantity > 0
-            LEFT JOIN phone_specs p ON i.product_id = p.product_id
+            LEFT JOIN products p ON i.product_id = p.product_id
             WHERE w.is_active = 1
             GROUP BY w.warehouse_id, w.name
             ORDER BY w.name
