@@ -24,13 +24,13 @@ DROP TABLE IF EXISTS `inventory`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `inventory` (
-  `inventory_type` enum('bulk','serialized','spare_part','batch') NOT NULL,
-  `product_id` varchar(36) DEFAULT NULL,
+  `inventory_type` varchar(50) NOT NULL,
+  `product_id` UUID DEFAULT NULL,
   `batch_id` int(11) DEFAULT NULL,
   `batch_no` varchar(100) DEFAULT NULL,
-  `warehouse_id` varchar(36) NOT NULL,
+  `warehouse_id` UUID NOT NULL,
   `zone_id` int(11) DEFAULT NULL,
-  `bin_id` varchar(36) DEFAULT NULL,
+  `bin_id` UUID DEFAULT NULL,
   `quantity` int(11) DEFAULT 0,
   `reserved_quantity` int(11) DEFAULT 0,
   `min_stock_level` int(11) DEFAULT 0,
@@ -46,8 +46,8 @@ CREATE TABLE `inventory` (
   `quantity_in_transit` int(11) DEFAULT 0,
   `manufacture_date` datetime DEFAULT NULL,
   `expiry_date` datetime DEFAULT NULL,
-  `supplier_id` int(11) DEFAULT NULL,
-  `import_invoice_id` int(11) DEFAULT NULL,
+  `supplier_id` UUID DEFAULT NULL,
+  `import_invoice_id` UUID DEFAULT NULL,
   `last_counted_at` datetime DEFAULT NULL,
   `last_counted_by` varchar(255) DEFAULT NULL,
   `last_movement_at` datetime DEFAULT NULL,
@@ -55,8 +55,8 @@ CREATE TABLE `inventory` (
   `notes` text DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `id` char(36) NOT NULL,
-  `spare_part_id` char(36) DEFAULT NULL,
+  `id` UUID NOT NULL,
+  `spare_part_id` UUID DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `product_id` (`product_id`),
   KEY `warehouse_id` (`warehouse_id`),
@@ -83,6 +83,21 @@ COMMIT;
 SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
 
 --
+-- Table structure for table `shipments`
+--
+
+DROP TABLE IF EXISTS `shipments`;
+CREATE TABLE `shipments` (
+  `shipment_id` UUID NOT NULL,
+  `customer_name` varchar(255) DEFAULT NULL,
+  `customer_address` text DEFAULT NULL,
+  `delivery_person` varchar(255) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`shipment_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+--
 -- Table structure for table `inventory_log`
 --
 
@@ -90,19 +105,19 @@ DROP TABLE IF EXISTS `inventory_log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `inventory_log` (
-  `product_id` char(36) DEFAULT NULL,
-  `spare_part_id` char(36) DEFAULT NULL,
+  `product_id` UUID DEFAULT NULL,
+  `spare_part_id` UUID DEFAULT NULL,
   `asset_id` int(11) DEFAULT NULL COMMENT 'Liên kết đến bảng assets hợp nhất',
-  `transaction_type` enum('incoming','outgoing','adjustment','transfer','rma_return','rma_disposition','zone_transfer_out','zone_transfer_in','zone_to_bin','bin_to_zone','bin_transfer','bin_deletion_return') NOT NULL,
+  `transaction_type` varchar(50) NOT NULL,
   `quantity_changed` int(11) DEFAULT NULL COMMENT 'Null for single-asset movements',
-  `condition` enum('NEW','REFURBISHED','USED','TESTING','DEFECTIVE') DEFAULT 'NEW',
+  `condition` varchar(50) DEFAULT 'NEW',
   `transaction_date` datetime DEFAULT current_timestamp(),
   `from_zone_id` int(11) DEFAULT NULL COMMENT 'Source zone for transfers',
   `zone_id` int(11) DEFAULT NULL COMMENT 'Destination zone',
-  `bin_id` char(36) DEFAULT NULL COMMENT 'Bin/basket location for the transaction',
+  `bin_id` UUID DEFAULT NULL COMMENT 'Bin/basket location for the transaction',
   `receipt_id` varchar(50) DEFAULT NULL,
   `user_id` int(11) DEFAULT NULL,
-  `supplier_id` int(11) DEFAULT NULL,
+  `supplier_id` UUID DEFAULT NULL,
   `notes` text DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `unit_cost` decimal(10,2) DEFAULT NULL COMMENT 'Unit cost at time of transaction',
@@ -113,27 +128,22 @@ CREATE TABLE `inventory_log` (
   `new_inventory_level` int(11) DEFAULT NULL COMMENT 'Inventory level after transaction',
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `serial_number` varchar(100) DEFAULT NULL COMMENT 'Serial number for serialized items',
-  `reference_id` char(36) DEFAULT NULL COMMENT 'Reference ID (e.g., RMA ID)',
-  `subtotal` decimal(10,2) DEFAULT 0.00 COMMENT 'Subtotal for multi-item transactions',
-  `tax_amount` decimal(10,2) DEFAULT 0.00 COMMENT 'Tax amount for transaction',
-  `total_amount` decimal(10,2) DEFAULT 0.00 COMMENT 'Total amount for transaction',
+  `reference_id` UUID DEFAULT NULL COMMENT 'Reference ID (e.g., RMA ID)',
   `transaction_group_id` varchar(50) DEFAULT NULL COMMENT 'Groups related log entries from same receipt',
   `item_sequence` int(11) DEFAULT NULL COMMENT 'Item order within transaction group',
   `po_id` int(11) DEFAULT NULL,
   `invoice_id` int(11) DEFAULT NULL,
-  `warehouse_id` char(36) DEFAULT NULL,
-  `from_warehouse_id` char(36) DEFAULT NULL,
-  `from_bin_id` char(36) DEFAULT NULL,
+  `warehouse_id` UUID DEFAULT NULL,
+  `from_warehouse_id` UUID DEFAULT NULL,
+  `from_bin_id` UUID DEFAULT NULL,
   `external_doc_no` varchar(100) DEFAULT NULL COMMENT 'Reference to external document (e.g. Supplier Invoice, DO) for traceability',
-  `customer_name` varchar(255) DEFAULT NULL COMMENT 'Customer/Recipient name for outgoing transactions',
-  `customer_address` text DEFAULT NULL COMMENT 'Customer/Recipient address',
-  `delivery_person` varchar(255) DEFAULT NULL COMMENT 'Person who delivered/received the goods',
   `document_reference` varchar(255) DEFAULT NULL COMMENT 'Reference to source document (PO, Invoice, etc.)',
   `unit_of_measure` varchar(50) DEFAULT 'Unit' COMMENT 'Unit of measurement for the product',
   `doc_type` varchar(10) DEFAULT NULL COMMENT 'GRN for Stock In, GDN for Stock Out',
   `doc_number` varchar(50) DEFAULT NULL COMMENT 'Document number',
-  `log_id` char(36) NOT NULL,
-  `batch_id` char(36) DEFAULT NULL,
+  `log_id` UUID NOT NULL,
+  `shipment_id` UUID DEFAULT NULL,
+  `batch_id` UUID DEFAULT NULL,
   PRIMARY KEY (`log_id`),
   KEY `idx_log_zone` (`zone_id`),
   KEY `idx_log_receipt` (`receipt_id`),
@@ -159,13 +169,14 @@ CREATE TABLE `inventory_log` (
   KEY `idx_log_from_warehouse` (`from_warehouse_id`),
   KEY `idx_log_warehouse_date` (`warehouse_id`,`transaction_date`),
   KEY `idx_log_bin` (`bin_id`),
-  KEY `idx_customer_name` (`customer_name`),
+  KEY `idx_shipment_id` (`shipment_id`),
   KEY `idx_document_ref` (`document_reference`),
   KEY `idx_inventory_log_doc` (`doc_type`,`doc_number`),
   KEY `idx_inventory_log_lot_id` (`lot_id`),
   KEY `idx_from_bin_id` (`from_bin_id`),
   CONSTRAINT `fk_log_to_bin` FOREIGN KEY (`bin_id`) REFERENCES `warehouse_bins` (`bin_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_log_to_specs` FOREIGN KEY (`product_id`) REFERENCES `phone_specs` (`product_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_log_to_shipment` FOREIGN KEY (`shipment_id`) REFERENCES `shipments` (`shipment_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_log_to_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`warehouse_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Unified transaction and inventory log table. Single source of truth for all inventory movements and receipts. Uses transaction_group_id to group related entries.';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -190,10 +201,10 @@ DROP TABLE IF EXISTS `invoice_items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `invoice_items` (
-  `product_id` varchar(36) DEFAULT NULL,
+  `product_id` UUID DEFAULT NULL,
   `spare_part_id` int(11) DEFAULT NULL,
   `product_name` varchar(255) DEFAULT NULL,
-  `product_uuid` varchar(36) DEFAULT NULL,
+  `product_uuid` UUID DEFAULT NULL,
   `description` text DEFAULT NULL,
   `unit` varchar(50) DEFAULT NULL,
   `unit_name` varchar(50) DEFAULT NULL,
@@ -205,8 +216,8 @@ CREATE TABLE `invoice_items` (
   `discount_rate` decimal(5,2) DEFAULT 0.00,
   `discount_amount` decimal(15,2) DEFAULT NULL,
   `total_amount` decimal(15,2) DEFAULT NULL,
-  `invoice_id` char(36) DEFAULT NULL,
-  `id` char(36) NOT NULL,
+  `invoice_id` UUID DEFAULT NULL,
+  `id` UUID NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -231,13 +242,13 @@ DROP TABLE IF EXISTS `invoices`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `invoices` (
-  `uuid` varchar(36) DEFAULT uuid(),
+  `uuid` UUID DEFAULT uuid(),
   `invoice_number` varchar(100) NOT NULL,
   `pattern_number` varchar(50) DEFAULT NULL,
   `serial_number` varchar(50) DEFAULT NULL,
-  `supplier_id` int(11) DEFAULT NULL,
-  `status` enum('draft','issued','paid','cancelled') DEFAULT 'draft',
-  `verification_status` enum('PENDING','PARTIAL','VERIFIED') DEFAULT 'PENDING',
+  `supplier_id` UUID DEFAULT NULL,
+  `status` varchar(50) DEFAULT 'draft',
+  `verification_status` varchar(50) DEFAULT 'PENDING',
   `invoice_date` datetime DEFAULT NULL,
   `due_date` datetime DEFAULT NULL,
   `imported_at` datetime DEFAULT NULL,
@@ -252,7 +263,7 @@ CREATE TABLE `invoices` (
   `notes` text DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `id` char(36) NOT NULL,
+  `id` UUID NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `invoice_number` (`invoice_number`),
   UNIQUE KEY `uuid` (`uuid`)
@@ -279,7 +290,7 @@ DROP TABLE IF EXISTS `phone_specs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `phone_specs` (
-  `product_id` char(36) NOT NULL,
+  `product_id` UUID NOT NULL,
   `device_type` varchar(50) DEFAULT 'smartphone',
   `color` varchar(100) DEFAULT NULL,
   `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attributes`)),
@@ -323,7 +334,7 @@ DROP TABLE IF EXISTS `products`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `products` (
-  `product_id` char(36) NOT NULL,
+  `product_id` UUID NOT NULL,
   `part_code` varchar(100) NOT NULL COMMENT 'Unified SKU or Part Code',
   `product_type` varchar(50) NOT NULL COMMENT 'e.g., CPU, GPU, PHONE, SPARE_PART, CABLE',
   `name` varchar(255) NOT NULL,
@@ -370,15 +381,15 @@ DROP TABLE IF EXISTS `repair_job_attachments`;
 CREATE TABLE `repair_job_attachments` (
   `file_name` varchar(255) NOT NULL,
   `file_path` varchar(500) NOT NULL,
-  `file_type` enum('IMAGE','DOCUMENT','VIDEO','OTHER') DEFAULT 'IMAGE',
+  `file_type` varchar(50) DEFAULT 'IMAGE',
   `file_size_kb` int(11) DEFAULT NULL,
   `mime_type` varchar(100) DEFAULT NULL,
-  `attachment_category` enum('BEFORE_PHOTO','AFTER_PHOTO','INVOICE','QUOTE','DIAGNOSTIC_REPORT','WARRANTY_CARD','OTHER') DEFAULT 'OTHER',
+  `attachment_category` varchar(50) DEFAULT 'OTHER',
   `description` text DEFAULT NULL,
   `uploaded_by` varchar(100) DEFAULT NULL,
   `uploaded_at` datetime DEFAULT current_timestamp(),
-  `attachment_id` char(36) NOT NULL,
-  `repair_job_id` char(36) DEFAULT NULL,
+  `attachment_id` UUID NOT NULL,
+  `repair_job_id` UUID DEFAULT NULL,
   PRIMARY KEY (`attachment_id`),
   KEY `idx_category` (`attachment_category`),
   KEY `idx_file_type` (`file_type`),
@@ -415,8 +426,8 @@ CREATE TABLE `repair_job_parts` (
   `installed_by` varchar(255) DEFAULT NULL,
   `warranty_months` int(11) DEFAULT NULL,
   `notes` text DEFAULT NULL,
-  `repair_job_id` char(36) DEFAULT NULL,
-  `id` char(36) NOT NULL,
+  `repair_job_id` UUID DEFAULT NULL,
+  `id` UUID NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -442,9 +453,9 @@ DROP TABLE IF EXISTS `repair_job_templates`;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `repair_job_templates` (
   `template_name` varchar(255) NOT NULL,
-  `template_category` enum('SCREEN_REPAIR','BATTERY_REPLACEMENT','CHARGING_PORT','WATER_DAMAGE','SOFTWARE_ISSUE','CAMERA_REPAIR','SPEAKER_REPAIR','BUTTON_REPAIR','OTHER') DEFAULT 'OTHER',
+  `template_category` varchar(50) DEFAULT 'OTHER',
   `description` text DEFAULT NULL,
-  `default_priority` enum('LOW','NORMAL','HIGH','URGENT') DEFAULT 'NORMAL',
+  `default_priority` varchar(50) DEFAULT 'NORMAL',
   `estimated_cost` decimal(10,2) DEFAULT 0.00,
   `estimated_labor_cost` decimal(10,2) DEFAULT 0.00,
   `estimated_duration_hours` int(11) DEFAULT 2,
@@ -457,7 +468,7 @@ CREATE TABLE `repair_job_templates` (
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `created_by` varchar(100) DEFAULT NULL,
-  `template_id` char(36) NOT NULL,
+  `template_id` UUID NOT NULL,
   PRIMARY KEY (`template_id`),
   KEY `idx_category` (`template_category`),
   KEY `idx_active` (`is_active`),
@@ -486,7 +497,7 @@ DROP TABLE IF EXISTS `repair_jobs`;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `repair_jobs` (
   `job_number` varchar(100) NOT NULL,
-  `product_id` varchar(36) DEFAULT NULL,
+  `product_id` UUID DEFAULT NULL,
   `device_name` varchar(255) DEFAULT NULL,
   `device_serial_number` varchar(100) DEFAULT NULL,
   `device_imei` varchar(100) DEFAULT NULL,
@@ -501,7 +512,7 @@ CREATE TABLE `repair_jobs` (
   `priority` varchar(50) DEFAULT 'NORMAL',
   `assigned_technician` varchar(255) DEFAULT NULL,
   `assigned_at` datetime DEFAULT NULL,
-  `warehouse_id` varchar(36) DEFAULT NULL,
+  `warehouse_id` UUID DEFAULT NULL,
   `received_date` datetime DEFAULT current_timestamp(),
   `estimated_completion_date` datetime DEFAULT NULL,
   `completion_date` datetime DEFAULT NULL,
@@ -520,7 +531,7 @@ CREATE TABLE `repair_jobs` (
   `created_by` varchar(255) DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `repair_job_id` char(36) NOT NULL,
+  `repair_job_id` UUID NOT NULL,
   PRIMARY KEY (`repair_job_id`),
   UNIQUE KEY `job_number` (`job_number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -546,7 +557,7 @@ DROP TABLE IF EXISTS `rma_items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `rma_items` (
-  `product_id` varchar(36) DEFAULT NULL,
+  `product_id` UUID DEFAULT NULL,
   `spare_part_id` int(11) DEFAULT NULL,
   `serial_number` varchar(100) DEFAULT NULL,
   `quantity` int(11) DEFAULT 1,
@@ -554,8 +565,8 @@ CREATE TABLE `rma_items` (
   `disposition` varchar(50) DEFAULT NULL,
   `unit_value` decimal(15,2) DEFAULT NULL,
   `notes` text DEFAULT NULL,
-  `rma_table_id` char(36) DEFAULT NULL,
-  `id` char(36) NOT NULL,
+  `rma_table_id` UUID DEFAULT NULL,
+  `id` UUID NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -580,7 +591,7 @@ DROP TABLE IF EXISTS `rmas`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `rmas` (
-  `rma_id` varchar(36) DEFAULT NULL,
+  `rma_id` UUID DEFAULT NULL,
   `customer_name` varchar(255) DEFAULT NULL,
   `customer_email` varchar(255) DEFAULT NULL,
   `customer_phone` varchar(50) DEFAULT NULL,
@@ -590,7 +601,7 @@ CREATE TABLE `rmas` (
   `reason_description` text DEFAULT NULL,
   `status` varchar(50) DEFAULT 'pending',
   `priority` varchar(50) DEFAULT 'medium',
-  `warehouse_id` varchar(36) DEFAULT NULL,
+  `warehouse_id` UUID DEFAULT NULL,
   `quarantine_zone_id` int(11) DEFAULT NULL,
   `requested_by` int(11) DEFAULT NULL,
   `assigned_to` int(11) DEFAULT NULL,
@@ -605,7 +616,7 @@ CREATE TABLE `rmas` (
   `internal_notes` text DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `id` char(36) NOT NULL,
+  `id` UUID NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `rma_id` (`rma_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -631,10 +642,10 @@ DROP TABLE IF EXISTS `spare_part_specs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `spare_part_specs` (
-  `product_id` char(36) NOT NULL,
+  `product_id` UUID NOT NULL,
   `part_category` varchar(100) NOT NULL,
   `part_type` varchar(100) DEFAULT NULL,
-  `compatible_product_id` varchar(36) DEFAULT NULL,
+  `compatible_product_id` UUID DEFAULT NULL,
   `compatible_device_category` varchar(100) DEFAULT NULL,
   `compatible_brands` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`compatible_brands`)),
   `compatible_models` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`compatible_models`)),
@@ -669,7 +680,7 @@ DROP TABLE IF EXISTS `stocktake_items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `stocktake_items` (
-  `product_id` char(36) DEFAULT NULL,
+  `product_id` UUID DEFAULT NULL,
   `bin_location` varchar(50) DEFAULT NULL,
   `system_quantity` decimal(10,2) NOT NULL DEFAULT 0.00,
   `counted_quantity` decimal(10,2) DEFAULT NULL,
@@ -682,8 +693,8 @@ CREATE TABLE `stocktake_items` (
   `counted_by` int(11) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `stocktake_id` char(36) DEFAULT NULL,
-  `id` char(36) NOT NULL,
+  `stocktake_id` UUID DEFAULT NULL,
+  `id` UUID NOT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_adjustment_receipt` (`adjustment_receipt_id`),
   KEY `idx_variance` (`variance`),
@@ -717,8 +728,8 @@ CREATE TABLE `stocktake_status_history` (
   `changed_by` int(11) NOT NULL,
   `changed_at` timestamp NULL DEFAULT current_timestamp(),
   `notes` text DEFAULT NULL,
-  `stocktake_id` char(36) DEFAULT NULL,
-  `id` char(36) NOT NULL,
+  `stocktake_id` UUID DEFAULT NULL,
+  `id` UUID NOT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_changed_at` (`changed_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -744,11 +755,11 @@ DROP TABLE IF EXISTS `stocktakes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `stocktakes` (
-  `stocktake_uuid` char(36) DEFAULT NULL,
+  `stocktake_uuid` UUID DEFAULT NULL,
   `stocktake_number` varchar(50) NOT NULL,
   `zone_id` int(11) DEFAULT NULL,
-  `count_type` enum('full','cycle','random','location') DEFAULT 'full',
-  `status` enum('PLANNED','IN_PROGRESS','COMPLETED','APPROVED','CANCELLED') DEFAULT 'PLANNED',
+  `count_type` varchar(50) DEFAULT 'full',
+  `status` varchar(50) DEFAULT 'PLANNED',
   `initiated_by` int(11) NOT NULL,
   `started_at` datetime DEFAULT NULL,
   `completed_at` datetime DEFAULT NULL,
@@ -760,8 +771,8 @@ CREATE TABLE `stocktakes` (
   `recurrence_rule` varchar(100) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `warehouse_id` char(36) DEFAULT NULL,
-  `stocktake_id` char(36) NOT NULL,
+  `warehouse_id` UUID DEFAULT NULL,
+  `stocktake_id` UUID NOT NULL,
   PRIMARY KEY (`stocktake_id`),
   UNIQUE KEY `stocktake_number` (`stocktake_number`),
   UNIQUE KEY `stocktake_uuid` (`stocktake_uuid`),
@@ -818,7 +829,7 @@ CREATE TABLE `suppliers` (
   `is_active` tinyint(1) DEFAULT 1,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `supplier_id` char(36) NOT NULL,
+  `supplier_id` UUID NOT NULL,
   PRIMARY KEY (`supplier_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -844,7 +855,7 @@ DROP TABLE IF EXISTS `transaction_items`;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `transaction_items` (
   `transaction_group_id` varchar(100) DEFAULT NULL,
-  `product_id` varchar(36) DEFAULT NULL,
+  `product_id` UUID DEFAULT NULL,
   `spare_part_id` int(11) DEFAULT NULL,
   `batch_id` int(11) DEFAULT NULL,
   `asset_id` int(11) DEFAULT NULL,
@@ -853,16 +864,16 @@ CREATE TABLE `transaction_items` (
   `condition_status` varchar(50) DEFAULT 'NEW',
   `unit_cost` decimal(15,2) DEFAULT 0.00,
   `total_value` decimal(15,2) DEFAULT 0.00,
-  `from_warehouse_id` varchar(36) DEFAULT NULL,
+  `from_warehouse_id` UUID DEFAULT NULL,
   `from_zone_id` int(11) DEFAULT NULL,
-  `from_bin_id` varchar(36) DEFAULT NULL,
-  `to_warehouse_id` varchar(36) DEFAULT NULL,
+  `from_bin_id` UUID DEFAULT NULL,
+  `to_warehouse_id` UUID DEFAULT NULL,
   `to_zone_id` int(11) DEFAULT NULL,
-  `to_bin_id` varchar(36) DEFAULT NULL,
+  `to_bin_id` UUID DEFAULT NULL,
   `new_inventory_level` int(11) DEFAULT NULL,
   `notes` text DEFAULT NULL,
-  `transaction_id` char(36) DEFAULT NULL,
-  `id` char(36) NOT NULL,
+  `transaction_id` UUID DEFAULT NULL,
+  `id` UUID NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -891,16 +902,16 @@ CREATE TABLE `transactions` (
   `receipt_id` varchar(100) DEFAULT NULL,
   `transaction_type` varchar(50) NOT NULL,
   `transaction_date` datetime DEFAULT current_timestamp(),
-  `warehouse_id` varchar(36) DEFAULT NULL,
-  `from_warehouse_id` varchar(36) DEFAULT NULL,
+  `warehouse_id` UUID DEFAULT NULL,
+  `from_warehouse_id` UUID DEFAULT NULL,
   `zone_id` int(11) DEFAULT NULL,
-  `bin_id` varchar(36) DEFAULT NULL,
+  `bin_id` UUID DEFAULT NULL,
   `subtotal` decimal(15,2) DEFAULT 0.00,
   `tax_amount` decimal(15,2) DEFAULT 0.00,
   `total_amount` decimal(15,2) DEFAULT 0.00,
   `shipping_fee` decimal(15,2) DEFAULT 0.00,
   `discount_amount` decimal(15,2) DEFAULT 0.00,
-  `supplier_id` int(11) DEFAULT NULL,
+  `supplier_id` UUID DEFAULT NULL,
   `invoice_id` int(11) DEFAULT NULL,
   `po_id` int(11) DEFAULT NULL,
   `user_id` int(11) DEFAULT NULL,
@@ -912,7 +923,7 @@ CREATE TABLE `transactions` (
   `internal_notes` text DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `id` char(36) NOT NULL,
+  `id` UUID NOT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_date_type` (`transaction_date`,`transaction_type`),
   KEY `idx_group` (`transaction_group_id`)
@@ -1000,9 +1011,9 @@ DROP TABLE IF EXISTS `warehouse_bins`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `warehouse_bins` (
-  `warehouse_id` varchar(36) NOT NULL,
+  `warehouse_id` UUID NOT NULL,
   `zone_id` int(11) NOT NULL,
-  `bin_id` varchar(36) NOT NULL,
+  `bin_id` UUID NOT NULL,
   `bin_code` varchar(100) NOT NULL,
   `bin_type` varchar(50) DEFAULT 'standard',
   `product_type` varchar(50) DEFAULT NULL,
@@ -1025,7 +1036,7 @@ CREATE TABLE `warehouse_bins` (
   `accessibility_level` varchar(50) DEFAULT 'easy',
   `is_active` tinyint(1) DEFAULT 1,
   `notes` text DEFAULT NULL,
-  `id` char(36) NOT NULL,
+  `id` UUID NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `bin_id` (`bin_id`),
   KEY `warehouse_id` (`warehouse_id`,`zone_id`),
@@ -1055,9 +1066,9 @@ DROP TABLE IF EXISTS `warehouse_zones`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `warehouse_zones` (
-  `warehouse_id` varchar(36) NOT NULL,
+  `warehouse_id` UUID NOT NULL,
   `zone_id` int(11) NOT NULL,
-  `zone_uuid` varchar(36) DEFAULT NULL,
+  `zone_uuid` UUID DEFAULT NULL,
   `name` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,
   `zone_type` varchar(50) DEFAULT 'storage',
@@ -1068,7 +1079,7 @@ CREATE TABLE `warehouse_zones` (
   `bin_layout` varchar(50) DEFAULT NULL,
   `capacity_limit` int(11) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
-  `id` char(36) NOT NULL,
+  `id` UUID NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_zone` (`warehouse_id`,`zone_id`),
   CONSTRAINT `warehouse_zones_ibfk_1` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`warehouse_id`) ON DELETE CASCADE
@@ -1095,7 +1106,7 @@ DROP TABLE IF EXISTS `warehouses`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `warehouses` (
-  `warehouse_id` varchar(36) NOT NULL,
+  `warehouse_id` UUID NOT NULL,
   `warehouse_uuid` varchar(36) DEFAULT NULL,
   `name` varchar(255) NOT NULL,
   `location` varchar(255) DEFAULT NULL,

@@ -8,9 +8,11 @@ echo "🔧 Creating databases..."
 mariadb -u root -p"$MARIADB_ROOT_PASSWORD" <<-EOSQL
     CREATE DATABASE IF NOT EXISTS master_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
     CREATE DATABASE IF NOT EXISTS security_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE DATABASE IF NOT EXISTS pc_components CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
     GRANT ALL PRIVILEGES ON master_db.* TO '$MARIADB_USER'@'%';
     GRANT ALL PRIVILEGES ON security_db.* TO '$MARIADB_USER'@'%';
+    GRANT ALL PRIVILEGES ON pc_components.* TO '$MARIADB_USER'@'%';
     FLUSH PRIVILEGES;
 EOSQL
 
@@ -20,4 +22,8 @@ mariadb -u root -p"$MARIADB_ROOT_PASSWORD" master_db < /docker-entrypoint-initdb
 echo "🔐 Importing security_db schema..."
 mariadb -u root -p"$MARIADB_ROOT_PASSWORD" security_db < /docker-entrypoint-initdb.d/security_db.sql
 
+echo "🖥️ Importing pc_components schema..."
+mariadb -u root -p"$MARIADB_ROOT_PASSWORD" pc_components < /docker-entrypoint-initdb.d/pc_components.sql
+
 echo "✅ Database initialization complete!"
+
