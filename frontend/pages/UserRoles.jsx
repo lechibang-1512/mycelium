@@ -78,16 +78,16 @@ function AssignModal({ user, roles, onClose, _onSaved }) {
     const handleRemove = async (roleId) => {
         if (!window.confirm('Remove this role from user?')) return;
         try { 
-            await api.delete(`/rbac/users/${userId}/roles/${roleId}`); 
+            await api.del(`/rbac/users/${userId}/roles/${roleId}`); 
             await loadRoles();
             toast.success('Role removed');
         } catch (e) { 
-            toast.error(e.response?.data?.error || 'Failed to remove role'); 
+            toast.error(e.message || 'Failed to remove role'); 
         }
     };
 
     return (
-        <Modal title={
+        <Modal isOpen={true} title={
             <div className="flex items-center gap-2">
                 <UserCheck className="w-5 h-5 text-indigo-600" />
                 <span>Manage Roles — {user.username}</span>
@@ -178,7 +178,7 @@ function RoleModal({ role, onClose, onSaved }) {
     };
 
     return (
-        <Modal title={
+        <Modal isOpen={true} title={
             <div className="flex items-center gap-2">
                 {isEdit ? <Pencil className="w-5 h-5 text-indigo-600" /> : <Plus className="w-5 h-5 text-indigo-600" />}
                 <span>{isEdit ? 'Edit Role' : 'Create Role'}</span>
@@ -252,7 +252,7 @@ function PermissionsTab({ roles, allPerms }) {
             if (isChecked) {
                 await api.post(`/rbac/roles/${roleId}/permissions`, { permissionId: permId });
             } else {
-                await api.delete(`/rbac/roles/${roleId}/permissions/${permId}`);
+                await api.del(`/rbac/roles/${roleId}/permissions/${permId}`);
             }
             // Update local state without refetching for snappy UI
             if (isChecked) {
@@ -422,11 +422,11 @@ export default function UserRoles() {
         if (!window.confirm(`Delete role "${r.name}"? This will remove the role from any users who have it.`)) return;
         
         try { 
-            await api.delete(`/rbac/roles/${id}`); 
+            await api.del(`/rbac/roles/${id}`); 
             toast.success('Role deleted successfully'); 
             loadAll(); 
         } catch (e) { 
-            toast.error(e.response?.data?.error || 'Failed to delete role'); 
+            toast.error(e.message || 'Failed to delete role'); 
         }
     };
 

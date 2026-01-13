@@ -260,7 +260,7 @@ class PCComponentService {
      * Delete (soft delete) a component
      */
     async delete(type, id) {
-        const { tableName } = this._resolveType(type);
+        this._resolveType(type);
         // Soft delete the base product record
         await sequelizeMaster.query(`UPDATE master_db.products SET is_active = 0 WHERE product_id = ? AND product_type = ?`, {
             replacements: [id, type.toUpperCase()], type: QueryTypes.UPDATE

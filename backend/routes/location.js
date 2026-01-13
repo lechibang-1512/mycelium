@@ -38,36 +38,39 @@ async function getBinContentsDetailed(binId) {
     const aggregateItems = await sequelizeMaster.query(`
         SELECT 
             i.id as assignment_id, i.quantity, i.product_id, i.batch_id,
-            p.device_name as product_name, p.device_maker as brand, p.color as model,
+            prod.name as product_name, prod.manufacturer as brand, p.color as model,
             'aggregate' as item_type, i.inventory_type
         FROM inventory i
+        LEFT JOIN products prod ON i.product_id = prod.product_id
         LEFT JOIN phone_specs p ON i.product_id = p.product_id
         WHERE i.bin_id = ? AND i.quantity > 0 AND i.inventory_type = 'bulk'
-        ORDER BY p.device_name
+        ORDER BY prod.name
     `, { replacements: [binId], type: QueryTypes.SELECT });
 
     const sparePartsItems = await sequelizeMaster.query(`
         SELECT 
             i.id as assignment_id, i.quantity, i.product_id as spare_part_id, i.batch_id,
-            sp.part_name as spare_part_name, sp.part_code, sp.part_category,
+            prod.name as spare_part_name, prod.part_code, sps.part_category,
             i.serial_number, i.condition_status, 'spare_part' as item_type
         FROM inventory i
-        LEFT JOIN spare_parts sp ON i.product_id = sp.spare_part_id
+        LEFT JOIN products prod ON i.product_id = prod.product_id
+        LEFT JOIN spare_part_specs sps ON i.product_id = sps.product_id
         WHERE i.bin_id = ? AND i.quantity > 0 AND i.inventory_type = 'spare_part'
-        ORDER BY sp.part_name
+        ORDER BY prod.name
     `, { replacements: [binId], type: QueryTypes.SELECT });
 
     const serializedItems = await sequelizeMaster.query(`
         SELECT 
             i.id as tracking_id, i.product_id, i.serial_number as imei_1,
             i.serial_number, i.status, i.condition_status as condition_grade,
-            i.created_at as received_at, p.device_name as product_name,
-            p.device_maker as brand, p.color as model, 'serialized' as item_type
+            i.created_at as received_at, prod.name as product_name,
+            prod.manufacturer as brand, p.color as model, 'serialized' as item_type
         FROM inventory i
+        LEFT JOIN products prod ON i.product_id = prod.product_id
         LEFT JOIN phone_specs p ON i.product_id = p.product_id
         WHERE i.bin_id = ? AND i.status IN ('available', 'reserved')
           AND i.inventory_type = 'serialized'
-        ORDER BY p.device_name, i.serial_number
+        ORDER BY prod.name, i.serial_number
     `, { replacements: [binId], type: QueryTypes.SELECT });
 
     return { aggregateItems: [...aggregateItems, ...sparePartsItems], serializedItems };

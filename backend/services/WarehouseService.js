@@ -189,10 +189,10 @@ class WarehouseService {
         for (const bin of bins) {
             const items = await sequelizeMaster.query(`
                 SELECT i.quantity, i.product_id, i.inventory_type, i.condition_status, 
-                       p.device_name, p.device_maker,
+                       prod.name as device_name, prod.manufacturer as device_maker,
                        i.serial_number, i.status
                 FROM inventory i
-                LEFT JOIN phone_specs p ON i.product_id = p.product_id
+                LEFT JOIN products prod ON i.product_id = prod.product_id
                 WHERE i.bin_id = ? AND i.quantity > 0
             `, { replacements: [bin.bin_id], type: QueryTypes.SELECT });
 
@@ -316,9 +316,9 @@ class WarehouseService {
 
     async getInventoryByLocation(warehouseId = null, binId = null) {
         let sqlPhones = `
-            SELECT i.*, p.device_name, p.device_maker, w.name as warehouse_name
+            SELECT i.*, prod.name as device_name, prod.manufacturer as device_maker, w.name as warehouse_name
             FROM inventory i
-            LEFT JOIN phone_specs p ON i.product_id = p.product_id
+            LEFT JOIN products prod ON i.product_id = prod.product_id
             LEFT JOIN warehouses w ON i.warehouse_id = w.warehouse_id
             WHERE i.quantity > 0 AND i.inventory_type = 'bulk'
         `;
@@ -329,9 +329,9 @@ class WarehouseService {
         const phones = await sequelizeMaster.query(sqlPhones, { replacements: paramsPhones, type: QueryTypes.SELECT });
 
         let sqlParts = `
-            SELECT i.*, s.part_name, s.part_code as part_number, w.name as warehouse_name
+            SELECT i.*, prod.name as part_name, prod.part_code as part_number, w.name as warehouse_name
             FROM inventory i
-            LEFT JOIN spare_parts s ON i.spare_part_id = s.spare_part_id
+            LEFT JOIN products prod ON i.spare_part_id = prod.product_id
             LEFT JOIN warehouses w ON i.warehouse_id = w.warehouse_id
             WHERE i.quantity > 0 AND i.inventory_type = 'spare_part'
         `;
@@ -539,7 +539,7 @@ class WarehouseService {
         } = options;
 
         return sequelizeMaster.query(`
-            SELECT i.product_id, p.device_name, p.device_maker,
+            SELECT i.product_id, prod.name as device_name, prod.manufacturer as device_maker,
                    w.name as warehouse_name, w.warehouse_id,
                    SUM(i.quantity) as total_quantity,
                    SUM(i.reserved_quantity) as total_reserved,
@@ -551,10 +551,10 @@ class WarehouseService {
                        ELSE 'normal'
                    END as stock_level
             FROM inventory i
-            LEFT JOIN phone_specs p ON i.product_id = p.product_id
+            LEFT JOIN products prod ON i.product_id = prod.product_id
             LEFT JOIN warehouses w ON i.warehouse_id = w.warehouse_id
             WHERE i.inventory_type = 'bulk' AND i.quantity > 0
-            GROUP BY i.product_id, i.warehouse_id, p.device_name, p.device_maker,
+            GROUP BY i.product_id, i.warehouse_id, prod.name, prod.manufacturer,
                      w.name, w.warehouse_id, i.min_stock_level
             HAVING stock_level IN ('critical', 'low')
             ORDER BY total_quantity ASC

@@ -40,10 +40,10 @@ export default function PCBuilds() {
     const handleDelete = async (id) => {
         if (!window.confirm('Delete this PC build?')) return;
         try { 
-            await api.delete(`/pc-builds/${id}`); 
+            await api.del(`/pc-builds/${id}`); 
             fetchBuilds(); 
         } catch (e) { 
-            alert(e.response?.data?.error || 'Failed to delete'); 
+            alert(e.message || 'Failed to delete'); 
         }
     };
 

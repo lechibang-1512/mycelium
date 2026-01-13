@@ -43,7 +43,7 @@ function SupplierModal({ supplier, categories, onClose, onSaved }) {
     );
 
     return (
-        <Modal title={supplier ? 'Edit Supplier' : 'Add New Supplier'} onClose={onClose} size="lg">
+        <Modal isOpen={true} title={supplier ? 'Edit Supplier' : 'Add New Supplier'} onClose={onClose} size="lg">
             <form onSubmit={handleSubmit}>
                 <div className="p-6 space-y-4">
                     {error && (
@@ -152,7 +152,7 @@ export default function Suppliers() {
     const deleteSup = async (id) => {
         if (!window.confirm('Delete this supplier? This action cannot be undone.')) return;
         try { 
-            await api.delete(`/suppliers/${id}`); 
+            await api.del(`/suppliers/${id}`); 
             toast.success('Supplier deleted'); 
             fetchAll(); 
         } catch { 

@@ -237,8 +237,8 @@ export default function SpecsParts() {
 
     const handleDelete = async (id) => {
         if (!window.confirm('PERMANENTLY DELETE this part? This cannot be undone.')) return;
-        try { await api.delete(`/spare-parts/${id}`); showMsg('Part deleted'); fetchParts(); }
-        catch (e) { showMsg(e.response?.data?.error || 'Failed to delete', 'error'); }
+        try { await api.del(`/spare-parts/${id}`); showMsg('Part deleted'); fetchParts(); }
+        catch (e) { showMsg(e.message || 'Failed to delete', 'error'); }
     };
 
     const toggleActive = async (part) => {

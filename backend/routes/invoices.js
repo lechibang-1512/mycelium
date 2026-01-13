@@ -57,15 +57,15 @@ module.exports = () => {
             const spareParts = await sequelizeMaster.query(`
                 SELECT 
                     ii.spare_part_id as id,
-                    sp.spare_part_uuid,
-                    sp.part_name as name,
-                    sp.part_code as sku,
-                    sp.part_category as category,
+                    prod.product_id as spare_part_uuid,
+                    prod.name as name,
+                    prod.part_code as sku,
+                    prod.category as category,
                     ii.quantity,
                     ii.unit_price
                 FROM invoices inv
                 JOIN invoice_items ii ON inv.id = ii.invoice_id
-                JOIN spare_parts sp ON ii.spare_part_id = sp.spare_part_id
+                JOIN products prod ON ii.spare_part_id = prod.product_id
                 WHERE inv.uuid = ? AND ii.spare_part_id IS NOT NULL
             `, { replacements: [invoiceUuid], type: QueryTypes.SELECT });
             const result = Array.isArray(spareParts) ? spareParts : [];

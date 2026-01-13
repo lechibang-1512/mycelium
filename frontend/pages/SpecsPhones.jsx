@@ -111,7 +111,7 @@ function PhoneModal({ phone, onClose, onSaved }) {
             }
             onSaved(isEdit ? 'Product updated successfully' : 'Product added successfully');
         } catch (err) { 
-            toast.error(err.response?.data?.error || 'Failed to save product'); 
+            toast.error(err.message || 'Failed to save product'); 
         } finally { 
             setSaving(false); 
         }
@@ -119,6 +119,7 @@ function PhoneModal({ phone, onClose, onSaved }) {
 
     return (
         <Modal 
+            isOpen={true}
             title={
                 <div className="flex items-center gap-2">
                     {isEdit ? <Pencil className="w-5 h-5 text-indigo-600" /> : <Smartphone className="w-5 h-5 text-indigo-600" />}
@@ -348,8 +349,8 @@ export default function SpecsPhones() {
     const fetchPhones = async (inactive = includeInactive) => {
         setLoading(true);
         try {
-            const res = await api.get('/inventory', { include_inactive: inactive });
-            const all = Array.isArray(res.data) ? res.data : [];
+            const res = await api.get('/phones', { include_inactive: inactive });
+            const all = Array.isArray(res.products) ? res.products : [];
             setAllPhones(all);
             setMakers(Array.from(new Set(all.map(p => p?.device_maker).filter(Boolean))).sort());
         } catch {
@@ -376,11 +377,11 @@ export default function SpecsPhones() {
     const handleDelete = async (id) => {
         if (!window.confirm('Delete this product catalog entry? This action cannot be undone.')) return;
         try { 
-            await api.delete(`/catalog/phones/${id}`); 
+            await api.del(`/phones/${id}`); 
             toast.success('Product deleted successfully'); 
             fetchPhones(); 
         } catch (e) { 
-            toast.error(e.response?.data?.error || 'Failed to delete product'); 
+            toast.error(e.message || 'Failed to delete product'); 
         }
     };
 

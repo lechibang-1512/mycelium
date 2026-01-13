@@ -27,12 +27,13 @@ class SerializedInventoryService {
                 i.status, i.condition_grade, i.warehouse_id, i.bin_id,
                 i.notes, i.created_at, i.updated_at,
                 w.name as warehouse_name,
-                p.device_name, p.device_maker, p.color, p.rom as storage,
-                sp.part_name, sp.manufacturer_part_number as part_number
+                prod.name as device_name, prod.manufacturer as device_maker, p.color, p.rom as storage,
+                sp.name as part_name, sp.manufacturer as part_number
             FROM inventory i
             LEFT JOIN warehouses w ON i.warehouse_id = w.warehouse_id
+            LEFT JOIN products prod ON i.product_id = prod.product_id
             LEFT JOIN phone_specs p ON i.product_id = p.product_id
-            LEFT JOIN spare_parts sp ON i.spare_part_id = sp.spare_part_id
+            LEFT JOIN products sp ON i.spare_part_id = sp.product_id
             WHERE i.inventory_type IN ('serialized', 'spare_part')
         `;
 
@@ -59,8 +60,8 @@ class SerializedInventoryService {
                 i.serial_number LIKE ? OR 
                 i.imei_1 LIKE ? OR 
                 i.imei_2 LIKE ? OR 
-                p.device_name LIKE ? OR 
-                sp.part_name LIKE ?
+                prod.name LIKE ? OR 
+                sp.name LIKE ?
             )`;
             const searchTerm = `%${search}%`;
             params.push(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
@@ -77,12 +78,13 @@ class SerializedInventoryService {
             SELECT 
                 i.*,
                 w.name as warehouse_name,
-                p.device_name, p.device_maker, p.color, p.rom as storage,
-                sp.part_name, sp.manufacturer_part_number as part_number
+                prod.name as device_name, prod.manufacturer as device_maker, p.color, p.rom as storage,
+                sp.name as part_name, sp.manufacturer as part_number
             FROM inventory i
             LEFT JOIN warehouses w ON i.warehouse_id = w.warehouse_id
+            LEFT JOIN products prod ON i.product_id = prod.product_id
             LEFT JOIN phone_specs p ON i.product_id = p.product_id
-            LEFT JOIN spare_parts sp ON i.spare_part_id = sp.spare_part_id
+            LEFT JOIN products sp ON i.spare_part_id = sp.product_id
             WHERE i.id = ?
         `;
 

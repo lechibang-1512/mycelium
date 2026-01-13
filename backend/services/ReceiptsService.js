@@ -64,10 +64,10 @@ class ReceiptsService {
 
     async getReceiptDetail(receiptId) {
         const rows = await sequelizeMaster.query(`
-            SELECT t.*, p.device_name, sp.part_name
+            SELECT t.*, prod.name as device_name, sp.name as part_name
             FROM transactions t
-            LEFT JOIN phone_specs p ON t.product_id = p.product_id
-            LEFT JOIN spare_parts sp ON t.spare_part_id = sp.spare_part_id
+            LEFT JOIN products prod ON t.product_id = prod.product_id
+            LEFT JOIN products sp ON t.spare_part_id = sp.product_id
             WHERE t.transaction_group_id = ? OR t.receipt_id = ?
             ORDER BY t.created_at ASC
         `, { replacements: [receiptId, receiptId], type: QueryTypes.SELECT });
@@ -99,7 +99,7 @@ class ReceiptsService {
     }
 
     async getPhones() {
-        return sequelizeMaster.query("SELECT product_id, device_name, device_maker FROM phone_specs WHERE device_type IN ('smartphone')", {
+        return sequelizeMaster.query("SELECT p.product_id, prod.name as device_name, prod.manufacturer as device_maker FROM phone_specs p JOIN products prod ON p.product_id = prod.product_id WHERE p.device_type IN ('smartphone')", {
             type: QueryTypes.SELECT
         });
     }

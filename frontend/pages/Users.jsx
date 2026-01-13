@@ -55,7 +55,7 @@ function UserModal({ user, onClose, onSaved }) {
     };
 
     return (
-        <Modal title={isEdit ? 'Edit User' : 'Create User'} onClose={onClose}>
+        <Modal isOpen={true} title={isEdit ? 'Edit User' : 'Create User'} onClose={onClose}>
             <form onSubmit={handleSubmit}>
                 <div className="p-6 space-y-4">
                     {error && (
@@ -177,11 +177,11 @@ export default function Users() {
     const handleDelete = async (id) => {
         if (!window.confirm('Delete this user? This action cannot be undone.')) return;
         try { 
-            await api.delete(`/users/${id}`); 
+            await api.del(`/users/${id}`); 
             toast.success('User deleted'); 
             fetchUsers(); 
         } catch (e) { 
-            toast.error(e.response?.data?.error || 'Failed to delete user'); 
+            toast.error(e.message || 'Failed to delete user'); 
         }
     };
 

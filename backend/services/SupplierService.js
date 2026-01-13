@@ -190,9 +190,9 @@ class SupplierService {
                 i.supplier_id,
                 SUM(i.quantity) as total_units,
                 COUNT(DISTINCT i.product_id) as unique_products,
-                SUM(i.quantity * COALESCE(p.device_price, 0)) as total_cost
+                SUM(i.quantity * COALESCE(prod.unit_price, 0)) as total_cost
             FROM inventory i
-            LEFT JOIN phone_specs p ON i.product_id = p.product_id
+            LEFT JOIN products prod ON i.product_id = prod.product_id
             WHERE i.inventory_type = 'bulk' AND i.quantity > 0
         `;
         const params = [];

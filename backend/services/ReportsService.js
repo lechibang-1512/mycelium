@@ -67,10 +67,10 @@ class ReportsService {
                 t.id as log_id, t.transaction_type, t.quantity_changed,
                 t.transaction_date as created_at, t.notes, t.receipt_id,
                 t.warehouse_id, w.name as warehouse_name,
-                p.device_name as product_name
+                prod.name as product_name
             FROM transactions t
             LEFT JOIN warehouses w ON t.warehouse_id = w.warehouse_id
-            LEFT JOIN phone_specs p ON t.product_id = p.product_id
+            LEFT JOIN products prod ON t.product_id = prod.product_id
             WHERE 1=1
         `;
         const replacements = {};
@@ -155,9 +155,9 @@ class ReportsService {
         return await sequelizeMaster.query(`
             SELECT 
                 i.product_id, 
-                COALESCE(p.device_name, sp.part_name) as name, 
-                COALESCE(p.device_maker, sp.part_category) as brand, 
-                COALESCE(sp.part_code, NULL) as sku,
+                prod.name as name, 
+                prod.manufacturer as brand, 
+                prod.part_code as sku,
                 i.quantity as quantity_on_hand,
                 i.created_at as received_date,
                 DATEDIFF(CURDATE(), i.created_at) as age_days,
@@ -168,8 +168,7 @@ class ReportsService {
                     ELSE '90+ days'
                 END as age_bracket
             FROM inventory i
-            LEFT JOIN phone_specs p ON i.product_id = p.product_id
-            LEFT JOIN spare_parts sp ON i.product_id = sp.spare_part_id
+            LEFT JOIN products prod ON i.product_id = prod.product_id
             WHERE i.quantity > 0
             ORDER BY age_days DESC
         `, { type: QueryTypes.SELECT });

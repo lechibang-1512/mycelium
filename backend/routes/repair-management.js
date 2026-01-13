@@ -312,7 +312,7 @@ module.exports = () => {
             // Get cost if not provided
             let finalUnitCost = 0;
             const costRows = await sequelizeMaster.query(
-                'SELECT unit_cost FROM spare_parts WHERE spare_part_id = ?',
+                'SELECT unit_cost FROM products WHERE product_id = ?',
                 { replacements: [spare_part_id], type: QueryTypes.SELECT }
             );
             if (costRows && costRows.length > 0) {

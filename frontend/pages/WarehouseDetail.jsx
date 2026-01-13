@@ -637,10 +637,10 @@ export default function WarehouseDetail() {
     const handleDeleteBin = async (b) => {
         if (!window.confirm(`Delete Bin "${b.bin_code}"?\nThis will fail if it contains items.`)) return;
         try {
-            await api.delete(`/bins/${b.bin_id}`);
+            await api.del(`/bins/${b.bin_id}`);
             showMsg('Bin deleted successfully');
             fetchData();
-        } catch (err) { showMsg(err.response?.data?.error || 'Failed to delete bin', 'error'); }
+        } catch (err) { showMsg(err.message || 'Failed to delete bin', 'error'); }
     };
 
     const handleSaved = (msg) => {

@@ -71,9 +71,9 @@ class StocktakeService {
         if (!stocktake) return null;
 
         stocktake.items = await sequelizeMaster.query(`
-            SELECT si.*, ps.device_name AS product_name
+            SELECT si.*, prod.name AS product_name
             FROM stocktake_items si
-            LEFT JOIN phone_specs ps ON si.product_id = ps.product_id
+            LEFT JOIN products prod ON si.product_id = prod.product_id
             WHERE si.stocktake_id = ?
             ORDER BY si.created_at ASC
         `, queryOpts);
@@ -281,14 +281,15 @@ class StocktakeService {
 
     static async getDueItems({ warehouse_id, limit = 50 } = {}) {
         let sql = `
-            SELECT p.product_id, p.device_name, p.device_maker,
+            SELECT p.product_id, prod.name AS device_name, prod.manufacturer AS device_maker,
                    i.warehouse_id, w.name AS warehouse_name,
                    i.last_counted_at,
                    DATEDIFF(NOW(), COALESCE(i.last_counted_at, i.created_at)) AS days_since_count
             FROM phone_specs p
+            JOIN products prod ON p.product_id = prod.product_id
             JOIN inventory i ON p.product_id = i.product_id AND i.inventory_type = 'bulk' AND i.quantity > 0
             LEFT JOIN warehouses w ON i.warehouse_id = w.warehouse_id
-            WHERE p.is_active = 1
+            WHERE prod.is_active = 1
         `;
         const params = [];
 
@@ -297,7 +298,7 @@ class StocktakeService {
             params.push(warehouse_id);
         }
 
-        sql += ` ORDER BY days_since_count DESC, p.device_name ASC LIMIT ?`;
+        sql += ` ORDER BY days_since_count DESC, prod.name ASC LIMIT ?`;
         params.push(parseInt(limit));
 
         return sequelizeMaster.query(sql, { replacements: params, type: QueryTypes.SELECT });
@@ -309,20 +310,21 @@ class StocktakeService {
 
     static async getWarehouseProducts({ warehouse_id, search }) {
         let sql = `
-            SELECT p.product_id, p.device_name, p.device_maker,
+            SELECT p.product_id, prod.name AS device_name, prod.manufacturer AS device_maker,
                    COALESCE(SUM(i.quantity), 0) AS system_quantity
             FROM phone_specs p
+            JOIN products prod ON p.product_id = prod.product_id
             JOIN inventory i ON p.product_id = i.product_id AND i.inventory_type = 'bulk'
-            WHERE i.warehouse_id = ? AND p.is_active = 1
+            WHERE i.warehouse_id = ? AND prod.is_active = 1
         `;
         const params = [warehouse_id];
 
         if (search) {
-            sql += ` AND (p.device_name LIKE ? OR p.device_maker LIKE ?)`;
+            sql += ` AND (prod.name LIKE ? OR prod.manufacturer LIKE ?)`;
             params.push(`%${search}%`, `%${search}%`);
         }
 
-        sql += ` GROUP BY p.product_id, p.device_name, p.device_maker ORDER BY p.device_name ASC`;
+        sql += ` GROUP BY p.product_id, prod.name, prod.manufacturer ORDER BY prod.name ASC`;
 
         return sequelizeMaster.query(sql, { replacements: params, type: QueryTypes.SELECT });
     }

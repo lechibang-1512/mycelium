@@ -46,15 +46,14 @@ class RecommendationService {
             // 1. Get products below reorder point
             const productsQuery = `
                 SELECT 
-                    p.product_id, p.name as device_name, p.brand as device_maker, p.sku,
-                    p.reorder_point, p.reorder_quantity, p.safety_stock,
+                    p.product_id, p.name as device_name, p.manufacturer as device_maker, p.part_code as sku,
+                    p.reorder_point, NULL as reorder_quantity, NULL as safety_stock,
                     COALESCE(SUM(i.quantity), 0) as current_stock,
-                    s.name as supplier_name
+                    NULL as supplier_name
                 FROM products p
                 LEFT JOIN inventory i ON p.product_id = i.product_id
-                LEFT JOIN suppliers s ON CAST(p.default_supplier_id AS CHAR) = CAST(s.supplier_id AS CHAR)
                 WHERE p.is_active = 1
-                GROUP BY p.product_id, p.name, p.brand, p.sku, p.reorder_point, p.reorder_quantity, p.safety_stock, s.name
+                GROUP BY p.product_id, p.name, p.manufacturer, p.part_code, p.reorder_point
                 HAVING current_stock < p.reorder_point
             `;
             const products = await conn.query(productsQuery);
@@ -62,16 +61,16 @@ class RecommendationService {
             // 2. Get spare parts below reorder point
             const partsQuery = `
                 SELECT 
-                    sp.spare_part_id, sp.part_name, sp.part_code, sp.part_category,
-                    sp.reorder_point, sp.reorder_quantity, sp.min_stock_level,
+                    p.product_id as spare_part_id, p.name as part_name, p.part_code, sps.part_category,
+                    p.reorder_point, NULL as reorder_quantity, NULL as min_stock_level,
                     COALESCE(SUM(i.quantity), 0) as current_stock,
-                    s.name as supplier_name
-                FROM spare_parts sp
-                LEFT JOIN inventory i ON sp.spare_part_id = i.spare_part_id
-                LEFT JOIN suppliers s ON CAST(sp.default_supplier_id AS CHAR) = CAST(s.supplier_id AS CHAR)
-                WHERE sp.is_active = 1
-                GROUP BY sp.spare_part_id, sp.part_name, sp.part_code, sp.part_category, sp.reorder_point, sp.reorder_quantity, sp.min_stock_level, s.name
-                HAVING current_stock < sp.reorder_point
+                    NULL as supplier_name
+                FROM products p
+                LEFT JOIN spare_part_specs sps ON p.product_id = sps.product_id
+                LEFT JOIN inventory i ON p.product_id = i.spare_part_id
+                WHERE p.product_type = 'SPARE_PART' AND p.is_active = 1
+                GROUP BY p.product_id, p.name, p.part_code, sps.part_category, p.reorder_point
+                HAVING current_stock < p.reorder_point
             `;
             const parts = await conn.query(partsQuery);
 

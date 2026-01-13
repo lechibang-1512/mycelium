@@ -69,10 +69,10 @@ export default function PCComponents() {
     const handleDelete = async (id) => {
         if (!window.confirm('Delete this component? This action cannot be undone.')) return;
         try { 
-            await api.delete(`/pc-components/${type}/${id}`); 
+            await api.del(`/pc-components/${type}/${id}`); 
             fetchItems(); 
         } catch (e) { 
-            alert(e.response?.data?.error || 'Failed to delete'); 
+            alert(e.message || 'Failed to delete'); 
         }
     };
 
