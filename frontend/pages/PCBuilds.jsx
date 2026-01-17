@@ -19,8 +19,8 @@ const getStatusVariant = (s) => ({
 export default function PCBuilds() {
     const navigate = useNavigate();
     const { hasAnyPermission } = useAuth();
-    const canWrite = hasAnyPermission(['pc:write', 'pc:manage']);
-    const canDelete = hasAnyPermission(['pc:delete', 'pc:manage']);
+    const canWrite = hasAnyPermission(['inventory:write', 'inventory:manage']);
+    const canDelete = hasAnyPermission(['inventory:delete', 'inventory:manage']);
 
     const [builds, setBuilds] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -30,8 +30,8 @@ export default function PCBuilds() {
         setLoading(true); setError(null);
         try {
             const res = await api.get('/pc-builds');
-            setBuilds(res?.data || []);
-        } catch (e) { setError(e.response?.data?.error || 'Failed to load builds'); }
+            setBuilds(res || []);
+        } catch (e) { setError(e.message || 'Failed to load builds'); }
         finally { setLoading(false); }
     };
 

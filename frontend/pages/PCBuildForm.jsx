@@ -39,7 +39,7 @@ export default function PCBuildForm() {
     const toast = useToast();
     
     const isEdit = !!id;
-    const canWrite = hasAnyPermission(['pc:write', 'pc:manage']);
+    const canWrite = hasAnyPermission(['inventory:write', 'inventory:manage']);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -79,12 +79,12 @@ export default function PCBuildForm() {
             try {
                 // Fetch all components concurrently
                 const resArr = await Promise.all(
-                    COMPONENT_TYPES.map(t => api.get(`/pc-components/${t}`).catch(() => ({ data: [] })))
+                    COMPONENT_TYPES.map(t => api.get(`/pc-components/${t}`).catch(() => []))
                 );
                 
                 const newOptions = {};
                 COMPONENT_TYPES.forEach((t, i) => { 
-                    newOptions[t] = resArr[i]?.data || []; 
+                    newOptions[t] = resArr[i] || []; 
                 });
                 setOptions(newOptions);
 
@@ -92,17 +92,17 @@ export default function PCBuildForm() {
                     const buildRes = await api.get(`/pc-builds/${id}`);
                     setFormData(prev => ({
                         ...prev,
-                        ...buildRes.data,
+                        ...buildRes,
                         // Ensure nulls are converted to empty strings for select inputs
-                        cpu_id: buildRes.data.cpu_id || '',
-                        motherboard_id: buildRes.data.motherboard_id || '',
-                        gpu_id: buildRes.data.gpu_id || '',
-                        psu_id: buildRes.data.psu_id || '',
-                        case_id: buildRes.data.case_id || '',
-                        cooler_id: buildRes.data.cooler_id || '',
-                        total_tdp_watts: buildRes.data.total_tdp_watts ?? '',
-                        estimated_price: buildRes.data.estimated_price ?? '',
-                        total_price: buildRes.data.total_price ?? '',
+                        cpu_id: buildRes.cpu_id || '',
+                        motherboard_id: buildRes.motherboard_id || '',
+                        gpu_id: buildRes.gpu_id || '',
+                        psu_id: buildRes.psu_id || '',
+                        case_id: buildRes.case_id || '',
+                        cooler_id: buildRes.cooler_id || '',
+                        total_tdp_watts: buildRes.total_tdp_watts ?? '',
+                        estimated_price: buildRes.estimated_price ?? '',
+                        total_price: buildRes.total_price ?? '',
                     }));
                 }
             } catch (_err) {
@@ -146,7 +146,7 @@ export default function PCBuildForm() {
             navigate('/pc-builds');
         } catch (err) {
             console.error(err);
-            setError(err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to save build');
+            setError(err.message || 'Failed to save build');
             window.scrollTo(0, 0);
         } finally {
             setSubmitting(false);

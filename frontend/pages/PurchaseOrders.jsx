@@ -33,8 +33,8 @@ const MatchIcon = ({ status }) => {
 
 export default function PurchaseOrders() {
     const { hasAnyPermission } = useAuth();
-    const canWrite = hasAnyPermission(['procurement.write', 'procurement.manage']);
-    const canReceive = hasAnyPermission(['inventory.receive', 'inventory.manage']);
+    const canWrite = hasAnyPermission(['inventory:write', 'inventory:manage']);
+    const canReceive = hasAnyPermission(['inventory:write', 'inventory:manage']);
 
     const [pos, setPos] = useState([]);
     const [suppliers, setSuppliers] = useState([]);

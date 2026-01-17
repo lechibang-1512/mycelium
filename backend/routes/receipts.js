@@ -3,13 +3,14 @@ const express = require('express');
 const router = express.Router();
 const ReceiptsService = require('../services/ReceiptsService');
 const { sendSuccess, sendError } = require('../utils/response');
+const { requirePermission } = require('../middleware/rbacMiddleware');
 
 module.exports = () => {
 
     // Get all receipts (with filters)
-    router.get('/', asyncHandler(async (req, res) => {
+    router.get('/', requirePermission('invoice:read'), asyncHandler(async (req, res) => {
         try {
-            const receipts = await ReceiptsService.getAllReceipts(req.query);
+            const receipts = await ReceiptsService.getReceiptsList(req.query);
             sendSuccess(res, { receipts, total: receipts.length });
         } catch (error) {
             console.error('Receipts fetch error:', error);
@@ -18,9 +19,9 @@ module.exports = () => {
     }));
 
     // Get single receipt with full details
-    router.get('/:id', asyncHandler(async (req, res) => {
+    router.get('/:id', requirePermission('invoice:read'), asyncHandler(async (req, res) => {
         try {
-            const result = await ReceiptsService.getReceiptById(req.params.id);
+            const result = await ReceiptsService.getReceiptDetail(req.params.id);
             if (!result) {
                 return sendError(res, 'Receipt not found', 404);
             }
@@ -32,7 +33,7 @@ module.exports = () => {
     }));
 
     // Create receipt
-    router.post('/', asyncHandler(async (req, res) => {
+    router.post('/', requirePermission('invoice:write'), asyncHandler(async (req, res) => {
         try {
             const result = await ReceiptsService.createReceipt(req.body);
             sendSuccess(res, { receipt_id: result.receipt_id }, 'Receipt created successfully');
@@ -46,7 +47,7 @@ module.exports = () => {
     }));
 
     // Delete receipt
-    router.delete('/:id', asyncHandler(async (req, res) => {
+    router.delete('/:id', requirePermission('invoice:delete'), asyncHandler(async (req, res) => {
         try {
             const result = await ReceiptsService.deleteReceipt(req.params.id);
             sendSuccess(res, result);

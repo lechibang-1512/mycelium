@@ -61,7 +61,7 @@ export default function PCInventory() {
     const [error, setError] = useState(null);
     const [editItem, setEditItem] = useState(null);
     const { hasPermission } = useAuth();
-    const canWrite = hasPermission('pc:write') || hasPermission('pc:manage');
+    const canWrite = hasPermission('inventory:write') || hasPermission('inventory:manage');
 
     const fetchInventory = async () => {
         setLoading(true);

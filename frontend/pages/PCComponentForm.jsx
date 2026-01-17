@@ -375,7 +375,7 @@ export default function PCComponentForm() {
     const toast = useToast();
     
     const isEdit = !!id;
-    const canWrite = hasAnyPermission(['pc:write', 'pc:manage']);
+    const canWrite = hasAnyPermission(['inventory:write', 'inventory:manage']);
 
     const [formData, setFormData] = useState({});
     const [loading, setLoading] = useState(isEdit);
@@ -393,7 +393,7 @@ export default function PCComponentForm() {
             if (isEdit) {
                 try {
                     const res = await api.get(`/pc-components/${type}/${id}`);
-                    setFormData(res?.data || {});
+                    setFormData(res || {});
                 } catch (_err) {
                     setError('Failed to load component details.');
                 }
@@ -452,7 +452,7 @@ export default function PCComponentForm() {
             navigate(`/pc-components/${type}`);
         } catch (err) {
             console.error(err);
-            setError(err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to save component.');
+            setError(err.message || 'Failed to save component.');
             window.scrollTo(0, 0);
         } finally {
             setSubmitting(false);

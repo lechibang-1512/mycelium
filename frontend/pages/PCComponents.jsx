@@ -48,8 +48,8 @@ export default function PCComponents() {
     // Default to cpu if invalid type
     const type = TYPES.includes(typeParam) ? typeParam : 'cpu';
 
-    const canWrite = hasAnyPermission(['pc:write', 'pc:manage']);
-    const canDelete = hasAnyPermission(['pc:delete', 'pc:manage']);
+    const canWrite = hasAnyPermission(['inventory:write', 'inventory:manage']);
+    const canDelete = hasAnyPermission(['inventory:delete', 'inventory:manage']);
 
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -59,8 +59,8 @@ export default function PCComponents() {
         setLoading(true); setError(null);
         try {
             const res = await api.get(`/pc-components/${type}`);
-            setItems(res?.data || []);
-        } catch (e) { setError(e.response?.data?.error || 'Failed to load components'); }
+            setItems(res || []);
+        } catch (e) { setError(e.message || 'Failed to load components'); }
         finally { setLoading(false); }
     };
 

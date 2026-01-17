@@ -24,7 +24,7 @@ const getStatusVariant = (s) => {
 
 export default function Invoices() {
     const { hasAnyPermission } = useAuth();
-    const canWrite = hasAnyPermission(['procurement.write', 'procurement.manage']);
+    const canWrite = hasAnyPermission(['invoice:write', 'invoice:manage']);
     const [invoices, setInvoices] = useState([]);
     const [suppliers, setSuppliers] = useState([]);
     const [loading, setLoading] = useState(false);

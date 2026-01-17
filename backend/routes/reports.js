@@ -10,6 +10,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const { success } = require('../utils/response');
 const ReportsService = require('../services/ReportsService');
 const SanitizationService = require('../services/SanitizationService');
+const { requirePermission } = require('../middleware/rbacMiddleware');
 
 const convertBigIntToNumber = SanitizationService.convertBigIntToNumber;
 
@@ -20,7 +21,7 @@ module.exports = () => {
      * GET /api/reports
      * List available reports
      */
-    router.get('/', (req, res) => {
+    router.get('/', requirePermission('reports:read'), (req, res) => {
         const reports = [
             { id: 'inventory', name: 'Inventory Summary', description: 'Current stock levels and value' },
             { id: 'transactions', name: 'Transaction History', description: 'Inbound and outbound movements' },
@@ -38,7 +39,7 @@ module.exports = () => {
      * GET /api/reports/scheduled
      * Get scheduled reports
      */
-    router.get('/scheduled', (req, res) => {
+    router.get('/scheduled', requirePermission('reports:read'), (req, res) => {
         res.json([]);
     });
 
@@ -46,7 +47,7 @@ module.exports = () => {
      * POST /api/reports/schedule
      * Schedule a report
      */
-    router.post('/schedule', (req, res) => {
+    router.post('/schedule', requirePermission('reports:read'), (req, res) => {
         res.json(success({ id: Date.now(), status: 'scheduled' }, { message: 'Report scheduled' }));
     });
 
@@ -54,7 +55,7 @@ module.exports = () => {
      * GET /api/reports/products
      * Get all products for selection in forms (RMA, Repair Jobs, etc.)
      */
-    router.get('/products', asyncHandler(async (req, res) => {
+    router.get('/products', requirePermission('reports:read', 'inventory:read'), asyncHandler(async (req, res) => {
         const result = await reportsService.getProducts();
         const products = result.map(convertBigIntToNumber);
 
@@ -65,7 +66,7 @@ module.exports = () => {
      * GET /api/reports/inventory
      * Generate inventory report with optional filters
      */
-    router.get('/inventory', asyncHandler(async (req, res) => {
+    router.get('/inventory', requirePermission('reports:read'), asyncHandler(async (req, res) => {
         const result = await reportsService.getInventoryReport(req.query);
         const inventory = result.map(convertBigIntToNumber);
 
@@ -76,7 +77,7 @@ module.exports = () => {
      * GET /api/reports/transactions
      * Generate transaction report with pagination and filters
      */
-    router.get('/transactions', asyncHandler(async (req, res) => {
+    router.get('/transactions', requirePermission('reports:read'), asyncHandler(async (req, res) => {
         const result = await reportsService.getTransactionsReport(req.query);
         const transactions = result.map(convertBigIntToNumber);
 
@@ -87,7 +88,7 @@ module.exports = () => {
      * GET /api/reports/stock-valuation
      * Calculate total stock valuation by warehouse
      */
-    router.get('/stock-valuation', asyncHandler(async (req, res) => {
+    router.get('/stock-valuation', requirePermission('reports:read'), asyncHandler(async (req, res) => {
         const valuation = await reportsService.getStockValuation(req.query);
 
         res.json(success({
@@ -101,7 +102,7 @@ module.exports = () => {
      * GET /api/reports/sales
      * Generate sales report (based on outgoing transactions)
      */
-    router.get('/sales', asyncHandler(async (req, res) => {
+    router.get('/sales', requirePermission('reports:read'), asyncHandler(async (req, res) => {
         const { period = 30 } = req.query;
         const salesData = await reportsService.getSalesReport(period);
 
@@ -117,7 +118,7 @@ module.exports = () => {
      * GET /api/reports/aging
      * Generate inventory aging report
      */
-    router.get('/aging', asyncHandler(async (req, res) => {
+    router.get('/aging', requirePermission('reports:read'), asyncHandler(async (req, res) => {
         const result = await reportsService.getAgingReport();
         const aging = result.map(convertBigIntToNumber);
 
@@ -128,7 +129,7 @@ module.exports = () => {
      * GET /api/reports/movement-summary
      * Generate summary of inventory movements
      */
-    router.get('/movement-summary', asyncHandler(async (req, res) => {
+    router.get('/movement-summary', requirePermission('reports:read'), asyncHandler(async (req, res) => {
         const summary = await reportsService.getMovementSummary(req.query);
 
         res.json(success({
@@ -141,7 +142,7 @@ module.exports = () => {
      * GET /api/reports/low-stock
      * Get products below reorder level
      */
-    router.get('/low-stock', asyncHandler(async (req, res) => {
+    router.get('/low-stock', requirePermission('reports:read'), asyncHandler(async (req, res) => {
         const result = await reportsService.getLowStock();
         const lowStock = result.map(convertBigIntToNumber);
 
@@ -153,7 +154,7 @@ module.exports = () => {
      * Export reports as CSV
      * Supported types: inventory, transactions, low-stock, stock-valuation, sales, aging
      */
-    router.get('/export/:reportType', asyncHandler(async (req, res) => {
+    router.get('/export/:reportType', requirePermission('reports:read'), asyncHandler(async (req, res) => {
         const { reportType } = req.params;
         const { sendCSVResponse } = require('../utils/csvExport');
 

@@ -102,8 +102,8 @@ function SupplierModal({ supplier, categories, onClose, onSaved }) {
 
 export default function Suppliers() {
     const { hasAnyPermission } = useAuth();
-    const canWrite = hasAnyPermission(['suppliers.write', 'suppliers.manage']);
-    const canDelete = hasAnyPermission(['suppliers.delete', 'suppliers.manage']);
+    const canWrite = hasAnyPermission(['inventory:write', 'inventory:manage']);
+    const canDelete = hasAnyPermission(['inventory:delete', 'inventory:manage']);
     const toast = useToast();
 
     const [suppliers, setSuppliers] = useState([]);

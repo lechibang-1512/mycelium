@@ -10,6 +10,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const { success } = require('../utils/response');
 const DashboardService = require('../services/DashboardService');
 const SanitizationService = require('../services/SanitizationService');
+const { requirePermission } = require('../middleware/rbacMiddleware');
 
 const convertBigIntToNumber = SanitizationService.convertBigIntToNumber;
 
@@ -20,7 +21,7 @@ module.exports = () => {
      * GET /api/dashboard/kpis
      * Get key performance indicators
      */
-    router.get('/kpis', asyncHandler(async (req, res) => {
+    router.get('/kpis', requirePermission('inventory:read'), asyncHandler(async (req, res) => {
         const kpis = await dashboardService.getKPIs();
         res.json(success(convertBigIntToNumber(kpis), { message: 'KPIs retrieved successfully' }));
     }));
@@ -29,7 +30,7 @@ module.exports = () => {
      * GET /api/dashboard/stock-trend
      * Get stock movement trend over the last N days
      */
-    router.get('/stock-trend', asyncHandler(async (req, res) => {
+    router.get('/stock-trend', requirePermission('inventory:read'), asyncHandler(async (req, res) => {
         const days = Math.min(Math.max(parseInt(req.query.days, 10) || 7, 1), 90);
         const trend = await dashboardService.getStockTrend(days);
         res.json(success(trend.map(convertBigIntToNumber), { message: 'Stock trend retrieved successfully' }));
@@ -39,7 +40,7 @@ module.exports = () => {
      * GET /api/dashboard/warehouse-util
      * Get warehouse utilization summary
      */
-    router.get('/warehouse-util', asyncHandler(async (req, res) => {
+    router.get('/warehouse-util', requirePermission('inventory:read'), asyncHandler(async (req, res) => {
         const utilization = await dashboardService.getWarehouseUtilization();
         res.json(success(utilization.map(convertBigIntToNumber), { message: 'Warehouse utilization retrieved successfully' }));
     }));
@@ -48,7 +49,7 @@ module.exports = () => {
      * GET /api/dashboard/service-summary
      * Get service center summary (repairs + RMAs)
      */
-    router.get('/service-summary', asyncHandler(async (req, res) => {
+    router.get('/service-summary', requirePermission('inventory:read'), asyncHandler(async (req, res) => {
         const summary = await dashboardService.getServiceSummary();
         res.json(success({
             repairs: summary.repairs.map(convertBigIntToNumber),

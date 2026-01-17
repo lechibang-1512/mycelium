@@ -22,6 +22,7 @@ const dbConfigCommon = {
         timeout: 60000,
         allowPublicKeyRetrieval: true,
         compress: true,
+        checkDuplicate: false,
         ...(process.env.DB_SOCKET ? { socketPath: process.env.DB_SOCKET } : {})
     },
     define: {

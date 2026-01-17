@@ -176,8 +176,8 @@ function SparePartModal({ part, devices, suppliers, onClose, onSaved }) {
 
 export default function SpecsParts() {
     const { hasAnyPermission } = useAuth();
-    const canWrite = hasAnyPermission(['spare_parts:write', 'spare_parts:manage']);
-    const canDelete = hasAnyPermission(['spare_parts:delete', 'spare_parts:manage']);
+    const canWrite = hasAnyPermission(['inventory:write', 'inventory:manage']);
+    const canDelete = hasAnyPermission(['inventory:delete', 'inventory:manage']);
 
     const [allParts, setAllParts] = useState([]);
     const [parts, setParts] = useState([]);

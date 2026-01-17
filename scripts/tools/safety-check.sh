@@ -209,7 +209,7 @@ gate_rbac() {
     local missing_files=""
 
     # Public/special files that don't need RBAC
-    local skip_files="auth.js receipts.js index.js catalog.js service-operations.js"
+    local skip_files="auth.js index.js catalog.js service-operations.js"
 
     for f in backend/routes/*.js; do
         local base
