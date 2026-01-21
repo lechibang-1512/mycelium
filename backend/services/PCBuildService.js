@@ -104,7 +104,7 @@ async function saveComponents(transaction, buildId, components, passedTypes) {
     
     // 1. Delete existing components of the passed types for this build
     await sequelizeMaster.query(
-        'DELETE FROM pc_components.build_components WHERE build_id = ? AND component_type IN (?)',
+        'DELETE FROM pc_build_components WHERE build_id = ? AND component_type IN (?)',
         {
             replacements: [buildId, passedTypes],
             type: QueryTypes.DELETE,
@@ -117,7 +117,7 @@ async function saveComponents(transaction, buildId, components, passedTypes) {
         for (const comp of components) {
             if (passedTypes.includes(comp.component_type)) {
                 await sequelizeMaster.query(
-                    'INSERT INTO pc_components.build_components (build_id, product_id, quantity, component_type) VALUES (?, ?, ?, ?)',
+                    'INSERT INTO pc_build_components (build_id, product_id, quantity, component_type) VALUES (?, ?, ?, ?)',
                     {
                         replacements: [comp.build_id, comp.product_id, comp.quantity, comp.component_type],
                         type: QueryTypes.INSERT,
@@ -131,7 +131,7 @@ async function saveComponents(transaction, buildId, components, passedTypes) {
 
 class PCBuildService {
     async getAllBuilds() {
-        const builds = await sequelizeMaster.query('SELECT * FROM pc_components.builds WHERE is_active = 1 ORDER BY created_at DESC', {
+        const builds = await sequelizeMaster.query('SELECT * FROM pc_builds WHERE is_active = 1 ORDER BY created_at DESC', {
             type: QueryTypes.SELECT
         });
         
@@ -139,7 +139,7 @@ class PCBuildService {
         
         const buildIds = builds.map(b => b.build_id);
         const components = await sequelizeMaster.query(
-            'SELECT build_id, product_id, quantity, component_type FROM pc_components.build_components WHERE build_id IN (?)',
+            'SELECT build_id, product_id, quantity, component_type FROM pc_build_components WHERE build_id IN (?)',
             { replacements: [buildIds], type: QueryTypes.SELECT }
         );
         
@@ -153,14 +153,14 @@ class PCBuildService {
     }
 
     async getBuildById(id) {
-        const rows = await sequelizeMaster.query('SELECT * FROM pc_components.builds WHERE build_id = ?', {
+        const rows = await sequelizeMaster.query('SELECT * FROM pc_builds WHERE build_id = ?', {
             replacements: [id], type: QueryTypes.SELECT
         });
         if (!rows[0]) return null;
         
         const build = rows[0];
         const components = await sequelizeMaster.query(
-            'SELECT product_id, quantity, component_type FROM pc_components.build_components WHERE build_id = ?',
+            'SELECT product_id, quantity, component_type FROM pc_build_components WHERE build_id = ?',
             { replacements: [id], type: QueryTypes.SELECT }
         );
         
@@ -194,7 +194,7 @@ class PCBuildService {
         }
 
         const placeholders = keys.map(() => '?').join(', ');
-        const sql = `INSERT INTO pc_components.builds (${keys.map(k => `\`${k}\``).join(', ')}) VALUES (${placeholders})`;
+        const sql = `INSERT INTO pc_builds (${keys.map(k => `\`${k}\``).join(', ')}) VALUES (${placeholders})`;
 
         const t = await sequelizeMaster.transaction();
         try {
@@ -248,7 +248,7 @@ class PCBuildService {
         try {
             if (fields.length > 0) {
                 const updateValues = [...values, id];
-                await sequelizeMaster.query(`UPDATE pc_components.builds SET ${fields.join(', ')} WHERE build_id = ?`, {
+                await sequelizeMaster.query(`UPDATE pc_builds SET ${fields.join(', ')} WHERE build_id = ?`, {
                     replacements: updateValues, type: QueryTypes.UPDATE, transaction: t
                 });
             }
@@ -268,7 +268,7 @@ class PCBuildService {
     }
 
     async deleteBuild(id) {
-        await sequelizeMaster.query('UPDATE pc_components.builds SET is_active = 0 WHERE build_id = ?', {
+        await sequelizeMaster.query('UPDATE pc_builds SET is_active = 0 WHERE build_id = ?', {
             replacements: [id], type: QueryTypes.UPDATE
         });
         return true;

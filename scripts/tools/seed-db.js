@@ -8,13 +8,15 @@ async function seed() {
     
     // Create admin user
     // Use a hardcoded default for seeding; users should change this immediately
-    const adminPassword = bcrypt.hashSync('admin', 10);
+    const adminUser = process.env.SEED_ADMIN_USER || 'admin';
+    const adminPass = process.env.SEED_ADMIN_PASS || 'admin';
+    const adminPassword = bcrypt.hashSync(adminPass, 10);
     const [admin, adminCreated] = await User.findOrCreate({
-        where: { username: 'admin' },
+        where: { username: adminUser },
         defaults: {
             id: generateId(),
             password: adminPassword,
-            email: 'admin@mycelium.com',
+            email: `${adminUser}@mycelium.com`,
             fullName: 'System Admin',
             role: 'admin',
             is_active: 1

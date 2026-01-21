@@ -18,28 +18,28 @@ const PRODUCT_COLUMNS = [
 
 class PCComponentService {
     /**
-     * Get the table name for a given type in pc_components DB
+     * Get the table name for a given type in master_db
      */
     _getTableName(type) {
         const mapping = {
-            'cpu': 'cpu_specs',
-            'gpu': 'gpu_specs',
-            'motherboard': 'motherboard_specs',
-            'ram': 'ram_specs',
-            'storage': 'storage_specs',
-            'psu': 'power_supply_specs',
-            'case': 'pc_cases_specs',
-            'cooling': 'cpu_coolers_specs',
-            'fan': 'case_fans_specs',
-            'monitor': 'monitors_specs',
-            'keyboard': 'keyboard_specs',
-            'mouse': 'mouse_specs',
-            'headphone': 'headphones_specs',
-            'headset': 'headsets_specs',
-            'cable': 'cables_specs',
-            'expansion': 'expansion_cards_specs'
+            'cpu': 'pc_cpu_specs',
+            'gpu': 'pc_gpu_specs',
+            'motherboard': 'pc_motherboard_specs',
+            'ram': 'pc_ram_specs',
+            'storage': 'pc_storage_specs',
+            'psu': 'pc_power_supply_specs',
+            'case': 'pc_pc_cases_specs',
+            'cooling': 'pc_cpu_coolers_specs',
+            'fan': 'pc_case_fans_specs',
+            'monitor': 'pc_monitors_specs',
+            'keyboard': 'pc_keyboard_specs',
+            'mouse': 'pc_mouse_specs',
+            'headphone': 'pc_headphones_specs',
+            'headset': 'pc_headsets_specs',
+            'cable': 'pc_cables_specs',
+            'expansion': 'pc_expansion_cards_specs'
         };
-        return mapping[type] || `${type}_specs`;
+        return mapping[type] || `pc_${type}_specs`;
     }
 
     /**
@@ -72,8 +72,8 @@ class PCComponentService {
             type: QueryTypes.SELECT
         });
         
-        // Spec schema from pc_components
-        const specSchema = await sequelizeMaster.query(`SHOW COLUMNS FROM pc_components.${tableName}`, {
+        // Spec schema from master_db
+        const specSchema = await sequelizeMaster.query(`SHOW COLUMNS FROM master_db.${tableName}`, {
             type: QueryTypes.SELECT
         });
         
@@ -100,7 +100,7 @@ class PCComponentService {
         return sequelizeMaster.query(`
             SELECT p.*, s.* 
             FROM master_db.products p
-            JOIN pc_components.${tableName} s ON p.product_id = s.product_id
+            JOIN master_db.${tableName} s ON p.product_id = s.product_id
             WHERE p.is_active = 1 AND p.product_type = ?
             ORDER BY p.created_at DESC
         `, {
@@ -117,7 +117,7 @@ class PCComponentService {
         const rows = await sequelizeMaster.query(`
             SELECT p.*, s.* 
             FROM master_db.products p
-            JOIN pc_components.${tableName} s ON p.product_id = s.product_id
+            JOIN master_db.${tableName} s ON p.product_id = s.product_id
             WHERE p.product_id = ? AND p.product_type = ?
         `, {
             replacements: [id, type.toUpperCase()], 
@@ -187,7 +187,7 @@ class PCComponentService {
 
             // 2. Insert into specs table
             const specPlaceholders = specKeys.map(() => '?').join(', ');
-            const specSql = `INSERT INTO pc_components.${tableName} (${specKeys.map(k => '`' + k + '`').join(', ')}) VALUES (${specPlaceholders})`;
+            const specSql = `INSERT INTO master_db.${tableName} (${specKeys.map(k => '`' + k + '`').join(', ')}) VALUES (${specPlaceholders})`;
             await sequelizeMaster.query(specSql, { replacements: specValues, type: QueryTypes.INSERT, transaction: t });
 
             await t.commit();
@@ -243,7 +243,7 @@ class PCComponentService {
             // 2. Update specs table
             if (specKeys.length > 0) {
                 const specSetClause = specKeys.map(k => '`' + k + '` = ?').join(', ');
-                const specSql = `UPDATE pc_components.${tableName} SET ${specSetClause} WHERE product_id = ?`;
+                const specSql = `UPDATE master_db.${tableName} SET ${specSetClause} WHERE product_id = ?`;
                 await sequelizeMaster.query(specSql, { replacements: [...specValues, id], type: QueryTypes.UPDATE, transaction: t });
             }
 
