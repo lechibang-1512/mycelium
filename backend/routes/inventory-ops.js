@@ -379,7 +379,7 @@ module.exports = (dbPool) => {
         try {
             const productId = req.params.productId;
             const warehouseId = req.query.warehouse_id || null;
-            const binId = req.query.bin_id ? parseInt(req.query.bin_id, 10) : null;
+            const binId = req.query.bin_id || null;
 
             if (!productId) {
                 return res.status(400).json({
@@ -396,7 +396,7 @@ module.exports = (dbPool) => {
                     warehouse_id: warehouseId,
                     bin_id: binId,
                     current_level: level,
-                    note: 'Level derived from inventory_log transactions'
+                    note: 'Level derived from inventory transactions'
                 }
             });
 
@@ -453,7 +453,7 @@ module.exports = (dbPool) => {
             const productId = req.query.product_id;
             const quantity = parseInt(req.query.quantity, 10);
             const warehouseId = req.query.warehouse_id;
-            const binId = req.query.bin_id ? parseInt(req.query.bin_id, 10) : null;
+            const binId = req.query.bin_id || null;
 
             if (!productId || isNaN(quantity) || !warehouseId) {
                 return res.status(400).json({

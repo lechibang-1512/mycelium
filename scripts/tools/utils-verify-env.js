@@ -19,9 +19,6 @@ const path = require('path');
 const REQUIRED_KEYS = [
   // Main DB
   'DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'DB_SSL',
-  // Suppliers DB
-  'SUPPLIERS_DB_HOST', 'SUPPLIERS_DB_PORT', 'SUPPLIERS_DB_USER',
-  'SUPPLIERS_DB_PASSWORD', 'SUPPLIERS_DB_NAME', 'SUPPLIERS_DB_SSL',
   // Auth DB
   'AUTH_DB_HOST', 'AUTH_DB_PORT', 'AUTH_DB_USER',
   'AUTH_DB_PASSWORD', 'AUTH_DB_NAME', 'AUTH_DB_SSL',
@@ -128,14 +125,14 @@ function validateEnv(root) {
 
   // 7) Type validation for ports and SSL flags
   console.log('\n⚙️ Validating types:');
-  ['DB_PORT', 'SUPPLIERS_DB_PORT', 'AUTH_DB_PORT', 'PORT'].forEach(k => {
+  ['DB_PORT', 'AUTH_DB_PORT', 'PORT'].forEach(k => {
     const v = env[k];
     if (v && !/^\d+$/.test(v)) {
       console.error(`  ❌ ${k} must be a number, got "${v}"`);
       allGood = false;
     }
   });
-  ['DB_SSL', 'SUPPLIERS_DB_SSL', 'AUTH_DB_SSL'].forEach(k => {
+  ['DB_SSL', 'AUTH_DB_SSL'].forEach(k => {
     const v = env[k]?.toLowerCase();
     if (v && v !== 'true' && v !== 'false') {
       console.error(`  ❌ ${k} must be true|false, got "${env[k]}"`);

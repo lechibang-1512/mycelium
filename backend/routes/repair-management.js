@@ -176,15 +176,7 @@ module.exports = () => {
     router.get('/repair-jobs/:id', requirePermission('repair:read'), asyncHandler(async (req, res) => {
         try {
             const { id } = req.params;
-            // Check if ID is likely numeric, otherwise skip to avoid casting errors
-            if (isNaN(id)) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Repair job not found (invalid ID)'
-                });
-            }
-
-            const job = await repairService.getJobById(req.params.id);
+            const job = await repairService.getJobById(id);
 
             if (!job) {
                 return res.status(404).json({
@@ -480,7 +472,7 @@ module.exports = () => {
     router.get('/repair-jobs/:id/linked-rmas', requirePermission('repair:read'), asyncHandler(async (req, res) => {
         try {
             const { id } = req.params;
-            const rmas = await repairService.getLinkedRMAs(parseInt(id));
+            const rmas = await repairService.getLinkedRMAs(id);
             res.json({ success: true, data: rmas.map(convertBigIntToNumber) });
         } catch (error) {
             console.error('Error fetching linked RMAs:', error);
@@ -534,21 +526,22 @@ module.exports = () => {
             const userId = req.user?.id || 1;
 
             const filename = req.file.filename;
-            const originalFilename = req.file.originalname;
             const mimeType = req.file.mimetype;
             const fileSize = req.file.size;
             const filePath = `/uploads/attachments/${filename}`;
+            const fileSizeKb = Math.round(fileSize / 1024);
+            const fileType = mimeType.startsWith('image/') ? 'IMAGE' : 'DOCUMENT';
 
             const attachmentId = generateId();
             const insertQuery = `
                 INSERT INTO repair_job_attachments (
-                    attachment_id, repair_job_id, file_path, file_name, original_file_name,
-                    file_size, mime_type, uploaded_by, notes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    attachment_id, repair_job_id, file_path, file_name,
+                    file_size_kb, mime_type, uploaded_by, description, file_type, attachment_category
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'OTHER')
             `;
 
             await sequelizeMaster.query(insertQuery, {
-                replacements: [attachmentId, id, filePath, filename, originalFilename, fileSize, mimeType, userId, notes],
+                replacements: [attachmentId, id, filePath, filename, fileSizeKb, mimeType, userId, notes || '', fileType],
                 type: QueryTypes.INSERT
             });
 

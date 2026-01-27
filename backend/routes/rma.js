@@ -254,7 +254,7 @@ module.exports = () => {
         return res.status(400).json({ error: 'Invalid inspection result' });
       }
 
-      const item = await rmaService.inspectRMAItem(rmaNumber, parseInt(itemId, 10), inspectionData, userId);
+      const item = await rmaService.inspectRMAItem(rmaNumber, itemId, inspectionData, userId);
       res.json(item);
     } catch (error) {
       next(error);
@@ -285,7 +285,7 @@ module.exports = () => {
         return res.status(400).json({ error: 'Invalid disposition' });
       }
 
-      const item = await rmaService.setItemDisposition(rmaNumber, parseInt(itemId, 10), disposition, notes, userId);
+      const item = await rmaService.setItemDisposition(rmaNumber, itemId, disposition, notes, userId);
       res.json(item);
     } catch (error) {
       next(error);
@@ -316,7 +316,7 @@ module.exports = () => {
         return res.status(400).json({ error: 'Invalid action type' });
       }
 
-      const result = await rmaService.processDispositionAction(rmaNumber, parseInt(itemId, 10), actionData, userId);
+      const result = await rmaService.processDispositionAction(rmaNumber, itemId, actionData, userId);
       res.json(result);
     } catch (error) {
       next(error);
@@ -439,7 +439,7 @@ module.exports = () => {
 
       const item = await rmaService.linkToRepairJob(
         rmaNumber,
-        parseInt(itemId, 10),
+        itemId,
         repairJobId,
         linkReason || 'defect_repair',
         userId,
@@ -475,7 +475,7 @@ module.exports = () => {
   router.delete('/:rmaNumber/items/:itemId/repair-link', requirePermission('rma:delete'), asyncHandler(async (req, res, next) => {
     try {
       const { rmaNumber, itemId } = req.params;
-      const success = await rmaService.unlinkRepairJob(rmaNumber, parseInt(itemId, 10));
+      const success = await rmaService.unlinkRepairJob(rmaNumber, itemId);
 
       if (!success) {
         return res.status(404).json({ error: 'Item or link not found' });
@@ -502,7 +502,7 @@ module.exports = () => {
         return res.status(404).json({ error: 'RMA not found' });
       }
 
-      const item = rma.items.find(i => i.item_id === parseInt(itemId, 10));
+      const item = rma.items.find(i => i.item_id === itemId);
       if (!item) {
         return res.status(404).json({ error: 'RMA item not found' });
       }

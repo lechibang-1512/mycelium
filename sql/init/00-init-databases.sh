@@ -1,4 +1,4 @@
-0#!/bin/bash
+#!/bin/bash
 # This script runs on first MariaDB container startup.
 # It creates both databases and imports the schema exports.
 

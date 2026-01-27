@@ -82,116 +82,6 @@ UNLOCK TABLES;
 COMMIT;
 SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
 
---
--- Table structure for table `shipments`
---
-
-DROP TABLE IF EXISTS `shipments`;
-CREATE TABLE `shipments` (
-  `shipment_id` UUID NOT NULL,
-  `customer_name` varchar(255) DEFAULT NULL,
-  `customer_address` text DEFAULT NULL,
-  `delivery_person` varchar(255) DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp(),
-  PRIMARY KEY (`shipment_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-
---
--- Table structure for table `inventory_log`
---
-
-DROP TABLE IF EXISTS `inventory_log`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `inventory_log` (
-  `product_id` UUID DEFAULT NULL,
-  `spare_part_id` UUID DEFAULT NULL,
-  `asset_id` int(11) DEFAULT NULL COMMENT 'Liên kết đến bảng assets hợp nhất',
-  `transaction_type` varchar(50) NOT NULL,
-  `quantity_changed` int(11) DEFAULT NULL COMMENT 'Null for single-asset movements',
-  `condition` varchar(50) DEFAULT 'NEW',
-  `transaction_date` datetime DEFAULT current_timestamp(),
-  `from_zone_id` int(11) DEFAULT NULL COMMENT 'Source zone for transfers',
-  `zone_id` int(11) DEFAULT NULL COMMENT 'Destination zone',
-  `bin_id` UUID DEFAULT NULL COMMENT 'Bin/basket location for the transaction',
-  `receipt_id` varchar(50) DEFAULT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  `supplier_id` UUID DEFAULT NULL,
-  `notes` text DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp(),
-  `unit_cost` decimal(10,2) DEFAULT NULL COMMENT 'Unit cost at time of transaction',
-  `total_value` decimal(12,2) DEFAULT NULL COMMENT 'Total value of transaction',
-  `batch_no` varchar(100) DEFAULT NULL COMMENT 'Batch number for tracking',
-  `lot_id` varchar(50) DEFAULT NULL COMMENT 'Lot identifier for transaction tracking',
-  `expiry_date` date DEFAULT NULL COMMENT 'Expiry date for batch items',
-  `new_inventory_level` int(11) DEFAULT NULL COMMENT 'Inventory level after transaction',
-  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `serial_number` varchar(100) DEFAULT NULL COMMENT 'Serial number for serialized items',
-  `reference_id` UUID DEFAULT NULL COMMENT 'Reference ID (e.g., RMA ID)',
-  `transaction_group_id` varchar(50) DEFAULT NULL COMMENT 'Groups related log entries from same receipt',
-  `item_sequence` int(11) DEFAULT NULL COMMENT 'Item order within transaction group',
-  `po_id` int(11) DEFAULT NULL,
-  `invoice_id` int(11) DEFAULT NULL,
-  `warehouse_id` UUID DEFAULT NULL,
-  `from_warehouse_id` UUID DEFAULT NULL,
-  `from_bin_id` UUID DEFAULT NULL,
-  `external_doc_no` varchar(100) DEFAULT NULL COMMENT 'Reference to external document (e.g. Supplier Invoice, DO) for traceability',
-  `document_reference` varchar(255) DEFAULT NULL COMMENT 'Reference to source document (PO, Invoice, etc.)',
-  `unit_of_measure` varchar(50) DEFAULT 'Unit' COMMENT 'Unit of measurement for the product',
-  `doc_type` varchar(10) DEFAULT NULL COMMENT 'GRN for Stock In, GDN for Stock Out',
-  `doc_number` varchar(50) DEFAULT NULL COMMENT 'Document number',
-  `log_id` UUID NOT NULL,
-  `shipment_id` UUID DEFAULT NULL,
-  `batch_id` UUID DEFAULT NULL,
-  PRIMARY KEY (`log_id`),
-  KEY `idx_log_zone` (`zone_id`),
-  KEY `idx_log_receipt` (`receipt_id`),
-  KEY `idx_log_supplier` (`supplier_id`),
-  KEY `idx_log_transaction_type` (`transaction_type`),
-  KEY `idx_log_transaction_date` (`transaction_date`),
-  KEY `idx_log_unit_cost` (`unit_cost`),
-  KEY `idx_log_batch_no` (`batch_no`),
-  KEY `idx_log_asset` (`asset_id`),
-  KEY `idx_log_date_type` (`transaction_date`,`transaction_type`),
-  KEY `idx_log_product_date` (`transaction_date`),
-  KEY `idx_log_supplier_date` (`supplier_id`,`transaction_date`),
-  KEY `idx_inventory_log_date_type` (`transaction_date`,`transaction_type`),
-  KEY `idx_inventory_log_product_date` (`transaction_date`),
-  KEY `idx_inventory_log_outgoing` (`transaction_type`,`transaction_date`),
-  KEY `idx_log_group` (`transaction_group_id`),
-  KEY `idx_log_group_product` (`transaction_group_id`),
-  KEY `idx_log_type_date` (`transaction_type`,`transaction_date`),
-  KEY `fk_log_to_specs` (`product_id`),
-  KEY `idx_spare_part_id` (`spare_part_id`),
-  KEY `idx_condition` (`condition`),
-  KEY `idx_log_warehouse` (`warehouse_id`),
-  KEY `idx_log_from_warehouse` (`from_warehouse_id`),
-  KEY `idx_log_warehouse_date` (`warehouse_id`,`transaction_date`),
-  KEY `idx_log_bin` (`bin_id`),
-  KEY `idx_shipment_id` (`shipment_id`),
-  KEY `idx_document_ref` (`document_reference`),
-  KEY `idx_inventory_log_doc` (`doc_type`,`doc_number`),
-  KEY `idx_inventory_log_lot_id` (`lot_id`),
-  KEY `idx_from_bin_id` (`from_bin_id`),
-  CONSTRAINT `fk_log_to_bin` FOREIGN KEY (`bin_id`) REFERENCES `warehouse_bins` (`bin_id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_log_to_specs` FOREIGN KEY (`product_id`) REFERENCES `phone_specs` (`product_id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_log_to_shipment` FOREIGN KEY (`shipment_id`) REFERENCES `shipments` (`shipment_id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_log_to_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`warehouse_id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Unified transaction and inventory log table. Single source of truth for all inventory movements and receipts. Uses transaction_group_id to group related entries.';
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `inventory_log`
---
-
-SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
-LOCK TABLES `inventory_log` WRITE;
-/*!40000 ALTER TABLE `inventory_log` DISABLE KEYS */;
-/*!40000 ALTER TABLE `inventory_log` ENABLE KEYS */;
-UNLOCK TABLES;
-COMMIT;
-SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
 
 --
 -- Table structure for table `invoice_items`
@@ -445,50 +335,6 @@ COMMIT;
 SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
 
 --
--- Table structure for table `repair_job_templates`
---
-
-DROP TABLE IF EXISTS `repair_job_templates`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
-CREATE TABLE `repair_job_templates` (
-  `template_name` varchar(255) NOT NULL,
-  `template_category` varchar(50) DEFAULT 'OTHER',
-  `description` text DEFAULT NULL,
-  `default_priority` varchar(50) DEFAULT 'NORMAL',
-  `estimated_cost` decimal(10,2) DEFAULT 0.00,
-  `estimated_labor_cost` decimal(10,2) DEFAULT 0.00,
-  `estimated_duration_hours` int(11) DEFAULT 2,
-  `default_parts` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Array of {spare_part_id, quantity}' CHECK (json_valid(`default_parts`)),
-  `checklist` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Array of task steps' CHECK (json_valid(`checklist`)),
-  `diagnosis_template` text DEFAULT NULL,
-  `repair_notes_template` text DEFAULT NULL,
-  `warranty_months` int(11) DEFAULT 3,
-  `is_active` tinyint(1) DEFAULT 1,
-  `created_at` datetime DEFAULT current_timestamp(),
-  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `created_by` varchar(100) DEFAULT NULL,
-  `template_id` UUID NOT NULL,
-  PRIMARY KEY (`template_id`),
-  KEY `idx_category` (`template_category`),
-  KEY `idx_active` (`is_active`),
-  KEY `idx_name` (`template_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Reusable templates for common repair job types';
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `repair_job_templates`
---
-
-SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
-LOCK TABLES `repair_job_templates` WRITE;
-/*!40000 ALTER TABLE `repair_job_templates` DISABLE KEYS */;
-/*!40000 ALTER TABLE `repair_job_templates` ENABLE KEYS */;
-UNLOCK TABLES;
-COMMIT;
-SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
-
---
 -- Table structure for table `repair_jobs`
 --
 
@@ -566,6 +412,7 @@ CREATE TABLE `rma_items` (
   `unit_value` decimal(15,2) DEFAULT NULL,
   `notes` text DEFAULT NULL,
   `rma_table_id` UUID DEFAULT NULL,
+  `repair_job_id` UUID DEFAULT NULL,
   `id` UUID NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -614,6 +461,8 @@ CREATE TABLE `rmas` (
   `restocking_fee` decimal(15,2) DEFAULT 0.00,
   `notes` text DEFAULT NULL,
   `internal_notes` text DEFAULT NULL,
+  `status_history` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`status_history`)),
+  `attachments` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`attachments`)),
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `id` UUID NOT NULL,
