@@ -64,7 +64,7 @@ function RepairsPanel() {
                         value={search} 
                         onChange={e => handleSearch(e.target.value)} 
                         placeholder="Search repairs by job, IMEI, or customer..." 
-                        className={`pl-10 ${IC}`} 
+                        className={IC.replace('px-3', 'pl-10 pr-3')} 
                     />
                 </div>
                 <div className="w-full sm:w-48">
@@ -162,7 +162,7 @@ function RMAPanel() {
                         value={search} 
                         onChange={e => handleSearch(e.target.value)} 
                         placeholder="Search RMAs..." 
-                        className={`pl-10 ${IC}`} 
+                        className={IC.replace('px-3', 'pl-10 pr-3')} 
                     />
                 </div>
                 <div className="w-full sm:w-48">
@@ -193,8 +193,8 @@ function RMAPanel() {
                                 {data.map((r, i) => (
                                     <tr key={i} className="hover:bg-slate-50 transition-colors">
                                         <td className="px-5 py-3">
-                                            <strong className="text-slate-900 block">{r.rma_number}</strong>
-                                            <code className="text-[10px] text-slate-400 font-medium">{r.rma_id}</code>
+                                            <strong className="text-slate-900 block">{r.rma_id}</strong>
+                                            <code className="text-[10px] text-slate-400 font-medium">{r.id}</code>
                                         </td>
                                         <td className="px-5 py-3">
                                             <div className="font-medium text-slate-800">{r.customer_name || '-'}</div>
@@ -237,14 +237,14 @@ export default function Service() {
                 {/* Tabs Header */}
                 <div className="flex border-b border-slate-200 bg-slate-50 px-2 pt-2">
                     <button 
-                        className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all ${tab === 'repairs' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'}`} 
+                        className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 -mb-px transition-all ${tab === 'repairs' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'}`} 
                         onClick={() => setTab('repairs')}
                     >
                         <Wrench className={`w-4 h-4 ${tab === 'repairs' ? 'text-indigo-600' : 'text-slate-400'}`} />
                         Repairs
                     </button>
                     <button 
-                        className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all ${tab === 'rma' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'}`} 
+                        className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 -mb-px transition-all ${tab === 'rma' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'}`} 
                         onClick={() => setTab('rma')}
                     >
                         <Undo2 className={`w-4 h-4 ${tab === 'rma' ? 'text-indigo-600' : 'text-slate-400'}`} />

@@ -431,8 +431,8 @@ export default function UserRoles() {
     };
 
     const tabCls = (t) => tab === t
-        ? 'flex items-center gap-2 px-5 py-3 text-sm font-bold cursor-pointer text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50 transition-colors'
-        : 'flex items-center gap-2 px-5 py-3 text-sm font-medium cursor-pointer text-slate-500 hover:text-slate-800 hover:bg-slate-50 border-b-2 border-transparent transition-colors';
+        ? 'flex items-center gap-2 px-5 py-3 text-sm font-bold cursor-pointer text-indigo-600 border-b-2 -mb-px border-indigo-600 bg-indigo-50/50 transition-colors'
+        : 'flex items-center gap-2 px-5 py-3 text-sm font-medium cursor-pointer text-slate-500 hover:text-slate-800 hover:bg-slate-50 border-b-2 -mb-px border-transparent transition-colors';
 
     if (!isAdmin) {
         return (

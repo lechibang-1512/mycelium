@@ -137,7 +137,7 @@ function PhoneModal({ phone, onClose, onSaved }) {
                             key={t.key} 
                             type="button" 
                             onClick={() => setActiveTab(t.key)} 
-                            className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${
+                            className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 -mb-px ${
                                 activeTab === t.key 
                                     ? 'border-indigo-600 text-indigo-600 bg-white' 
                                     : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100'

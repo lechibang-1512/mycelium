@@ -315,7 +315,7 @@ export default function Recommendations() {
                 {/* Tabs */}
                 <div className="flex border-b border-slate-200 bg-slate-50 px-2 pt-2 rounded-t-xl overflow-x-auto custom-scrollbar">
                     <button 
-                        className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${tab === 'reorder' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'}`} 
+                        className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 -mb-px transition-all whitespace-nowrap ${tab === 'reorder' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'}`} 
                         onClick={() => { setTab('reorder'); setSelectedItems(new Set()); }}
                     >
                         <Box className={`w-4 h-4 ${tab === 'reorder' ? 'text-indigo-600' : 'text-slate-400'}`} />
@@ -323,7 +323,7 @@ export default function Recommendations() {
                         <span className={`ml-1.5 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold ${tab === 'reorder' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'}`}>{rawProducts.length} pending</span>
                     </button>
                     <button 
-                        className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${tab === 'spare-parts' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'}`} 
+                        className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 -mb-px transition-all whitespace-nowrap ${tab === 'spare-parts' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'}`} 
                         onClick={() => { setTab('spare-parts'); setSelectedItems(new Set()); }}
                     >
                         <Settings className={`w-4 h-4 ${tab === 'spare-parts' ? 'text-indigo-600' : 'text-slate-400'}`} />

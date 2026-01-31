@@ -183,7 +183,7 @@ export default function Inventory() {
                             <button 
                                 key={tab.key} 
                                 onClick={() => switchTab(tab.key)}
-                                className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all ${
+                                className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 -mb-px transition-all ${
                                     active 
                                         ? 'border-indigo-600 text-indigo-700' 
                                         : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
