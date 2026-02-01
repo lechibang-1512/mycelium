@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mycelium ERP Invoice Template - XML Format -->
+<!-- This template follows the Vietnamese e-invoice standard (T-VAN) -->
+<Invoice xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="invoice.xsd">
+    <!-- General Invoice Information -->
+    <GeneralInfo>
+        <invoiceNumber>INV-2024-001</invoiceNumber>
+        <pattern>01GTKT0/001</pattern>
+        <serial>AA/24P</serial>
+        <date>2024-01-30</date>
+        <currency>VND</currency>
+        <paymentMethod>TM/CK</paymentMethod>
+    </GeneralInfo>
+
+    <!-- Seller/Supplier Information -->
+    <Seller>
+        <name>Cong Ty TNHH ABC Technology</name>
+        <taxCode>0101234567</taxCode>
+        <address>123 Nguyen Trai, Quan Hoan Kiem, Ha Noi</address>
+        <email>invoice@abc-tech.com</email>
+        <phone>0909123456</phone>
+    </Seller>
+
+    <!-- Invoice Summary -->
+    <Summary>
+        <subtotal>22500000</subtotal>
+        <taxRate>10</taxRate>
+        <taxAmount>2250000</taxAmount>
+        <shippingFee>0</shippingFee>
+        <discountAmount>0</discountAmount>
+        <totalAmount>24750000</totalAmount>
+    </Summary>
+
+    <!-- Invoice Items -->
+    <Items>
+        <Item>
+            <productName>iPhone 15 Pro Max 256GB Natural Titanium</productName>
+            <unit>Cái</unit>
+            <quantity>1</quantity>
+            <unitPrice>22500000</unitPrice>
+            <totalAmount>22500000</totalAmount>
+            <taxRate>10</taxRate>
+            <taxAmount>2250000</taxAmount>
+            <discountAmount>0</discountAmount>
+            <!-- Serial numbers/IMEIs - comma separated -->
+            <serials>IMEI123456789012345,IMEI987654321098765</serials>
+        </Item>
+        <!-- Add more items as needed -->
+    </Items>
+</Invoice>

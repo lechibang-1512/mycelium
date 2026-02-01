@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <invoice_header>
+        <invoice_number>INV-IMPORT-2026-001</invoice_number>
+        <pattern>01GTKT0/001</pattern>
+        <serial>BB/26E</serial>
+        <invoice_date>2026-01-31</invoice_date>
+        <due_date>2026-02-28</due_date>
+        <currency>VND</currency>
+        <payment_method>TM</payment_method>
+    </invoice_header>
+
+    <seller>
+        <name>Mobile Device Supplier Co., Ltd</name>
+        <tax_code>0987654321</tax_code>
+        <address>789 Le Duan, District 1, HCMC</address>
+        <phone>028-9999-8888</phone>
+        <email>supply@mobilesupplier.vn</email>
+    </seller>
+    
+    <buyer>
+        <name>Mycelium ERP Co., Ltd</name>
+        <tax_code>9876543210</tax_code>
+        <address>456 Lê Lợi, Quận 1, TP.HCM</address>
+    </buyer>
+    
+    <items>
+        <!-- SMARTPHONES (100 units total: 2 products x 50 qty) -->
+        <item>
+            <product_name>realme P3 127GB 12GB Black</product_name>
+            <product_id>26e9c184-2004-4aea-9b45-e6df3e9237a3</product_id>
+            <unit>Chiếc</unit>
+            <quantity>50</quantity>
+            <unit_price>8000000</unit_price>
+            <line_total>400000000</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>40000000</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>440000000</final_price>
+            <serials>RP3-BLK-001,RP3-BLK-002,RP3-BLK-003,RP3-BLK-004,RP3-BLK-005,RP3-BLK-006,RP3-BLK-007,RP3-BLK-008,RP3-BLK-009,RP3-BLK-010,RP3-BLK-011,RP3-BLK-012,RP3-BLK-013,RP3-BLK-014,RP3-BLK-015,RP3-BLK-016,RP3-BLK-017,RP3-BLK-018,RP3-BLK-019,RP3-BLK-020,RP3-BLK-021,RP3-BLK-022,RP3-BLK-023,RP3-BLK-024,RP3-BLK-025,RP3-BLK-026,RP3-BLK-027,RP3-BLK-028,RP3-BLK-029,RP3-BLK-030,RP3-BLK-031,RP3-BLK-032,RP3-BLK-033,RP3-BLK-034,RP3-BLK-035,RP3-BLK-036,RP3-BLK-037,RP3-BLK-038,RP3-BLK-039,RP3-BLK-040,RP3-BLK-041,RP3-BLK-042,RP3-BLK-043,RP3-BLK-044,RP3-BLK-045,RP3-BLK-046,RP3-BLK-047,RP3-BLK-048,RP3-BLK-049,RP3-BLK-050</serials>
+            <imei_numbers>351234560000001,351234560000002,351234560000003,351234560000004,351234560000005,351234560000006,351234560000007,351234560000008,351234560000009,351234560000010,351234560000011,351234560000012,351234560000013,351234560000014,351234560000015,351234560000016,351234560000017,351234560000018,351234560000019,351234560000020,351234560000021,351234560000022,351234560000023,351234560000024,351234560000025,351234560000026,351234560000027,351234560000028,351234560000029,351234560000030,351234560000031,351234560000032,351234560000033,351234560000034,351234560000035,351234560000036,351234560000037,351234560000038,351234560000039,351234560000040,351234560000041,351234560000042,351234560000043,351234560000044,351234560000045,351234560000046,351234560000047,351234560000048,351234560000049,351234560000050</imei_numbers>
+        </item>
+
+        <item>
+            <product_name>realme P3 64GB 4GB Green</product_name>
+            <product_id>2a56bb70-8094-4069-af29-5685e07406c8</product_id>
+            <unit>Chiếc</unit>
+            <quantity>50</quantity>
+            <unit_price>5000000</unit_price>
+            <line_total>250000000</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>25000000</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>275000000</final_price>
+            <serials>RP3-GRN-001,RP3-GRN-002,RP3-GRN-003,RP3-GRN-004,RP3-GRN-005,RP3-GRN-006,RP3-GRN-007,RP3-GRN-008,RP3-GRN-009,RP3-GRN-010,RP3-GRN-011,RP3-GRN-012,RP3-GRN-013,RP3-GRN-014,RP3-GRN-015,RP3-GRN-016,RP3-GRN-017,RP3-GRN-018,RP3-GRN-019,RP3-GRN-020,RP3-GRN-021,RP3-GRN-022,RP3-GRN-023,RP3-GRN-024,RP3-GRN-025,RP3-GRN-026,RP3-GRN-027,RP3-GRN-028,RP3-GRN-029,RP3-GRN-030,RP3-GRN-031,RP3-GRN-032,RP3-GRN-033,RP3-GRN-034,RP3-GRN-035,RP3-GRN-036,RP3-GRN-037,RP3-GRN-038,RP3-GRN-039,RP3-GRN-040,RP3-GRN-041,RP3-GRN-042,RP3-GRN-043,RP3-GRN-044,RP3-GRN-045,RP3-GRN-046,RP3-GRN-047,RP3-GRN-048,RP3-GRN-049,RP3-GRN-050</serials>
+            <imei_numbers>351234560000051,351234560000052,351234560000053,351234560000054,351234560000055,351234560000056,351234560000057,351234560000058,351234560000059,351234560000060,351234560000061,351234560000062,351234560000063,351234560000064,351234560000065,351234560000066,351234560000067,351234560000068,351234560000069,351234560000070,351234560000071,351234560000072,351234560000073,351234560000074,351234560000075,351234560000076,351234560000077,351234560000078,351234560000079,351234560000080,351234560000081,351234560000082,351234560000083,351234560000084,351234560000085,351234560000086,351234560000087,351234560000088,351234560000089,351234560000090,351234560000091,351234560000092,351234560000093,351234560000094,351234560000095,351234560000096,351234560000097,351234560000098,351234560000099,351234560000100</imei_numbers>
+        </item>
+
+        <!-- SPARE PARTS (100 units total: 2 products x 50 qty) -->
+        <item>
+            <product_name>Test LCD Screen</product_name>
+            <product_id>00343eb5-6a4d-4593-aa83-27485571efca</product_id>
+            <unit>Cái</unit>
+            <quantity>50</quantity>
+            <unit_price>2300000</unit_price>
+            <line_total>115000000</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>11500000</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>126500000</final_price>
+            <serials>LCD-SCR-001,LCD-SCR-002,LCD-SCR-003,LCD-SCR-004,LCD-SCR-005,LCD-SCR-006,LCD-SCR-007,LCD-SCR-008,LCD-SCR-009,LCD-SCR-010,LCD-SCR-011,LCD-SCR-012,LCD-SCR-013,LCD-SCR-014,LCD-SCR-015,LCD-SCR-016,LCD-SCR-017,LCD-SCR-018,LCD-SCR-019,LCD-SCR-020,LCD-SCR-021,LCD-SCR-022,LCD-SCR-023,LCD-SCR-024,LCD-SCR-025,LCD-SCR-026,LCD-SCR-027,LCD-SCR-028,LCD-SCR-029,LCD-SCR-030,LCD-SCR-031,LCD-SCR-032,LCD-SCR-033,LCD-SCR-034,LCD-SCR-035,LCD-SCR-036,LCD-SCR-037,LCD-SCR-038,LCD-SCR-039,LCD-SCR-040,LCD-SCR-041,LCD-SCR-042,LCD-SCR-043,LCD-SCR-044,LCD-SCR-045,LCD-SCR-046,LCD-SCR-047,LCD-SCR-048,LCD-SCR-049,LCD-SCR-050</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+
+        <item>
+            <product_name>motherbo</product_name>
+            <product_id>7ac41f85-0a23-4098-b887-1f109b32b31a</product_id>
+            <unit>Cái</unit>
+            <quantity>50</quantity>
+            <unit_price>2300000</unit_price>
+            <line_total>115000000</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>11500000</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>126500000</final_price>
+            <serials>MB-SP-001,MB-SP-002,MB-SP-003,MB-SP-004,MB-SP-005,MB-SP-006,MB-SP-007,MB-SP-008,MB-SP-009,MB-SP-010,MB-SP-011,MB-SP-012,MB-SP-013,MB-SP-014,MB-SP-015,MB-SP-016,MB-SP-017,MB-SP-018,MB-SP-019,MB-SP-020,MB-SP-021,MB-SP-022,MB-SP-023,MB-SP-024,MB-SP-025,MB-SP-026,MB-SP-027,MB-SP-028,MB-SP-029,MB-SP-030,MB-SP-031,MB-SP-032,MB-SP-033,MB-SP-034,MB-SP-035,MB-SP-036,MB-SP-037,MB-SP-038,MB-SP-039,MB-SP-040,MB-SP-041,MB-SP-042,MB-SP-043,MB-SP-044,MB-SP-045,MB-SP-046,MB-SP-047,MB-SP-048,MB-SP-049,MB-SP-050</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+    </items>
+
+    <totals>
+        <subtotal>880000000</subtotal>
+        <total_discount>0</total_discount>
+        <total_tax>88000000</total_tax>
+        <grand_total>968000000</grand_total>
+        <amount_in_words>Chín trăm sáu mươi tám triệu đồng</amount_in_words>
+    </totals>
+
+    <payment_info>
+        <bank_name>Ngân hàng TMCP Ngoại thương Việt Nam</bank_name>
+        <account_number>1234567890123456</account_number>
+        <account_holder>Mobile Device Supplier Co., Ltd</account_holder>
+    </payment_info>
+
+    <notes>Hóa đơn nhập hàng cho Mycelium ERP - 100 smartphones (realme P3) và 100 spare parts (Test LCD Screen, Motherboard). Mỗi sản phẩm có serial number riêng để theo dõi.</notes>
+</invoice>

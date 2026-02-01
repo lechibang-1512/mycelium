@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice>
+    <general_info>
+        <invoice_number>HD-TEST-2024-001</invoice_number>
+        <pattern>01GTKT0/001</pattern>
+        <serial>AA/24E</serial>
+        <date>2024-01-30</date>
+        <due_date>2024-02-15</due_date>
+        <currency>VND</currency>
+        <payment_method>TM/CK</payment_method>
+    </general_info>
+    
+    <seller>
+        <name>Công ty TNHH Điện Tử Việt Nam</name>
+        <tax_code>0123456789</tax_code>
+        <address>123 Nguyễn Huệ, Quận 1, TP.HCM</address>
+        <phone>028-1234-5678</phone>
+        <email>contact@electronics-vn.com</email>
+    </seller>
+    
+    <buyer>
+        <name>Mycelium ERP Co., Ltd</name>
+        <tax_code>9876543210</tax_code>
+        <address>456 Lê Lợi, Quận 1, TP.HCM</address>
+    </buyer>
+    
+    <items>
+        <item>
+            <product_name>iPhone 15 Pro Max 256GB Natural Titanium</product_name>
+            <unit>Chiếc</unit>
+            <quantity>2</quantity>
+            <unit_price>32000000</unit_price>
+            <total_amount>64000000</total_amount>
+            <tax_rate>10</tax_rate>
+            <tax_amount>6400000</tax_amount>
+            <discount_amount>0</discount_amount>
+            <serials>IP15PM-NT256-001,IP15PM-NT256-002</serials>
+        </item>
+        
+        <item>
+            <product_name>Samsung Galaxy S24 Ultra LCD Screen</product_name>
+            <unit>Cái</unit>
+            <quantity>5</quantity>
+            <unit_price>2500000</unit_price>
+            <total_amount>12500000</total_amount>
+            <tax_rate>10</tax_rate>
+            <tax_amount>1250000</tax_amount>
+            <discount_amount>250000</discount_amount>
+            <serials>SGS24-LCD-001,SGS24-LCD-002,SGS24-LCD-003,SGS24-LCD-004,SGS24-LCD-005</serials>
+        </item>
+        
+        <item>
+            <product_name>iPhone 14 Battery OEM Quality</product_name>
+            <unit>Cái</unit>
+            <quantity>10</quantity>
+            <unit_price>450000</unit_price>
+            <total_amount>4500000</total_amount>
+            <tax_rate>10</tax_rate>
+            <tax_amount>450000</tax_amount>
+            <discount_amount>0</discount_amount>
+            <serials></serials>
+        </item>
+        
+        <item>
+            <product_name>USB-C Cable 2M Premium</product_name>
+            <unit>Sợi</unit>
+            <quantity>25</quantity>
+            <unit_price>120000</unit_price>
+            <total_amount>3000000</total_amount>
+            <tax_rate>10</tax_rate>
+            <tax_amount>300000</tax_amount>
+            <discount_amount>150000</discount_amount>
+            <serials></serials>
+        </item>
+        
+        <item>
+            <product_name>Xiaomi 13 Pro Back Cover Glass</product_name>
+            <unit>Cái</unit>
+            <quantity>8</quantity>
+            <unit_price>350000</unit_price>
+            <total_amount>2800000</total_amount>
+            <tax_rate>10</tax_rate>
+            <tax_amount>280000</tax_amount>
+            <discount_amount>0</discount_amount>
+            <serials>XM13P-BG-001,XM13P-BG-002,XM13P-BG-003,XM13P-BG-004,XM13P-BG-005,XM13P-BG-006,XM13P-BG-007,XM13P-BG-008</serials>
+        </item>
+    </items>
+    
+    <summary>
+        <subtotal>86800000</subtotal>
+        <tax_rate>10</tax_rate>
+        <tax_amount>8680000</tax_amount>
+        <discount_amount>400000</discount_amount>
+        <shipping_fee>200000</shipping_fee>
+        <total_amount>95280000</total_amount>
+    </summary>
+    
+    <notes>
+        Hàng hóa được bảo hành theo chính sách của nhà sản xuất.
+        Vui lòng kiểm tra hàng trước khi nhận.
+        Thanh toán trong vòng 15 ngày kể từ ngày xuất hóa đơn.
+    </notes>
+</invoice>

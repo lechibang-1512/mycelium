@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <invoice_header>
+        <invoice_number>INV-SAM-PHONES-2026-001</invoice_number>
+        <pattern>01GTKT0/001</pattern>
+        <serial>PH/26E</serial>
+        <invoice_date>2026-02-01</invoice_date>
+        <due_date>2026-03-01</due_date>
+        <currency>USD</currency>
+        <payment_method>TM</payment_method>
+    </invoice_header>
+
+    <seller>
+        <name>Samsung Electronics Vietnam Co., Ltd</name>
+        <tax_code>0100105033</tax_code>
+        <address>123 Nguyen Van Linh, District 7, HCMC</address>
+        <phone>028-8888-7777</phone>
+        <email>supply@samsung.vn</email>
+    </seller>
+    
+    <buyer>
+        <name>Mycelium ERP Co., Ltd</name>
+        <tax_code>9876543210</tax_code>
+        <address>456 Lê Lợi, Quận 1, TP.HCM</address>
+    </buyer>
+    
+    <items>
+        <!-- Galaxy S24 8GB/128GB - 10 units -->
+        <item>
+            <product_name>Galaxy S24 8GB/128GB</product_name>
+            <product_id>5db20759-fef9-11f0-8f11-d82429657d44</product_id>
+            <unit>Chiếc</unit>
+            <quantity>10</quantity>
+            <unit_price>799.99</unit_price>
+            <line_total>7999.90</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>799.99</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>8799.89</final_price>
+            <serials>S24-128-001,S24-128-002,S24-128-003,S24-128-004,S24-128-005,S24-128-006,S24-128-007,S24-128-008,S24-128-009,S24-128-010</serials>
+            <imei_numbers>351234560100001,351234560100002,351234560100003,351234560100004,351234560100005,351234560100006,351234560100007,351234560100008,351234560100009,351234560100010</imei_numbers>
+        </item>
+
+        <!-- Galaxy S24 8GB/256GB - 8 units -->
+        <item>
+            <product_name>Galaxy S24 8GB/256GB</product_name>
+            <product_id>5db20fbe-fef9-11f0-8f11-d82429657d44</product_id>
+            <unit>Chiếc</unit>
+            <quantity>8</quantity>
+            <unit_price>859.99</unit_price>
+            <line_total>6879.92</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>687.99</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>7567.91</final_price>
+            <serials>S24-256-001,S24-256-002,S24-256-003,S24-256-004,S24-256-005,S24-256-006,S24-256-007,S24-256-008</serials>
+            <imei_numbers>351234560200001,351234560200002,351234560200003,351234560200004,351234560200005,351234560200006,351234560200007,351234560200008</imei_numbers>
+        </item>
+
+        <!-- Galaxy S24+ 12GB/256GB - 6 units -->
+        <item>
+            <product_name>Galaxy S24+ 12GB/256GB</product_name>
+            <product_id>5db2125a-fef9-11f0-8f11-d82429657d44</product_id>
+            <unit>Chiếc</unit>
+            <quantity>6</quantity>
+            <unit_price>999.99</unit_price>
+            <line_total>5999.94</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>599.99</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>6599.93</final_price>
+            <serials>S24P-256-001,S24P-256-002,S24P-256-003,S24P-256-004,S24P-256-005,S24P-256-006</serials>
+            <imei_numbers>351234560300001,351234560300002,351234560300003,351234560300004,351234560300005,351234560300006</imei_numbers>
+        </item>
+
+        <!-- Galaxy S24+ 12GB/512GB - 5 units -->
+        <item>
+            <product_name>Galaxy S24+ 12GB/512GB</product_name>
+            <product_id>5db21393-fef9-11f0-8f11-d82429657d44</product_id>
+            <unit>Chiếc</unit>
+            <quantity>5</quantity>
+            <unit_price>1119.99</unit_price>
+            <line_total>5599.95</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>560.00</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>6159.95</final_price>
+            <serials>S24P-512-001,S24P-512-002,S24P-512-003,S24P-512-004,S24P-512-005</serials>
+            <imei_numbers>351234560400001,351234560400002,351234560400003,351234560400004,351234560400005</imei_numbers>
+        </item>
+
+        <!-- Galaxy S24 Ultra 12GB/256GB - 5 units -->
+        <item>
+            <product_name>Galaxy S24 Ultra 12GB/256GB</product_name>
+            <product_id>5db214f6-fef9-11f0-8f11-d82429657d44</product_id>
+            <unit>Chiếc</unit>
+            <quantity>5</quantity>
+            <unit_price>1299.99</unit_price>
+            <line_total>6499.95</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>650.00</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>7149.95</final_price>
+            <serials>S24U-256-001,S24U-256-002,S24U-256-003,S24U-256-004,S24U-256-005</serials>
+            <imei_numbers>351234560500001,351234560500002,351234560500003,351234560500004,351234560500005</imei_numbers>
+        </item>
+
+        <!-- Galaxy S24 Ultra 12GB/512GB - 4 units -->
+        <item>
+            <product_name>Galaxy S24 Ultra 12GB/512GB</product_name>
+            <product_id>5db2157f-fef9-11f0-8f11-d82429657d44</product_id>
+            <unit>Chiếc</unit>
+            <quantity>4</quantity>
+            <unit_price>1419.99</unit_price>
+            <line_total>5679.96</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>568.00</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>6247.96</final_price>
+            <serials>S24U-512-001,S24U-512-002,S24U-512-003,S24U-512-004</serials>
+            <imei_numbers>351234560600001,351234560600002,351234560600003,351234560600004</imei_numbers>
+        </item>
+
+        <!-- Galaxy S24 Ultra 12GB/1TB - 2 units -->
+        <item>
+            <product_name>Galaxy S24 Ultra 12GB/1TB</product_name>
+            <product_id>5db21601-fef9-11f0-8f11-d82429657d44</product_id>
+            <unit>Chiếc</unit>
+            <quantity>2</quantity>
+            <unit_price>1659.99</unit_price>
+            <line_total>3319.98</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>332.00</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>3651.98</final_price>
+            <serials>S24U-1TB-001,S24U-1TB-002</serials>
+            <imei_numbers>351234560700001,351234560700002</imei_numbers>
+        </item>
+    </items>
+
+    <totals>
+        <subtotal>41979.60</subtotal>
+        <total_discount>0</total_discount>
+        <total_tax>4197.97</total_tax>
+        <grand_total>46177.57</grand_total>
+        <amount_in_words>Forty-six thousand one hundred seventy-seven US dollars and fifty-seven cents</amount_in_words>
+    </totals>
+
+    <payment_info>
+        <bank_name>Vietcombank</bank_name>
+        <account_number>0071001234567</account_number>
+        <account_holder>Samsung Electronics Vietnam Co., Ltd</account_holder>
+    </payment_info>
+
+    <notes>Samsung Galaxy S24 series smartphones import - 40 units total (7 variants). Includes S24, S24+, and S24 Ultra models with various storage configurations. Each device has unique serial number and IMEI.</notes>
+</invoice>

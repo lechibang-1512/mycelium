@@ -1,0 +1,191 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Mycelium ERP Invoice Schema",
+  "description": "Schema for invoice import in Mycelium ERP system",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version",
+      "default": "1.0"
+    },
+    "invoice": {
+      "type": "object",
+      "properties": {
+        "generalInfo": {
+          "type": "object",
+          "properties": {
+            "invoiceNumber": {
+              "type": "string",
+              "description": "Unique invoice number",
+              "minLength": 1
+            },
+            "pattern": {
+              "type": "string",
+              "description": "Invoice pattern (e.g., 01GTKT0/001)",
+              "default": "01GTKT0/001"
+            },
+            "serial": {
+              "type": "string",
+              "description": "Invoice serial number",
+              "default": "AA/24P"
+            },
+            "date": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "description": "Invoice date (YYYY-MM-DD)"
+            },
+            "dueDate": {
+              "type": ["string", "null"],
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "description": "Payment due date (YYYY-MM-DD)"
+            },
+            "currency": {
+              "type": "string",
+              "enum": ["VND", "USD", "EUR"],
+              "default": "VND"
+            },
+            "paymentMethod": {
+              "type": "string",
+              "description": "Payment method",
+              "default": "TM/CK"
+            }
+          },
+          "required": ["invoiceNumber", "date"]
+        },
+        "seller": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Supplier company name",
+              "minLength": 1
+            },
+            "taxCode": {
+              "type": ["string", "null"],
+              "description": "Tax identification number",
+              "pattern": "^[0-9]{10,13}$"
+            },
+            "address": {
+              "type": ["string", "null"],
+              "description": "Supplier address"
+            },
+            "email": {
+              "type": ["string", "null"],
+              "pattern": "^[^@]+@[^@]+\\.[^@]+$",
+              "description": "Contact email"
+            },
+            "phone": {
+              "type": ["string", "null"],
+              "description": "Contact phone number"
+            }
+          },
+          "required": ["name"]
+        },
+        "summary": {
+          "type": "object",
+          "properties": {
+            "subtotal": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Subtotal before tax"
+            },
+            "taxRate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "default": 10,
+              "description": "Tax rate percentage"
+            },
+            "taxAmount": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Total tax amount"
+            },
+            "shippingFee": {
+              "type": "number",
+              "minimum": 0,
+              "default": 0,
+              "description": "Shipping/delivery fee"
+            },
+            "discountAmount": {
+              "type": "number",
+              "minimum": 0,
+              "default": 0,
+              "description": "Total discount amount"
+            },
+            "totalAmount": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Final total amount"
+            }
+          },
+          "required": ["totalAmount"]
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productName": {
+                "type": "string",
+                "description": "Product name/description",
+                "minLength": 1
+              },
+              "unit": {
+                "type": "string",
+                "description": "Unit of measurement",
+                "default": "Cái"
+              },
+              "quantity": {
+                "type": "number",
+                "minimum": 1,
+                "description": "Quantity ordered"
+              },
+              "unitPrice": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Price per unit"
+              },
+              "totalAmount": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Total amount for this item"
+              },
+              "taxRate": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100,
+                "default": 10,
+                "description": "Tax rate for this item"
+              },
+              "taxAmount": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Tax amount for this item"
+              },
+              "discountAmount": {
+                "type": "number",
+                "minimum": 0,
+                "default": 0,
+                "description": "Discount for this item"
+              },
+              "serials": {
+                "type": ["string", "null"],
+                "description": "Serial numbers/IMEIs (comma-separated)"
+              }
+            },
+            "required": ["productName", "quantity", "unitPrice"]
+          },
+          "minItems": 1
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes"
+        }
+      },
+      "required": ["generalInfo", "seller", "items"]
+    }
+  },
+  "required": ["invoice"]
+}

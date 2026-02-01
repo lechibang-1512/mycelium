@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <invoice_header>
+        <invoice_number>INV-SAM-IMPORT-2026-001</invoice_number>
+        <pattern>01GTKT0/001</pattern>
+        <serial>SAM/26E</serial>
+        <invoice_date>2026-02-01</invoice_date>
+        <due_date>2026-03-01</due_date>
+        <currency>USD</currency>
+        <payment_method>TM</payment_method>
+    </invoice_header>
+
+    <seller>
+        <name>Samsung Electronics Vietnam Co., Ltd</name>
+        <tax_code>0100105033</tax_code>
+        <address>123 Nguyen Van Linh, District 7, HCMC</address>
+        <phone>028-8888-7777</phone>
+        <email>supply@samsung.vn</email>
+    </seller>
+    
+    <buyer>
+        <name>Mycelium ERP Co., Ltd</name>
+        <tax_code>9876543210</tax_code>
+        <address>456 Lê Lợi, Quận 1, TP.HCM</address>
+    </buyer>
+    
+    <items>
+        <!-- DISPLAYS -->
+        <item>
+            <product_name>Samsung Galaxy S24 AMOLED Display Assembly</product_name>
+            <product_id>7d695546-fef9-11f0-8f11-d82429657d44</product_id>
+            <unit>Cái</unit>
+            <quantity>20</quantity>
+            <unit_price>149.99</unit_price>
+            <line_total>2999.80</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>299.98</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>3299.78</final_price>
+            <serials>S24-DSP-001,S24-DSP-002,S24-DSP-003,S24-DSP-004,S24-DSP-005,S24-DSP-006,S24-DSP-007,S24-DSP-008,S24-DSP-009,S24-DSP-010,S24-DSP-011,S24-DSP-012,S24-DSP-013,S24-DSP-014,S24-DSP-015,S24-DSP-016,S24-DSP-017,S24-DSP-018,S24-DSP-019,S24-DSP-020</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+
+        <item>
+            <product_name>Samsung Galaxy S24 Ultra AMOLED Display</product_name>
+            <product_id>7d69589d-fef9-11f0-8f11-d82429657d44</product_id>
+            <unit>Cái</unit>
+            <quantity>10</quantity>
+            <unit_price>299.99</unit_price>
+            <line_total>2999.90</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>299.99</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>3299.89</final_price>
+            <serials>S24U-DSP-001,S24U-DSP-002,S24U-DSP-003,S24U-DSP-004,S24U-DSP-005,S24U-DSP-006,S24U-DSP-007,S24U-DSP-008,S24U-DSP-009,S24U-DSP-010</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+
+        <!-- BATTERIES -->
+        <item>
+            <product_name>Samsung Galaxy S24 Battery 4000mAh</product_name>
+            <product_id>7d695907-fef9-11f0-8f11-d82429657d44</product_id>
+            <unit>Cái</unit>
+            <quantity>30</quantity>
+            <unit_price>44.99</unit_price>
+            <line_total>1349.70</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>134.97</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>1484.67</final_price>
+            <serials>S24-BAT-001,S24-BAT-002,S24-BAT-003,S24-BAT-004,S24-BAT-005,S24-BAT-006,S24-BAT-007,S24-BAT-008,S24-BAT-009,S24-BAT-010,S24-BAT-011,S24-BAT-012,S24-BAT-013,S24-BAT-014,S24-BAT-015,S24-BAT-016,S24-BAT-017,S24-BAT-018,S24-BAT-019,S24-BAT-020,S24-BAT-021,S24-BAT-022,S24-BAT-023,S24-BAT-024,S24-BAT-025,S24-BAT-026,S24-BAT-027,S24-BAT-028,S24-BAT-029,S24-BAT-030</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+
+        <item>
+            <product_name>Samsung Galaxy S24 Ultra Battery 5000mAh</product_name>
+            <product_id>7d6959cb-fef9-11f0-8f11-d82429657d44</product_id>
+            <unit>Cái</unit>
+            <quantity>15</quantity>
+            <unit_price>59.99</unit_price>
+            <line_total>899.85</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>89.99</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>989.84</final_price>
+            <serials>S24U-BAT-001,S24U-BAT-002,S24U-BAT-003,S24U-BAT-004,S24U-BAT-005,S24U-BAT-006,S24U-BAT-007,S24U-BAT-008,S24U-BAT-009,S24U-BAT-010,S24U-BAT-011,S24U-BAT-012,S24U-BAT-013,S24U-BAT-014,S24U-BAT-015</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+
+        <!-- CAMERAS -->
+        <item>
+            <product_name>Samsung Galaxy S24 Rear Camera 50MP</product_name>
+            <product_id>7d695b23-fef9-11f0-8f11-d82429657d44</product_id>
+            <unit>Cái</unit>
+            <quantity>15</quantity>
+            <unit_price>99.99</unit_price>
+            <line_total>1499.85</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>149.99</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>1649.84</final_price>
+            <serials>S24-CAM-001,S24-CAM-002,S24-CAM-003,S24-CAM-004,S24-CAM-005,S24-CAM-006,S24-CAM-007,S24-CAM-008,S24-CAM-009,S24-CAM-010,S24-CAM-011,S24-CAM-012,S24-CAM-013,S24-CAM-014,S24-CAM-015</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+
+        <item>
+            <product_name>Samsung Galaxy S24 Ultra 200MP Camera</product_name>
+            <product_id>7d695b7d-fef9-11f0-8f11-d82429657d44</product_id>
+            <unit>Cái</unit>
+            <quantity>8</quantity>
+            <unit_price>249.99</unit_price>
+            <line_total>1999.92</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>199.99</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>2199.91</final_price>
+            <serials>S24U-CAM-001,S24U-CAM-002,S24U-CAM-003,S24U-CAM-004,S24U-CAM-005,S24U-CAM-006,S24U-CAM-007,S24U-CAM-008</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+
+        <!-- MOTHERBOARDS -->
+        <item>
+            <product_name>Samsung Galaxy S24 Motherboard 128GB</product_name>
+            <product_id>252e2541-fefa-11f0-8f11-d82429657d44</product_id>
+            <unit>Cái</unit>
+            <quantity>5</quantity>
+            <unit_price>349.99</unit_price>
+            <line_total>1749.95</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>175.00</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>1924.95</final_price>
+            <serials>S24-MB128-001,S24-MB128-002,S24-MB128-003,S24-MB128-004,S24-MB128-005</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+
+        <item>
+            <product_name>Samsung Galaxy S24 Ultra Motherboard 512GB</product_name>
+            <product_id>252e2e17-fefa-11f0-8f11-d82429657d44</product_id>
+            <unit>Cái</unit>
+            <quantity>3</quantity>
+            <unit_price>729.99</unit_price>
+            <line_total>2189.97</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>219.00</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>2408.97</final_price>
+            <serials>S24U-MB512-001,S24U-MB512-002,S24U-MB512-003</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+
+        <!-- CHARGING PORTS -->
+        <item>
+            <product_name>Samsung Galaxy S24 Type-C Charging Port</product_name>
+            <product_id>7d695abb-fef9-11f0-8f11-d82429657d44</product_id>
+            <unit>Cái</unit>
+            <quantity>25</quantity>
+            <unit_price>29.99</unit_price>
+            <line_total>749.75</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>74.98</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>824.73</final_price>
+            <serials>S24-CHRG-001,S24-CHRG-002,S24-CHRG-003,S24-CHRG-004,S24-CHRG-005,S24-CHRG-006,S24-CHRG-007,S24-CHRG-008,S24-CHRG-009,S24-CHRG-010,S24-CHRG-011,S24-CHRG-012,S24-CHRG-013,S24-CHRG-014,S24-CHRG-015,S24-CHRG-016,S24-CHRG-017,S24-CHRG-018,S24-CHRG-019,S24-CHRG-020,S24-CHRG-021,S24-CHRG-022,S24-CHRG-023,S24-CHRG-024,S24-CHRG-025</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+
+        <!-- BACK HOUSINGS -->
+        <item>
+            <product_name>Samsung Galaxy S24 Back Housing - Phantom Black</product_name>
+            <product_id>252daef9-fefa-11f0-8f11-d82429657d44</product_id>
+            <unit>Cái</unit>
+            <quantity>20</quantity>
+            <unit_price>59.99</unit_price>
+            <line_total>1199.80</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>119.98</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>1319.78</final_price>
+            <serials>S24-HSG-BLK-001,S24-HSG-BLK-002,S24-HSG-BLK-003,S24-HSG-BLK-004,S24-HSG-BLK-005,S24-HSG-BLK-006,S24-HSG-BLK-007,S24-HSG-BLK-008,S24-HSG-BLK-009,S24-HSG-BLK-010,S24-HSG-BLK-011,S24-HSG-BLK-012,S24-HSG-BLK-013,S24-HSG-BLK-014,S24-HSG-BLK-015,S24-HSG-BLK-016,S24-HSG-BLK-017,S24-HSG-BLK-018,S24-HSG-BLK-019,S24-HSG-BLK-020</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+
+        <item>
+            <product_name>Samsung Galaxy S24 Ultra Back Housing - Titanium Black</product_name>
+            <product_id>252db48a-fefa-11f0-8f11-d82429657d44</product_id>
+            <unit>Cái</unit>
+            <quantity>10</quantity>
+            <unit_price>129.99</unit_price>
+            <line_total>1299.90</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>129.99</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>1429.89</final_price>
+            <serials>S24U-HSG-TBK-001,S24U-HSG-TBK-002,S24U-HSG-TBK-003,S24U-HSG-TBK-004,S24U-HSG-TBK-005,S24U-HSG-TBK-006,S24U-HSG-TBK-007,S24U-HSG-TBK-008,S24U-HSG-TBK-009,S24U-HSG-TBK-010</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+    </items>
+
+    <totals>
+        <subtotal>18938.39</subtotal>
+        <total_discount>0</total_discount>
+        <total_tax>1893.86</total_tax>
+        <grand_total>20832.25</grand_total>
+        <amount_in_words>Twenty thousand eight hundred thirty-two US dollars and twenty-five cents</amount_in_words>
+    </totals>
+
+    <payment_info>
+        <bank_name>Vietcombank</bank_name>
+        <account_number>0071001234567</account_number>
+        <account_holder>Samsung Electronics Vietnam Co., Ltd</account_holder>
+    </payment_info>
+
+    <notes>Samsung Galaxy S24 series spare parts import - 161 units total (11 product types). Includes displays, batteries, cameras, motherboards, charging ports, and back housings for S24, S24+, and S24 Ultra models.</notes>
+</invoice>

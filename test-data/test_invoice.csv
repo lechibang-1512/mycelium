@@ -1,0 +1,19 @@
+Invoice Number,HD-CSV-2024-003
+Invoice Date,2024-01-30
+Supplier,Công ty TNHH Phụ Kiện Di Động Hà Nội
+Supplier Tax Code,0111222333
+Currency,VND
+Total Amount,45670000
+
+productname,unit,quantity,unitprice,linetotal,taxrate,taxamount,discount,serialnumbers
+"Oppo Find X6 Pro 256GB Desert Silver",Chiếc,2,18500000,37000000,10,3700000,500000,"OPX6P-DS256-001,OPX6P-DS256-002"
+"Huawei P60 Pro Charging Port Flex Cable",Cái,8,450000,3600000,10,360000,0,"HWP60-CP-001,HWP60-CP-002,HWP60-CP-003,HWP60-CP-004,HWP60-CP-005,HWP60-CP-006,HWP60-CP-007,HWP60-CP-008"
+"Universal Wireless Charger 15W",Cái,6,650000,3900000,10,390000,100000,""
+"Nokia G42 5G Back Camera Module",Cái,4,320000,1280000,10,128000,0,"NOK-G42-BC-001,NOK-G42-BC-002,NOK-G42-BC-003,NOK-G42-BC-004"
+"Premium Tempered Glass Screen Protector",Tấm,50,18000,900000,10,90000,20000,""
+
+Subtotal,46680000
+Tax Total,4668000
+Discount Total,620000
+Shipping,150000
+Final Total,50878000

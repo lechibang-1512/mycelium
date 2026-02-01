@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dispense Stock</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #667eea;
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .form {
+            padding: 20px;
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e8e8e8;
+            border-radius: 10px;
+            font-size: 15px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .stock-info {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #666;
+            margin-top: 6px;
+        }
+
+        .stock-info.low {
+            background: #ffe8e8;
+            color: #d63031;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        .submit-btn:active {
+            opacity: 0.8;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            text-align: center;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        .message.error {
+            background: #ffe8e8;
+            color: #d63031;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <button class="back-btn" onclick="history.back()">←</button>
+        <h1>📤 Dispense Stock</h1>
+    </div>
+
+    <div class="form">
+        <div id="message" class="message"></div>
+
+        <form id="dispenseForm">
+            <div class="field">
+                <label>Product *</label>
+                <select id="product" required>
+                    <option value="">Loading...</option>
+                </select>
+                <div id="stockInfo" class="stock-info" style="display:none;"></div>
+            </div>
+
+            <div class="field">
+                <label>Quantity *</label>
+                <input type="number" id="quantity" min="1" required placeholder="0">
+            </div>
+
+            <div class="field">
+                <label>Recipient</label>
+                <input type="text" id="recipient" placeholder="Who is receiving (optional)">
+            </div>
+
+            <div class="field">
+                <label>Notes</label>
+                <textarea id="notes" rows="3" placeholder="Optional notes..."></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">Dispense Stock</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('dispenseForm');
+        const message = document.getElementById('message');
+        const productSelect = document.getElementById('product');
+        const stockInfo = document.getElementById('stockInfo');
+        const quantityInput = document.getElementById('quantity');
+        const submitBtn = document.getElementById('submitBtn');
+        let products = [];
+
+        // Load products
+        fetch('/api/inventory', { credentials: 'include' })
+            .then(res => res.json())
+            .then(data => {
+                // Handle both response formats
+                const items = data.data || data || [];
+                products = items;
+
+                if (items.length > 0) {
+                    productSelect.innerHTML = '<option value="">Select product...</option>' +
+                        items.map(item => {
+                            const maker = item.device_maker || '';
+                            const name = item.device_name || item.name || 'Unnamed';
+                            const displayName = maker ? `${maker} ${name}` : name;
+                            const productId = item.product_id || item.id;
+                            const qty = item.quantity || 0;
+                            return `<option value="${productId}">${displayName} (Stock: ${qty})</option>`;
+                        }).join('');
+                } else {
+                    productSelect.innerHTML = '<option value="">No products found</option>';
+                }
+            })
+            .catch(err => {
+                console.error('Error loading products:', err);
+                productSelect.innerHTML = '<option value="">Error loading products</option>';
+            });
+
+        // Show stock info when product selected
+        productSelect.addEventListener('change', (e) => {
+            const productId = e.target.value;
+            if (productId) {
+                const product = products.find(p => String(p.product_id || p.id) === String(productId));
+                if (product) {
+                    const qty = product.quantity || 0;
+                    stockInfo.textContent = `Available stock: ${qty} units`;
+                    stockInfo.className = qty < 10 ? 'stock-info low' : 'stock-info';
+                    stockInfo.style.display = 'block';
+                }
+            } else {
+                stockInfo.style.display = 'none';
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const productId = productSelect.value;
+            const quantity = parseInt(quantityInput.value);
+
+            // Check stock
+            const product = products.find(p => String(p.product_id || p.id) === String(productId));
+            if (product && quantity > (product.quantity || 0)) {
+                message.textContent = 'Insufficient stock!';
+                message.className = 'message error';
+                return;
+            }
+
+            const data = {
+                productId: productId,
+                quantity: quantity,
+                recipient: document.getElementById('recipient').value,
+                notes: document.getElementById('notes').value
+            };
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+            message.className = 'message';
+
+            try {
+                const response = await fetch('/api/inventory/dispense', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (result.success || response.ok) {
+                    message.textContent = 'Stock dispensed successfully!';
+                    message.className = 'message success';
+                    form.reset();
+                    stockInfo.style.display = 'none';
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    message.textContent = result.error || 'Failed to dispense stock';
+                    message.className = 'message error';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                message.textContent = error.message || 'Network error';
+                message.className = 'message error';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Dispense Stock';
+            }
+        });
+    </script>
+</body>
+
+</html>

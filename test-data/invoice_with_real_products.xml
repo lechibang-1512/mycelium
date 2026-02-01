@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<invoice xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <invoice_header>
+        <invoice_number>INV-REAL-2024-003</invoice_number>
+        <pattern>01GTKT0/001</pattern>
+        <serial>BB/24R</serial>
+        <invoice_date>2024-01-30</invoice_date>
+        <due_date>2024-02-29</due_date>
+        <currency>VND</currency>
+        <payment_method>TM</payment_method>
+    </invoice_header>
+
+    <seller>
+        <name>Công ty TNHH Thiết Bị Di Động Việt Nam</name>
+        <tax_code>0123456789</tax_code>
+        <address>123 Nguyễn Huệ, Quận 1, TP.HCM</address>
+        <phone>028-1234-5678</phone>
+        <email>sales@vietnammobile.vn</email>
+    </seller>
+    
+    <buyer>
+        <name>Mycelium ERP Co., Ltd</name>
+        <tax_code>9876543210</tax_code>
+        <address>456 Lê Lợi, Quận 1, TP.HCM</address>
+    </buyer>
+    
+    <items>
+        <item>
+            <product_name>Samsung Galaxy S23 FE 256GB</product_name>
+            <product_id>samsung-s23-fe-256gb</product_id>
+            <unit>Chiếc</unit>
+            <quantity>5</quantity>
+            <unit_price>12500000</unit_price>
+            <line_total>62500000</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>6250000</tax_amount>
+            <discount_amount>1250000</discount_amount>
+            <final_price>67500000</final_price>
+            <serials>SGS23FE-VN-2024-001,SGS23FE-VN-2024-002,SGS23FE-VN-2024-003,SGS23FE-VN-2024-004,SGS23FE-VN-2024-005</serials>
+            <imei_numbers>351234567890123,351234567890124,351234567890125,351234567890126,351234567890127</imei_numbers>
+        </item>
+
+        <item>
+            <product_name>iPhone 14 Pro Max 256GB</product_name>
+            <product_id>iphone-14-pro-max-256gb</product_id>
+            <unit>Chiếc</unit>
+            <quantity>3</quantity>
+            <unit_price>28500000</unit_price>
+            <line_total>85500000</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>8550000</tax_amount>
+            <discount_amount>0</discount_amount>
+            <final_price>94050000</final_price>
+            <serials>IP14PM-VN-2024-001,IP14PM-VN-2024-002,IP14PM-VN-2024-003</serials>
+            <imei_numbers>352468135792468,352468135792469,352468135792470</imei_numbers>
+        </item>
+
+        <item>
+            <product_name>Samsung Galaxy S24 Ultra LCD Screen</product_name>
+            <product_id>samsung-s24-ultra-screen</product_id>
+            <unit>Cái</unit>
+            <quantity>8</quantity>
+            <unit_price>2800000</unit_price>
+            <line_total>22400000</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>2240000</tax_amount>
+            <discount_amount>560000</discount_amount>
+            <final_price>24080000</final_price>
+            <serials>SGS24-SCR-001,SGS24-SCR-002,SGS24-SCR-003,SGS24-SCR-004,SGS24-SCR-005,SGS24-SCR-006,SGS24-SCR-007,SGS24-SCR-008</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+
+        <item>
+            <product_name>iPhone 13 Pro Battery OEM</product_name>
+            <product_id>iphone-13-pro-battery</product_id>
+            <unit>Cái</unit>
+            <quantity>12</quantity>
+            <unit_price>650000</unit_price>
+            <line_total>7800000</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>780000</tax_amount>
+            <discount_amount>156000</discount_amount>
+            <final_price>8424000</final_price>
+            <serials>IP13PRO-BAT-001,IP13PRO-BAT-002,IP13PRO-BAT-003,IP13PRO-BAT-004,IP13PRO-BAT-005,IP13PRO-BAT-006,IP13PRO-BAT-007,IP13PRO-BAT-008,IP13PRO-BAT-009,IP13PRO-BAT-010,IP13PRO-BAT-011,IP13PRO-BAT-012</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+
+        <item>
+            <product_name>Universal Phone Repair Toolkit Pro</product_name>
+            <product_id>repair-toolkit-pro</product_id>
+            <unit>Bộ</unit>
+            <quantity>6</quantity>
+            <unit_price>450000</unit_price>
+            <line_total>2700000</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>270000</tax_amount>
+            <discount_amount>135000</discount_amount>
+            <final_price>2835000</final_price>
+            <serials>TOOLKIT-PRO-001,TOOLKIT-PRO-002,TOOLKIT-PRO-003,TOOLKIT-PRO-004,TOOLKIT-PRO-005,TOOLKIT-PRO-006</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+
+        <item>
+            <product_name>USB-C to Lightning Cable Premium 2M</product_name>
+            <product_id>usb-c-lightning-cable-2m</product_id>
+            <unit>Sợi</unit>
+            <quantity>20</quantity>
+            <unit_price>280000</unit_price>
+            <line_total>5600000</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>560000</tax_amount>
+            <discount_amount>280000</discount_amount>
+            <final_price>5880000</final_price>
+            <serials>USBC-LTNG-001,USBC-LTNG-002,USBC-LTNG-003,USBC-LTNG-004,USBC-LTNG-005,USBC-LTNG-006,USBC-LTNG-007,USBC-LTNG-008,USBC-LTNG-009,USBC-LTNG-010,USBC-LTNG-011,USBC-LTNG-012,USBC-LTNG-013,USBC-LTNG-014,USBC-LTNG-015,USBC-LTNG-016,USBC-LTNG-017,USBC-LTNG-018,USBC-LTNG-019,USBC-LTNG-020</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+
+        <item>
+            <product_name>Samsung Galaxy A54 High Capacity Battery</product_name>
+            <product_id>samsung-a54-battery-hc</product_id>
+            <unit>Cái</unit>
+            <quantity>15</quantity>
+            <unit_price>320000</unit_price>
+            <line_total>4800000</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>480000</tax_amount>
+            <discount_amount>96000</discount_amount>
+            <final_price>5184000</final_price>
+            <serials>SGA54-BAT-001,SGA54-BAT-002,SGA54-BAT-003,SGA54-BAT-004,SGA54-BAT-005,SGA54-BAT-006,SGA54-BAT-007,SGA54-BAT-008,SGA54-BAT-009,SGA54-BAT-010,SGA54-BAT-011,SGA54-BAT-012,SGA54-BAT-013,SGA54-BAT-014,SGA54-BAT-015</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+
+        <item>
+            <product_name>iPhone 12 OLED Display Original</product_name>
+            <product_id>iphone-12-oled-display</product_id>
+            <unit>Cái</unit>
+            <quantity>10</quantity>
+            <unit_price>3200000</unit_price>
+            <line_total>32000000</line_total>
+            <tax_rate>10</tax_rate>
+            <tax_amount>3200000</tax_amount>
+            <discount_amount>640000</discount_amount>
+            <final_price>34560000</final_price>
+            <serials>IP12-OLED-001,IP12-OLED-002,IP12-OLED-003,IP12-OLED-004,IP12-OLED-005,IP12-OLED-006,IP12-OLED-007,IP12-OLED-008,IP12-OLED-009,IP12-OLED-010</serials>
+            <imei_numbers></imei_numbers>
+        </item>
+    </items>
+
+    <totals>
+        <subtotal>222800000</subtotal>
+        <total_discount>3117000</total_discount>
+        <total_tax>21930000</total_tax>
+        <grand_total>241613000</grand_total>
+        <amount_in_words>Hai trăm bốn mười một triệu sáu trăm mười ba nghìn đồng</amount_in_words>
+    </totals>
+
+    <payment_info>
+        <bank_name>Ngân hàng TMCP Ngoại thương Việt Nam</bank_name>
+        <account_number>1234567890123456</account_number>
+        <account_holder>Công ty TNHH Thiết Bị Di Động Việt Nam</account_holder>
+    </payment_info>
+
+    <notes>Hóa đơn bán hàng cho Mycelium ERP - Đơn hàng thiết bị di động và phụ kiện. Mỗi sản phẩm có serial number riêng để theo dõi. Thiết bị di động có kèm IMEI number.</notes>
+</invoice>

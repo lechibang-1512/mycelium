@@ -1,0 +1,23 @@
+# Mycelium Warehouse Management - Cron Jobs Setup
+# 
+# Add these lines to your crontab (run: crontab -e)
+# Replace /path/to/mycelium with your actual project path
+
+# Run ABC/Pareto Analysis - Weekly on Monday at 6:00 AM
+0 6 * * 1 cd /path/to/mycelium && node scripts/jobs/run-abc-analysis.js >> logs/abc-analysis.log 2>&1
+
+# Generate reorder recommendations - Daily at 7:00 AM (runs after ABC analysis)
+0 7 * * * cd /path/to/mycelium && node scripts/jobs/generate-reorder-recommendations.js >> logs/recommendations.log 2>&1
+
+# Check expiring batches - Daily at 8:00 AM
+0 8 * * * cd /path/to/mycelium && node scripts/jobs/check-expiring-batches.js >> logs/expiry-check.log 2>&1
+
+# Check expiring warranties - Daily at 8:30 AM
+30 8 * * * cd /path/to/mycelium && node scripts/jobs/check-expiring-warranties.js >> logs/warranty-check.log 2>&1
+
+# Generate efficiency reports - Weekly on Monday at 9:00 AM
+0 9 * * 1 cd /path/to/mycelium && node scripts/jobs/generate-efficiency-reports.js >> logs/efficiency-reports.log 2>&1
+
+# Alternative: Use node-cron within the application
+# See server.js for in-app scheduled jobs using the 'node-cron' package
+# ABC Analysis runs automatically via ScheduledJobsService

@@ -1,0 +1,350 @@
+
+
+.inventory-movement-page {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.inventory-movement-page .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 3px solid #0d6efd;
+}
+
+.inventory-movement-page .page-header h1 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #0d6efd;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.inventory-movement-page .page-header p {
+  font-size: 1rem;
+  margin-bottom: 0;
+  color: #6c757d;
+}
+
+/* Golden Rule Info Panel */
+.inventory-movement-page .card {
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.inventory-movement-page .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Transfer Type Selection */
+.inventory-movement-page .btn-lg {
+  padding: 1.5rem;
+  border-radius: 1rem;
+  transition: all 0.3s ease;
+  border: 2px solid;
+  font-weight: 600;
+}
+
+.inventory-movement-page .btn-outline-warning {
+  border-color: #ffc107;
+  color: #f57c00;
+}
+
+.inventory-movement-page .btn-outline-warning:hover,
+.inventory-movement-page .btn-warning {
+  background: linear-gradient(135deg, #ffc107, #ff9800);
+  border-color: #ffc107;
+  color: #fff;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(255, 193, 7, 0.3);
+}
+
+.inventory-movement-page .btn-outline-primary {
+  border-color: #0d6efd;
+  color: #0d6efd;
+}
+
+.inventory-movement-page .btn-outline-primary:hover,
+.inventory-movement-page .btn-primary {
+  background: linear-gradient(135deg, #0d6efd, #0056b3);
+  border-color: #0d6efd;
+  color: #fff;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3);
+}
+
+/* Card Headers */
+.inventory-movement-page .card-header {
+  border-radius: 0.75rem 0.75rem 0 0 !important;
+  padding: 1.5rem;
+  font-weight: 600;
+}
+
+.inventory-movement-page .card-header.bg-warning {
+  background: linear-gradient(135deg, #ffc107, #ff9800) !important;
+  color: #fff !important;
+}
+
+.inventory-movement-page .card-header.bg-primary {
+  background: linear-gradient(135deg, #0d6efd, #0056b3) !important;
+}
+
+/* Form Controls */
+.inventory-movement-page .form-select-lg,
+.inventory-movement-page .form-control-lg {
+  border-width: 2px;
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  font-weight: 500;
+}
+
+.inventory-movement-page .form-select-lg:focus,
+.inventory-movement-page .form-control-lg:focus {
+  border-width: 2px;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+  transform: translateY(-1px);
+}
+
+.inventory-movement-page .form-label.fw-bold {
+  color: #495057;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+/* Alerts */
+.inventory-movement-page .alert {
+  border-radius: 0.75rem;
+  border: none;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.inventory-movement-page .alert-info {
+  background: linear-gradient(135deg, rgba(13, 202, 240, 0.1), rgba(13, 110, 253, 0.1));
+  color: #0c4b6c;
+  border-left: 4px solid #0dcaf0;
+}
+
+.inventory-movement-page .alert-warning {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.1));
+  color: #664d03;
+  border-left: 4px solid #ffc107;
+}
+
+.inventory-movement-page .alert-primary {
+  background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(0, 86, 179, 0.1));
+  color: #084298;
+  border-left: 4px solid #0d6efd;
+}
+
+.inventory-movement-page .alert-success {
+  background: linear-gradient(135deg, rgba(25, 135, 84, 0.1), rgba(40, 167, 69, 0.1));
+  color: #0f5132;
+  border-left: 4px solid #198754;
+}
+
+.inventory-movement-page .alert-danger {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(255, 0, 0, 0.1));
+  color: #842029;
+  border-left: 4px solid #dc3545;
+}
+
+/* Transfer Summary */
+.transfer-summary {
+  animation: slideIn 0.5s ease-out;
+  margin-top: 2rem;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Badge Enhancements */
+.inventory-movement-page .badge {
+  padding: 0.5em 0.75em;
+  font-weight: 600;
+  border-radius: 0.5rem;
+}
+
+.inventory-movement-page .badge.bg-danger {
+  background: linear-gradient(135deg, #dc3545, #c82333) !important;
+}
+
+.inventory-movement-page .badge.bg-primary {
+  background: linear-gradient(135deg, #0d6efd, #0056b3) !important;
+}
+
+.inventory-movement-page .badge.bg-info {
+  background: linear-gradient(135deg, #0dcaf0, #0aa2c0) !important;
+}
+
+/* Icons */
+.inventory-movement-page i.bi {
+  vertical-align: middle;
+}
+
+/* Movement History Table */
+.history-table-container {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.history-table-container table {
+  margin-bottom: 0;
+}
+
+.history-table-container .location-cell {
+  line-height: 1.6;
+}
+
+/* Buttons */
+.inventory-movement-page .btn {
+  border-radius: 0.75rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.inventory-movement-page .btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.inventory-movement-page .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Staging Badge */
+.inventory-movement-page .badge.bg-secondary {
+  background: linear-gradient(135deg, #6c757d, #545b62) !important;
+}
+
+/* Product Selection Enhancement */
+.inventory-movement-page select option {
+  padding: 0.5rem;
+}
+
+/* Loading States */
+.inventory-movement-page .spinner-border-sm {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+/* Zone Type Specific Styling */
+.inventory-movement-page .badge {
+  text-transform: capitalize;
+}
+
+/* Info Panels */
+.inventory-movement-page .bg-light {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef) !important;
+  border-radius: 0.75rem;
+}
+
+/* Transfer Type Indicators */
+.inventory-movement-page .alert.alert-dismissible {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .inventory-movement-page {
+    padding: 1rem;
+  }
+
+  .inventory-movement-page .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .inventory-movement-page .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .inventory-movement-page .btn-lg {
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .history-table-container {
+    overflow-x: auto;
+    padding: 1rem;
+  }
+
+  .inventory-movement-page .card-body {
+    padding: 1rem;
+  }
+}
+
+/* Quantity Input Special Styling */
+.inventory-movement-page input[type="number"] {
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Disabled Form Controls */
+.inventory-movement-page .form-select:disabled,
+.inventory-movement-page .form-control:disabled {
+  background: linear-gradient(135deg, #e9ecef, #dee2e6);
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Card Body Padding */
+.inventory-movement-page .card-body {
+  padding: 2rem;
+}
+
+/* Alert Heading */
+.inventory-movement-page .alert-heading {
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+/* Small Text Enhancement */
+.inventory-movement-page small {
+  color: #6c757d;
+  font-weight: 500;
+}
+
+/* Success Messages */
+.inventory-movement-page .text-success {
+  color: #198754 !important;
+  font-weight: 600;
+}
+
+/* Border Enhancements */
+.inventory-movement-page .border-primary {
+  border-color: #0d6efd !important;
+}
+
+.inventory-movement-page .border-info {
+  border-color: #0dcaf0 !important;
+}

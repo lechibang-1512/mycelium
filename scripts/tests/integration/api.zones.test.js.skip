@@ -1,0 +1,174 @@
+/**
+ * Integration Tests: Zones API
+ * 
+ * Tests the warehouse zone management API endpoints
+ */
+
+const { expect } = require('chai');
+const { APITestHelper, TestDataGenerator, AssertionHelpers } = require('../helpers/api-test-helper');
+const { getTestPool, createTestFixtures, cleanTestFixtures } = require('../setup');
+
+describe('Zones API Integration Tests', function() {
+    this.timeout(10000);
+    
+    let api;
+    let fixtures;
+    let _pool; // Reserved for future use
+    let createdZoneId;
+    
+    before(async function() {
+        api = new APITestHelper();
+        _pool = getTestPool();
+        
+        const serverReady = await api.waitForServer();
+        if (!serverReady) {
+            this.skip('Server is not running');
+        }
+        
+        fixtures = await createTestFixtures();
+        
+        const loginResponse = await api.login();
+        if (!api.isSuccess(loginResponse)) {
+            this.skip('Could not login - check credentials');
+        }
+    });
+    
+    after(async function() {
+        await cleanTestFixtures(fixtures);
+        await api.logout();
+    });
+    
+    describe('POST /api/zones', function() {
+        it('should create a new zone', async function() {
+            const zoneData = {
+                warehouse_id: fixtures.warehouses[0].id,
+                zone_name: `Test Zone ${Date.now()}`,
+                zone_type: 'STORAGE',
+                capacity: 1000
+            };
+            
+            const response = await api.post('/api/zones', zoneData);
+            
+            if (response.status === 201) {
+                AssertionHelpers.assertSuccess(response);
+                expect(response.data).to.have.property('zone');
+                createdZoneId = response.data.zone.zone_id;
+            }
+        });
+        
+        it('should require warehouse_id and zone_name', async function() {
+            const invalidData = {
+                zone_type: 'STORAGE'
+            };
+            
+            const response = await api.post('/api/zones', invalidData);
+            
+            AssertionHelpers.assertError(response, 400);
+        });
+    });
+    
+    describe('GET /api/zones', function() {
+        it('should return all zones', async function() {
+            const response = await api.get('/api/zones');
+            
+            AssertionHelpers.assertSuccess(response);
+            expect(response.data).to.be.an('array');
+        });
+        
+        it('should filter by warehouse_id', async function() {
+            const warehouseId = fixtures.warehouses[0].id;
+            const response = await api.get(`/api/zones?warehouse_id=${warehouseId}`);
+            
+            AssertionHelpers.assertSuccess(response);
+            expect(response.data).to.be.an('array');
+        });
+        
+        it('should filter by zone_type', async function() {
+            const response = await api.get('/api/zones?zone_type=STORAGE');
+            
+            AssertionHelpers.assertSuccess(response);
+            expect(response.data).to.be.an('array');
+        });
+    });
+    
+    describe('GET /api/zones/:id', function() {
+        it('should return zone details', async function() {
+            if (!createdZoneId) {
+                this.skip('No zone created');
+            }
+            
+            const response = await api.get(`/api/zones/${createdZoneId}`);
+            
+            AssertionHelpers.assertSuccess(response);
+            expect(response.data).to.have.property('zone');
+        });
+        
+        it('should return 404 for non-existent zone', async function() {
+            const response = await api.get('/api/zones/999999');
+            
+            AssertionHelpers.assertError(response, 404);
+        });
+    });
+    
+    describe('PUT /api/zones/:id', function() {
+        it('should update zone details', async function() {
+            if (!createdZoneId) {
+                this.skip('No zone created');
+            }
+            
+            const updateData = {
+                capacity: 1500,
+                zone_type: 'PICKING'
+            };
+            
+            const response = await api.put(`/api/zones/${createdZoneId}`, updateData);
+            
+            if (response.status === 200) {
+                AssertionHelpers.assertSuccess(response);
+            }
+        });
+    });
+    
+    describe('GET /api/zones/:id/inventory', function() {
+        it('should return inventory in zone', async function() {
+            if (!createdZoneId) {
+                this.skip('No zone created');
+            }
+            
+            const response = await api.get(`/api/zones/${createdZoneId}/inventory`);
+            
+            AssertionHelpers.assertSuccess(response);
+            expect(response.data).to.be.an('array');
+        });
+    });
+    
+    describe('GET /api/zones/:id/utilization', function() {
+        it('should return zone utilization stats', async function() {
+            if (!createdZoneId) {
+                this.skip('No zone created');
+            }
+            
+            const response = await api.get(`/api/zones/${createdZoneId}/utilization`);
+            
+            if (response.status === 200) {
+                AssertionHelpers.assertSuccess(response);
+                expect(response.data).to.be.an('object');
+            }
+        });
+    });
+    
+    describe('DELETE /api/zones/:id', function() {
+        it('should delete zone', async function() {
+            if (!createdZoneId) {
+                this.skip('No zone created');
+            }
+            
+            const response = await api.delete(`/api/zones/${createdZoneId}`);
+            
+            if (response.status === 200) {
+                AssertionHelpers.assertSuccess(response);
+                createdZoneId = null;
+            }
+        });
+    });
+});

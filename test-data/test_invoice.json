@@ -1,0 +1,101 @@
+{
+  "invoice_number": "HD-JSON-2024-002",
+  "pattern": "01GTKT0/001",
+  "serial": "BB/24E",
+  "invoice_date": "2024-01-30",
+  "due_date": "2024-02-20",
+  "currency": "VND",
+  "payment_method": "TM",
+  "seller": {
+    "name": "Công ty CP Linh Kiện Điện Tử Sài Gòn",
+    "tax_code": "0987654321",
+    "address": "789 Điện Biên Phủ, Quận 3, TP.HCM",
+    "phone": "028-9876-5432",
+    "email": "sales@sgelectronics.vn"
+  },
+  "buyer": {
+    "name": "Mycelium ERP Co., Ltd",
+    "tax_code": "9876543210",
+    "address": "456 Lê Lợi, Quận 1, TP.HCM"
+  },
+  "items": [
+    {
+      "product_name": "Samsung Galaxy S23 FE 256GB Mint",
+      "unit": "Chiếc",
+      "quantity": 3,
+      "unit_price": 12500000,
+      "line_total": 37500000,
+      "tax_rate": 10,
+      "tax_amount": 3750000,
+      "discount_amount": 750000,
+      "serial_numbers": [
+        "SGS23FE-MINT-2024-001",
+        "SGS23FE-MINT-2024-002", 
+        "SGS23FE-MINT-2024-003"
+      ]
+    },
+    {
+      "product_name": "iPhone 13 Pro Max Screen OLED Original",
+      "unit": "Cái",
+      "quantity": 7,
+      "unit_price": 4500000,
+      "line_total": 31500000,
+      "tax_rate": 10,
+      "tax_amount": 3150000,
+      "discount_amount": 0,
+      "serial_numbers": [
+        "IP13PM-OLED-001",
+        "IP13PM-OLED-002",
+        "IP13PM-OLED-003",
+        "IP13PM-OLED-004",
+        "IP13PM-OLED-005",
+        "IP13PM-OLED-006",
+        "IP13PM-OLED-007"
+      ]
+    },
+    {
+      "product_name": "Universal Phone Repair Tool Kit",
+      "unit": "Bộ",
+      "quantity": 12,
+      "unit_price": 350000,
+      "line_total": 4200000,
+      "tax_rate": 10,
+      "tax_amount": 420000,
+      "discount_amount": 100000,
+      "serial_numbers": []
+    },
+    {
+      "product_name": "Samsung Galaxy A54 Battery High Capacity",
+      "unit": "Cái", 
+      "quantity": 15,
+      "unit_price": 280000,
+      "line_total": 4200000,
+      "tax_rate": 10,
+      "tax_amount": 420000,
+      "discount_amount": 0,
+      "serial_numbers": []
+    },
+    {
+      "product_name": "iPhone Lightning to USB-C Adapter Original",
+      "unit": "Cái",
+      "quantity": 20,
+      "unit_price": 750000,
+      "line_total": 15000000,
+      "tax_rate": 10,
+      "tax_amount": 1500000,
+      "discount_amount": 300000,
+      "serial_numbers": [
+        "APPLE-LTUC-001", "APPLE-LTUC-002", "APPLE-LTUC-003", "APPLE-LTUC-004", "APPLE-LTUC-005",
+        "APPLE-LTUC-006", "APPLE-LTUC-007", "APPLE-LTUC-008", "APPLE-LTUC-009", "APPLE-LTUC-010",
+        "APPLE-LTUC-011", "APPLE-LTUC-012", "APPLE-LTUC-013", "APPLE-LTUC-014", "APPLE-LTUC-015",
+        "APPLE-LTUC-016", "APPLE-LTUC-017", "APPLE-LTUC-018", "APPLE-LTUC-019", "APPLE-LTUC-020"
+      ]
+    }
+  ],
+  "subtotal": 92400000,
+  "tax_amount": 9240000,
+  "discount_amount": 1150000,
+  "shipping_fee": 150000,
+  "total_amount": 100640000,
+  "notes": "Đơn hàng ưu tiên giao nhanh. Kiểm tra serial number khi nhận hàng."
+}

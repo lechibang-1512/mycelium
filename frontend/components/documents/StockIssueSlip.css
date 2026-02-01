@@ -1,0 +1,35 @@
+.stock-issue-slip {
+    font-family: 'Times New Roman', Times, serif;
+    padding: 20px;
+    background: white;
+    max-width: 210mm; /* A4 width */
+    margin: 0 auto;
+}
+
+.data-field {
+    border-bottom: 1px dotted #000;
+    padding: 0 5px;
+    font-weight: bold;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .stock-issue-slip, .stock-issue-slip * {
+        visibility: visible;
+    }
+    .stock-issue-slip {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    /* Hide modal backdrop and other UI elements */
+    .modal-header, .modal-footer, .btn-close {
+        display: none !important;
+    }
+}

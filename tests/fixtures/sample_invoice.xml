@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Invoice>
+    <GeneralInfo>
+        <invoiceNumber>0067890</invoiceNumber>
+        <pattern>1/001</pattern>
+        <serial>C25TA</serial>
+        <date>2026-01-29</date>
+        <currency>VND</currency>
+        <paymentMethod>TM/CK</paymentMethod>
+    </GeneralInfo>
+    <Seller>
+        <name>Cong Ty TNHH ABC</name>
+        <taxCode>0101234567</taxCode>
+        <address>123 Nguyen Trai, Ha Noi</address>
+        <email>contact@abc.com</email>
+        <phone>0909123456</phone>
+    </Seller>
+    <Summary>
+        <totalAmount>25000000</totalAmount>
+        <taxRate>10</taxRate>
+        <taxAmount>2500000</taxAmount>
+        <subtotal>22500000</subtotal>
+    </Summary>
+    <Items>
+        <Item>
+            <productName>iPhone 15 Pro Max 256GB Titan</productName>
+            <unit>Cái</unit>
+            <quantity>1</quantity>
+            <unitPrice>22500000</unitPrice>
+            <totalAmount>22500000</totalAmount>
+            <taxRate>10</taxRate>
+            <taxAmount>2250000</taxAmount>
+            <serials>IMEI123456789012345,IMEI987654321098765</serials>
+        </Item>
+    </Items>
+</Invoice>

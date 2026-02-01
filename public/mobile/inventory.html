@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Inventory</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #667eea;
+            color: white;
+            padding: 16px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            overflow-x: auto;
+        }
+
+        .tab {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .search {
+            width: 100%;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+        }
+
+        .filters {
+            padding: 16px 20px;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .filter-group {
+            margin-bottom: 12px;
+        }
+
+        .filter-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e8e8e8;
+            border-radius: 8px;
+            font-size: 14px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: white url('data:image/svg+xml;utf8,<svg fill="%23666" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 8px center;
+            background-size: 20px;
+        }
+
+        .stats {
+            padding: 12px 20px;
+            background: #f0f0f0;
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat strong {
+            color: #333;
+        }
+
+        .list {
+            padding: 16px;
+        }
+
+        .item {
+            background: white;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 6px;
+        }
+
+        .item-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: #333;
+        }
+
+        .item-maker {
+            font-size: 13px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .item-location {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .item-sku {
+            font-size: 12px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        .item-qty {
+            font-size: 20px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .item-qty.low {
+            color: #d63031;
+        }
+
+        .item-qty.staging {
+            color: #f39c12;
+        }
+
+        .item-info {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: #666;
+            margin-top: 6px;
+        }
+
+        .loading,
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        .value-badge {
+            background: #d4edda;
+            color: #155724;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="header-top">
+            <button class="back-btn" onclick="history.back()">←</button>
+            <h1>📋 Inventory</h1>
+        </div>
+        <div class="tabs">
+            <button class="tab active" data-view="all">All</button>
+            <button class="tab" data-view="staging">Staging</button>
+            <button class="tab" data-view="warehouse">Warehouses</button>
+        </div>
+        <input type="search" class="search" id="search" placeholder="Search...">
+    </div>
+
+    <!-- Warehouse Filters (hidden by default) -->
+    <div class="filters" id="warehouseFilters" style="display:none;">
+        <div class="filter-group">
+            <label class="filter-label">Warehouse</label>
+            <select id="warehouseSelect">
+                <option value="">Loading...</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Zone</label>
+            <select id="zoneSelect">
+                <option value="">All Zones</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Stats Bar (for staging view) -->
+    <div class="stats" id="stagingStats" style="display:none;">
+        <div class="stat">
+            <span>📦</span>
+            <span><strong id="stagingTotalItems">0</strong> items</span>
+        </div>
+        <div class="stat">
+            <span>💰</span>
+            <span><strong id="stagingTotalValue">$0</strong></span>
+        </div>
+    </div>
+
+    <div class="list" id="list">
+        <div class="loading">Loading...</div>
+    </div>
+
+    <script>
+        const VIEWS = {
+            ALL: 'all',
+            STAGING: 'staging',
+            WAREHOUSE: 'warehouse'
+        };
+
+        let currentView = VIEWS.ALL;
+        let allItems = [];
+        let stagingItems = [];
+        let warehouseItems = [];
+        let warehouses = [];
+        let zones = [];
+
+        const search = document.getElementById('search');
+        const list = document.getElementById('list');
+        const warehouseFilters = document.getElementById('warehouseFilters');
+        const stagingStats = document.getElementById('stagingStats');
+        const warehouseSelect = document.getElementById('warehouseSelect');
+        const zoneSelect = document.getElementById('zoneSelect');
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentView = tab.dataset.view;
+                search.value = '';
+                switchView();
+            });
+        });
+
+        function switchView() {
+            warehouseFilters.style.display = 'none';
+            stagingStats.style.display = 'none';
+
+            if (currentView === VIEWS.ALL) {
+                fetchAllInventory();
+            } else if (currentView === VIEWS.STAGING) {
+                stagingStats.style.display = 'flex';
+                fetchStagingInventory();
+            } else if (currentView === VIEWS.WAREHOUSE) {
+                warehouseFilters.style.display = 'block';
+                fetchWarehouses();
+            }
+        }
+
+        // Fetch all inventory
+        function fetchAllInventory() {
+            list.innerHTML = '<div class="loading">Loading...</div>';
+            fetch('/api/inventory', { credentials: 'include' })
+                .then(res => res.json())
+                .then(data => {
+                    allItems = data.data || data || [];
+                    renderAllInventory(allItems);
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    list.innerHTML = '<div class="empty"><div class="empty-icon">❌</div><p>Error loading</p></div>';
+                });
+        }
+
+        // Fetch staging inventory
+        function fetchStagingInventory() {
+            list.innerHTML = '<div class="loading">Loading staging...</div>';
+            fetch('/api/inventory-movement/staging', { credentials: 'include' })
+                .then(res => res.json())
+                .then(data => {
+                    const stagingData = data.data || data || {};
+                    stagingItems = stagingData.products || [];
+                    document.getElementById('stagingTotalItems').textContent = stagingData.totalItems || 0;
+                    document.getElementById('stagingTotalValue').textContent = '$' + (stagingData.totalValue || 0).toFixed(2);
+                    renderStagingInventory(stagingItems);
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    list.innerHTML = '<div class="empty"><div class="empty-icon">❌</div><p>Error loading staging</p></div>';
+                });
+        }
+
+        // Fetch warehouses
+        function fetchWarehouses() {
+            list.innerHTML = '<div class="loading">Loading warehouses...</div>';
+            fetch('/api/warehouses', { credentials: 'include' })
+                .then(res => res.json())
+                .then(data => {
+                    warehouses = data.data?.warehouses || data.warehouses || [];
+
+                    if (warehouses.length > 0) {
+                        warehouseSelect.innerHTML = '<option value="">Select warehouse...</option>' +
+                            warehouses.map(w => {
+                                const id = w.warehouse_id || w.id;
+                                const name = w.warehouse_name || w.name;
+                                return `<option value="${id}">${name}</option>`;
+                            }).join('');
+                    } else {
+                        warehouseSelect.innerHTML = '<option value="">No warehouses</option>';
+                        list.innerHTML = '<div class="empty"><div class="empty-icon">🏭</div><p>No warehouses found</p></div>';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    list.innerHTML = '<div class="empty"><div class="empty-icon">❌</div><p>Error loading warehouses</p></div>';
+                });
+        }
+
+        // Warehouse selection change
+        warehouseSelect.addEventListener('change', (e) => {
+            const warehouseId = e.target.value;
+            if (warehouseId) {
+                fetchZones(warehouseId);
+                fetchWarehouseInventory(warehouseId);
+            } else {
+                zoneSelect.innerHTML = '<option value="">All Zones</option>';
+                list.innerHTML = '<div class="empty"><div class="empty-icon">🏭</div><p>Select a warehouse</p></div>';
+            }
+        });
+
+        // Zone selection change
+        zoneSelect.addEventListener('change', () => {
+            const warehouseId = warehouseSelect.value;
+            const zoneId = parseInt(zoneSelect.value);
+            if (warehouseId) {
+                fetchWarehouseInventory(warehouseId, zoneId && !isNaN(zoneId) ? zoneId : null);
+            }
+        });
+
+        // Fetch zones for warehouse
+        function fetchZones(warehouseId) {
+            fetch(`/api/warehouses/${warehouseId}/zones`, { credentials: 'include' })
+                .then(res => res.json())
+                .then(data => {
+                    zones = data.data?.zones || data.zones || [];
+                    zoneSelect.innerHTML = '<option value="">All Zones</option>' +
+                        zones.map(z => {
+                            const productCount = z.product_count || 0;
+                            const totalQty = z.total_quantity || 0;
+                            const zoneName = z.name;
+                            const displayText = productCount > 0
+                                ? `${zoneName} (${productCount} products, ${totalQty} units)`
+                                : `${zoneName} (Empty)`;
+                            return `<option value="${z.id || z.zone_id}">${displayText}</option>`;
+                        }).join('');
+                })
+                .catch(err => {
+                    console.error('Error loading zones:', err);
+                    zoneSelect.innerHTML = '<option value="">All Zones</option>';
+                });
+        }
+
+        // Fetch warehouse inventory
+        function fetchWarehouseInventory(warehouseId, zoneId = null) {
+            list.innerHTML = '<div class="loading">Loading inventory...</div>';
+            const url = `/api/warehouses/${warehouseId}/inventory${zoneId ? `?zone_id=${zoneId}` : ''}`;
+
+
+            fetch(url, { credentials: 'include' })
+                .then(res => res.json())
+                .then(data => {
+                    warehouseItems = data.data?.inventory || data.inventory || data.data || [];
+                    renderWarehouseInventory(warehouseItems);
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    list.innerHTML = '<div class="empty"><div class="empty-icon">❌</div><p>Error loading inventory</p></div>';
+                });
+        }
+
+        // Search functionality
+        search.addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+
+            if (currentView === VIEWS.ALL) {
+                const filtered = allItems.filter(item => {
+                    const maker = (item.device_maker || '').toLowerCase();
+                    const name = (item.device_name || item.name || '').toLowerCase();
+                    const sku = (item.sku || '').toLowerCase();
+                    return maker.includes(q) || name.includes(q) || sku.includes(q);
+                });
+                renderAllInventory(filtered);
+            } else if (currentView === VIEWS.STAGING) {
+                const filtered = stagingItems.filter(item => {
+                    const maker = (item.device_maker || '').toLowerCase();
+                    const name = (item.device_name || '').toLowerCase();
+                    return maker.includes(q) || name.includes(q);
+                });
+                renderStagingInventory(filtered);
+            } else if (currentView === VIEWS.WAREHOUSE) {
+                const filtered = warehouseItems.filter(item => {
+                    const maker = (item.device_maker || '').toLowerCase();
+                    const name = (item.device_name || item.product_name || '').toLowerCase();
+                    return maker.includes(q) || name.includes(q);
+                });
+                renderWarehouseInventory(filtered);
+            }
+        });
+
+        // Render functions
+        function renderAllInventory(data) {
+            if (data.length === 0) {
+                list.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><p>No matches</p></div>';
+                return;
+            }
+
+            list.innerHTML = data.map(item => {
+                const qty = item.quantity || item.total_inventory || 0;
+                const qtyClass = qty < 10 ? 'low' : '';
+                const maker = item.device_maker || '';
+                const name = item.device_name || item.name || 'Unnamed';
+                const sku = item.sku || 'No SKU';
+
+                return `
+                    <div class="item">
+                        <div class="item-row">
+                            <div style="flex: 1;">
+                                ${maker ? `<div class="item-maker">${maker}</div>` : ''}
+                                <div class="item-name">${name}</div>
+                                <div class="item-sku">${sku}</div>
+                            </div>
+                            <div class="item-qty ${qtyClass}">${qty}</div>
+                        </div>
+                        <div class="item-info">
+                            <span>📍 ${item.location || 'N/A'}</span>
+                            ${item.category ? `<span>🏷️ ${item.category}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderStagingInventory(data) {
+            if (data.length === 0) {
+                list.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><p>Staging area is empty</p></div>';
+                return;
+            }
+
+            list.innerHTML = data.map(item => {
+                const qty = item.staging_quantity || 0;
+                const value = item.staging_value || 0;
+                const maker = item.device_maker || '';
+                const name = item.device_name || 'Unnamed';
+
+                return `
+                    <div class="item">
+                        <div class="item-row">
+                            <div style="flex: 1;">
+                                ${maker ? `<div class="item-maker">${maker}</div>` : ''}
+                                <div class="item-name">${name}</div>
+                            </div>
+                            <div class="item-qty staging">${qty}</div>
+                        </div>
+                        <div class="item-info">
+                            <span class="value-badge">$${value.toFixed(2)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderWarehouseInventory(data) {
+            if (data.length === 0) {
+                list.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><p>No inventory in this location</p></div>';
+                return;
+            }
+
+            list.innerHTML = data.map(item => {
+                const qty = item.quantity || 0;
+                const qtyClass = qty < 10 ? 'low' : '';
+                const maker = item.device_maker || '';
+                const name = item.device_name || item.product_name || 'Unnamed';
+                const warehouse = item.warehouse_name || '';
+                const zone = item.zone_name || '';
+                const location = item.bin_location || item.location || '';
+
+                return `
+                    <div class="item">
+                        <div class="item-row">
+                            <div style="flex: 1;">
+                                ${maker ? `<div class="item-maker">${maker}</div>` : ''}
+                                <div class="item-name">${name}</div>
+                                ${warehouse || zone ? `<div class="item-location">🏭 ${warehouse}${zone ? ` › ${zone}` : ''}${location ? ` › ${location}` : ''}</div>` : ''}
+                            </div>
+                            <div class="item-qty ${qtyClass}">${qty}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Initial load
+        fetchAllInventory();
+    </script>
+</body>
+
+</html>

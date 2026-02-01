@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Receive Stock</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #667eea;
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .form {
+            padding: 20px;
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e8e8e8;
+            border-radius: 10px;
+            font-size: 15px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        .submit-btn:active {
+            opacity: 0.8;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            text-align: center;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        .message.error {
+            background: #ffe8e8;
+            color: #d63031;
+            display: block;
+        }
+
+        .total-value {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #333;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <button class="back-btn" onclick="history.back()">←</button>
+        <h1>📥 Receive Stock</h1>
+    </div>
+
+    <div class="form">
+        <div id="message" class="message"></div>
+
+        <form id="receiveForm">
+            <div class="field">
+                <label>Product *</label>
+                <select id="product" required>
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Quantity *</label>
+                <input type="number" id="quantity" min="1" required placeholder="0">
+            </div>
+
+            <div class="field">
+                <label>Supplier</label>
+                <select id="supplier">
+                    <option value="">Loading suppliers...</option>
+                </select>
+                <div class="hint">Track which supplier provided this stock</div>
+            </div>
+
+            <div class="field">
+                <label>Unit Cost</label>
+                <input type="number" id="unitCost" min="0" step="0.01" placeholder="Cost per unit">
+                <div class="hint">Pre-filled from product price if available</div>
+                <div id="totalValue" class="total-value" style="display:none;">
+                    Total value: <strong>$0.00</strong>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Notes</label>
+                <textarea id="notes" rows="3" placeholder="Optional notes about this receipt..."></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">Receive Stock</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('receiveForm');
+        const message = document.getElementById('message');
+        const productSelect = document.getElementById('product');
+        const supplierSelect = document.getElementById('supplier');
+        const quantityInput = document.getElementById('quantity');
+        const unitCostInput = document.getElementById('unitCost');
+        const totalValueDiv = document.getElementById('totalValue');
+        const submitBtn = document.getElementById('submitBtn');
+
+        let products = [];
+
+        // Load products
+        fetch('/api/inventory', { credentials: 'include' })
+            .then(res => res.json())
+            .then(data => {
+                // Handle both response formats: response.data or data.data
+                const items = data.data || data || [];
+                products = items;
+
+                if (items.length > 0) {
+                    productSelect.innerHTML = '<option value="">Select product...</option>' +
+                        items.map(item => {
+                            const maker = item.device_maker || '';
+                            const name = item.device_name || item.name || 'Unnamed';
+                            const displayName = maker ? `${maker} ${name}` : name;
+                            const productId = item.product_id || item.id;
+                            return `<option value="${productId}">${displayName}</option>`;
+                        }).join('');
+                } else {
+                    productSelect.innerHTML = '<option value="">No products found</option>';
+                }
+            })
+            .catch(err => {
+                console.error('Error loading products:', err);
+                productSelect.innerHTML = '<option value="">Error loading products</option>';
+            });
+
+        // Load suppliers
+        fetch('/api/suppliers?status=active', { credentials: 'include' })
+            .then(res => res.json())
+            .then(data => {
+                const suppliers = data.data?.suppliers || data.suppliers || [];
+
+                if (suppliers.length > 0) {
+                    supplierSelect.innerHTML = '<option value="">Select supplier (optional)...</option>' +
+                        suppliers.map(supplier => {
+                            const category = supplier.category ? ` - ${supplier.category}` : '';
+                            return `<option value="${supplier.id}">${supplier.name}${category}</option>`;
+                        }).join('');
+                } else {
+                    supplierSelect.innerHTML = '<option value="">No suppliers available</option>';
+                }
+            })
+            .catch(err => {
+                console.error('Error loading suppliers:', err);
+                supplierSelect.innerHTML = '<option value="">Select supplier (optional)...</option>';
+            });
+
+        // Auto-fill unit cost when product is selected
+        productSelect.addEventListener('change', (e) => {
+            const productId = e.target.value;
+            if (productId) {
+                const product = products.find(p => String(p.product_id || p.id) === String(productId));
+                if (product && product.device_price !== undefined && product.device_price !== null) {
+                    unitCostInput.value = product.device_price;
+                } else {
+                    unitCostInput.value = '';
+                }
+            } else {
+                unitCostInput.value = '';
+            }
+            updateTotalValue();
+        });
+
+        // Update total value when quantity or unit cost changes
+        quantityInput.addEventListener('input', updateTotalValue);
+        unitCostInput.addEventListener('input', updateTotalValue);
+
+        function updateTotalValue() {
+            const qty = parseInt(quantityInput.value) || 0;
+            const cost = parseFloat(unitCostInput.value) || 0;
+            const total = qty * cost;
+
+            if (qty > 0 && cost > 0) {
+                totalValueDiv.style.display = 'block';
+                totalValueDiv.innerHTML = `Total value: <strong>$${total.toFixed(2)}</strong>`;
+            } else {
+                totalValueDiv.style.display = 'none';
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const data = {
+                productId: productSelect.value,
+                quantity: parseInt(quantityInput.value),
+                supplier_id: supplierSelect.value || null,
+                unit_cost: unitCostInput.value ? parseFloat(unitCostInput.value) : null,
+                notes: document.getElementById('notes').value
+            };
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+            message.className = 'message';
+
+            try {
+                const response = await fetch('/api/inventory/receive', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (result.success || response.ok) {
+                    message.textContent = 'Stock received successfully!';
+                    message.className = 'message success';
+                    form.reset();
+                    totalValueDiv.style.display = 'none';
+
+                    setTimeout(() => {
+                        message.className = 'message';
+                        window.location.href = '/mobile/dashboard.html';
+                    }, 2000);
+                } else {
+                    message.textContent = result.error || 'Failed to receive stock';
+                    message.className = 'message error';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                message.textContent = error.message || 'Network error';
+                message.className = 'message error';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Receive Stock';
+            }
+        });
+    </script>
+</body>
+
+</html>

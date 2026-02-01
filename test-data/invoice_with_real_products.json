@@ -1,0 +1,137 @@
+{
+  "invoice_number": "INV-REAL-2024-003",
+  "pattern": "01GTKT0/001",
+  "serial": "BB/24R",
+  "invoice_date": "2024-01-30",
+  "due_date": "2024-02-29",
+  "currency": "VND",
+  "payment_method": "TM",
+  "seller": {
+    "name": "Công ty TNHH Thiết Bị Di Động Việt Nam",
+    "tax_code": "0123456789",
+    "address": "123 Nguyễn Huệ, Quận 1, TP.HCM",
+    "phone": "028-1234-5678",
+    "email": "sales@vietnammobile.vn"
+  },
+  "buyer": {
+    "name": "Mycelium ERP Co., Ltd",
+    "tax_code": "9876543210",
+    "address": "456 Lê Lợi, Quận 1, TP.HCM"
+  },
+  "items": [
+    {
+      "product_name": "realme P3 Black 12GB/127GB",
+      "product_id": "26e9c184-2004-4aea-9b45-e6df3e9237a3",
+      "product_uuid": "26e9c184-2004-4aea-9b45-e6df3e9237a3",
+      "unit": "Chiếc",
+      "quantity": 5,
+      "unit_price": 29998000,
+      "line_total": 149990000,
+      "tax_rate": 10,
+      "tax_amount": 14999000,
+      "discount_amount": 2999800,
+      "final_price": 161989200,
+      "specifications": {
+        "color": "Black",
+        "ram": "12GB",
+        "rom": "127GB",
+        "processor": ""
+      },
+      "serial_numbers": [
+        "REALME-P3-BLK-2024-001",
+        "REALME-P3-BLK-2024-002", 
+        "REALME-P3-BLK-2024-003",
+        "REALME-P3-BLK-2024-004",
+        "REALME-P3-BLK-2024-005"
+      ],
+      "imei_numbers": [
+        "861234567890123",
+        "861234567890124",
+        "861234567890125",
+        "861234567890126",
+        "861234567890127"
+      ]
+    },
+    {
+      "product_name": "realme P3 Green 4GB/64GB",
+      "product_id": "2a56bb70-8094-4069-af29-5685e07406c8",
+      "product_uuid": "2a56bb70-8094-4069-af29-5685e07406c8",
+      "unit": "Chiếc",
+      "quantity": 8,
+      "unit_price": 20000000,
+      "line_total": 160000000,
+      "tax_rate": 10,
+      "tax_amount": 16000000,
+      "discount_amount": 3200000,
+      "final_price": 172800000,
+      "specifications": {
+        "color": "Green",
+        "ram": "4GB",
+        "rom": "64GB",
+        "processor": ""
+      },
+      "serial_numbers": [
+        "REALME-P3-GRN-2024-001",
+        "REALME-P3-GRN-2024-002",
+        "REALME-P3-GRN-2024-003",
+        "REALME-P3-GRN-2024-004",
+        "REALME-P3-GRN-2024-005",
+        "REALME-P3-GRN-2024-006",
+        "REALME-P3-GRN-2024-007",
+        "REALME-P3-GRN-2024-008"
+      ],
+      "imei_numbers": [
+        "862345678901234",
+        "862345678901235",
+        "862345678901236",
+        "862345678901237",
+        "862345678901238",
+        "862345678901239",
+        "862345678901240",
+        "862345678901241"
+      ]
+    }
+  ],
+  "invoice_totals": {
+    "subtotal": 309990000,
+    "total_discount": 6199800,
+    "total_tax": 30999000,
+    "grand_total": 334789200,
+    "amount_in_words": "Ba trăm ba mười bốn triệu bảy trăm tám mười chín nghìn hai trăm đồng"
+  },
+  "payment_info": {
+    "bank_name": "Ngân hàng TMCP Ngoại thương Việt Nam",
+    "account_number": "1234567890123456",
+    "account_holder": "Công ty TNHH Thiết Bị Di Động Việt Nam"
+  },
+  "notes": "Hóa đơn bán hàng cho Mycelium ERP - Đơn hàng điện thoại realme P3 với các cấu hình khác nhau. Mỗi thiết bị có serial number và IMEI riêng biệt để theo dõi. Sản phẩm có UUID thực từ cơ sở dữ liệu specs_db.",
+  "imei_serial_mapping": {
+    "description": "Mapping IMEI to Serial Number (one-to-one correspondence)",
+    "mappings": [
+      {"imei": "861234567890123", "serial": "REALME-P3-BLK-2024-001", "product_uuid": "26e9c184-2004-4aea-9b45-e6df3e9237a3"},
+      {"imei": "861234567890124", "serial": "REALME-P3-BLK-2024-002", "product_uuid": "26e9c184-2004-4aea-9b45-e6df3e9237a3"},
+      {"imei": "861234567890125", "serial": "REALME-P3-BLK-2024-003", "product_uuid": "26e9c184-2004-4aea-9b45-e6df3e9237a3"},
+      {"imei": "861234567890126", "serial": "REALME-P3-BLK-2024-004", "product_uuid": "26e9c184-2004-4aea-9b45-e6df3e9237a3"},
+      {"imei": "861234567890127", "serial": "REALME-P3-BLK-2024-005", "product_uuid": "26e9c184-2004-4aea-9b45-e6df3e9237a3"},
+      {"imei": "862345678901234", "serial": "REALME-P3-GRN-2024-001", "product_uuid": "2a56bb70-8094-4069-af29-5685e07406c8"},
+      {"imei": "862345678901235", "serial": "REALME-P3-GRN-2024-002", "product_uuid": "2a56bb70-8094-4069-af29-5685e07406c8"},
+      {"imei": "862345678901236", "serial": "REALME-P3-GRN-2024-003", "product_uuid": "2a56bb70-8094-4069-af29-5685e07406c8"},
+      {"imei": "862345678901237", "serial": "REALME-P3-GRN-2024-004", "product_uuid": "2a56bb70-8094-4069-af29-5685e07406c8"},
+      {"imei": "862345678901238", "serial": "REALME-P3-GRN-2024-005", "product_uuid": "2a56bb70-8094-4069-af29-5685e07406c8"},
+      {"imei": "862345678901239", "serial": "REALME-P3-GRN-2024-006", "product_uuid": "2a56bb70-8094-4069-af29-5685e07406c8"},
+      {"imei": "862345678901240", "serial": "REALME-P3-GRN-2024-007", "product_uuid": "2a56bb70-8094-4069-af29-5685e07406c8"},
+      {"imei": "862345678901241", "serial": "REALME-P3-GRN-2024-008", "product_uuid": "2a56bb70-8094-4069-af29-5685e07406c8"}
+    ]
+  },
+  "creation_metadata": {
+    "created_by": "system",
+    "created_at": "2024-01-30T10:30:00Z",
+    "file_format": "json",
+    "purpose": "invoice_receiving_integration_test",
+    "database_source": "specs_db",
+    "real_product_uuids": [
+      "26e9c184-2004-4aea-9b45-e6df3e9237a3",
+      "2a56bb70-8094-4069-af29-5685e07406c8"
+    ]
+  }
+}

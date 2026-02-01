@@ -1,0 +1,97 @@
+{
+  "invoice_number": "INV-REAL-2024-003-MINI",
+  "invoice_date": "2024-01-30",
+  "supplier": {
+    "name": "realme Devices Vietnam",
+    "address": "123 Tech Street, District 1, Ho Chi Minh City",
+    "tax_id": "0123456789",
+    "contact": "sales@realme.vn"
+  },
+  "customer": {
+    "name": "Mycelium ERP Test Company",
+    "address": "456 Business Ave, District 2, Ho Chi Minh City",
+    "tax_id": "9876543210"
+  },
+  "items": [
+    {
+      "product_uuid": "26e9c184-2004-4aea-9b45-e6df3e9237a3",
+      "product_name": "realme P3 Black 12GB/127GB",
+      "product_code": "REALME-P3-BLK-12GB",
+      "quantity": 2,
+      "unit_price": 299.98,
+      "line_total": 599.96,
+      "tax_rate": 0.10,
+      "tax_amount": 59.996,
+      "serial_numbers": [
+        "REALME-P3-BLK-2024-001",
+        "REALME-P3-BLK-2024-002"
+      ],
+      "imei_numbers": [
+        "861234567890123",
+        "861234567890124"
+      ]
+    },
+    {
+      "product_uuid": "2a56bb70-8094-4069-af29-5685e07406c8",
+      "product_name": "realme P3 Green 4GB/64GB",
+      "product_code": "REALME-P3-GRN-4GB",
+      "quantity": 3,
+      "unit_price": 200.00,
+      "line_total": 600.00,
+      "tax_rate": 0.10,
+      "tax_amount": 60.00,
+      "serial_numbers": [
+        "REALME-P3-GRN-2024-001",
+        "REALME-P3-GRN-2024-002",
+        "REALME-P3-GRN-2024-003"
+      ],
+      "imei_numbers": [
+        "862345678901234",
+        "862345678901235",
+        "862345678901236"
+      ]
+    }
+  ],
+  "invoice_totals": {
+    "subtotal": 1199.96,
+    "tax_amount": 119.996,
+    "discount_amount": 0.00,
+    "shipping_fee": 50.00,
+    "grand_total": 1369.96
+  },
+  "payment_terms": {
+    "method": "bank_transfer",
+    "due_date": "2024-02-29",
+    "currency": "VND"
+  },
+  "notes": "Test invoice with real product UUIDs from specs_db - scaled for database constraints",
+  "imei_serial_mapping": {
+    "mappings": [
+      {
+        "imei": "861234567890123",
+        "serial": "REALME-P3-BLK-2024-001",
+        "product_uuid": "26e9c184-2004-4aea-9b45-e6df3e9237a3"
+      },
+      {
+        "imei": "861234567890124",
+        "serial": "REALME-P3-BLK-2024-002",
+        "product_uuid": "26e9c184-2004-4aea-9b45-e6df3e9237a3"
+      },
+      {
+        "imei": "862345678901234",
+        "serial": "REALME-P3-GRN-2024-001",
+        "product_uuid": "2a56bb70-8094-4069-af29-5685e07406c8"
+      },
+      {
+        "imei": "862345678901235",
+        "serial": "REALME-P3-GRN-2024-002",
+        "product_uuid": "2a56bb70-8094-4069-af29-5685e07406c8"
+      },
+      {
+        "imei": "862345678901236",
+        "serial": "REALME-P3-GRN-2024-003",
+        "product_uuid": "2a56bb70-8094-4069-af29-5685e07406c8"
+      }
+    ]
+  }
+}

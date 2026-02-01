@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Session secrets
+*.session-secrets.json
+.session-secrets.json
+
+# Build artifacts
+*dist/
+build/
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Vite cache
+.vite/
+node_modules/.vite/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Testing
+coverage/
+.nyc_output/
+test-results-*.json
+*.test-results.json
+tests/.test-cache/
+.mocha-results.json
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Session and test artifacts
+cookies.txt
+*.cookies
+mycelium_code_submission/

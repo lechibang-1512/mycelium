@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Agent Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .info-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .mobile {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+
+        .desktop {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            display: block;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔍 User Agent Detection Test</h1>
+
+    <div class="info-box" id="detection-result">
+        <h2>Loading...</h2>
+    </div>
+
+    <div class="info-box">
+        <h3>Client-Side Detection</h3>
+        <p><strong>User Agent:</strong></p>
+        <code id="client-ua"></code>
+        <p><strong>Screen Size:</strong> <span id="screen-size"></span></p>
+        <p><strong>Touch Support:</strong> <span id="touch-support"></span></p>
+    </div>
+
+    <script>
+        // Client-side detection
+        document.getElementById('client-ua').textContent = navigator.userAgent;
+        document.getElementById('screen-size').textContent = `${window.screen.width}x${window.screen.height}`;
+        document.getElementById('touch-support').textContent = 'ontouchstart' in window ? 'Yes ✓' : 'No ✗';
+
+        // Fetch server-side detection
+        fetch('/api/ua-test')
+            .then(res => res.json())
+            .then(data => {
+                const box = document.getElementById('detection-result');
+                box.className = 'info-box ' + (data.isMobile ? 'mobile' : 'desktop');
+                box.innerHTML = `
+                    <h2>${data.isMobile ? '📱 Mobile Device Detected' : '💻 Desktop Device Detected'}</h2>
+                    <p><strong>Server Detection:</strong> ${data.isMobile ? 'Mobile' : 'Desktop'}</p>
+                    <p><strong>User Agent (Server):</strong></p>
+                    <code>${data.userAgent}</code>
+                `;
+            })
+            .catch(err => {
+                document.getElementById('detection-result').innerHTML =
+                    '<h2>❌ Error</h2><p>Could not fetch server detection: ' + err.message + '</p>';
+            });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: red;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+        }
+
+        .box {
+            background: blue;
+            padding: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>MOBILE TEST PAGE</h1>
+    <div class="box">If you can see this, CSS is working!</div>
+    <p>User Agent: <span id="ua"></span></p>
+    <p>Screen: <span id="screen"></span></p>
+    <script>
+        document.getElementById('ua').textContent = navigator.userAgent;
+        document.getElementById('screen').textContent = window.innerWidth + 'x' + window.innerHeight;
+        console.log('Test page loaded successfully!');
+    </script>
+</body>
+
+</html>
