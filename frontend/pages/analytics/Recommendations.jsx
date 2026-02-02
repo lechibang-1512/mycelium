@@ -1,13 +1,55 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Badge, Spinner, Tab, Tabs, Table, ButtonGroup, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import axios from 'axios';
-import { formatDate } from '../../../shared/utils/formatters';
-import {
-  exportRecommendationsToCSV,
-  sortRecommendations,
-  filterBySearch,
-  formatCurrency
-} from '../../../shared/utils/recommendations';
+
+// Inline formatDate (from deleted shared/utils/formatters.js)
+const formatDate = (dateString, options = {}) => {
+  if (!dateString) return 'N/A';
+  const defaultOptions = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', ...options };
+  try { return new Date(dateString).toLocaleDateString('en-US', defaultOptions); }
+  catch { return 'N/A'; }
+};
+
+// Inline functions (from deleted shared/utils/recommendations.js)
+const exportRecommendationsToCSV = (recommendations, type = 'products') => {
+  if (typeof document === 'undefined') { console.warn('CSV export not supported'); return; }
+  if (!recommendations || recommendations.length === 0) { alert('No data to export'); return; }
+  const headers = type === 'products'
+    ? ['Product', 'Warehouse', 'Current Stock', 'Reorder Point', 'Recommended Qty', 'Urgency', 'Stockout Date', 'Reason']
+    : ['Part Name', 'Part Code', 'Warehouse', 'Current Stock', 'Reorder Point', 'Recommended Qty', 'Urgency', 'Stockout Date'];
+  const rows = recommendations.map(rec => type === 'products'
+    ? [`${rec.device_maker || ''} ${rec.device_name || ''}`.trim(), rec.warehouse_name || 'N/A', rec.current_stock || 0, rec.reorder_point || 0, rec.recommended_quantity || 0, rec.urgency_level || 'N/A', rec.estimated_stockout_date || 'N/A', (rec.recommendation_reason || '').replace(/,/g, ';')]
+    : [rec.part_name || 'N/A', rec.part_code || 'N/A', rec.warehouse_name || 'N/A', rec.current_stock || 0, rec.reorder_point || 0, rec.recommended_quantity || 0, rec.urgency_level || 'N/A', rec.estimated_stockout_date || 'N/A']
+  );
+  const csvContent = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.setAttribute('href', URL.createObjectURL(blob));
+  link.setAttribute('download', `recommendations_${type}_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link); link.click(); document.body.removeChild(link);
+};
+
+const sortRecommendations = (recommendations, sortBy, sortOrder = 'desc') => {
+  const urgencyOrder = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+  return [...recommendations].sort((a, b) => {
+    let aVal, bVal;
+    switch (sortBy) {
+      case 'urgency': aVal = urgencyOrder[a.urgency_level] || 0; bVal = urgencyOrder[b.urgency_level] || 0; break;
+      case 'stockout_date': aVal = new Date(a.estimated_stockout_date || '9999-12-31').getTime(); bVal = new Date(b.estimated_stockout_date || '9999-12-31').getTime(); break;
+      case 'quantity': aVal = parseFloat(a.recommended_quantity || 0); bVal = parseFloat(b.recommended_quantity || 0); break;
+      case 'current_stock': aVal = parseFloat(a.current_stock || 0); bVal = parseFloat(b.current_stock || 0); break;
+      case 'name': aVal = (a.device_name || a.part_name || '').toLowerCase(); bVal = (b.device_name || b.part_name || '').toLowerCase(); break;
+      default: return 0;
+    }
+    return sortOrder === 'asc' ? (aVal > bVal ? 1 : aVal < bVal ? -1 : 0) : (aVal < bVal ? 1 : aVal > bVal ? -1 : 0);
+  });
+};
+
+const filterBySearch = (recommendations, term) => {
+  if (!term) return recommendations;
+  const t = term.toLowerCase();
+  return recommendations.filter(rec => (rec.device_name || rec.part_name || '').toLowerCase().includes(t) || (rec.device_maker || '').toLowerCase().includes(t) || (rec.part_code || '').toLowerCase().includes(t) || (rec.warehouse_name || '').toLowerCase().includes(t));
+};
 
 function Recommendations() {
   // State management

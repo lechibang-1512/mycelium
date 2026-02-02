@@ -11,11 +11,18 @@ import {
 import { rmaAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { PERMISSIONS } from '../../constants/permissions';
-import { formatDate } from '../../../shared/utils/formatters';
 import CreateRMAForm from '../../components/rma/CreateRMAForm';
 import EditRMAForm from '../../components/rma/EditRMAForm';
 import RMADetail from '../../components/rma/RMADetail';
 import RepairJobForm from '../../components/spareparts/RepairJobForm';
+
+// Inline formatDate (from deleted shared/utils/formatters.js)
+const formatDate = (dateString, options = {}) => {
+  if (!dateString) return 'N/A';
+  const defaultOptions = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', ...options };
+  try { return new Date(dateString).toLocaleDateString('en-US', defaultOptions); }
+  catch { return 'N/A'; }
+};
 
 const RMA = () => {
   const { hasPermission } = useAuth();

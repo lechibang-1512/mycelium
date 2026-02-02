@@ -3,16 +3,8 @@
     "entry": [
         "backend/server.cjs",
         "frontend/main.jsx",
-        "scripts/init-rbac.js",
-        "scripts/jobs/*.js",
-        "scripts/utils-*.js",
-        "scripts/seed-db.js",
-        "scripts/setup-spare-parts-recommendations.js",
-        "scripts/reports/*.js",
         "scripts/tests/setup.js",
-        "scripts/tests/check-dbs.js",
-        "scripts/tests/cleanup-test-data.js",
-        "scripts/tests/test-*.js"
+        "scripts/tests/cleanup-test-data.js"
     ],
     "project": [
         "backend/**/*.{js,cjs,mjs}",

@@ -35,13 +35,11 @@ const setupMiddleware = require('./middleware/setupMiddleware');
 const { detectMobile } = require('./middleware/userAgent');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 const { bigintHandler } = require('./middleware/bigintHandler');
-const ScheduledJobsService = require('./services/ScheduledJobsService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 const convertBigIntToNumber = SanitizationService.convertBigIntToNumber;
-let scheduledJobsService = null;
 let dbConnection = null;
 
 // MongoDB migration complete - no SQL pool needed
@@ -63,10 +61,6 @@ async function startServer() {
         // Sync policies from MongoDB roles and user-role assignments
         await CasbinService.syncFromMongoDB();
         console.log('✅ Casbin policies synced from MongoDB');
-
-        // Scheduled Jobs
-        // scheduledJobsService = new ScheduledJobsService(dbConnection); // Need to update service to work with Mongoose
-        // scheduledJobsService.start();
 
         // Request logging middleware - logs to file, not console
         const logFile = path.join(__dirname, '../server.log');
@@ -152,8 +146,7 @@ async function startServer() {
 
 async function gracefulShutdown(signal) {
     console.log(`🛑 ${signal} received, shutting down...`);
-    if (scheduledJobsService) scheduledJobsService.stop();
-    // if (dbConnection) await dbConnection.close(); // Mongoose connection is global, could close here
+    // if (dbConnection) await dbConnection.close(); // Mongoose connection is global
     removePidFile();
     process.exit(0);
 }

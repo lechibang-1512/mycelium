@@ -53,7 +53,6 @@ export { sparePartsAPI } from './api/spare-parts';
 
 // Catalog APIs
 export {
-  phonesAPI,
   suppliersAPI,
   deviceSearchAPI,
   reportsAPI
@@ -62,10 +61,7 @@ export {
 export { invoicesAPI } from './api/invoices';
 
 // Stocktake APIs
-export {
-  stocktakeAPI,
-  recommendationsAPI
-} from './api/stocktake';
+export { stocktakeAPI } from './api/stocktake';
 
 // Receipts API
 export { receiptsAPI } from './api/receipts';

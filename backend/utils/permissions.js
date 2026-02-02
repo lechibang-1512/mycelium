@@ -88,9 +88,6 @@ if (typeof module !== 'undefined' && module.exports) {
         PERMISSION_DEFINITIONS,
         ROLES,
         PERMISSION_GROUPS,
-        hasPermission,
-        hasAnyPermission,
-        hasAllPermissions,
         getEffectivePermissions
     };
 }

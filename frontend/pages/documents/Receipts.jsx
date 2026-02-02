@@ -1,9 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Table, Button, Badge, Form, Modal, Alert, Spinner } from 'react-bootstrap';
 import { receiptsAPI, warehouseAPI } from '../../services/api';
-import { formatDate } from '../../../shared/utils/formatters';
 import { useAuth } from '../../contexts/AuthContext';
 import { PERMISSIONS } from '../../constants/permissions';
+
+// Inline formatDate (from deleted shared/utils/formatters.js)
+const formatDate = (dateString, options = {}) => {
+  if (!dateString) return 'N/A';
+  const defaultOptions = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', ...options };
+  try { return new Date(dateString).toLocaleDateString('en-US', defaultOptions); }
+  catch { return 'N/A'; }
+};
 
 function Receipts() {
   const { hasPermission } = useAuth();

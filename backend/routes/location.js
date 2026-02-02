@@ -10,8 +10,9 @@
 const express = require('express');
 const router = express.Router();
 const WarehouseService = require('../services/WarehouseService');
-const locationApi = require('../apis/locationApi');
-const { withTransaction } = require('../utils/queryHelper');
+const SanitizationService = require('../services/SanitizationService');
+
+const convertBigIntToNumber = SanitizationService.convertBigIntToNumber;
 
 module.exports = () => {
     const warehouseService = new WarehouseService();
@@ -24,19 +25,13 @@ module.exports = () => {
     // List bins with optional filters
     binsRouter.get('/', async (req, res) => {
         try {
-            const { warehouse_id, active, product_type } = req.query;
+            const { warehouse_id, active } = req.query;
 
-            if (warehouse_id) {
-                const bins = await warehouseService.getBinsByWarehouse(warehouse_id, active !== 'false');
-                return res.json(bins.map(b => convertBigIntToNumber(b)));
+            if (!warehouse_id) {
+                return res.status(400).json({ success: false, error: 'warehouse_id is required' });
             }
 
-            // Use locationApi for listing all bins
-            const api = locationApi();
-            const bins = await api.listAllBins({
-                active: active !== 'false',
-                product_type
-            });
+            const bins = await warehouseService.getBinsByWarehouse(warehouse_id, active !== 'false');
             res.json(bins.map(b => convertBigIntToNumber(b)));
         } catch (error) {
             console.error('List bins error:', error);
@@ -119,9 +114,13 @@ module.exports = () => {
                 return res.status(404).json({ success: false, error: 'Bin not found' });
             }
 
-            // Use locationApi for detailed contents
-            const api = locationApi();
-            const { aggregateItems, serializedItems } = await api.getBinContentsDetailed(binId);
+            // Get bin with items using WarehouseService
+            const binsWithItems = await warehouseService.getBinsByWarehouseWithItems(bin.warehouse_id, true);
+            const binWithItems = binsWithItems.find(b => b.bin_id === binId);
+
+            const items = binWithItems?.items || [];
+            const aggregateItems = items.filter(i => i.item_type === 'aggregate');
+            const serializedItems = items.filter(i => i.item_type === 'serialized');
 
             // Calculate totals
             const aggregateCount = aggregateItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
@@ -273,19 +272,14 @@ module.exports = () => {
         }
     });
 
-    // Remove product from bin
+    // Remove product from bin - Note: Use inventory transfer to move items out of bins
     binsRouter.delete('/:binId/inventory/:productId', async (req, res) => {
         try {
-            const binId = req.params.binId;
-            const productId = req.params.productId;
-            const { quantity, batch_id } = req.body;
-
-            if (!quantity || quantity <= 0) {
-                return res.status(400).json({ success: false, error: 'Positive quantity required' });
-            }
-
-            await warehouseService.removeProductFromBin(binId, productId, quantity, batch_id || null);
-            res.json({ success: true, message: 'Product removed from bin successfully' });
+            // This endpoint is deprecated - bin inventory is managed via transfers
+            res.status(501).json({
+                success: false,
+                error: 'Direct bin removal not supported. Use inventory transfer to move items between locations.'
+            });
         } catch (error) {
             console.error('Remove product from bin error:', error);
             res.status(400).json({ success: false, error: error.message || 'Failed to remove product from bin' });
@@ -295,27 +289,41 @@ module.exports = () => {
     // Move product or spare part between bins
     binsRouter.post('/move', async (req, res) => {
         try {
-            const { from_bin_id, to_bin_id, product_id, spare_part_id, quantity, batch_id } = req.body;
+            const { from_bin_id, to_bin_id, product_id, quantity } = req.body;
 
-            if (!from_bin_id || !to_bin_id || (!product_id && !spare_part_id) || !quantity || quantity <= 0) {
+            if (!from_bin_id || !to_bin_id || !product_id || !quantity || quantity <= 0) {
                 return res.status(400).json({
                     success: false,
-                    error: 'from_bin_id, to_bin_id, product_id or spare_part_id, and positive quantity required'
+                    error: 'from_bin_id, to_bin_id, product_id, and positive quantity required'
                 });
             }
 
-            // Use locationApi for transfer with full transaction support
-            const api = locationApi();
-            const result = await api.transferBetweenBins({
-                from_bin_id,
-                to_bin_id,
-                product_id,
-                spare_part_id,
-                quantity,
-                batch_id
-            });
+            // Get bin info to validate and get warehouse IDs
+            const fromBin = await warehouseService.getBinById(from_bin_id);
+            const toBin = await warehouseService.getBinById(to_bin_id);
 
-            res.json(result);
+            if (!fromBin || !toBin) {
+                return res.status(404).json({ success: false, error: 'Source or destination bin not found' });
+            }
+
+            // For same warehouse, use bin assignment
+            if (fromBin.warehouse_id === toBin.warehouse_id) {
+                // For now, bin-to-bin transfer within same warehouse requires manual adjustment
+                // This could be enhanced with a dedicated method later
+                res.status(501).json({
+                    success: false,
+                    error: 'Bin-to-bin transfer within same warehouse not yet implemented. Use warehouse transfer for cross-warehouse moves.'
+                });
+            } else {
+                // Cross-warehouse transfer
+                await warehouseService.transferInventory(
+                    product_id,
+                    fromBin.warehouse_id,
+                    toBin.warehouse_id,
+                    quantity
+                );
+                res.json({ success: true, message: 'Inventory transferred between warehouses' });
+            }
         } catch (error) {
             console.error('Move product between bins error:', error);
             res.status(400).json({ success: false, error: error.message || 'Failed to move between bins' });
