@@ -11,6 +11,11 @@ const PhoneModal = ({
   activeTab,
   onTabSelect
 }) => {
+  // Helper to safely access nested properties provided path like "attributes.processor.name"
+  const getNestedValue = (obj, path) => {
+    return path.split('.').reduce((acc, part) => acc && acc[part], obj) || '';
+  };
+
   return (
     <Modal show={show} onHide={onHide} size="xl">
       <Modal.Header closeButton>
@@ -108,8 +113,8 @@ const PhoneModal = ({
                       <Form.Label>Color</Form.Label>
                       <Form.Control
                         type="text"
-                        name="color"
-                        value={formData.color}
+                        name="attributes.body.color"
+                        value={getNestedValue(formData, 'attributes.body.color')}
                         onChange={onInputChange}
                         placeholder="Phantom Black"
                       />
@@ -122,8 +127,8 @@ const PhoneModal = ({
                       <Form.Label>Water & Dust Rating</Form.Label>
                       <Form.Control
                         type="text"
-                        name="water_and_dust_rating"
-                        value={formData.water_and_dust_rating}
+                        name="attributes.body.water_resistance"
+                        value={getNestedValue(formData, 'attributes.body.water_resistance')}
                         onChange={onInputChange}
                         placeholder="IP68"
                       />
@@ -134,8 +139,8 @@ const PhoneModal = ({
                       <Form.Label>Operating System</Form.Label>
                       <Form.Control
                         type="text"
-                        name="operating_system"
-                        value={formData.operating_system}
+                        name="attributes.software.os"
+                        value={getNestedValue(formData, 'attributes.software.os')}
                         onChange={onInputChange}
                         placeholder="Android 13, One UI 5.1"
                       />
@@ -144,26 +149,26 @@ const PhoneModal = ({
                 </Row>
               </Tab.Pane>
 
-              {/* Specs Tab */}
+              {/* Specs Tab - ATTRIBUTES MAPPED */}
               <Tab.Pane eventKey="specs">
                 <h6 className="text-primary mb-3"><i className="fas fa-microchip me-2"></i>Processor & Performance</h6>
                 <Row>
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Manufacturer</Form.Label>
-                      <Form.Control type="text" name="processor_manufacturer" value={formData.processor_manufacturer} onChange={onInputChange} placeholder="Qualcomm" />
+                      <Form.Control type="text" name="attributes.processor.manufacturer" value={getNestedValue(formData, 'attributes.processor.manufacturer')} onChange={onInputChange} placeholder="Qualcomm" />
                     </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Processor / Chipset</Form.Label>
-                      <Form.Control type="text" name="processor" value={formData.processor} onChange={onInputChange} placeholder="Snapdragon 8 Gen 2" />
+                      <Form.Control type="text" name="attributes.processor.name" value={getNestedValue(formData, 'attributes.processor.name')} onChange={onInputChange} placeholder="Snapdragon 8 Gen 2" />
                     </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>GPU</Form.Label>
-                      <Form.Control type="text" name="gpu" value={formData.gpu} onChange={onInputChange} placeholder="Adreno 740" />
+                      <Form.Control type="text" name="attributes.processor.gpu" value={getNestedValue(formData, 'attributes.processor.gpu')} onChange={onInputChange} placeholder="Adreno 740" />
                     </Form.Group>
                   </Col>
                 </Row>
@@ -171,25 +176,112 @@ const PhoneModal = ({
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Process Node (nm)</Form.Label>
-                      <Form.Control type="number" name="process_node" value={formData.process_node} onChange={onInputChange} placeholder="4" />
+                      <Form.Control type="number" name="attributes.processor.process_nm" value={getNestedValue(formData, 'attributes.processor.process_nm')} onChange={onInputChange} placeholder="4" />
                     </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Core Structure</Form.Label>
+                      <Form.Label>
+                        Core Structure
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="p-0 ms-2 text-decoration-none"
+                          onClick={() => {
+                            const current = getNestedValue(formData, 'attributes.processor.cores');
+                            if (Array.isArray(current)) {
+                              // Switch to text
+                              const str = current.map(c => `${c.type || 'Core'}*${c.count || 1}`).join(' + ');
+                              onInputChange({ target: { name: 'attributes.processor.cores', value: str } });
+                            } else {
+                              // Switch to array
+                              const parts = (current || '').toString().split('+').map(p => p.trim()).filter(Boolean);
+                              let newCores = [];
+                              if (parts.length > 0) {
+                                newCores = parts.map(p => {
+                                  const [type, count] = p.split('*').map(s => s.trim());
+                                  return { type: type || 'Core', count: count || 1, frequency: '' };
+                                });
+                              } else {
+                                newCores = [{ type: '', count: '', frequency: '' }];
+                              }
+                              onInputChange({ target: { name: 'attributes.processor.cores', value: newCores } });
+                            }
+                          }}
+                        >
+                          {Array.isArray(getNestedValue(formData, 'attributes.processor.cores'))
+                            ? <i className="fas fa-font text-muted" title="Switch to Text Mode"></i>
+                            : <i className="fas fa-list text-primary" title="Switch to Builder Mode"></i>
+                          }
+                        </Button>
+                      </Form.Label>
                       <Form.Control
                         type="text"
-                        name="cpu_cores"
-                        value={formData.cpu_cores}
+                        name="attributes.processor.cores"
+                        value={getNestedValue(formData, 'attributes.processor.cores')}
                         onChange={onInputChange}
                         placeholder="Cortex A55*6 + Cortex A75*2"
+                        style={{ display: Array.isArray(getNestedValue(formData, 'attributes.processor.cores')) ? 'none' : 'block' }}
                       />
+                      {/* Chiplet Builder UI */}
+                      {Array.isArray(getNestedValue(formData, 'attributes.processor.cores')) && (
+                        <div className="border p-2 rounded bg-light mt-1">
+                          {getNestedValue(formData, 'attributes.processor.cores').map((chiplet, idx) => (
+                            <div key={idx} className="mb-2 border-bottom pb-2">
+                              <div className="d-flex gap-1 mb-1">
+                                <Form.Control
+                                  size="sm"
+                                  placeholder="Type (e.g. A55)"
+                                  value={chiplet.type || ''}
+                                  onChange={(e) => {
+                                    const cores = [...getNestedValue(formData, 'attributes.processor.cores')];
+                                    cores[idx] = { ...chiplet, type: e.target.value };
+                                    onInputChange({ target: { name: 'attributes.processor.cores', value: cores } });
+                                  }}
+                                />
+                                <Form.Control
+                                  type="number"
+                                  size="sm"
+                                  placeholder="#"
+                                  style={{ width: '50px' }}
+                                  value={chiplet.count || ''}
+                                  onChange={(e) => {
+                                    const cores = [...getNestedValue(formData, 'attributes.processor.cores')];
+                                    cores[idx] = { ...chiplet, count: e.target.value };
+                                    onInputChange({ target: { name: 'attributes.processor.cores', value: cores } });
+                                  }}
+                                />
+                                <Button variant="outline-danger" size="sm" onClick={() => {
+                                  const cores = getNestedValue(formData, 'attributes.processor.cores').filter((_, i) => i !== idx);
+                                  onInputChange({ target: { name: 'attributes.processor.cores', value: cores } });
+                                }}>&times;</Button>
+                              </div>
+                              <Form.Control
+                                size="sm"
+                                placeholder="Freq (e.g. 2.0GHz)"
+                                value={chiplet.frequency || ''}
+                                onChange={(e) => {
+                                  const cores = [...getNestedValue(formData, 'attributes.processor.cores')];
+                                  cores[idx] = { ...chiplet, frequency: e.target.value };
+                                  onInputChange({ target: { name: 'attributes.processor.cores', value: cores } });
+                                }}
+                              />
+                            </div>
+                          ))}
+                          <Button size="sm" variant="outline-primary" className="w-100" onClick={() => {
+                            const current = getNestedValue(formData, 'attributes.processor.cores') || [];
+                            onInputChange({ target: { name: 'attributes.processor.cores', value: [...current, { type: '', count: '', frequency: '' }] } });
+                          }}>
+                            <i className="fas fa-plus me-1"></i> Add Chiplet
+                          </Button>
+                        </div>
+                      )}
                     </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Clock Speed</Form.Label>
-                      <Form.Control type="text" name="cpu_frequency" value={formData.cpu_frequency} onChange={onInputChange} placeholder="3.2 GHz" />
+                      <Form.Control type="text" name="attributes.processor.clock_speed" value={getNestedValue(formData, 'attributes.processor.clock_speed')} onChange={onInputChange} placeholder="3.2 GHz" />
                     </Form.Group>
                   </Col>
                 </Row>
@@ -199,7 +291,7 @@ const PhoneModal = ({
                     <Form.Group className="mb-3">
                       <Form.Label>RAM</Form.Label>
                       <InputGroup>
-                        <Form.Control type="text" name="ram" value={formData.ram} onChange={onInputChange} placeholder="12" />
+                        <Form.Control type="text" name="attributes.memory.ram" value={getNestedValue(formData, 'attributes.memory.ram')} onChange={onInputChange} placeholder="12" />
                         <InputGroup.Text>GB</InputGroup.Text>
                       </InputGroup>
                     </Form.Group>
@@ -208,7 +300,7 @@ const PhoneModal = ({
                     <Form.Group className="mb-3">
                       <Form.Label>ROM/Storage</Form.Label>
                       <InputGroup>
-                        <Form.Control type="text" name="rom" value={formData.rom} onChange={onInputChange} placeholder="512" />
+                        <Form.Control type="text" name="attributes.memory.rom" value={getNestedValue(formData, 'attributes.memory.rom')} onChange={onInputChange} placeholder="512" />
                         <InputGroup.Text>GB</InputGroup.Text>
                       </InputGroup>
                     </Form.Group>
@@ -216,7 +308,7 @@ const PhoneModal = ({
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Expandable Memory</Form.Label>
-                      <Form.Control type="text" name="expandable_memory" value={formData.expandable_memory} onChange={onInputChange} placeholder="No" />
+                      <Form.Control type="text" name="attributes.memory.expandable" value={getNestedValue(formData, 'attributes.memory.expandable')} onChange={onInputChange} placeholder="No" />
                     </Form.Group>
                   </Col>
                 </Row>
@@ -228,13 +320,13 @@ const PhoneModal = ({
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Display Size (inches)</Form.Label>
-                      <Form.Control type="number" step="0.01" name="display_size" value={formData.display_size} onChange={onInputChange} placeholder="6.8" />
+                      <Form.Control type="number" step="0.01" name="attributes.display.size" value={getNestedValue(formData, 'attributes.display.size')} onChange={onInputChange} placeholder="6.8" />
                     </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Display Type</Form.Label>
-                      <Form.Select name="display_type" value={formData.display_type || ''} onChange={onInputChange}>
+                      <Form.Select name="attributes.display.type" value={getNestedValue(formData, 'attributes.display.type') || ''} onChange={onInputChange}>
                         <option value="">Select type...</option>
                         <option value="LCD">LCD</option>
                         <option value="IPS_LCD">IPS LCD</option>
@@ -250,7 +342,7 @@ const PhoneModal = ({
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Resolution</Form.Label>
-                      <Form.Control type="text" name="resolution" value={formData.resolution} onChange={onInputChange} placeholder="3088x1440" />
+                      <Form.Control type="text" name="attributes.display.resolution" value={getNestedValue(formData, 'attributes.display.resolution')} onChange={onInputChange} placeholder="3088x1440" />
                     </Form.Group>
                   </Col>
                 </Row>
@@ -258,19 +350,19 @@ const PhoneModal = ({
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Refresh Rate</Form.Label>
-                      <Form.Control type="text" name="refresh_rate" value={formData.refresh_rate} onChange={onInputChange} placeholder="120Hz" />
+                      <Form.Control type="text" name="attributes.display.refresh_rate" value={getNestedValue(formData, 'attributes.display.refresh_rate')} onChange={onInputChange} placeholder="120Hz" />
                     </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>HDR Support</Form.Label>
-                      <Form.Control type="text" name="hdr_support" value={formData.hdr_support} onChange={onInputChange} placeholder="HDR10, HDR10+, Dolby Vision" />
+                      <Form.Control type="text" name="attributes.display.hdr" value={getNestedValue(formData, 'attributes.display.hdr')} onChange={onInputChange} placeholder="HDR10, HDR10+, Dolby Vision" />
                     </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Display Features</Form.Label>
-                      <Form.Control type="text" name="display_features" value={formData.display_features} onChange={onInputChange} placeholder="Dynamic AMOLED 2X" />
+                      <Form.Control type="text" name="attributes.display.features" value={getNestedValue(formData, 'attributes.display.features')} onChange={onInputChange} placeholder="Dynamic AMOLED 2X" />
                     </Form.Group>
                   </Col>
                 </Row>
@@ -283,19 +375,19 @@ const PhoneModal = ({
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Main Camera</Form.Label>
-                      <Form.Control type="text" name="rear_camera_main" value={formData.rear_camera_main} onChange={onInputChange} placeholder="200MP f/1.7 OIS" />
+                      <Form.Control type="text" name="attributes.camera.rear.main" value={getNestedValue(formData, 'attributes.camera.rear.main')} onChange={onInputChange} placeholder="200MP f/1.7 OIS" />
                     </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Ultrawide Camera</Form.Label>
-                      <Form.Control type="text" name="rear_camera_ultrawide" value={formData.rear_camera_ultrawide} onChange={onInputChange} placeholder="12MP f/2.2" />
+                      <Form.Control type="text" name="attributes.camera.rear.ultrawide" value={getNestedValue(formData, 'attributes.camera.rear.ultrawide')} onChange={onInputChange} placeholder="12MP f/2.2" />
                     </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Telephoto Camera</Form.Label>
-                      <Form.Control type="text" name="rear_camera_telephoto" value={formData.rear_camera_telephoto} onChange={onInputChange} placeholder="10MP f/4.9" />
+                      <Form.Control type="text" name="attributes.camera.rear.telephoto" value={getNestedValue(formData, 'attributes.camera.rear.telephoto')} onChange={onInputChange} placeholder="10MP f/4.9" />
                     </Form.Group>
                   </Col>
                 </Row>
@@ -303,13 +395,13 @@ const PhoneModal = ({
                   <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Optical Zoom</Form.Label>
-                      <Form.Control type="text" name="optical_zoom" value={formData.optical_zoom} onChange={onInputChange} placeholder="3x, 10x" />
+                      <Form.Control type="text" name="attributes.camera.rear.optical_zoom" value={getNestedValue(formData, 'attributes.camera.rear.optical_zoom')} onChange={onInputChange} placeholder="3x, 10x" />
                     </Form.Group>
                   </Col>
                   <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Rear Camera Features</Form.Label>
-                      <Form.Control type="text" name="rear_camera_features" value={formData.rear_camera_features} onChange={onInputChange} placeholder="8K video, Night mode" />
+                      <Form.Control type="text" name="attributes.camera.rear.features" value={getNestedValue(formData, 'attributes.camera.rear.features')} onChange={onInputChange} placeholder="8K video, Night mode" />
                     </Form.Group>
                   </Col>
                 </Row>
@@ -318,13 +410,13 @@ const PhoneModal = ({
                   <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Front Camera</Form.Label>
-                      <Form.Control type="text" name="front_camera" value={formData.front_camera} onChange={onInputChange} placeholder="12MP f/2.2" />
+                      <Form.Control type="text" name="attributes.camera.front.main" value={getNestedValue(formData, 'attributes.camera.front.main')} onChange={onInputChange} placeholder="12MP f/2.2" />
                     </Form.Group>
                   </Col>
                   <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Front Camera Features</Form.Label>
-                      <Form.Control type="text" name="front_camera_features" value={formData.front_camera_features} onChange={onInputChange} placeholder="Dual Pixel AF" />
+                      <Form.Control type="text" name="attributes.camera.front.features" value={getNestedValue(formData, 'attributes.camera.front.features')} onChange={onInputChange} placeholder="Dual Pixel AF" />
                     </Form.Group>
                   </Col>
                 </Row>
@@ -338,7 +430,7 @@ const PhoneModal = ({
                     <Form.Group className="mb-3">
                       <Form.Label>Battery Capacity</Form.Label>
                       <InputGroup>
-                        <Form.Control type="number" name="battery_capacity" value={formData.battery_capacity} onChange={onInputChange} placeholder="5000" />
+                        <Form.Control type="number" name="attributes.battery.capacity" value={getNestedValue(formData, 'attributes.battery.capacity')} onChange={onInputChange} placeholder="5000" />
                         <InputGroup.Text>mAh</InputGroup.Text>
                       </InputGroup>
                     </Form.Group>
@@ -347,8 +439,8 @@ const PhoneModal = ({
                     <Form.Group className="mb-3">
                       <Form.Label>Fast Charging</Form.Label>
                       <InputGroup>
-                        <Form.Control type="text" name="fast_charging" value={formData.fast_charging} onChange={onInputChange} placeholder="Super Fast Charging" />
-                        <Form.Control type="number" name="fast_charging_w" value={formData.fast_charging_w} onChange={onInputChange} placeholder="45" style={{ maxWidth: '80px' }} />
+                        <Form.Control type="text" name="attributes.battery.fast_charging_support" value={getNestedValue(formData, 'attributes.battery.fast_charging_support')} onChange={onInputChange} placeholder="Super Fast Charging" />
+                        <Form.Control type="number" name="attributes.battery.charging.wired_wattage" value={getNestedValue(formData, 'attributes.battery.charging.wired_wattage')} onChange={onInputChange} placeholder="45" style={{ maxWidth: '80px' }} />
                         <InputGroup.Text>W</InputGroup.Text>
                       </InputGroup>
                     </Form.Group>
@@ -356,7 +448,7 @@ const PhoneModal = ({
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Connector</Form.Label>
-                      <Form.Control type="text" name="connector" value={formData.connector} onChange={onInputChange} placeholder="USB Type-C 3.2" />
+                      <Form.Control type="text" name="attributes.battery.charging.connector_type" value={getNestedValue(formData, 'attributes.battery.charging.connector_type')} onChange={onInputChange} placeholder="USB Type-C 3.2" />
                     </Form.Group>
                   </Col>
                 </Row>
@@ -365,8 +457,8 @@ const PhoneModal = ({
                     <Form.Group className="mb-3">
                       <Form.Label>Wireless Charging</Form.Label>
                       <InputGroup>
-                        <Form.Control type="text" name="wireless_charging" value={formData.wireless_charging} onChange={onInputChange} placeholder="15W Qi" />
-                        <Form.Control type="number" name="wireless_charging_w" value={formData.wireless_charging_w} onChange={onInputChange} placeholder="15" style={{ maxWidth: '80px' }} />
+                        <Form.Control type="text" name="attributes.connectivity.wireless" value={getNestedValue(formData, 'attributes.connectivity.wireless')} onChange={onInputChange} placeholder="15W Qi" />
+                        <Form.Control type="number" name="attributes.battery.charging.wireless_wattage" value={getNestedValue(formData, 'attributes.battery.charging.wireless_wattage')} onChange={onInputChange} placeholder="15" style={{ maxWidth: '80px' }} />
                         <InputGroup.Text>W</InputGroup.Text>
                       </InputGroup>
                     </Form.Group>
@@ -375,8 +467,8 @@ const PhoneModal = ({
                     <Form.Group className="mb-3">
                       <Form.Label>Reverse Charging</Form.Label>
                       <InputGroup>
-                        <Form.Control type="text" name="reverse_charging" value={formData.reverse_charging} onChange={onInputChange} placeholder="Wireless PowerShare" />
-                        <Form.Control type="number" name="reverse_charging_w" value={formData.reverse_charging_w} onChange={onInputChange} placeholder="4.5" style={{ maxWidth: '80px' }} />
+                        <Form.Control type="text" disabled placeholder="Wireless PowerShare" />
+                        <Form.Control type="number" name="attributes.battery.charging.reverse_wireless_wattage" value={getNestedValue(formData, 'attributes.battery.charging.reverse_wireless_wattage')} onChange={onInputChange} placeholder="4.5" style={{ maxWidth: '80px' }} />
                         <InputGroup.Text>W</InputGroup.Text>
                       </InputGroup>
                     </Form.Group>
@@ -387,19 +479,19 @@ const PhoneModal = ({
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>SIM Card</Form.Label>
-                      <Form.Control type="text" name="sim_card" value={formData.sim_card} onChange={onInputChange} placeholder="Dual SIM + eSIM" />
+                      <Form.Control type="text" name="attributes.connectivity.sim" value={getNestedValue(formData, 'attributes.connectivity.sim')} onChange={onInputChange} placeholder="Dual SIM + eSIM" />
                     </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>NFC</Form.Label>
-                      <Form.Control type="text" name="nfc" value={formData.nfc} onChange={onInputChange} placeholder="Yes" />
+                      <Form.Control type="text" name="attributes.connectivity.nfc" value={getNestedValue(formData, 'attributes.connectivity.nfc')} onChange={onInputChange} placeholder="Yes" />
                     </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Wireless Connectivity</Form.Label>
-                      <Form.Control type="text" name="wireless_connectivity" value={formData.wireless_connectivity} onChange={onInputChange} placeholder="5G, Wi-Fi 6E" />
+                      <Form.Control type="text" name="attributes.connectivity.wireless" value={getNestedValue(formData, 'attributes.connectivity.wireless')} onChange={onInputChange} placeholder="5G, Wi-Fi 6E" />
                     </Form.Group>
                   </Col>
                 </Row>
@@ -412,25 +504,25 @@ const PhoneModal = ({
                   <Col md={3}>
                     <Form.Group className="mb-3">
                       <Form.Label>Length (mm)</Form.Label>
-                      <Form.Control type="number" step="0.1" name="length_mm" value={formData.length_mm} onChange={onInputChange} placeholder="163.4" />
+                      <Form.Control type="number" step="0.1" name="attributes.dimensions.length" value={getNestedValue(formData, 'attributes.dimensions.length')} onChange={onInputChange} placeholder="163.4" />
                     </Form.Group>
                   </Col>
                   <Col md={3}>
                     <Form.Group className="mb-3">
                       <Form.Label>Width (mm)</Form.Label>
-                      <Form.Control type="number" step="0.1" name="width_mm" value={formData.width_mm} onChange={onInputChange} placeholder="78.1" />
+                      <Form.Control type="number" step="0.1" name="attributes.dimensions.width" value={getNestedValue(formData, 'attributes.dimensions.width')} onChange={onInputChange} placeholder="78.1" />
                     </Form.Group>
                   </Col>
                   <Col md={3}>
                     <Form.Group className="mb-3">
                       <Form.Label>Thickness (mm)</Form.Label>
-                      <Form.Control type="number" step="0.1" name="thickness_mm" value={formData.thickness_mm} onChange={onInputChange} placeholder="8.9" />
+                      <Form.Control type="number" step="0.1" name="attributes.dimensions.thickness" value={getNestedValue(formData, 'attributes.dimensions.thickness')} onChange={onInputChange} placeholder="8.9" />
                     </Form.Group>
                   </Col>
                   <Col md={3}>
                     <Form.Group className="mb-3">
                       <Form.Label>Weight (g)</Form.Label>
-                      <Form.Control type="number" step="0.1" name="weight_g" value={formData.weight_g} onChange={onInputChange} placeholder="234" />
+                      <Form.Control type="number" step="0.1" name="attributes.dimensions.weight" value={getNestedValue(formData, 'attributes.dimensions.weight')} onChange={onInputChange} placeholder="234" />
                     </Form.Group>
                   </Col>
                 </Row>
@@ -438,19 +530,19 @@ const PhoneModal = ({
                   <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Security Features</Form.Label>
-                      <Form.Control type="text" name="security_features" value={formData.security_features} onChange={onInputChange} placeholder="In-display fingerprint, Face recognition" />
+                      <Form.Control type="text" name="attributes.features.security" value={getNestedValue(formData, 'attributes.features.security')} onChange={onInputChange} placeholder="In-display fingerprint, Face recognition" />
                     </Form.Group>
                   </Col>
                   <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Sensors</Form.Label>
-                      <Form.Control type="text" name="sensors" value={formData.sensors} onChange={onInputChange} placeholder="Accelerometer, Gyro, Proximity" />
+                      <Form.Control type="text" name="attributes.features.sensors" value={getNestedValue(formData, 'attributes.features.sensors')} onChange={onInputChange} placeholder="Accelerometer, Gyro, Proximity" />
                     </Form.Group>
                   </Col>
                 </Row>
                 <Form.Group className="mb-3">
                   <Form.Label>Package Contents</Form.Label>
-                  <Form.Control as="textarea" rows={2} name="package_contents" value={formData.package_contents} onChange={onInputChange} placeholder="Phone, USB-C cable, SIM tool, Documentation" />
+                  <Form.Control as="textarea" rows={2} name="attributes.package_contents" value={getNestedValue(formData, 'attributes.package_contents')} onChange={onInputChange} placeholder="Phone, USB-C cable, SIM tool, Documentation" />
                 </Form.Group>
               </Tab.Pane>
 
@@ -493,7 +585,7 @@ const PhoneModal = ({
                         name="is_active"
                         label="Active"
                         checked={formData.is_active}
-                        onChange={(e) => onInputChange({ target: { name: 'is_active', value: e.target.checked } })}
+                        onChange={onInputChange}
                       />
                       <Form.Text className="text-muted">Available for sale</Form.Text>
                     </Form.Group>
@@ -506,7 +598,7 @@ const PhoneModal = ({
                         name="is_discontinued"
                         label="Discontinued"
                         checked={formData.is_discontinued}
-                        onChange={(e) => onInputChange({ target: { name: 'is_discontinued', value: e.target.checked } })}
+                        onChange={onInputChange}
                       />
                       <Form.Text className="text-muted">By manufacturer</Form.Text>
                     </Form.Group>

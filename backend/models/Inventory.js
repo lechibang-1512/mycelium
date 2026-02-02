@@ -90,7 +90,6 @@ InventorySchema.index({ warehouse_id: 1, product_id: 1, condition: 1 });
 
 // Pre-save validation for referential integrity
 InventorySchema.pre('save', async function (next) {
-    const mongoose = require('mongoose');
 
     // Validate product_id for bulk/serialized inventory
     if (this.inventory_type === 'bulk' || this.inventory_type === 'serialized') {
@@ -129,6 +128,7 @@ InventorySchema.index({ warehouse_id: 1, zone_id: 1, bin_id: 1 });
 InventorySchema.index({ inventory_type: 1, warehouse_id: 1 });
 InventorySchema.index({ serial_number: 1 }, { sparse: true });
 InventorySchema.index({ imei_1: 1 }, { sparse: true });
+InventorySchema.index({ imei_2: 1 }, { sparse: true });
 InventorySchema.index({ expiry_date: 1 }, { sparse: true });
 
 // Virtual for available quantity

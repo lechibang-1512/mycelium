@@ -185,9 +185,15 @@ function ProductDetails() {
               <Card.Body>
                 <Table hover responsive className="mb-0">
                   <tbody>
-                    <SpecRow label="Processor" value={product.processor} />
-                    <SpecRow label="Process Node" value={product.process_node} />
-                    <SpecRow label="CPU Cores" value={product.cpu_cores} />
+                    <SpecRow label="Processor" value={product.processor || product.attributes?.processor?.name} />
+                    <SpecRow label="Process Node" value={product.process_node || product.attributes?.processor?.process_nm} />
+                    <SpecRow label="CPU Cores" value={(() => {
+                      const cores = product.cpu_cores || product.attributes?.processor?.cores;
+                      if (Array.isArray(cores)) {
+                        return cores.map(c => `${c.count}x ${c.type}${c.frequency ? ' @ ' + c.frequency : ''}`).join(' + ');
+                      }
+                      return cores;
+                    })()} />
                     <SpecRow label="CPU Frequency" value={product.cpu_frequency} />
                     <SpecRow label="GPU" value={product.gpu} />
                     <SpecRow label="RAM" value={product.ram} />

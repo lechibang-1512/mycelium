@@ -39,7 +39,7 @@ class PhonesService {
             device_name: p.device_name,
             device_maker: p.device_maker,
             sku: p.sku,
-            base_price: p.base_price,
+            device_price: p.device_price,
             is_active: p.is_active !== false,
             device_type: p.device_type,
             attributes: p.attributes,
@@ -70,7 +70,7 @@ class PhonesService {
             device_name: phone.device_name,
             device_maker: phone.device_maker,
             sku: phone.sku,
-            base_price: phone.base_price,
+            device_price: phone.device_price,
             is_active: phone.is_active !== false,
             device_type: phone.device_type,
             description: phone.description,
@@ -90,10 +90,30 @@ class PhonesService {
 
     // Helper to map flat spec fields to attributes
     _mapSpecFieldsToAttributes(phoneData, existingAttributes = {}) {
-        const attributes = { ...existingAttributes, ...phoneData.attributes };
+        // Start with existing attributes ensuring deep merge isn't needed for top level replacements
+        let attributes = { ...existingAttributes };
 
-        // Processor mapping
-        if (phoneData.processor || phoneData.processor_manufacturer || phoneData.process_node || phoneData.cpu_cores || phoneData.gpu) {
+        // If phoneData already has attributes (new frontend structure), merge them first
+        if (phoneData.attributes && typeof phoneData.attributes === 'object') {
+            // Function to deep merge objects
+            const deepMerge = (target, source) => {
+                for (const key of Object.keys(source)) {
+                    if (source[key] instanceof Object && key in target) {
+                        Object.assign(source[key], deepMerge(target[key], source[key]));
+                    }
+                }
+                Object.assign(target || {}, source);
+                return target;
+            };
+            attributes = deepMerge(attributes, phoneData.attributes);
+        }
+
+        // Feature flags / Legacy support:
+        // Even if we have attributes, we might still receive flat fields from other sources (e.g. bulk import)
+        // So we continue to map them if present, effectively overwriting nested values if legacy fields are provided.
+
+        // Processor
+        if (phoneData.processor || phoneData.processor_manufacturer || phoneData.process_node || phoneData.cpu_cores || phoneData.cpu_frequency || phoneData.gpu) {
             attributes.processor = {
                 ...(attributes.processor || {}),
                 name: phoneData.processor || attributes.processor?.name,
@@ -105,56 +125,131 @@ class PhonesService {
             };
         }
 
-        // Battery mapping
-        if (phoneData.battery_capacity || phoneData.battery_type || phoneData.fast_charging_w) {
-            attributes.battery = {
-                ...(attributes.battery || {}),
-                capacity: phoneData.battery_capacity || attributes.battery?.capacity,
-                type: phoneData.battery_type || attributes.battery?.type,
-                charging: {
-                    ...(attributes.battery?.charging || {}),
-                    wired_wattage: phoneData.fast_charging_w || attributes.battery?.charging?.wired_wattage,
-                    wireless_wattage: phoneData.wireless_charging_w || attributes.battery?.charging?.wireless_wattage,
-                    reverse_wireless_wattage: phoneData.reverse_charging_w || attributes.battery?.charging?.reverse_wireless_wattage,
-                    connector_type: phoneData.connector || attributes.battery?.charging?.connector_type
-                }
+        // Memory
+        if (phoneData.ram || phoneData.rom || phoneData.expandable_memory || phoneData.memory_type) {
+            attributes.memory = {
+                ...(attributes.memory || {}),
+                ram: phoneData.ram || attributes.memory?.ram,
+                rom: phoneData.rom || attributes.memory?.rom,
+                type: phoneData.memory_type || attributes.memory?.type,
+                expandable: phoneData.expandable_memory || attributes.memory?.expandable
             };
         }
 
-        // Display mapping coverage (basic)
-        if (phoneData.display_size || phoneData.display_type || phoneData.resolution) {
+        // Display
+        if (phoneData.display_size || phoneData.display_type || phoneData.resolution || phoneData.refresh_rate || phoneData.hdr_support || phoneData.display_features) {
             attributes.display = {
                 ...(attributes.display || {}),
                 size: phoneData.display_size || attributes.display?.size,
                 type: phoneData.display_type || attributes.display?.type,
                 resolution: phoneData.resolution || attributes.display?.resolution,
-                refresh_rate: phoneData.refresh_rate || attributes.display?.refresh_rate
+                refresh_rate: phoneData.refresh_rate || attributes.display?.refresh_rate,
+                hdr: phoneData.hdr_support || attributes.display?.hdr,
+                features: phoneData.display_features || attributes.display?.features
             };
         }
 
-        // Legacy/Flat mappings (for backward compatibility or top-level access)
-        const flatFields = [
-            'storage_capacity', 'ram', 'screen_size', 'color', 'camera', 'os_version'
-        ];
-        flatFields.forEach(f => {
-            if (phoneData[f] !== undefined) attributes[f] = phoneData[f];
-        });
+        // Camera - Rear
+        if (phoneData.rear_camera_main || phoneData.rear_camera_ultrawide || phoneData.rear_camera_telephoto || phoneData.rear_camera_features) {
+            // Ensure legacy checks don't wipe out existing camera structure if only partial fields differ
+            const currentRear = attributes.camera?.rear || {};
+            attributes.camera = {
+                ...(attributes.camera || {}),
+                rear: {
+                    ...currentRear,
+                    main: phoneData.rear_camera_main || currentRear.main,
+                    ultrawide: phoneData.rear_camera_ultrawide || currentRear.ultrawide,
+                    telephoto: phoneData.rear_camera_telephoto || currentRear.telephoto,
+                    features: phoneData.rear_camera_features || currentRear.features,
+                    optical_zoom: phoneData.optical_zoom || currentRear.optical_zoom
+                }
+            };
+        }
 
-        // Clean up undefined keys in nested objects
-        const cleanCtx = (obj) => {
+        // Camera - Front
+        if (phoneData.front_camera || phoneData.front_camera_features) {
+            const currentFront = attributes.camera?.front || {};
+            attributes.camera = {
+                ...(attributes.camera || {}),
+                front: {
+                    ...currentFront,
+                    main: phoneData.front_camera || currentFront.main,
+                    features: phoneData.front_camera_features || currentFront.features
+                }
+            };
+        }
+
+        // Battery
+        if (phoneData.battery_capacity || phoneData.fast_charging || phoneData.fast_charging_w || phoneData.wireless_charging) {
+            const currentBattery = attributes.battery || {};
+            const currentCharging = currentBattery.charging || {};
+
+            attributes.battery = {
+                ...currentBattery,
+                capacity: phoneData.battery_capacity || currentBattery.capacity,
+                fast_charging_support: phoneData.fast_charging || currentBattery.fast_charging_support,
+                charging: {
+                    ...currentCharging,
+                    wired_wattage: phoneData.fast_charging_w || currentCharging.wired_wattage,
+                    wireless_wattage: phoneData.wireless_charging_w || currentCharging.wireless_wattage,
+                    reverse_wireless_wattage: phoneData.reverse_charging_w || currentCharging.reverse_wireless_wattage,
+                    connector_type: phoneData.connector || currentCharging.connector_type
+                }
+            };
+        }
+
+        // Physical Dimensions
+        if (phoneData.length_mm || phoneData.width_mm || phoneData.thickness_mm || phoneData.weight_g) {
+            attributes.dimensions = {
+                ...(attributes.dimensions || {}),
+                length: phoneData.length_mm || attributes.dimensions?.length,
+                width: phoneData.width_mm || attributes.dimensions?.width,
+                thickness: phoneData.thickness_mm || attributes.dimensions?.thickness,
+                weight: phoneData.weight_g || attributes.dimensions?.weight
+            };
+        }
+
+        // Connectivity & Misc
+        if (phoneData.sim_card || phoneData.nfc || phoneData.wireless_connectivity || phoneData.operating_system || phoneData.water_and_dust_rating || phoneData.color) {
+            attributes.connectivity = {
+                ...(attributes.connectivity || {}),
+                sim: phoneData.sim_card || attributes.connectivity?.sim,
+                nfc: phoneData.nfc || attributes.connectivity?.nfc,
+                wireless: phoneData.wireless_connectivity || attributes.connectivity?.wireless
+            };
+            attributes.software = {
+                ...(attributes.software || {}),
+                os: phoneData.operating_system || attributes.software?.os
+            };
+            attributes.body = {
+                ...(attributes.body || {}),
+                water_resistance: phoneData.water_and_dust_rating || attributes.body?.water_resistance,
+                color: phoneData.color || attributes.body?.color
+            };
+            attributes.features = {
+                ...(attributes.features || {}),
+                security: phoneData.security_features || attributes.features?.security,
+                sensors: phoneData.sensors || attributes.features?.sensors
+            };
+        }
+
+        // Clean up undefined values and empty objects recursively
+        const clean = (obj) => {
             Object.keys(obj).forEach(key => {
-                if (obj[key] === undefined) delete obj[key];
-                else if (typeof obj[key] === 'object' && obj[key] !== null) cleanCtx(obj[key]);
+                if (obj[key] && typeof obj[key] === 'object') clean(obj[key]);
+                if (obj[key] === undefined || obj[key] === '' || (typeof obj[key] === 'object' && Object.keys(obj[key]).length === 0)) {
+                    delete obj[key];
+                }
             });
+            return obj;
         };
-        cleanCtx(attributes);
 
-        return attributes;
+        return clean(attributes);
     }
 
     async createPhone(phoneData) {
         const {
-            device_name, device_maker, sku, base_price = 0,
+            device_name, device_maker, sku, device_price = 0,
             device_type = 'smartphone', description,
             min_stock_level = 0, is_active = true
         } = phoneData;
@@ -174,7 +269,7 @@ class PhonesService {
             device_name,
             device_maker,
             sku: sku || uuidv4().substring(0, 8).toUpperCase(),
-            base_price,
+            device_price,
             device_type,
             description,
             attributes,
@@ -193,7 +288,7 @@ class PhonesService {
         if (!phone) return { success: false, error: 'Phone not found' };
 
         const fields = [
-            'device_name', 'device_maker', 'sku', 'base_price',
+            'device_name', 'device_maker', 'sku', 'device_price',
             'device_type', 'description', 'min_stock_level', 'is_active'
         ];
 

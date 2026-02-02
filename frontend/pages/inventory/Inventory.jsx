@@ -229,7 +229,41 @@ const Inventory = () => {
 
   // Phone Handlers
   const handlePhoneInputChange = (e) => {
-    setPhoneFormData({ ...phoneFormData, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    // Handle split for nested keys like "attributes.processor.name"
+    if (name.includes('.')) {
+      setPhoneFormData(prev => {
+        const newState = { ...prev };
+        const parts = name.split('.');
+        let current = newState;
+        for (let i = 0; i < parts.length - 1; i++) {
+          // Create object if it doesn't exist
+          if (!current[parts[i]]) current[parts[i]] = {};
+          // If we are at the last level of object traversal but before assignment, we need to clone to avoid mutation
+          if (i === 0 && parts.length > 2 && name.startsWith('attributes')) {
+            current[parts[i]] = { ...current[parts[i]] };
+          }
+          current = current[parts[i]];
+        }
+        current[parts[parts.length - 1]] = type === 'checkbox' ? checked : value;
+
+        // Proper deep clone approach for React state safety (simplified above is risky for deeper nests)
+        // Let's use a safer approach:
+        const setNested = (obj, path, val) => {
+          const [head, ...tail] = path;
+          if (tail.length === 0) {
+            return { ...obj, [head]: val };
+          }
+          return {
+            ...obj,
+            [head]: setNested(obj[head] || {}, tail, val)
+          };
+        };
+        return setNested(prev, name.split('.'), type === 'checkbox' ? checked : value);
+      });
+    } else {
+      setPhoneFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    }
   };
 
   const handleEditPhone = (product) => {

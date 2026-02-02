@@ -40,7 +40,8 @@ const ProductSchema = new Schema({
     },
 
     // Common smartphone specs (kept for backward compatibility during migration)
-    // These will be moved to attributes.* over time
+    // DEPRECATED: These fields are being moved to attributes.* object.
+    // Do not add new features relying on these top-level fields.
     processor: String,
     ram: String,
     rom: String,
