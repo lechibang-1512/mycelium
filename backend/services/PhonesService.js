@@ -88,10 +88,74 @@ class PhonesService {
         };
     }
 
+    // Helper to map flat spec fields to attributes
+    _mapSpecFieldsToAttributes(phoneData, existingAttributes = {}) {
+        const attributes = { ...existingAttributes, ...phoneData.attributes };
+
+        // Processor mapping
+        if (phoneData.processor || phoneData.processor_manufacturer || phoneData.process_node || phoneData.cpu_cores || phoneData.gpu) {
+            attributes.processor = {
+                ...(attributes.processor || {}),
+                name: phoneData.processor || attributes.processor?.name,
+                manufacturer: phoneData.processor_manufacturer || attributes.processor?.manufacturer,
+                process_nm: phoneData.process_node || attributes.processor?.process_nm,
+                cores: phoneData.cpu_cores || attributes.processor?.cores,
+                clock_speed: phoneData.cpu_frequency || attributes.processor?.clock_speed,
+                gpu: phoneData.gpu || attributes.processor?.gpu
+            };
+        }
+
+        // Battery mapping
+        if (phoneData.battery_capacity || phoneData.battery_type || phoneData.fast_charging_w) {
+            attributes.battery = {
+                ...(attributes.battery || {}),
+                capacity: phoneData.battery_capacity || attributes.battery?.capacity,
+                type: phoneData.battery_type || attributes.battery?.type,
+                charging: {
+                    ...(attributes.battery?.charging || {}),
+                    wired_wattage: phoneData.fast_charging_w || attributes.battery?.charging?.wired_wattage,
+                    wireless_wattage: phoneData.wireless_charging_w || attributes.battery?.charging?.wireless_wattage,
+                    reverse_wireless_wattage: phoneData.reverse_charging_w || attributes.battery?.charging?.reverse_wireless_wattage,
+                    connector_type: phoneData.connector || attributes.battery?.charging?.connector_type
+                }
+            };
+        }
+
+        // Display mapping coverage (basic)
+        if (phoneData.display_size || phoneData.display_type || phoneData.resolution) {
+            attributes.display = {
+                ...(attributes.display || {}),
+                size: phoneData.display_size || attributes.display?.size,
+                type: phoneData.display_type || attributes.display?.type,
+                resolution: phoneData.resolution || attributes.display?.resolution,
+                refresh_rate: phoneData.refresh_rate || attributes.display?.refresh_rate
+            };
+        }
+
+        // Legacy/Flat mappings (for backward compatibility or top-level access)
+        const flatFields = [
+            'storage_capacity', 'ram', 'screen_size', 'color', 'camera', 'os_version'
+        ];
+        flatFields.forEach(f => {
+            if (phoneData[f] !== undefined) attributes[f] = phoneData[f];
+        });
+
+        // Clean up undefined keys in nested objects
+        const cleanCtx = (obj) => {
+            Object.keys(obj).forEach(key => {
+                if (obj[key] === undefined) delete obj[key];
+                else if (typeof obj[key] === 'object' && obj[key] !== null) cleanCtx(obj[key]);
+            });
+        };
+        cleanCtx(attributes);
+
+        return attributes;
+    }
+
     async createPhone(phoneData) {
         const {
             device_name, device_maker, sku, base_price = 0,
-            device_type = 'smartphone', description, attributes = {},
+            device_type = 'smartphone', description,
             min_stock_level = 0, is_active = true
         } = phoneData;
 
@@ -102,6 +166,8 @@ class PhonesService {
             const existing = await Product.findOne({ sku });
             if (existing) throw new Error('SKU already exists');
         }
+
+        const attributes = this._mapSpecFieldsToAttributes(phoneData);
 
         const phone = await Product.create({
             product_id: uuidv4(),
@@ -135,22 +201,8 @@ class PhonesService {
             if (phoneData[f] !== undefined) phone[f] = phoneData[f];
         });
 
-        // Handle attributes separately (merge)
-        if (phoneData.attributes) {
-            phone.attributes = { ...phone.attributes, ...phoneData.attributes };
-        }
-
-        // Handle spec fields that go into attributes
-        const specFields = [
-            'storage_capacity', 'ram', 'screen_size', 'battery_capacity',
-            'color', 'camera', 'processor', 'os_version'
-        ];
-        specFields.forEach(f => {
-            if (phoneData[f] !== undefined) {
-                phone.attributes = phone.attributes || {};
-                phone.attributes[f] = phoneData[f];
-            }
-        });
+        // Handle attributes with new detailed mapping
+        phone.attributes = this._mapSpecFieldsToAttributes(phoneData, phone.attributes);
 
         await phone.save();
         return { success: true };

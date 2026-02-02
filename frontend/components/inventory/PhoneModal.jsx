@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Form, Row, Col, Tab, Nav, Button } from 'react-bootstrap';
+import { Modal, Form, Row, Col, Tab, Nav, Button, InputGroup } from 'react-bootstrap';
 
 const PhoneModal = ({
   show,
@@ -151,16 +151,42 @@ const PhoneModal = ({
               <Tab.Pane eventKey="specs">
                 <h6 className="text-primary mb-3"><i className="fas fa-microchip me-2"></i>Processor & Performance</h6>
                 <Row>
-                  <Col md={6}>
+                  <Col md={4}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Processor</Form.Label>
+                      <Form.Label>Manufacturer</Form.Label>
+                      <Form.Control type="text" name="processor_manufacturer" value={formData.processor_manufacturer} onChange={onInputChange} placeholder="Qualcomm" />
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Processor / Chipset</Form.Label>
                       <Form.Control type="text" name="processor" value={formData.processor} onChange={onInputChange} placeholder="Snapdragon 8 Gen 2" />
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
+                  <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>GPU</Form.Label>
                       <Form.Control type="text" name="gpu" value={formData.gpu} onChange={onInputChange} placeholder="Adreno 740" />
+                    </Form.Group>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Process Node (nm)</Form.Label>
+                      <Form.Control type="number" name="process_node" value={formData.process_node} onChange={onInputChange} placeholder="4" />
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>CPU Cores</Form.Label>
+                      <Form.Control type="number" name="cpu_cores" value={formData.cpu_cores} onChange={onInputChange} placeholder="8" />
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Clock Speed</Form.Label>
+                      <Form.Control type="text" name="cpu_frequency" value={formData.cpu_frequency} onChange={onInputChange} placeholder="3.2 GHz" />
                     </Form.Group>
                   </Col>
                 </Row>
@@ -302,13 +328,20 @@ const PhoneModal = ({
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Battery Capacity</Form.Label>
-                      <Form.Control type="text" name="battery_capacity" value={formData.battery_capacity} onChange={onInputChange} placeholder="5000mAh" />
+                      <InputGroup>
+                        <Form.Control type="number" name="battery_capacity" value={formData.battery_capacity} onChange={onInputChange} placeholder="5000" />
+                        <InputGroup.Text>mAh</InputGroup.Text>
+                      </InputGroup>
                     </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>Fast Charging</Form.Label>
-                      <Form.Control type="text" name="fast_charging" value={formData.fast_charging} onChange={onInputChange} placeholder="45W wired" />
+                      <InputGroup>
+                        <Form.Control type="text" name="fast_charging" value={formData.fast_charging} onChange={onInputChange} placeholder="Super Fast Charging" />
+                        <Form.Control type="number" name="fast_charging_w" value={formData.fast_charging_w} onChange={onInputChange} placeholder="45" style={{ maxWidth: '80px' }} />
+                        <InputGroup.Text>W</InputGroup.Text>
+                      </InputGroup>
                     </Form.Group>
                   </Col>
                   <Col md={4}>
@@ -322,13 +355,21 @@ const PhoneModal = ({
                   <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Wireless Charging</Form.Label>
-                      <Form.Control type="text" name="wireless_charging" value={formData.wireless_charging} onChange={onInputChange} placeholder="15W Qi, 50W" />
+                      <InputGroup>
+                        <Form.Control type="text" name="wireless_charging" value={formData.wireless_charging} onChange={onInputChange} placeholder="15W Qi" />
+                        <Form.Control type="number" name="wireless_charging_w" value={formData.wireless_charging_w} onChange={onInputChange} placeholder="15" style={{ maxWidth: '80px' }} />
+                        <InputGroup.Text>W</InputGroup.Text>
+                      </InputGroup>
                     </Form.Group>
                   </Col>
                   <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label>Reverse Charging</Form.Label>
-                      <Form.Control type="text" name="reverse_charging" value={formData.reverse_charging} onChange={onInputChange} placeholder="4.5W wireless power share" />
+                      <InputGroup>
+                        <Form.Control type="text" name="reverse_charging" value={formData.reverse_charging} onChange={onInputChange} placeholder="Wireless PowerShare" />
+                        <Form.Control type="number" name="reverse_charging_w" value={formData.reverse_charging_w} onChange={onInputChange} placeholder="4.5" style={{ maxWidth: '80px' }} />
+                        <InputGroup.Text>W</InputGroup.Text>
+                      </InputGroup>
                     </Form.Group>
                   </Col>
                 </Row>

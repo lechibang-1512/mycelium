@@ -32,9 +32,20 @@ const SparePartSchema = new Schema({
     compatible_models: [String],
 
     // Physical specs
-    dimensions: String,
-    weight_g: Number,
+    dimensions: {
+        height: Number,
+        width: Number,
+        depth: Number,
+        weight: Number
+    },
+    weight_g: Number, // Keeping for backward compatibility or easy indexing
     color_variants: [String],
+
+    // Technical specifications (flexible)
+    specs: {
+        type: Schema.Types.Mixed,
+        default: {} // Can store processor info for motherboards, charging info for batteries etc.
+    },
 
     // Quality and warranty
     quality_grade: {

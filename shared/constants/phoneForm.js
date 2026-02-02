@@ -20,6 +20,7 @@ export const INITIAL_PHONE_FORM_STATE = {
 
     // Processor & Performance
     processor: '',
+    processor_manufacturer: '',
     process_node: '',
     cpu_cores: '',
     cpu_frequency: '',
@@ -63,9 +64,13 @@ export const INITIAL_PHONE_FORM_STATE = {
 
     // Battery & Charging
     battery_capacity: '',
+    battery_type: '',
     fast_charging: '',
+    fast_charging_w: '',
     wireless_charging: '',
+    wireless_charging_w: '',
     reverse_charging: '',
+    reverse_charging_w: '',
     connector: '',
 
     // Security & SIM
@@ -121,10 +126,11 @@ export function mapPhoneToFormState(phone) {
 
         // Processor & Performance
         processor: phone.processor || '',
-        process_node: phone.process_node || '',
-        cpu_cores: phone.cpu_cores || '',
-        cpu_frequency: phone.cpu_frequency || '',
-        gpu: phone.gpu || '',
+        processor_manufacturer: phone.processor_manufacturer || phone.attributes?.processor?.manufacturer || '',
+        process_node: phone.process_node || phone.attributes?.processor?.process_nm || '',
+        cpu_cores: phone.cpu_cores || phone.attributes?.processor?.cores || '',
+        cpu_frequency: phone.cpu_frequency || phone.attributes?.processor?.clock_speed || '',
+        gpu: phone.gpu || phone.attributes?.processor?.gpu || '',
 
         // Memory
         memory_type: phone.memory_type || '',
@@ -163,11 +169,15 @@ export function mapPhoneToFormState(phone) {
         front_video_resolution: phone.front_video_resolution || '',
 
         // Battery & Charging
-        battery_capacity: phone.battery_capacity || '',
+        battery_capacity: phone.battery_capacity || phone.attributes?.battery?.capacity || '',
+        battery_type: phone.battery_type || phone.attributes?.battery?.type || '',
         fast_charging: phone.fast_charging || '',
+        fast_charging_w: phone.fast_charging_w || phone.attributes?.battery?.charging?.wired_wattage || '',
         wireless_charging: phone.wireless_charging || '',
+        wireless_charging_w: phone.wireless_charging_w || phone.attributes?.battery?.charging?.wireless_wattage || '',
         reverse_charging: phone.reverse_charging || '',
-        connector: phone.connector || '',
+        reverse_charging_w: phone.reverse_charging_w || phone.attributes?.battery?.charging?.reverse_wireless_wattage || '',
+        connector: phone.connector || phone.attributes?.battery?.charging?.connector_type || '',
 
         // Security & SIM
         security_features: phone.security_features || '',

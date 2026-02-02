@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Button, Form, Row, Col, Accordion } from 'react-bootstrap';
+import { Modal, Button, Form, Row, Col, Accordion, InputGroup } from 'react-bootstrap';
 import { sparePartsAPI, inventoryAPI, suppliersAPI } from '../../services/api';
+import { SPECS, INITIAL_SPECS_STATE } from '../../constants/specs';
 
 /**
  * Spare Part Form Component - Full Specifications
@@ -19,9 +20,14 @@ const SparePartForm = ({ show, onHide, onSaved, part }) => {
     is_active: true,
 
     // Physical Specs
-    dimensions: '',
-    weight_g: '',
+    dimensions: { ...INITIAL_SPECS_STATE.dimensions },
     color_variants: '',
+
+    // Technical Specs (Flexible)
+    specs: {
+      battery: { ...INITIAL_SPECS_STATE.battery },
+      processor: { ...INITIAL_SPECS_STATE.processor }
+    },
 
     // Device Compatibility
     compatible_product_id: '',
@@ -76,9 +82,13 @@ const SparePartForm = ({ show, onHide, onSaved, part }) => {
         description: part.description || '',
         is_active: part.is_active !== undefined ? Boolean(part.is_active) : true,
 
-        dimensions: part.dimensions || '',
-        weight_g: part.weight_g || '',
+        dimensions: typeof part.dimensions === 'object' ? { ...INITIAL_SPECS_STATE.dimensions, ...part.dimensions } : { ...INITIAL_SPECS_STATE.dimensions },
         color_variants: Array.isArray(part.color_variants) ? part.color_variants.join(', ') : (part.color_variants || ''),
+
+        specs: {
+          battery: { ...INITIAL_SPECS_STATE.battery, ...(part.specs?.battery || {}) },
+          processor: { ...INITIAL_SPECS_STATE.processor, ...(part.specs?.processor || {}) }
+        },
 
         compatible_product_id: part.compatible_product_id || '',
         compatible_device_category: part.compatible_device_category || '',
@@ -114,8 +124,11 @@ const SparePartForm = ({ show, onHide, onSaved, part }) => {
         part_type: '',
         description: '',
         is_active: true,
-        dimensions: '',
-        weight_g: '',
+        dimensions: { ...INITIAL_SPECS_STATE.dimensions },
+        specs: {
+          battery: { ...INITIAL_SPECS_STATE.battery },
+          processor: { ...INITIAL_SPECS_STATE.processor }
+        },
         color_variants: '',
         compatible_product_id: '',
         compatible_device_category: '',
@@ -177,6 +190,24 @@ const SparePartForm = ({ show, onHide, onSaved, part }) => {
     }));
   };
 
+  const handleDimensionsChange = (e) => {
+    const { name, value } = e.target;
+    setForm(s => ({
+      ...s,
+      dimensions: { ...s.dimensions, [name]: value }
+    }));
+  };
+
+  const handleSpecsChange = (category, field, value) => {
+    setForm(s => ({
+      ...s,
+      specs: {
+        ...s.specs,
+        [category]: { ...s.specs[category], [field]: value }
+      }
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -191,17 +222,23 @@ const SparePartForm = ({ show, onHide, onSaved, part }) => {
 
     try {
       // Convert comma-separated strings to arrays for JSON fields
+      // Convert comma-separated strings to arrays for JSON fields
       const submitData = {
         ...form,
         color_variants: form.color_variants ? form.color_variants.split(',').map(s => s.trim()).filter(Boolean) : null,
         compatible_brands: form.compatible_brands ? form.compatible_brands.split(',').map(s => s.trim()).filter(Boolean) : null,
         compatible_models: form.compatible_models ? form.compatible_models.split(',').map(s => s.trim()).filter(Boolean) : null,
-        weight_g: form.weight_g ? parseFloat(form.weight_g) : null,
+        weight_g: form.dimensions.weight ? parseFloat(form.dimensions.weight) : null, // Sync top-level weight
+        dimensions: form.dimensions, // Now structured
         lead_time_days: form.lead_time_days ? parseInt(form.lead_time_days) : null,
         default_supplier_id: form.default_supplier_id || null,
         is_active: form.is_active ? 1 : 0,
         is_hazardous: form.is_hazardous ? 1 : 0,
         requires_serial_tracking: form.requires_serial_tracking ? 1 : 0,
+        specs: {
+          battery: form.part_category === 'BATTERY' ? form.specs.battery : undefined,
+          processor: form.part_category === 'MOTHERBOARD' ? form.specs.processor : undefined
+        }
       };
 
       if (part && (part.spare_part_uuid || part.uuid)) {
@@ -383,19 +420,45 @@ const SparePartForm = ({ show, onHide, onSaved, part }) => {
               </Accordion.Header>
               <Accordion.Body>
                 <Row>
-                  <Col md={4}>
+                  <Col md={3}>
                     <Form.Group className="mb-2">
-                      <Form.Label>Dimensions</Form.Label>
-                      <Form.Control name="dimensions" value={form.dimensions} onChange={handleChange} placeholder="e.g., 6.1 inch or 155x71mm" />
+                      <Form.Label>Height (mm)</Form.Label>
+                      <InputGroup size="sm">
+                        <Form.Control type="number" name="height" value={form.dimensions.height} onChange={handleDimensionsChange} />
+                        <InputGroup.Text>mm</InputGroup.Text>
+                      </InputGroup>
                     </Form.Group>
                   </Col>
-                  <Col md={4}>
+                  <Col md={3}>
+                    <Form.Group className="mb-2">
+                      <Form.Label>Width (mm)</Form.Label>
+                      <InputGroup size="sm">
+                        <Form.Control type="number" name="width" value={form.dimensions.width} onChange={handleDimensionsChange} />
+                        <InputGroup.Text>mm</InputGroup.Text>
+                      </InputGroup>
+                    </Form.Group>
+                  </Col>
+                  <Col md={3}>
+                    <Form.Group className="mb-2">
+                      <Form.Label>Depth (mm)</Form.Label>
+                      <InputGroup size="sm">
+                        <Form.Control type="number" name="depth" value={form.dimensions.depth} onChange={handleDimensionsChange} />
+                        <InputGroup.Text>mm</InputGroup.Text>
+                      </InputGroup>
+                    </Form.Group>
+                  </Col>
+                  <Col md={3}>
                     <Form.Group className="mb-2">
                       <Form.Label>Weight (g)</Form.Label>
-                      <Form.Control type="number" step="0.01" name="weight_g" value={form.weight_g} onChange={handleChange} placeholder="Weight in grams" />
+                      <InputGroup size="sm">
+                        <Form.Control type="number" name="weight" value={form.dimensions.weight} onChange={handleDimensionsChange} />
+                        <InputGroup.Text>g</InputGroup.Text>
+                      </InputGroup>
                     </Form.Group>
                   </Col>
-                  <Col md={4}>
+                </Row>
+                <Row className="mt-2">
+                  <Col md={12}>
                     <Form.Group className="mb-2">
                       <Form.Label>Color Variants</Form.Label>
                       <Form.Control name="color_variants" value={form.color_variants} onChange={handleChange} placeholder="Black, White, Silver" />
@@ -405,6 +468,61 @@ const SparePartForm = ({ show, onHide, onSaved, part }) => {
                 </Row>
               </Accordion.Body>
             </Accordion.Item>
+
+            {/* Technical Specifications (Conditional) */}
+            {(form.part_category === 'BATTERY' || form.part_category === 'MOTHERBOARD') && (
+              <Accordion.Item eventKey="tech_specs">
+                <Accordion.Header>
+                  <i className="fas fa-microchip me-2"></i>
+                  Technical Specifications
+                </Accordion.Header>
+                <Accordion.Body>
+                  {form.part_category === 'BATTERY' && (
+                    <Row>
+                      <Col md={4}>
+                        <Form.Group className="mb-2">
+                          <Form.Label>Capacity (mAh)</Form.Label>
+                          <InputGroup>
+                            <Form.Control type="number" value={form.specs.battery.capacity} onChange={(e) => handleSpecsChange('battery', 'capacity', e.target.value)} />
+                            <InputGroup.Text>mAh</InputGroup.Text>
+                          </InputGroup>
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-2">
+                          <Form.Label>Type</Form.Label>
+                          <Form.Select value={form.specs.battery.type} onChange={(e) => handleSpecsChange('battery', 'type', e.target.value)}>
+                            {SPECS.BATTERY.type.options.map(o => <option key={o} value={o}>{o}</option>)}
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-2">
+                          <Form.Label>Connector</Form.Label>
+                          <Form.Control value={form.specs.battery.connector_type || ''} onChange={(e) => handleSpecsChange('battery', 'connector_type', e.target.value)} />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                  )}
+                  {form.part_category === 'MOTHERBOARD' && (
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group className="mb-2">
+                          <Form.Label>Chipset</Form.Label>
+                          <Form.Control value={form.specs.processor.chipset} onChange={(e) => handleSpecsChange('processor', 'chipset', e.target.value)} placeholder="e.g. Snapdragon 8 Gen 2" />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-2">
+                          <Form.Label>Manufacturer</Form.Label>
+                          <Form.Control value={form.specs.processor.manufacturer} onChange={(e) => handleSpecsChange('processor', 'manufacturer', e.target.value)} />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                  )}
+                </Accordion.Body>
+              </Accordion.Item>
+            )}
 
             {/* Quality & Warranty */}
             <Accordion.Item eventKey="3">
