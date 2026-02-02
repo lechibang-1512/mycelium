@@ -134,8 +134,8 @@ export function mapPhoneToFormState(phone) {
 
         // Memory
         memory_type: phone.memory_type || '',
-        ram: phone.ram || phone.storage || '',
-        rom: phone.rom || '',
+        ram: (phone.ram || phone.storage || '').toString().replace(/GB/i, '').trim(),
+        rom: (phone.rom || '').toString().replace(/GB/i, '').trim(),
         expandable_memory: phone.expandable_memory || '',
 
         // Physical Dimensions

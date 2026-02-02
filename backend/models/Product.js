@@ -19,7 +19,7 @@ const ProductSchema = new Schema({
     // Device classification
     device_type: {
         type: String,
-        enum: ['smartphone', 'tablet', 'laptop', 'accessory', 'spare_part', 'other'],
+        enum: ['smartphone', 'tablet', 'laptop', 'accessory', 'spare_part', 'other', 'general'],
         default: 'smartphone',
         index: true
     },

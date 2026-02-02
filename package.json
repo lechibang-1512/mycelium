@@ -6,16 +6,10 @@
     "diff": ">=8.0.3"
   },
   "scripts": {
-    "start": "node backend/server.cjs",
-    "dev": "vite --config backend/config/vite.config.mjs",
-    "build": "node ./scripts/tools/clean-simple.js && vite build --config backend/config/vite.config.mjs && npm start",
-    "build:only": "node ./scripts/tools/clean-simple.js && vite build --config backend/config/vite.config.mjs",
-    "build:quick": "vite build --config backend/config/vite.config.mjs",
-    "clean": "node ./scripts/tools/clean-simple.js",
+    "build": "vite build --config backend/config/vite.config.mjs && node backend/server.cjs",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "knip": "knip",
-    "preview": "vite preview --config backend/config/vite.config.mjs",
     "test": "node scripts/tests/run-all-tests.js",
     "test:mocha": "mocha --config backend/config/.mocharc.js",
     "test:watch": "mocha --watch --config backend/config/.mocharc.js",

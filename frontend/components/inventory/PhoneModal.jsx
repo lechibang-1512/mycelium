@@ -72,7 +72,6 @@ const PhoneModal = ({
                         name="device_name"
                         value={formData.device_name}
                         onChange={onInputChange}
-                        required
                         placeholder="e.g., Galaxy S23 Ultra"
                       />
                     </Form.Group>
@@ -85,7 +84,6 @@ const PhoneModal = ({
                         name="device_maker"
                         value={formData.device_maker}
                         onChange={onInputChange}
-                        required
                         placeholder="e.g., Samsung"
                       />
                     </Form.Group>
@@ -101,7 +99,6 @@ const PhoneModal = ({
                         name="device_price"
                         value={formData.device_price}
                         onChange={onInputChange}
-                        required
                         placeholder="1199.99"
                       />
                     </Form.Group>
@@ -179,8 +176,14 @@ const PhoneModal = ({
                   </Col>
                   <Col md={4}>
                     <Form.Group className="mb-3">
-                      <Form.Label>CPU Cores</Form.Label>
-                      <Form.Control type="number" name="cpu_cores" value={formData.cpu_cores} onChange={onInputChange} placeholder="8" />
+                      <Form.Label>Core Structure</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="cpu_cores"
+                        value={formData.cpu_cores}
+                        onChange={onInputChange}
+                        placeholder="Cortex A55*6 + Cortex A75*2"
+                      />
                     </Form.Group>
                   </Col>
                   <Col md={4}>
@@ -195,13 +198,19 @@ const PhoneModal = ({
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>RAM</Form.Label>
-                      <Form.Control type="text" name="ram" value={formData.ram} onChange={onInputChange} placeholder="12GB" />
+                      <InputGroup>
+                        <Form.Control type="text" name="ram" value={formData.ram} onChange={onInputChange} placeholder="12" />
+                        <InputGroup.Text>GB</InputGroup.Text>
+                      </InputGroup>
                     </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label>ROM/Storage</Form.Label>
-                      <Form.Control type="text" name="rom" value={formData.rom} onChange={onInputChange} placeholder="512GB" />
+                      <InputGroup>
+                        <Form.Control type="text" name="rom" value={formData.rom} onChange={onInputChange} placeholder="512" />
+                        <InputGroup.Text>GB</InputGroup.Text>
+                      </InputGroup>
                     </Form.Group>
                   </Col>
                   <Col md={4}>

@@ -6,7 +6,7 @@
 const mongoose = require('mongoose');
 
 const mongoConfig = {
-    uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/mycelium',
+    uri: process.env.MONGODB_URI || 'mongodb://lechibang:1212@localhost:27017/mycelium?authSource=admin',
     options: {
         maxPoolSize: 20,
         minPoolSize: 5,

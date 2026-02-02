@@ -259,6 +259,11 @@ const Inventory = () => {
 
   const handlePhoneSubmit = (e) => {
     e.preventDefault();
+    if (!phoneFormData.device_name || !phoneFormData.device_maker || !phoneFormData.device_price) {
+      setError('Please fill in all required fields (Name, Manufacturer, Price)');
+      setModalActiveTab('basic');
+      return;
+    }
     saveProductMutation.mutate({
       isEdit: !!editingProduct,
       id: editingProduct?.product_id,

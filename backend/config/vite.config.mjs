@@ -9,6 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   plugins: [react()],
   root: path.resolve(__dirname, '../../frontend'),
+  publicDir: path.resolve(__dirname, '../../public'),
   resolve: {
     alias: {
       '@shared': path.resolve(__dirname, '../../shared')
