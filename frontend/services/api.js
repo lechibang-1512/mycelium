@@ -27,6 +27,7 @@ export const updateRole = (roleId, data) => api.put(`/roles/${roleId}`, data).th
 export const deleteRole = (roleId) => api.delete(`/roles/${roleId}`).then(res => res.data);
 export const assignPermissionToRole = (roleId, permissionId) => api.post(`/roles/${roleId}/permissions`, { permission_id: permissionId }).then(res => res.data);
 export const removePermissionFromRole = (roleId, permissionId) => api.delete(`/roles/${roleId}/permissions/${permissionId}`).then(res => res.data);
+export const bulkSetRolePermissions = (roleId, permissions) => api.put(`/roles/${roleId}/permissions/bulk`, { permissions }).then(res => res.data);
 export const getUsersByRole = (roleId) => api.get(`/roles/${roleId}/users`).then(res => res.data);
 
 // Inventory APIs

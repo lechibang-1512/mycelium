@@ -10,6 +10,7 @@ const { requireRole } = require('../middleware/rbac');
 
 module.exports = () => {
   const router = express.Router();
+  const rmaService = new RMAService();
 
   /**
    * @route   POST /api/rma
@@ -45,7 +46,7 @@ module.exports = () => {
         });
       }
 
-      const rma = await RMAService.createRMARequest( rmaData, items, userId);
+      const rma = await rmaService.createRMARequest(rmaData, items, userId);
       res.status(201).json(rma);
     } catch (error) {
       next(error);
@@ -72,7 +73,7 @@ module.exports = () => {
         offset: req.query.offset || 0
       };
 
-      const rmas = await RMAService.listRMAs( filters);
+      const rmas = await rmaService.listRMAs(filters);
       res.json(Array.isArray(rmas) ? rmas : []);
     } catch (error) {
       next(error);
@@ -86,7 +87,7 @@ module.exports = () => {
    */
   router.get('/dashboard', async (req, res, next) => {
     try {
-      const metrics = await RMAService.getDashboardMetrics();
+      const metrics = await rmaService.getDashboardMetrics();
       res.json(metrics);
     } catch (error) {
       next(error);
@@ -104,7 +105,7 @@ module.exports = () => {
         date_from: req.query.date_from,
         date_to: req.query.date_to
       };
-      const analytics = await RMAService.getRMAAnalytics( filters);
+      const analytics = await rmaService.getRMAAnalytics(filters);
       res.json(analytics);
     } catch (error) {
       next(error);
@@ -119,7 +120,7 @@ module.exports = () => {
   router.get('/search/:query', async (req, res, next) => {
     try {
       const { query } = req.params;
-      const rmas = await RMAService.listRMAs( { customer_search: query });
+      const rmas = await rmaService.listRMAs({ customer_search: query });
       res.json(rmas);
     } catch (error) {
       next(error);
@@ -134,7 +135,7 @@ module.exports = () => {
   router.get('/:rmaNumber', async (req, res, next) => {
     try {
       const { rmaNumber } = req.params;
-      const rma = await RMAService.getRMAById( rmaNumber);
+      const rma = await rmaService.getRMAById(rmaNumber);
 
       if (!rma) {
         return res.status(404).json({ error: 'RMA not found' });
@@ -157,7 +158,7 @@ module.exports = () => {
       const updates = req.body;
       const userId = req.user?.id || 1;
 
-      const rma = await RMAService.updateRMARequest( rmaNumber, updates, userId);
+      const rma = await rmaService.updateRMARequest(rmaNumber, updates, userId);
 
       if (!rma) {
         return res.status(404).json({ error: 'RMA not found' });
@@ -178,7 +179,7 @@ module.exports = () => {
     try {
       const { rmaNumber } = req.params;
 
-      const success = await RMAService.deleteRMA( rmaNumber);
+      const success = await rmaService.deleteRMA(rmaNumber);
 
       if (!success) {
         return res.status(404).json({ error: 'RMA not found' });
@@ -214,7 +215,7 @@ module.exports = () => {
         return res.status(400).json({ error: 'Invalid status' });
       }
 
-      const rma = await RMAService.updateRMAStatus( rmaNumber, status, userId, reason);
+      const rma = await rmaService.updateRMAStatus(rmaNumber, status, userId, reason);
       res.json(rma);
     } catch (error) {
       next(error);
@@ -236,7 +237,7 @@ module.exports = () => {
         return res.status(400).json({ error: 'Items data is required' });
       }
 
-      const rma = await RMAService.receiveRMAItems( rmaNumber, items, userId);
+      const rma = await rmaService.receiveRMAItems(rmaNumber, items, userId);
       res.json(rma);
     } catch (error) {
       next(error);
@@ -251,7 +252,7 @@ module.exports = () => {
   router.get('/:rmaNumber/history', async (req, res, next) => {
     try {
       const { rmaNumber } = req.params;
-      const rma = await RMAService.getRMAById( rmaNumber);
+      const rma = await rmaService.getRMAById(rmaNumber);
 
       if (!rma) {
         return res.status(404).json({ error: 'RMA not found' });
@@ -283,7 +284,7 @@ module.exports = () => {
         return res.status(400).json({ error: 'Invalid inspection result' });
       }
 
-      const item = await RMAService.inspectRMAItem( rmaNumber, parseInt(itemId, 10), inspectionData, userId);
+      const item = await rmaService.inspectRMAItem(rmaNumber, parseInt(itemId, 10), inspectionData, userId);
       res.json(item);
     } catch (error) {
       next(error);
@@ -314,7 +315,7 @@ module.exports = () => {
         return res.status(400).json({ error: 'Invalid disposition' });
       }
 
-      const item = await RMAService.setItemDisposition( rmaNumber, parseInt(itemId, 10), disposition, notes, userId);
+      const item = await rmaService.setItemDisposition(rmaNumber, parseInt(itemId, 10), disposition, notes, userId);
       res.json(item);
     } catch (error) {
       next(error);
@@ -345,7 +346,7 @@ module.exports = () => {
         return res.status(400).json({ error: 'Invalid action type' });
       }
 
-      const result = await RMAService.processDispositionAction( rmaNumber, parseInt(itemId, 10), actionData, userId);
+      const result = await rmaService.processDispositionAction(rmaNumber, parseInt(itemId, 10), actionData, userId);
       res.json(result);
     } catch (error) {
       next(error);
@@ -367,7 +368,7 @@ module.exports = () => {
         return res.status(400).json({ error: 'File name and path are required' });
       }
 
-      const attachment = await RMAService.addAttachment( rmaNumber, attachmentData, userId);
+      const attachment = await rmaService.addAttachment(rmaNumber, attachmentData, userId);
       res.status(201).json(attachment);
     } catch (error) {
       next(error);
@@ -382,7 +383,7 @@ module.exports = () => {
   router.get('/:rmaNumber/attachments', async (req, res, next) => {
     try {
       const { rmaNumber } = req.params;
-      const attachments = await RMAService.getAttachments( rmaNumber);
+      const attachments = await rmaService.getAttachments(rmaNumber);
       res.json(attachments);
     } catch (error) {
       next(error);
@@ -410,7 +411,7 @@ module.exports = () => {
         return res.status(400).json({ error: 'status is required' });
       }
 
-      const results = await RMAService.bulkUpdateStatus( numbers, status, userId, reason);
+      const results = await rmaService.bulkUpdateStatus(numbers, status, userId, reason);
       res.json({
         message: 'Bulk status update completed',
         results
@@ -441,7 +442,7 @@ module.exports = () => {
         return res.status(400).json({ error: 'assignedTo is required' });
       }
 
-      const results = await RMAService.bulkAssign( numbers, assignedTo, userId);
+      const results = await rmaService.bulkAssign(numbers, assignedTo, userId);
       res.json({
         message: 'Bulk assignment completed',
         results
@@ -470,7 +471,7 @@ module.exports = () => {
         return res.status(400).json({ error: 'disposition is required' });
       }
 
-      const results = await RMAService.bulkSetDisposition( rmaNumber, itemIds, disposition, notes, userId);
+      const results = await rmaService.bulkSetDisposition(rmaNumber, itemIds, disposition, notes, userId);
       res.json({
         message: 'Bulk disposition update completed',
         results
@@ -495,7 +496,7 @@ module.exports = () => {
         return res.status(400).json({ error: 'repairJobId is required' });
       }
 
-      const item = await RMAService.linkToRepairJob(
+      const item = await rmaService.linkToRepairJob(
         pool,
         rmaNumber,
         parseInt(itemId, 10),
@@ -519,7 +520,7 @@ module.exports = () => {
   router.get('/:rmaNumber/repair-jobs', async (req, res, next) => {
     try {
       const { rmaNumber } = req.params;
-      const links = await RMAService.getLinkedRepairJobs( rmaNumber);
+      const links = await rmaService.getLinkedRepairJobs(rmaNumber);
       res.json(links);
     } catch (error) {
       next(error);
@@ -534,7 +535,7 @@ module.exports = () => {
   router.delete('/:rmaNumber/items/:itemId/repair-link', async (req, res, next) => {
     try {
       const { rmaNumber, itemId } = req.params;
-      const success = await RMAService.unlinkRepairJob( rmaNumber, parseInt(itemId, 10));
+      const success = await rmaService.unlinkRepairJob(rmaNumber, parseInt(itemId, 10));
 
       if (!success) {
         return res.status(404).json({ error: 'Item or link not found' });
@@ -556,7 +557,7 @@ module.exports = () => {
       const { rmaNumber, itemId } = req.params;
 
       // Get the RMA to find the item
-      const rma = await RMAService.getRMAById( rmaNumber);
+      const rma = await rmaService.getRMAById(rmaNumber);
       if (!rma) {
         return res.status(404).json({ error: 'RMA not found' });
       }
@@ -567,7 +568,7 @@ module.exports = () => {
       }
 
       // Use RMAService method to find matching repair jobs
-      const jobs = await RMAService.getMatchingRepairJobs( item);
+      const jobs = await rmaService.getMatchingRepairJobs(item);
 
       res.json({
         success: true,

@@ -1,7 +1,11 @@
 /**
  * Unified Response Utilities
  * Combines response formatting and Express response helpers.
+ * Includes automatic BigInt to Number conversion for all responses.
  */
+
+const SanitizationService = require('../services/SanitizationService');
+const convertBigIntToNumber = SanitizationService.convertBigIntToNumber;
 
 const ERROR_CODES = {
     NOT_FOUND: 'NOT_FOUND',
@@ -83,11 +87,12 @@ function list(items, itemsKey = 'items') {
 
 /**
  * Send a success response (Express helper)
+ * Automatically converts BigInt values to Numbers
  */
 function sendSuccess(res, data = {}, message = null, status = 200) {
     const response = {
         success: true,
-        ...data
+        ...convertBigIntToNumber(data)
     };
     if (message) {
         response.message = message;
@@ -97,6 +102,7 @@ function sendSuccess(res, data = {}, message = null, status = 200) {
 
 /**
  * Send an error response (Express helper)
+ * Automatically converts BigInt values to Numbers
  */
 function sendError(res, message, status = 500, details = null) {
     // Log internal server errors
@@ -110,7 +116,7 @@ function sendError(res, message, status = 500, details = null) {
     };
 
     if (details && process.env.NODE_ENV !== 'production') {
-        response.details = details;
+        response.details = convertBigIntToNumber(details);
     }
 
     return res.status(status).json(response);
@@ -122,6 +128,8 @@ module.exports = {
     // Express Helpers
     sendSuccess,
     sendError,
+    // BigInt utilities
+    convertBigIntToNumber,
     // Constants
     ERROR_CODES,
     ERROR_STATUS

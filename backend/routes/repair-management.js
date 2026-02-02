@@ -12,6 +12,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { sendSuccess, sendError } = require('../utils/response');
+const { convertBigIntToNumber } = require('../middleware/bigintHandler');
 
 module.exports = () => {
     // Initialize services
@@ -414,7 +415,7 @@ module.exports = () => {
                 return res.status(400).json({ success: false, message: 'Invalid status', allowed: normalized.allowed });
             }
 
-            const results = await repairService.bulkUpdateStatus( ids, normalized.normalized, userId);
+            const results = await repairService.bulkUpdateStatus(ids, normalized.normalized, userId);
             res.json({ success: true, message: 'Bulk status update completed', results });
         } catch (error) {
             console.error('Error in bulk status:', error);
@@ -436,7 +437,7 @@ module.exports = () => {
                 return res.status(400).json({ success: false, message: 'technicianId required' });
             }
 
-            const results = await repairService.bulkAssignTechnician( ids, tech, userId);
+            const results = await repairService.bulkAssignTechnician(ids, tech, userId);
             res.json({ success: true, message: 'Bulk assignment completed', results });
         } catch (error) {
             console.error('Error in bulk assign:', error);
@@ -462,7 +463,7 @@ module.exports = () => {
                 return res.status(400).json({ success: false, message: 'Invalid priority', allowed: normalized.allowed });
             }
 
-            const results = await repairService.bulkUpdatePriority( ids, normalized.normalized, userId);
+            const results = await repairService.bulkUpdatePriority(ids, normalized.normalized, userId);
             res.json({ success: true, message: 'Bulk priority update completed', results });
         } catch (error) {
             console.error('Error in bulk priority:', error);
@@ -480,7 +481,7 @@ module.exports = () => {
                 return res.status(400).json({ success: false, message: 'jobIds required' });
             }
 
-            const results = await repairService.bulkCancel( ids, reason || 'Bulk cancellation', userId);
+            const results = await repairService.bulkCancel(ids, reason || 'Bulk cancellation', userId);
             res.json({ success: true, message: 'Bulk cancellation completed', results });
         } catch (error) {
             console.error('Error in bulk cancel:', error);
@@ -493,7 +494,7 @@ module.exports = () => {
     router.get('/repair-jobs/rma/:rmaNumber/item/:itemId', async (req, res) => {
         try {
             const { rmaNumber, itemId } = req.params;
-            const jobs = await repairService.getJobsByRMAItem( rmaNumber, parseInt(itemId));
+            const jobs = await repairService.getJobsByRMAItem(rmaNumber, parseInt(itemId));
             res.json({ success: true, data: jobs.map(convertBigIntToNumber) });
         } catch (error) {
             console.error('Error fetching repair jobs by RMA item:', error);
@@ -513,7 +514,7 @@ module.exports = () => {
                 return res.status(400).json({ success: false, message: 'rmaItemData requires rma_number and item_id' });
             }
 
-            const result = await repairService.createFromRMAItem( rmaItemData, repairJobData || {}, userId);
+            const result = await repairService.createFromRMAItem(rmaItemData, repairJobData || {}, userId);
             res.status(201).json({ success: true, message: 'Repair job created from RMA item', data: convertBigIntToNumber(result) });
         } catch (error) {
             console.error('Error creating repair job from RMA:', error);
@@ -524,7 +525,7 @@ module.exports = () => {
     router.get('/repair-jobs/:id/linked-rmas', async (req, res) => {
         try {
             const { id } = req.params;
-            const rmas = await repairService.getLinkedRMAs( parseInt(id));
+            const rmas = await repairService.getLinkedRMAs(parseInt(id));
             res.json({ success: true, data: rmas.map(convertBigIntToNumber) });
         } catch (error) {
             console.error('Error fetching linked RMAs:', error);

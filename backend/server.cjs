@@ -34,6 +34,7 @@ const { ensureSingleInstance, removePidFile } = require('./utils/singleInstance'
 const setupMiddleware = require('./middleware/setupMiddleware');
 const { detectMobile } = require('./middleware/userAgent');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
+const { bigintHandler } = require('./middleware/bigintHandler');
 const ScheduledJobsService = require('./services/ScheduledJobsService');
 
 const app = express();
@@ -54,13 +55,14 @@ async function startServer() {
         dbConnection = await connectMongoDB();
         console.log('✅ MongoDB connected');
 
-        // Initialize Casbin Service (needs update for Mongoose adapter if not already compatible)
-        // const CasbinService = require('./services/CasbinService');
-        // await CasbinService.init(dbConnection); 
-        // console.log('✅ Casbin Service initialized');
+        // Initialize Casbin Service with MongoDB adapter
+        const CasbinService = require('./services/CasbinService');
+        await CasbinService.init();
+        console.log('✅ Casbin Service initialized');
 
-        // Populate Casbin policies from code definitions
-        // await CasbinService.syncLegacyPolicies(dbConnection);
+        // Sync policies from MongoDB roles and user-role assignments
+        await CasbinService.syncFromMongoDB();
+        console.log('✅ Casbin policies synced from MongoDB');
 
         // Scheduled Jobs
         // scheduledJobsService = new ScheduledJobsService(dbConnection); // Need to update service to work with Mongoose
@@ -79,6 +81,9 @@ async function startServer() {
         });
 
         const { authLimiter, apiLimiter } = setupMiddleware(app);
+
+        // BigInt handler middleware - converts BigInt to Number in all JSON responses
+        app.use(bigintHandler);
 
         // Static Files
         app.get('/favicon.ico', (req, res) => {

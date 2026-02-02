@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Container, Row, Col, Card, Button, Table, Modal, Form, Badge, Alert, Spinner, Tabs, Tab } from 'react-bootstrap';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllRoles, getAllPermissions, createRole, updateRole, deleteRole, assignPermissionToRole, removePermissionFromRole, getUsersByRole } from '../../services/api';
+import { getAllRoles, getAllPermissions, createRole, updateRole, deleteRole, assignPermissionToRole, removePermissionFromRole, getUsersByRole, bulkSetRolePermissions } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { PERMISSIONS } from '../../constants/permissions';
 
@@ -199,6 +199,18 @@ const RolesPermissions = () => {
     },
   });
 
+  // Bulk set permissions mutation
+  const bulkPermissionsMutation = useMutation({
+    mutationFn: ({ roleId, permissions }) => bulkSetRolePermissions(roleId, permissions),
+    onSuccess: (data, { allOn }) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.roles });
+      setSuccess(allOn ? 'All permissions enabled' : 'All permissions removed');
+    },
+    onError: (err) => {
+      setError(err.response?.data?.error || 'Failed to update permissions');
+    },
+  });
+
   // ==================== HANDLERS ====================
 
   const handleCreateRole = (e) => {
@@ -232,6 +244,23 @@ const RolesPermissions = () => {
     setError(null);
     togglePermissionMutation.mutate({ roleId, permissionId, hasPermission });
   }, [togglePermissionMutation]);
+
+  const handleEnableAllPermissions = useCallback(() => {
+    if (!selectedRole) return;
+    setError(null);
+    const allPermNames = permissions.map(p => p.name);
+    bulkPermissionsMutation.mutate({ roleId: selectedRole.id, permissions: allPermNames, allOn: true });
+    // Update local state
+    setSelectedRole(prev => ({ ...prev, permissions: permissions }));
+  }, [selectedRole, permissions, bulkPermissionsMutation]);
+
+  const handleDisableAllPermissions = useCallback(() => {
+    if (!selectedRole) return;
+    setError(null);
+    bulkPermissionsMutation.mutate({ roleId: selectedRole.id, permissions: [], allOn: false });
+    // Update local state
+    setSelectedRole(prev => ({ ...prev, permissions: [] }));
+  }, [selectedRole, bulkPermissionsMutation]);
 
   const handleViewUsers = (role) => {
     setSelectedRole(role);
@@ -480,6 +509,37 @@ const RolesPermissions = () => {
           ))}
         </Modal.Body>
         <Modal.Footer>
+          {canManage && (
+            <div className="me-auto">
+              <Button
+                variant="success"
+                size="sm"
+                onClick={handleEnableAllPermissions}
+                disabled={bulkPermissionsMutation.isPending}
+                className="me-2"
+              >
+                {bulkPermissionsMutation.isPending ? (
+                  <Spinner animation="border" size="sm" className="me-1" />
+                ) : (
+                  <i className="fas fa-check-double me-1"></i>
+                )}
+                Enable All
+              </Button>
+              <Button
+                variant="outline-danger"
+                size="sm"
+                onClick={handleDisableAllPermissions}
+                disabled={bulkPermissionsMutation.isPending}
+              >
+                {bulkPermissionsMutation.isPending ? (
+                  <Spinner animation="border" size="sm" className="me-1" />
+                ) : (
+                  <i className="fas fa-times me-1"></i>
+                )}
+                Disable All
+              </Button>
+            </div>
+          )}
           <Button variant="secondary" onClick={() => setShowPermissionsModal(false)}>
             Close
           </Button>

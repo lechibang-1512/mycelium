@@ -1,25 +1,45 @@
+/**
+ * Casbin Service
+ * Role-Based Access Control using Casbin with MongoDB adapter
+ * 
+ * This is the single source of truth for permission enforcement.
+ * Policies are synced from MongoDB roles collection on startup.
+ */
+
 const casbin = require('casbin');
-const CasbinAdapter = require('./CasbinAdapter');
+const { MongooseAdapter } = require('casbin-mongoose-adapter');
 const path = require('path');
-const { PERMISSIONS, ROLES, getEffectivePermissions } = require('../utils/permissions.js');
 const { ROLE_DEFINITIONS } = require('../utils/role-assignments');
+const { getEffectivePermissions, PERMISSION_DEFINITIONS } = require('../utils/permissions');
+const Role = require('../models/Role');
+const User = require('../models/User');
 
 let enforcerInstance = null;
 
 class CasbinService {
     /**
-     * Initialize Casbin Enforcer
-     * @param {Object} pool - Database pool
+     * Initialize Casbin Enforcer with MongoDB adapter
      */
-    static async init(pool) {
+    static async init() {
         if (!enforcerInstance) {
-            console.log('Initializing Casbin Enforcer...');
-            const adapter = await CasbinAdapter.newAdapter(pool);
+            console.log('[Casbin] Initializing with MongoDB adapter...');
+
+            const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/mycelium';
+            if (!mongoUri) {
+                throw new Error('MongoDB URI is required');
+            }
+
+            // Create MongoDB adapter
+            const adapter = await MongooseAdapter.newAdapter(mongoUri);
+
+            // Load model configuration
             const modelPath = path.resolve(__dirname, '../config/casbin_model.conf');
 
+            // Create enforcer
             enforcerInstance = await casbin.newEnforcer(modelPath, adapter);
             await enforcerInstance.loadPolicy();
-            console.log('Casbin Enforcer initialized');
+
+            console.log('[Casbin] Enforcer initialized');
         }
         return enforcerInstance;
     }
@@ -27,130 +47,252 @@ class CasbinService {
     /**
      * Get the initialized enforcer instance
      * @returns {Object} Casbin Enforcer
+     * @throws {Error} If enforcer not initialized
      */
     static getEnforcer() {
         if (!enforcerInstance) {
-            throw new Error('Casbin Enforcer not initialized');
+            throw new Error('Casbin Enforcer not initialized. Call CasbinService.init() first.');
         }
         return enforcerInstance;
     }
 
     /**
-     * Check permission
-     * @param {string} sub - Subject (User ID or Role)
-     * @param {string} obj - Object (Resource)
-     * @param {string} act - Action
+     * Check if user has permission
+     * @param {string|number} userId - User ID
+     * @param {string} resource - Resource name
+     * @param {string} action - Action name
      * @returns {Promise<boolean>}
      */
-    static async enforce(sub, obj, act) {
-        // Casbin expects strings. Ensure sub is string.
-        return await this.getEnforcer().enforce(String(sub), obj, act);
+    static async enforce(userId, resource, action) {
+        const e = this.getEnforcer();
+        return await e.enforce(String(userId), resource, action);
     }
 
     /**
      * Check if user has role
-     * @param {string} user - User ID
-     * @param {string} role - Role Name
+     * @param {string|number} userId - User ID
+     * @param {string} roleName - Role name
+     * @returns {Promise<boolean>}
      */
-    static async hasRole(user, role) {
-        return await this.getEnforcer().hasRoleForUser(String(user), role);
+    static async hasRole(userId, roleName) {
+        const e = this.getEnforcer();
+        return await e.hasRoleForUser(String(userId), roleName);
     }
 
     /**
-     * Add role for user
-     * @param {string} user 
-     * @param {string} role 
+     * Get all roles for a user
+     * @param {string|number} userId - User ID
+     * @returns {Promise<string[]>}
      */
-    static async addRoleForUser(user, role) {
-        return await this.getEnforcer().addGroupingPolicy(String(user), role);
-    }
-
-    /**
-     * Remove role for user
-     */
-    static async deleteRoleForUser(user, role) {
-        return await this.getEnforcer().removeGroupingPolicy(String(user), role);
-    }
-
-    /**
-     * Add permission policy
-     * @param {string} sub - Subject (Role)
-     * @param {string} obj - Object (Resource)
-     * @param {string} act - Action
-     */
-    static async addPolicy(sub, obj, act) {
-        return await this.getEnforcer().addPolicy(sub, obj, act);
-    }
-
-    /**
-     * Remove permission policy
-     * @param {string} sub - Subject (Role)
-     * @param {string} obj - Object (Resource)
-     * @param {string} act - Action
-     */
-    static async removePolicy(sub, obj, act) {
-        return await this.getEnforcer().removePolicy(sub, obj, act);
+    static async getRolesForUser(userId) {
+        const e = this.getEnforcer();
+        return await e.getRolesForUser(String(userId));
     }
 
     /**
      * Get implicit permissions for a user (includes role permissions)
+     * @param {string|number} userId - User ID
+     * @returns {Promise<string[][]>} Array of [subject, resource, action] tuples
      */
-    static async getImplicitPermissionsForUser(user) {
-        return await this.getEnforcer().getImplicitPermissionsForUser(String(user));
+    static async getImplicitPermissionsForUser(userId) {
+        const e = this.getEnforcer();
+        return await e.getImplicitPermissionsForUser(String(userId));
     }
 
     /**
-     * Sync legacy policies to Casbin
-     * Reads from permissions.js and populates Casbin rules
-     * Also migrates existing user roles if needed (custom logic required for DB tables)
+     * Add a policy rule
+     * @param {string} subject - Subject (role name)
+     * @param {string} resource - Resource
+     * @param {string} action - Action
+     * @returns {Promise<boolean>}
      */
-    static async syncLegacyPolicies(pool) {
+    static async addPolicy(subject, resource, action) {
+        const e = this.getEnforcer();
+        const added = await e.addPolicy(subject, resource, action);
+        if (added) {
+            await e.savePolicy();
+        }
+        return added;
+    }
+
+    /**
+     * Remove a policy rule
+     * @param {string} subject - Subject (role name)
+     * @param {string} resource - Resource
+     * @param {string} action - Action
+     * @returns {Promise<boolean>}
+     */
+    static async removePolicy(subject, resource, action) {
+        const e = this.getEnforcer();
+        const removed = await e.removePolicy(subject, resource, action);
+        if (removed) {
+            await e.savePolicy();
+        }
+        return removed;
+    }
+
+    /**
+     * Add role for user (grouping policy)
+     * @param {string|number} userId - User ID
+     * @param {string} roleName - Role name
+     * @returns {Promise<boolean>}
+     */
+    static async addRoleForUser(userId, roleName) {
+        const e = this.getEnforcer();
+        const added = await e.addGroupingPolicy(String(userId), roleName);
+        if (added) {
+            await e.savePolicy();
+        }
+        return added;
+    }
+
+    /**
+     * Remove role from user (grouping policy)
+     * @param {string|number} userId - User ID
+     * @param {string} roleName - Role name
+     * @returns {Promise<boolean>}
+     */
+    static async deleteRoleForUser(userId, roleName) {
+        const e = this.getEnforcer();
+        const removed = await e.removeGroupingPolicy(String(userId), roleName);
+        if (removed) {
+            await e.savePolicy();
+        }
+        return removed;
+    }
+
+    /**
+     * Remove all policies for a role
+     * @param {string} roleName - Role name
+     * @returns {Promise<boolean>}
+     */
+    static async removeFilteredPoliciesForRole(roleName) {
+        const e = this.getEnforcer();
+        // RemoveFilteredPolicy(fieldIndex, ...fieldValues)
+        // Field 0 is v0 (subject) in policy definition
+        const removed = await e.removeFilteredPolicy(0, roleName);
+        if (removed) {
+            await e.savePolicy();
+        }
+        return removed;
+    }
+
+    /**
+     * Sync all role policies for a specific role
+     * Call this after updating a role's permissions in MongoDB
+     * @param {string} roleName - Role name
+     * @param {string[]} permissions - Array of permission strings
+     */
+    static async syncRolePolicies(roleName, permissions) {
         const e = this.getEnforcer();
 
-        console.log('[Casbin Sync] Starting migration of legacy policies...');
+        // Remove all existing policies for this role
+        await e.removeFilteredPolicy(0, roleName);
+
+        // Add new policies with effective permissions (expanded via hierarchy)
+        const effectivePermissions = getEffectivePermissions(permissions);
+        for (const permString of effectivePermissions) {
+            const [resource, action] = permString.split('.');
+            if (resource && action) {
+                await e.addPolicy(roleName, resource, action);
+            }
+        }
+
+        await e.savePolicy();
+    }
+
+    /**
+     * Get user's roles and permissions for frontend/API
+     * Replaces RBACService.getUserPermissions()
+     * @param {number} userId - User ID
+     * @returns {Promise<{roles: Object[], permissions: Object[]}>}
+     */
+    static async getUserPermissions(userId) {
+        const e = this.getEnforcer();
+
+        // Get roles
+        const roleNames = await e.getRolesForUser(String(userId));
+        const roles = roleNames.map(name => ({ name }));
+
+        // Get implicit permissions
+        const policies = await e.getImplicitPermissionsForUser(String(userId));
+
+        // Convert to permission objects
+        const permissionSet = new Set();
+        const permissions = [];
+
+        for (const policy of policies) {
+            const resource = policy[1];
+            const action = policy[2];
+            const name = `${resource}.${action}`;
+
+            if (!permissionSet.has(name)) {
+                permissionSet.add(name);
+
+                // Find matching definition for metadata
+                const def = PERMISSION_DEFINITIONS.find(d => d.name === name);
+                permissions.push(def || {
+                    name,
+                    resource,
+                    action,
+                    description: ''
+                });
+            }
+        }
+
+        return { roles, permissions };
+    }
+
+    /**
+     * Sync all policies from MongoDB on startup
+     * Reads roles and user-role assignments from MongoDB and populates Casbin
+     */
+    static async syncFromMongoDB() {
+        const e = this.getEnforcer();
+        console.log('[Casbin] Syncing policies from MongoDB...');
 
         try {
-            // 1. Sync Roles and Permissions (P rules)
-            for (const roleDef of ROLE_DEFINITIONS) {
-                const roleName = roleDef.name;
+            // Clear all existing policies
+            await e.clearPolicy();
 
-                // Remove existing policies for this role to prevent duplication
-                // removeFilteredPolicy(fieldIndex, ...fieldValues)
-                // Field 0 is v0 which contains the subject (role name)
-                await e.removeFilteredPolicy(0, roleName);
+            // 1. Sync role permissions (p rules)
+            const roles = await Role.find().lean();
+            let policyCount = 0;
 
-                // Expand permissions to include implied ones (e.g. manage -> read, write, delete)
-                const effectivePermissions = getEffectivePermissions(roleDef.permissions);
+            for (const role of roles) {
+                // Expand permissions via hierarchy
+                const effectivePermissions = getEffectivePermissions(role.permissions || []);
 
                 for (const permString of effectivePermissions) {
                     const [resource, action] = permString.split('.');
                     if (resource && action) {
-                        await e.addPolicy(roleName, resource, action);
+                        await e.addPolicy(role.name, resource, action);
+                        policyCount++;
                     }
                 }
-                console.log(`[Casbin Sync] Role '${roleName}': Synced ${effectivePermissions.length} permissions`);
             }
+            console.log(`[Casbin] Synced ${policyCount} permission policies from ${roles.length} roles`);
 
-            // 2. Sync User-Role assignments (G rules)
-            // We clear existing grouping policies before re-syncing from DB
-            // WARNING: This assumes the SQL security_db.user_roles is the source of truth for assignments
-            await e.removeFilteredGroupingPolicy(1); // remove all grouping policies (v1 is role)
+            // 2. Sync user-role assignments (g rules)
+            const users = await User.find({ is_active: true }).populate('roles').lean();
+            let groupingCount = 0;
 
-            const rows = await pool.query(`
-                SELECT user_id, r.name as role_name 
-                FROM security_db.user_roles ur 
-                JOIN security_db.roles r ON ur.role_id = r.id
-            `);
-
-            for (const row of rows) {
-                await e.addGroupingPolicy(String(row.user_id), row.role_name);
+            for (const user of users) {
+                if (user.roles && user.roles.length > 0) {
+                    for (const role of user.roles) {
+                        await e.addGroupingPolicy(String(user.user_id), role.name);
+                        groupingCount++;
+                    }
+                }
             }
-            console.log(`[Casbin Sync] Users: Synced ${rows.length} role assignments`);
+            console.log(`[Casbin] Synced ${groupingCount} user-role assignments`);
 
+            // Save all policies
             await e.savePolicy();
-            console.log('[Casbin Sync] Migration complete');
+            console.log('[Casbin] Policies saved to MongoDB');
+
         } catch (err) {
-            console.error('[Casbin Sync] Error during migration:', err.message);
+            console.error('[Casbin] Error syncing from MongoDB:', err.message);
             throw err;
         }
     }

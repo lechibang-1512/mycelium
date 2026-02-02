@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const SanitizationService = require('../services/SanitizationService');
+const convertBigIntToNumber = SanitizationService.convertBigIntToNumber;
 
 module.exports = () => {
     const InvoiceService = require('../services/InvoiceService');

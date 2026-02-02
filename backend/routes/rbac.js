@@ -1,21 +1,17 @@
 /**
- * RBAC (Role-Based Access Control) Consolidated Routes
- * Combines: roles.js, permissions.js, user-roles.js
- * 
- * All routes maintain original URL paths for backward compatibility.
+ * RBAC (Role-Based Access Control) Routes
+ * Uses CasbinService for permission enforcement and MongoDB for data storage
  */
 
 const express = require('express');
 const router = express.Router();
-const RBACService = require('../services/RBACService');
 const asyncHandler = require('../utils/asyncHandler');
-const SanitizationService = require('../services/SanitizationService');
-
-const convertBigIntToNumber = SanitizationService.convertBigIntToNumber;
+const CasbinService = require('../services/CasbinService');
+const Role = require('../models/Role');
+const User = require('../models/User');
+const { PERMISSION_DEFINITIONS } = require('../utils/permissions');
 
 module.exports = () => {
-    const rbacService = new RBACService();
-
     // ========================================================================
     // ROLES ENDPOINTS (/api/roles)
     // ========================================================================
@@ -26,11 +22,40 @@ module.exports = () => {
      * @route GET /api/roles
      */
     rolesRouter.get('/', asyncHandler(async (req, res) => {
-        const roles = await rbacService.getAllRoles();
+        const roles = await Role.find().sort({ name: 1 }).lean();
+
+        const result = roles.map(role => ({
+            id: role.role_id,
+            name: role.name,
+            description: role.description,
+            created_at: role.created_at,
+            updated_at: role.updated_at,
+            permissions: role.permissions.map(permName => {
+                const def = PERMISSION_DEFINITIONS.find(p => p.name === permName);
+                if (def) {
+                    return {
+                        id: def.name,
+                        name: def.name,
+                        description: def.description,
+                        resource: def.resource,
+                        action: def.action
+                    };
+                }
+                const [resource, action] = permName.split('.');
+                return {
+                    id: permName,
+                    name: permName,
+                    description: '',
+                    resource: resource || '',
+                    action: action || ''
+                };
+            })
+        }));
+
         res.json({
             success: true,
-            roles: roles.map(r => convertBigIntToNumber(r)),
-            total: roles.length
+            roles: result,
+            total: result.length
         });
     }));
 
@@ -44,12 +69,41 @@ module.exports = () => {
             return res.status(400).json({ success: false, error: 'Invalid role ID' });
         }
 
-        const role = await rbacService.getRoleById(roleId);
+        const role = await Role.findOne({ role_id: roleId }).lean();
         if (!role) {
             return res.status(404).json({ success: false, error: 'Role not found' });
         }
 
-        res.json({ success: true, role: convertBigIntToNumber(role) });
+        res.json({
+            success: true,
+            role: {
+                id: role.role_id,
+                name: role.name,
+                description: role.description,
+                created_at: role.created_at,
+                updated_at: role.updated_at,
+                permissions: role.permissions.map(permName => {
+                    const def = PERMISSION_DEFINITIONS.find(p => p.name === permName);
+                    if (def) {
+                        return {
+                            id: def.name,
+                            name: def.name,
+                            description: def.description,
+                            resource: def.resource,
+                            action: def.action
+                        };
+                    }
+                    const [resource, action] = permName.split('.');
+                    return {
+                        id: permName,
+                        name: permName,
+                        description: '',
+                        resource: resource || '',
+                        action: action || ''
+                    };
+                })
+            }
+        });
     }));
 
     /**
@@ -62,10 +116,19 @@ module.exports = () => {
             return res.status(400).json({ success: false, error: 'Role name is required' });
         }
 
-        const role = await rbacService.createRole({ name, description });
+        const role = await Role.create({
+            name,
+            description,
+            permissions: []
+        });
+
         res.status(201).json({
             success: true,
-            role: convertBigIntToNumber(role),
+            role: {
+                id: role.role_id,
+                name: role.name,
+                description: role.description
+            },
             message: 'Role created successfully'
         });
     }));
@@ -85,10 +148,23 @@ module.exports = () => {
             return res.status(400).json({ success: false, error: 'Role name is required' });
         }
 
-        const role = await rbacService.updateRole(roleId, { name, description });
+        const role = await Role.findOneAndUpdate(
+            { role_id: roleId },
+            { name, description },
+            { new: true }
+        ).lean();
+
+        if (!role) {
+            return res.status(404).json({ success: false, error: 'Role not found' });
+        }
+
         res.json({
             success: true,
-            role: convertBigIntToNumber(role),
+            role: {
+                id: role.role_id,
+                name: role.name,
+                description: role.description
+            },
             message: 'Role updated successfully'
         });
     }));
@@ -103,7 +179,20 @@ module.exports = () => {
             return res.status(400).json({ success: false, error: 'Invalid role ID' });
         }
 
-        await rbacService.deleteRole(roleId);
+        const role = await Role.findOne({ role_id: roleId });
+        if (role) {
+            // Remove role reference from all users
+            await User.updateMany(
+                { roles: role._id },
+                { $pull: { roles: role._id } }
+            );
+
+            // Remove role policies from Casbin
+            await CasbinService.removeFilteredPoliciesForRole(role.name);
+
+            await role.deleteOne();
+        }
+
         res.json({ success: true, message: 'Role deleted successfully' });
     }));
 
@@ -115,11 +204,31 @@ module.exports = () => {
         const roleId = parseInt(req.params.id);
         const { permission_id } = req.body;
 
-        if (isNaN(roleId) || isNaN(permission_id)) {
-            return res.status(400).json({ success: false, error: 'Invalid role ID or permission ID' });
+        if (isNaN(roleId)) {
+            return res.status(400).json({ success: false, error: 'Invalid role ID' });
         }
 
-        await rbacService.assignPermissionToRole(roleId, permission_id);
+        // permission_id can be a number (index) or string (permission name)
+        let permName = permission_id;
+        if (typeof permission_id === 'number') {
+            const perm = PERMISSION_DEFINITIONS[permission_id - 1];
+            permName = perm?.name || permission_id;
+        }
+
+        const role = await Role.findOne({ role_id: roleId });
+        if (!role) {
+            return res.status(404).json({ success: false, error: 'Role not found' });
+        }
+
+        // Add permission if not already present
+        if (!role.permissions.includes(permName)) {
+            role.permissions.push(permName);
+            await role.save();
+        }
+
+        // Sync to Casbin
+        await CasbinService.syncRolePolicies(role.name, role.permissions);
+
         res.json({ success: true, message: 'Permission assigned to role successfully' });
     }));
 
@@ -129,14 +238,67 @@ module.exports = () => {
      */
     rolesRouter.delete('/:id/permissions/:permissionId', asyncHandler(async (req, res) => {
         const roleId = parseInt(req.params.id);
-        const permissionId = parseInt(req.params.permissionId);
+        const permissionId = req.params.permissionId;
 
-        if (isNaN(roleId) || isNaN(permissionId)) {
-            return res.status(400).json({ success: false, error: 'Invalid role ID or permission ID' });
+        if (isNaN(roleId)) {
+            return res.status(400).json({ success: false, error: 'Invalid role ID' });
         }
 
-        await rbacService.removePermissionFromRole(roleId, permissionId);
+        // permissionId can be a number (index) or string (permission name)
+        let permName = permissionId;
+        if (!isNaN(parseInt(permissionId))) {
+            const perm = PERMISSION_DEFINITIONS[parseInt(permissionId) - 1];
+            permName = perm?.name || permissionId;
+        }
+
+        const role = await Role.findOne({ role_id: roleId });
+        if (!role) {
+            return res.status(404).json({ success: false, error: 'Role not found' });
+        }
+
+        // Remove permission
+        role.permissions = role.permissions.filter(p => p !== permName);
+        await role.save();
+
+        // Sync to Casbin
+        await CasbinService.syncRolePolicies(role.name, role.permissions);
+
         res.json({ success: true, message: 'Permission removed from role successfully' });
+    }));
+
+    /**
+     * Bulk set all permissions for a role
+     * @route PUT /api/roles/:id/permissions/bulk
+     */
+    rolesRouter.put('/:id/permissions/bulk', asyncHandler(async (req, res) => {
+        const roleId = parseInt(req.params.id);
+        const { permissions } = req.body;
+
+        if (isNaN(roleId)) {
+            return res.status(400).json({ success: false, error: 'Invalid role ID' });
+        }
+
+        if (!Array.isArray(permissions)) {
+            return res.status(400).json({ success: false, error: 'permissions must be an array' });
+        }
+
+        const role = await Role.findOne({ role_id: roleId });
+        if (!role) {
+            return res.status(404).json({ success: false, error: 'Role not found' });
+        }
+
+        // Set permissions directly (array of permission name strings)
+        role.permissions = permissions;
+        await role.save();
+
+        // Sync to Casbin
+        await CasbinService.syncRolePolicies(role.name, role.permissions);
+
+        res.json({
+            success: true,
+            message: `Set ${permissions.length} permissions for role`,
+            count: permissions.length
+        });
     }));
 
     /**
@@ -149,11 +311,28 @@ module.exports = () => {
             return res.status(400).json({ success: false, error: 'Invalid role ID' });
         }
 
-        const users = await rbacService.getUsersByRole(roleId);
+        const role = await Role.findOne({ role_id: roleId });
+        if (!role) {
+            return res.status(404).json({ success: false, error: 'Role not found' });
+        }
+
+        const users = await User.find({ roles: role._id })
+            .select('-password')
+            .sort({ username: 1 })
+            .lean();
+
+        const result = users.map(u => ({
+            id: u.user_id,
+            username: u.username,
+            email: u.email,
+            fullName: u.fullName,
+            assigned_at: u.updated_at
+        }));
+
         res.json({
             success: true,
-            users: users.map(u => convertBigIntToNumber(u)),
-            total: users.length
+            users: result,
+            total: result.length
         });
     }));
 
@@ -163,20 +342,27 @@ module.exports = () => {
     const permissionsRouter = express.Router();
 
     /**
-     * Get all permissions
+     * Get all permissions (from code definitions)
      * @route GET /api/permissions
      */
     permissionsRouter.get('/', asyncHandler(async (req, res) => {
-        const permissions = await rbacService.getAllPermissions();
+        const permissions = PERMISSION_DEFINITIONS.map((perm, index) => ({
+            id: index + 1,
+            name: perm.name,
+            description: perm.description,
+            resource: perm.resource,
+            action: perm.action
+        }));
+
         res.json({
             success: true,
-            permissions: permissions.map(p => convertBigIntToNumber(p)),
+            permissions,
             total: permissions.length
         });
     }));
 
     /**
-     * Create a new permission
+     * Create a new permission (no-op - permissions defined in code)
      * @route POST /api/permissions
      */
     permissionsRouter.post('/', asyncHandler(async (req, res) => {
@@ -185,11 +371,11 @@ module.exports = () => {
             return res.status(400).json({ success: false, error: 'Permission name is required' });
         }
 
-        const permission = await rbacService.createPermission({ name, description, resource, action });
+        // Permissions are defined in code, return the provided data
         res.status(201).json({
             success: true,
-            permission: convertBigIntToNumber(permission),
-            message: 'Permission created successfully'
+            permission: { name, description, resource, action },
+            message: 'Permission created successfully (note: permissions are defined in code)'
         });
     }));
 
@@ -208,12 +394,13 @@ module.exports = () => {
             return res.status(400).json({ success: false, error: 'Invalid user ID' });
         }
 
-        const permissions = await rbacService.getUserPermissions(userId);
+        const permissions = await CasbinService.getUserPermissions(userId);
+
         res.json({
             success: true,
             user_id: userId,
-            roles: permissions.roles.map(r => convertBigIntToNumber(r)),
-            permissions: permissions.permissions.map(p => convertBigIntToNumber(p))
+            roles: permissions.roles,
+            permissions: permissions.permissions
         });
     }));
 
@@ -223,13 +410,26 @@ module.exports = () => {
      */
     userRolesRouter.post('/:userId/roles', asyncHandler(async (req, res) => {
         const userId = parseInt(req.params.userId);
-        const { role_id, assigned_by } = req.body;
+        const { role_id } = req.body;
 
         if (isNaN(userId) || isNaN(role_id)) {
             return res.status(400).json({ success: false, error: 'Invalid user ID or role ID' });
         }
 
-        await rbacService.assignRoleToUser(userId, role_id, assigned_by);
+        const role = await Role.findOne({ role_id: role_id });
+        if (!role) {
+            return res.status(404).json({ success: false, error: 'Role not found' });
+        }
+
+        // Add role to user in MongoDB
+        await User.updateOne(
+            { user_id: userId },
+            { $addToSet: { roles: role._id } }
+        );
+
+        // Sync to Casbin
+        await CasbinService.addRoleForUser(userId, role.name);
+
         res.json({ success: true, message: 'Role assigned to user successfully' });
     }));
 
@@ -245,7 +445,20 @@ module.exports = () => {
             return res.status(400).json({ success: false, error: 'Invalid user ID or role ID' });
         }
 
-        await rbacService.removeRoleFromUser(userId, roleId);
+        const role = await Role.findOne({ role_id: roleId });
+        if (!role) {
+            return res.status(404).json({ success: false, error: 'Role not found' });
+        }
+
+        // Remove role from user in MongoDB
+        await User.updateOne(
+            { user_id: userId },
+            { $pull: { roles: role._id } }
+        );
+
+        // Sync to Casbin
+        await CasbinService.deleteRoleForUser(userId, role.name);
+
         res.json({ success: true, message: 'Role removed from user successfully' });
     }));
 
@@ -261,7 +474,9 @@ module.exports = () => {
             return res.status(400).json({ success: false, error: 'Invalid user ID' });
         }
 
-        const hasPermission = await rbacService.userHasPermission(userId, permissionName);
+        const [resource, action] = permissionName.split('.');
+        const hasPermission = await CasbinService.enforce(userId, resource, action);
+
         res.json({
             success: true,
             user_id: userId,
@@ -282,7 +497,8 @@ module.exports = () => {
             return res.status(400).json({ success: false, error: 'Invalid user ID' });
         }
 
-        const hasRole = await rbacService.userHasRole(userId, roleName);
+        const hasRole = await CasbinService.hasRole(userId, roleName);
+
         res.json({
             success: true,
             user_id: userId,

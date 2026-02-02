@@ -11,13 +11,9 @@ const Session = require('../models/Session');
 class AuthService {
     /**
      * @param {Object} pool - Legacy DB pool (ignored)
-     * @param {RBACService} rbacService - Optional RBAC service for permission checks
-     * @param {UsersService} usersService - Optional Users service
      */
-    constructor(pool, rbacService = null, usersService = null) {
+    constructor(pool = null) {
         // Pool is legacy, we don't use it anymore
-        this.rbacService = rbacService;
-        this.usersService = usersService;
         this.MAX_FAILED_ATTEMPTS = 5;
         this.LOCKOUT_DURATION_MINUTES = 15;
         this.SESSION_DURATION_HOURS = 24;
@@ -142,15 +138,13 @@ class AuthService {
     }
 
     /**
-     * Proxy to RBACService if available
+     * Get user permissions from Casbin
+     * @param {number} userId - User ID
+     * @returns {Promise<{roles: Object[], permissions: Object[]}>}
      */
     async getUserPermissions(userId) {
-        if (!this.rbacService) {
-            // Fallback if not injected (not ideal but maintains compatibility)
-            const RBACService = require('./RBACService');
-            this.rbacService = new RBACService(this.pool);
-        }
-        return this.rbacService.getUserPermissions(userId);
+        const CasbinService = require('./CasbinService');
+        return CasbinService.getUserPermissions(userId);
     }
 }
 

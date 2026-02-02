@@ -13,9 +13,9 @@ const {
     PERMISSIONS,
     ROLES,
     PERMISSION_DEFINITIONS,
-    ROLE_DEFINITIONS,
     PERMISSION_GROUPS
 } = require('../utils/permissions.js');
+const { ROLE_DEFINITIONS } = require('../utils/role-assignments');
 
 /**
  * Middleware to check if user has a specific permission

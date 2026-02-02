@@ -10,6 +10,7 @@ const CustomerInvoices = () => {
     const [success, setSuccess] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState(null);
+    const [editingInvoice, setEditingInvoice] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [warrantySearch, setWarrantySearch] = useState('');
     const [warrantyInfo, setWarrantyInfo] = useState(null);
@@ -127,6 +128,88 @@ const CustomerInvoices = () => {
         } catch (err) {
             console.error('Failed to load invoice details:', err);
         }
+    };
+
+    const handleEditInvoice = async (invoice) => {
+        try {
+            const response = await customerInvoicesAPI.getById(invoice.id);
+            const result = response.data;
+
+            if (result.success) {
+                const inv = result.data;
+                setEditingInvoice(inv);
+                setFormData({
+                    invoice_number: inv.invoice_number || '',
+                    customer_name: inv.customer_name || '',
+                    customer_phone: inv.customer_phone || '',
+                    customer_email: inv.customer_email || '',
+                    invoice_date: inv.invoice_date ? new Date(inv.invoice_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+                    payment_method: inv.payment_method || '',
+                    notes: inv.notes || '',
+                    items: inv.items || []
+                });
+                setShowModal(true);
+            }
+        } catch (err) {
+            setError('Failed to load invoice for editing');
+            console.error(err);
+        }
+    };
+
+    const handleUpdateInvoice = async (e) => {
+        e.preventDefault();
+        if (!editingInvoice) return;
+
+        setLoading(true);
+        try {
+            const response = await customerInvoicesAPI.update(editingInvoice.id, formData);
+            const result = response.data;
+
+            if (result.success) {
+                setSuccess('Invoice updated successfully!');
+                setShowModal(false);
+                setEditingInvoice(null);
+                resetForm();
+                fetchInvoices();
+            } else {
+                setError(result.error || 'Failed to update invoice');
+            }
+        } catch (err) {
+            setError('Failed to update invoice');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDeleteInvoice = async (invoice) => {
+        if (!window.confirm(`Are you sure you want to delete invoice "${invoice.invoice_number}"? This action cannot be undone.`)) {
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const response = await customerInvoicesAPI.delete(invoice.id);
+            const result = response.data;
+
+            if (result.success) {
+                setSuccess('Invoice deleted successfully!');
+                fetchInvoices();
+            } else {
+                setError(result.error || 'Failed to delete invoice');
+            }
+        } catch (err) {
+            setError('Failed to delete invoice');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCloseModal = () => {
+        setShowModal(false);
+        setEditingInvoice(null);
+        resetForm();
     };
 
     return (
@@ -277,8 +360,14 @@ const CustomerInvoices = () => {
                                         <td>{inv.item_count || 0}</td>
                                         <td>{parseFloat(inv.total_amount || 0).toLocaleString()}</td>
                                         <td>
-                                            <Button size="sm" variant="outline-primary" onClick={() => viewInvoiceDetails(inv.id)}>
+                                            <Button size="sm" variant="outline-primary" className="me-1" onClick={() => viewInvoiceDetails(inv.id)} title="View Details">
                                                 <i className="fas fa-eye"></i>
+                                            </Button>
+                                            <Button size="sm" variant="outline-warning" className="me-1" onClick={() => handleEditInvoice(inv)} title="Edit Invoice">
+                                                <i className="fas fa-edit"></i>
+                                            </Button>
+                                            <Button size="sm" variant="outline-danger" onClick={() => handleDeleteInvoice(inv)} title="Delete Invoice">
+                                                <i className="fas fa-trash"></i>
                                             </Button>
                                         </td>
                                     </tr>
@@ -289,12 +378,12 @@ const CustomerInvoices = () => {
                 </Card.Body>
             </Card>
 
-            {/* Create Invoice Modal */}
-            <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
+            {/* Create/Edit Invoice Modal */}
+            <Modal show={showModal} onHide={handleCloseModal} size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title>Create Customer Invoice</Modal.Title>
+                    <Modal.Title>{editingInvoice ? 'Edit Customer Invoice' : 'Create Customer Invoice'}</Modal.Title>
                 </Modal.Header>
-                <Form onSubmit={handleCreateInvoice}>
+                <Form onSubmit={editingInvoice ? handleUpdateInvoice : handleCreateInvoice}>
                     <Modal.Body>
                         <Row>
                             <Col md={6}>
@@ -385,11 +474,11 @@ const CustomerInvoices = () => {
                         </Form.Group>
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button variant="secondary" onClick={() => setShowModal(false)}>
+                        <Button variant="secondary" onClick={handleCloseModal}>
                             Cancel
                         </Button>
                         <Button variant="success" type="submit" disabled={loading}>
-                            {loading ? 'Creating...' : 'Create Invoice'}
+                            {loading ? (editingInvoice ? 'Updating...' : 'Creating...') : (editingInvoice ? 'Update Invoice' : 'Create Invoice')}
                         </Button>
                     </Modal.Footer>
                 </Form>

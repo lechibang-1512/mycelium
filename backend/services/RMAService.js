@@ -89,7 +89,7 @@ class RMAService {
     return Math.max(...items.map(i => i.item_id || 0)) + 1;
   }
 
-  async createRMARequest(pool, rmaData, items, userId) {
+  async createRMARequest( rmaData, items, userId) {
     const rmaItems = items.map((item, idx) => ({
       item_id: idx + 1,
       product_id: item.product_id,
@@ -127,14 +127,14 @@ class RMAService {
     };
   }
 
-  async getRMAById(pool, rmaId) {
+  async getRMAById( rmaId) {
     const query = typeof rmaId === 'number' ? { rma_id: rmaId } : { rma_number: rmaId };
     const rma = await RMA.findOne(query).lean();
     if (!rma) return null;
     return { ...rma, id: rma.rma_id };
   }
 
-  async listRMAs(pool, filters = {}) {
+  async listRMAs( filters = {}) {
     const query = {};
     if (filters.status) query.status = filters.status;
     if (filters.priority) query.priority = filters.priority;
@@ -158,7 +158,7 @@ class RMAService {
     }));
   }
 
-  async updateRMAStatus(pool, rmaId, newStatus, userId, reason = null) {
+  async updateRMAStatus( rmaId, newStatus, userId, reason = null) {
     const query = typeof rmaId === 'number' ? { rma_id: rmaId } : { rma_number: rmaId };
     const rma = await RMA.findOne(query);
     if (!rma) return { success: false, error: 'RMA not found' };
@@ -184,7 +184,7 @@ class RMAService {
     return { success: true, old_status: oldStatus, new_status: newStatus };
   }
 
-  async receiveRMAItems(pool, rmaId, receivedItems, userId) {
+  async receiveRMAItems( rmaId, receivedItems, userId) {
     const query = typeof rmaId === 'number' ? { rma_id: rmaId } : { rma_number: rmaId };
     const rma = await RMA.findOne(query);
     if (!rma) return { success: false, error: 'RMA not found' };
@@ -212,7 +212,7 @@ class RMAService {
     return { success: true };
   }
 
-  async inspectRMAItem(pool, rmaId, itemId, inspectionData, userId) {
+  async inspectRMAItem( rmaId, itemId, inspectionData, userId) {
     const query = typeof rmaId === 'number' ? { rma_id: rmaId } : { rma_number: rmaId };
     const rma = await RMA.findOne(query);
     if (!rma) return { success: false, error: 'RMA not found' };
@@ -228,7 +228,7 @@ class RMAService {
     return { success: true };
   }
 
-  async setItemDisposition(pool, rmaId, itemId, disposition, notes, userId) {
+  async setItemDisposition( rmaId, itemId, disposition, notes, userId) {
     const query = typeof rmaId === 'number' ? { rma_id: rmaId } : { rma_number: rmaId };
     const rma = await RMA.findOne(query);
     if (!rma) return { success: false, error: 'RMA not found' };
@@ -244,7 +244,7 @@ class RMAService {
     return { success: true };
   }
 
-  async processDispositionAction(pool, rmaId, itemId, actionData, userId) {
+  async processDispositionAction( rmaId, itemId, actionData, userId) {
     const query = typeof rmaId === 'number' ? { rma_id: rmaId } : { rma_number: rmaId };
     const rma = await RMA.findOne(query);
     if (!rma) return { success: false, error: 'RMA not found' };
@@ -272,13 +272,13 @@ class RMAService {
     return { success: true, disposition: item.disposition };
   }
 
-  async deleteRMA(pool, rmaId) {
+  async deleteRMA( rmaId) {
     const query = typeof rmaId === 'number' ? { rma_id: rmaId } : { rma_number: rmaId };
     const result = await RMA.deleteOne(query);
     return { success: result.deletedCount > 0 };
   }
 
-  async addAttachment(pool, rmaId, attachmentData, userId) {
+  async addAttachment( rmaId, attachmentData, userId) {
     const query = typeof rmaId === 'number' ? { rma_id: rmaId } : { rma_number: rmaId };
     await RMA.updateOne(query, {
       $push: {
@@ -293,13 +293,13 @@ class RMAService {
     return { success: true };
   }
 
-  async getAttachments(pool, rmaId) {
+  async getAttachments( rmaId) {
     const query = typeof rmaId === 'number' ? { rma_id: rmaId } : { rma_number: rmaId };
     const rma = await RMA.findOne(query).select('attachments').lean();
     return rma?.attachments || [];
   }
 
-  async bulkUpdateStatus(pool, rmaIds, newStatus, userId, reason = null, options = {}) {
+  async bulkUpdateStatus( rmaIds, newStatus, userId, reason = null, options = {}) {
     let updated = 0;
     for (const id of rmaIds) {
       const result = await this.updateRMAStatus(pool, id, newStatus, userId, reason);
@@ -308,7 +308,7 @@ class RMAService {
     return { success: true, updated, total: rmaIds.length };
   }
 
-  async bulkAssign(pool, rmaIds, assignedTo, userId) {
+  async bulkAssign( rmaIds, assignedTo, userId) {
     await RMA.updateMany(
       { rma_id: { $in: rmaIds } },
       { $set: { assigned_to: assignedTo } }
@@ -316,7 +316,7 @@ class RMAService {
     return { success: true, updated: rmaIds.length };
   }
 
-  async bulkSetDisposition(pool, rmaId, itemIds, disposition, notes, userId) {
+  async bulkSetDisposition( rmaId, itemIds, disposition, notes, userId) {
     const rma = await RMA.findOne({ rma_id: rmaId });
     if (!rma) return { success: false, error: 'RMA not found' };
 
@@ -347,7 +347,7 @@ class RMAService {
     return { total, byStatus };
   }
 
-  async addItem(pool, rmaId, itemData, userId) {
+  async addItem( rmaId, itemData, userId) {
     const rma = await RMA.findOne({ rma_id: rmaId });
     if (!rma) return { success: false, error: 'RMA not found' };
 
@@ -366,7 +366,7 @@ class RMAService {
     return { success: true, item_id: newItemId };
   }
 
-  async removeItem(pool, rmaId, itemId, userId) {
+  async removeItem( rmaId, itemId, userId) {
     await RMA.updateOne(
       { rma_id: rmaId },
       { $pull: { items: { item_id: itemId } } }

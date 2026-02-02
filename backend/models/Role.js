@@ -24,12 +24,11 @@ const RoleSchema = new Schema({
 });
 
 // Auto-increment role_id
-RoleSchema.pre('save', async function (next) {
+RoleSchema.pre('save', async function () {
     if (this.isNew && !this.role_id) {
         const last = await this.constructor.findOne().sort({ role_id: -1 });
         this.role_id = (last?.role_id || 0) + 1;
     }
-    next();
 });
 
 // Check if role has permission

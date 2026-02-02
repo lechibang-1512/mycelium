@@ -126,7 +126,7 @@ module.exports = () => {
             // Fetch user permissions
             let userPermissions = { roles: [], permissions: [] };
             try {
-                userPermissions = await authService.getUserPermissions(user.id);
+                userPermissions = await authService.getUserPermissions(user.user_id);
             } catch (permErr) {
                 console.warn('Could not fetch permissions:', permErr.message);
             }

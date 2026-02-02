@@ -119,6 +119,31 @@ TransactionSchema.index({ warehouse_id: 1, transaction_date: -1 });
 TransactionSchema.index({ supplier_id: 1, transaction_date: -1 });
 TransactionSchema.index({ 'items.product_id': 1 });
 
+// Pre-save validation for referential integrity
+TransactionSchema.pre('save', async function (next) {
+    const mongoose = require('mongoose');
+
+    // Validate supplier_id if provided
+    if (this.supplier_id) {
+        const Supplier = mongoose.model('Supplier');
+        const supplierExists = await Supplier.exists({ supplier_id: this.supplier_id });
+        if (!supplierExists) {
+            return next(new Error(`Invalid supplier_id: ${this.supplier_id} does not exist`));
+        }
+    }
+
+    // Validate warehouse_id if provided
+    if (this.warehouse_id) {
+        const Warehouse = mongoose.model('Warehouse');
+        const warehouseExists = await Warehouse.exists({ warehouse_id: this.warehouse_id });
+        if (!warehouseExists) {
+            return next(new Error(`Invalid warehouse_id: ${this.warehouse_id} does not exist`));
+        }
+    }
+
+    next();
+});
+
 // Statics
 TransactionSchema.statics.getByDateRange = function (startDate, endDate, filters = {}) {
     return this.find({
