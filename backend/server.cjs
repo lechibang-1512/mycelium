@@ -1,5 +1,5 @@
 // Load environment variables first
-require('dotenv').config();
+require('dotenv').config({ path: './backend/config/.env' });
 
 // Global error handlers
 process.on('unhandledRejection', (reason, promise) => {
@@ -106,7 +106,7 @@ async function startServer() {
         app.use('/api', apiLimiter);
 
         // Receipts route before auth (intentionally unauthenticated for internal use)
-        const receiptsAPI = require('./routes/receipts')();
+        const receiptsAPI = require('./controllers/receipts')();
         app.use('/api/receipts', receiptsAPI);
 
         const { createAuthMiddleware } = require('./middleware/authMiddleware');
@@ -116,7 +116,7 @@ async function startServer() {
         app.use('/api', authMiddleware);
 
         // Main routes - MongoDB version
-        app.use('/api', require('./routes/index')());
+        app.use('/api', require('./controllers/index')());
 
         // Serve React build
         const reactBuildPath = path.join(__dirname, '../dist');

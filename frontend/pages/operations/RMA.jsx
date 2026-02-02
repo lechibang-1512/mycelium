@@ -8,7 +8,7 @@ import {
   Container, Row, Col, Button, Table, Spinner, Badge,
   Modal, Form, Card, Tabs, Tab, ButtonGroup
 } from 'react-bootstrap';
-import { rmaAPI } from '../../services/api';
+import { rmaAPI } from '../../api/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { PERMISSIONS } from '../../constants/permissions';
 import CreateRMAForm from '../../components/rma/CreateRMAForm';

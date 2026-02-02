@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Table, Badge, Spinner, Alert } from 'react-bootstrap';
-import { inventoryMovementAPI, warehouseAPI } from '../../services/api';
+import { inventoryMovementAPI, warehouseAPI } from '../../api/api';
 
 /**
  * StockMovement Page

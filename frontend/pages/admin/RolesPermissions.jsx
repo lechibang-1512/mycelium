@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Container, Row, Col, Card, Button, Table, Modal, Form, Badge, Alert, Spinner, Tabs, Tab } from 'react-bootstrap';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllRoles, getAllPermissions, createRole, updateRole, deleteRole, assignPermissionToRole, removePermissionFromRole, getUsersByRole, bulkSetRolePermissions } from '../../services/api';
+import { getAllRoles, getAllPermissions, createRole, updateRole, deleteRole, assignPermissionToRole, removePermissionFromRole, getUsersByRole, bulkSetRolePermissions } from '../../api/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { PERMISSIONS } from '../../constants/permissions';
 

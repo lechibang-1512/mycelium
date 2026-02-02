@@ -2,8 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Container, Row, Col, Card, Button, Form, Modal, Alert, Badge, Table, Spinner, ProgressBar, ButtonGroup, Tab, Tabs, InputGroup, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { useAuth } from '../../contexts/AuthContext';
 import { PERMISSIONS } from '../../constants/permissions';
-import { stocktakeAPI } from '../../services/api/stocktake';
-import { warehouseAPI } from '../../services/api/warehouse';
+import { stocktakeAPI } from '../../api/api/stocktake';
+import { warehouseAPI } from '../../api/api/warehouse';
 
 /**
  * Inventory Counts - Physical inventory counting and cycle count management

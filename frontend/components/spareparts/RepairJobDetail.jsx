@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Row, Col, Table, Spinner, Badge, Button, Tabs, Tab, Form, InputGroup, Alert } from 'react-bootstrap';
-import { repairJobsAPI, sparePartsAPI, rmaAPI } from '../../services/api';
+import { repairJobsAPI, sparePartsAPI, rmaAPI } from '../../api/api';
 import CustomerHistoryModal from './CustomerHistoryModal';
 
 const RepairJobDetail = ({ repairJobId, onSaved }) => {

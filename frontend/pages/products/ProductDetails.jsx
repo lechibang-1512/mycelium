@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Badge, Button, Table, Alert, Spinner } from 'react-bootstrap';
-import { inventoryAPI } from '../../services/api';
+import { inventoryAPI } from '../../api/api';
 import DeviceSparePartsManager from '../../components/spareparts/DeviceSparePartsManager';
 
 function ProductDetails() {

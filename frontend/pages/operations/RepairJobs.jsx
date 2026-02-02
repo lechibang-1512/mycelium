@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Button, Table, Spinner, Badge, Modal, Form, Card, InputGroup, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { repairJobsAPI, rmaAPI } from '../../services/api/service-operations';
+import { repairJobsAPI, rmaAPI } from '../../api/api/service-operations';
 import { useAuth } from '../../contexts/AuthContext';
 import { PERMISSIONS } from '../../constants/permissions';
 import RepairJobForm from '../../components/spareparts/RepairJobForm';

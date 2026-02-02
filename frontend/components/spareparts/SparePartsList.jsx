@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Table, Button, Spinner, Badge, Form, Row, Col, InputGroup } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { sparePartsAPI } from '../../services/api';
+import { sparePartsAPI } from '../../api/api';
 
 const SparePartsList = ({ parts = [], loading = false, onEdit, onRefresh, canWrite = false, canDelete = false }) => {
   const [searchTerm, setSearchTerm] = useState('');

@@ -7,7 +7,7 @@
  *   import { warehouseAPI } from './api/warehouse';
  * 
  * Legacy imports continue to work:
- *   import { inventoryAPI, warehouseAPI } from '@/services/api';
+ *   import { inventoryAPI, warehouseAPI } from '@/api/api';
  */
 
 // Core axios instance

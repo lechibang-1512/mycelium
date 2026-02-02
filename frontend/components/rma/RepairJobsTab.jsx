@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Spinner, Accordion, ListGroup, Row, Col, Badge, Alert, Toast, ToastContainer } from 'react-bootstrap';
-import { rmaAPI } from '../../services/api';
+import { rmaAPI } from '../../api/api';
 import RepairJobForm from '../spareparts/RepairJobForm';
 
 /**

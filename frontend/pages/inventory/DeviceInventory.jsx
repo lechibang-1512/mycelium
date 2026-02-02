@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Table, Form, Button, Badge, Modal, InputGroup, Spinner, Alert, Pagination } from 'react-bootstrap';
-import { serializedInventoryAPI } from '../../services/api';
+import { serializedInventoryAPI } from '../../api/api';
 import { useStocktake } from '../../contexts/StocktakeContext';
 import LockdownOverlay from '../../components/layout/LockdownOverlay';
 

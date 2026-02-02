@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, InputGroup, Modal, Badge } from 'react-bootstrap';
-import { inventoryAPI, suppliersAPI, invoicesAPI, warehouseAPI, inventoryTransactionAPI, binsAPI, sparePartsAPI } from '../../services/api';
+import { inventoryAPI, suppliersAPI, invoicesAPI, warehouseAPI, inventoryTransactionAPI, binsAPI, sparePartsAPI } from '../../api/api';
 
 import { useStocktake } from '../../contexts/StocktakeContext';
 import LockdownOverlay from '../../components/layout/LockdownOverlay';

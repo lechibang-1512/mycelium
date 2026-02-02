@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Table, Button, Form, Badge, Spinner, Row, Col } from 'react-bootstrap';
-import { sparePartsAPI } from '../../services/api';
+import { sparePartsAPI } from '../../api/api';
 
 const DeviceSparePartsManager = ({ show, onHide, productId, deviceName }) => {
   const [compatibleParts, setCompatibleParts] = useState([]);

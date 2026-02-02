@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Form, Modal, Alert, Badge, Spinner } from 'react-bootstrap';
-import { warehouseAPI } from '../../services/api';
+import { warehouseAPI } from '../../api/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { PERMISSIONS } from '../../constants/permissions';
 

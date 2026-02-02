@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Button, Form, Row, Col, Accordion, InputGroup } from 'react-bootstrap';
-import { sparePartsAPI, inventoryAPI, suppliersAPI } from '../../services/api';
+import { sparePartsAPI, inventoryAPI, suppliersAPI } from '../../api/api';
 import { SPECS, INITIAL_SPECS_STATE } from '../../constants/specs';
 
 /**

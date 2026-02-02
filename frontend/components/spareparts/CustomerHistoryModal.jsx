@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Table, Card, Badge, Row, Col, Spinner } from 'react-bootstrap';
-import { repairJobsAPI } from '../../services/api';
+import { repairJobsAPI } from '../../api/api';
 
 const CustomerHistoryModal = ({ show, onHide, customer }) => {
     const [history, setHistory] = useState(null);

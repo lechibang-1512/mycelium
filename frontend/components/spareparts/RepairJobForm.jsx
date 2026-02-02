@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Button, Form, Row, Col, Alert, Spinner, Badge, Card } from 'react-bootstrap';
-import { repairJobsAPI, inventoryAPI, deviceSearchAPI, rmaAPI, warehouseAPI } from '../../services/api';
+import { repairJobsAPI, inventoryAPI, deviceSearchAPI, rmaAPI, warehouseAPI } from '../../api/api';
 
 /**
  * Repair Job Form Component - Enhanced

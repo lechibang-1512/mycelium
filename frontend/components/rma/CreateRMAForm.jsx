@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Row, Col, Card, Spinner, Alert, Badge, InputGroup } from 'react-bootstrap';
-import { rmaAPI, warehouseAPI, reportsAPI } from '../../services/api';
+import { rmaAPI, warehouseAPI, reportsAPI } from '../../api/api';
 
 const CreateRMAForm = ({ onSuccess, onCancel }) => {
     const [formData, setFormData] = useState({

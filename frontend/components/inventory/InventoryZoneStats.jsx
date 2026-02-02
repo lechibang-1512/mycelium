@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Table, Spinner, Badge, Alert } from 'react-bootstrap';
-import { inventoryAPI } from '../../services/api/inventory';
+import { inventoryAPI } from '../../api/api/inventory';
 
 const InventoryZoneStats = () => {
     const [data, setData] = useState({ phones: [], parts: [] });

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Table, Modal, Form, Badge, Alert, Spinner } from 'react-bootstrap';
-import { getUserPermissions, assignRoleToUser, removeRoleFromUser, getAllRoles } from '../../services/api';
-import api from '../../services/api';
+import { getUserPermissions, assignRoleToUser, removeRoleFromUser, getAllRoles } from '../../api/api';
+import api from '../../api/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { PERMISSIONS } from '../../constants/permissions';
 

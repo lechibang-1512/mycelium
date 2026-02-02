@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Table, Button, Badge, Modal, Form, Alert, Spinner } from 'react-bootstrap';
-import { invoicesAPI, suppliersAPI, reportsAPI } from '../../services/api';
-import { sparePartsAPI } from '../../services/api/spare-parts';
+import { invoicesAPI, suppliersAPI, reportsAPI } from '../../api/api';
+import { sparePartsAPI } from '../../api/api/spare-parts';
 import { useLocation } from 'react-router-dom';
 
 const Invoices = () => {

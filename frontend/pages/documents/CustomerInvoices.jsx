@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, Table, Modal, Badge } from 'react-bootstrap';
-import { customerInvoicesAPI } from '../../services/api';
+import { customerInvoicesAPI } from '../../api/api';
 
 const CustomerInvoices = () => {
     const [invoices, setInvoices] = useState([]);

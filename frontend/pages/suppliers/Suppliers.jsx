@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Table, Button, Form, Modal, Alert, Badge, Tabs, Tab, Spinner } from 'react-bootstrap';
-import { suppliersAPI, invoicesAPI } from '../../services/api';
+import { suppliersAPI, invoicesAPI } from '../../api/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { PERMISSIONS } from '../../constants/permissions';
 

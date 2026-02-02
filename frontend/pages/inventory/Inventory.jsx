@@ -2,9 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, InputGroup, Spinner, Tabs, Tab } from 'react-bootstrap';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { inventoryAPI } from '../../services/api/inventory';
-import { phonesAPI } from '../../services/api/catalog';
-import { sparePartsAPI } from '../../services/api/spare-parts'; // Import spare parts API
+import { inventoryAPI } from '../../api/api/inventory';
+import { phonesAPI } from '../../api/api/catalog';
+import { sparePartsAPI } from '../../api/api/spare-parts'; // Import spare parts API
 import { INITIAL_PHONE_FORM_STATE, mapPhoneToFormState, resetPhoneForm } from '../../../shared/constants/phoneForm';
 import { useAuth } from '../../contexts/AuthContext';
 import { PERMISSIONS } from '../../constants/permissions';

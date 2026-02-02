@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, Modal, Badge } from 'react-bootstrap';
-import { warehouseAPI, inventoryTransactionAPI, invoicesAPI, receiptsAPI, inventoryAPI, sparePartsAPI, binsAPI, lotsAPI } from '../../services/api';
+import { warehouseAPI, inventoryTransactionAPI, invoicesAPI, receiptsAPI, inventoryAPI, sparePartsAPI, binsAPI, lotsAPI } from '../../api/api';
 import StockIssueSlip from '../../components/documents/StockIssueSlip';
 import StockDistributionForm from '../../components/documents/StockDistributionForm';
 import '../../components/documents/StockIssueSlip.css';

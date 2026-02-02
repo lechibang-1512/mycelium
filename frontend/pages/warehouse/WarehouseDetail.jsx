@@ -4,7 +4,7 @@ import {
   Container, Row, Col, Card, Table, Button, Form,
   Modal, Alert, Badge, Spinner, ProgressBar
 } from 'react-bootstrap';
-import { warehouseAPI, binsAPI } from '../../services/api';
+import { warehouseAPI, binsAPI } from '../../api/api';
 import BinCard from '../../components/bins/BinCard';
 import BinForm from '../../components/bins/BinForm';
 import '../../styles/hierarchical-warehouse.css';

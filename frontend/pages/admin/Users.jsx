@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Table, Modal, Form, Badge, Alert, Spinner } from 'react-bootstrap';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '../../services/api';
-import { getAllRoles, assignRoleToUser, getUserPermissions, removeRoleFromUser } from '../../services/api';
+import api from '../../api/api';
+import { getAllRoles, assignRoleToUser, getUserPermissions, removeRoleFromUser } from '../../api/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { PERMISSIONS } from '../../constants/permissions';
 
