@@ -480,7 +480,7 @@ export default function PCComponentForm() {
                             name={f.key} 
                             checked={!!val} 
                             onChange={handleChange} 
-                            className="rounded border-border" 
+                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 w-4 h-4 cursor-pointer"
                         />
                         {f.label}
                     </label>

@@ -158,8 +158,8 @@ function SparePartModal({ part, devices, suppliers, onClose, onSaved }) {
 
                         <Section title="Tracking & Notes" icon="fa-clipboard-list" defaultOpen={false}>
                             <div className="grid grid-cols-2 gap-3 mb-3">
-                                <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" name="is_hazardous" checked={!!form.is_hazardous} onChange={onInp} className="rounded" />Hazardous Material <span className="text-xs text-text-muted">(special handling)</span></label>
-                                <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" name="requires_serial_tracking" checked={!!form.requires_serial_tracking} onChange={onInp} className="rounded" />Requires Serial Tracking <span className="text-xs text-text-muted">(high-value)</span></label>
+                                <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" name="is_hazardous" checked={!!form.is_hazardous} onChange={onInp} className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 w-4 h-4 cursor-pointer" />Hazardous Material <span className="text-xs text-text-muted">(special handling)</span></label>
+                                <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" name="requires_serial_tracking" checked={!!form.requires_serial_tracking} onChange={onInp} className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 w-4 h-4 cursor-pointer" />Requires Serial Tracking <span className="text-xs text-text-muted">(high-value)</span></label>
                             </div>
                             <div><label className="block text-sm font-medium text-text-secondary mb-1">Notes</label><textarea name="notes" rows="3" value={form.notes || ''} onChange={onInp} className={IC}></textarea></div>
                         </Section>
@@ -267,7 +267,7 @@ export default function SpecsParts() {
                 <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search parts..." className={`${IC} flex-1 min-w-[180px]`} />
                 <select value={category} onChange={e => setCategory(e.target.value)} className={`${IC} min-w-[140px]`}><option value="">All Categories</option>{categories.map(c => <option key={c} value={c}>{c}</option>)}</select>
                 <select value={stock} onChange={e => setStock(e.target.value)} className={`${IC} min-w-[140px]`}><option value="">All Stock</option><option value="out">Out of Stock</option><option value="critical">Critical</option><option value="low">Low Stock</option></select>
-                <label className="flex items-center gap-2 text-sm cursor-pointer whitespace-nowrap"><input type="checkbox" checked={includeInactive} onChange={e => { setIncludeInactive(e.target.checked); fetchParts(e.target.checked); }} className="rounded border-border" />Show Inactive</label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer whitespace-nowrap"><input type="checkbox" checked={includeInactive} onChange={e => { setIncludeInactive(e.target.checked); fetchParts(e.target.checked); }} className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 w-4 h-4 cursor-pointer" />Show Inactive</label>
                 <small className="text-text-muted ml-auto">Showing {parts.length} of {allParts.length} parts</small>
             </div>
 

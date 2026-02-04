@@ -416,7 +416,7 @@ export default function SpecsPhones() {
                         value={search} 
                         onChange={e => setSearch(e.target.value)} 
                         placeholder="Search devices, specs, or SKUs..." 
-                        className={`${IC} pl-9 w-full`} 
+                        className={`${IC.replace('px-3', 'pl-9 pr-3')} w-full`} 
                     />
                 </div>
                 <select 
