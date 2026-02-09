@@ -152,16 +152,16 @@ function PhoneModal({ phone, onClose, onSaved }) {
             <form onSubmit={handleSubmit}>
                 <div className="p-6 overflow-y-auto" style={{ minHeight: '350px', maxHeight: '50vh' }}>
                     {activeTab === 'basic' && (
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-5">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-8">
                                 <FI label="Manufacturer" name="device_maker" value={form.device_maker} onChange={onInput} required />
                                 <FI label="Device Name" name="device_name" value={form.device_name} onChange={onInput} required />
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-8">
                                 <FI label="Price (MSRP $)" name="device_price" value={form.device_price} onChange={onInput} type="number" required step="0.01" />
                                 <FI label="Color Variant" name="color" value={form.color} onChange={onInput} />
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-8">
                                 <FI label="Operating System" name="operating_system" value={form.operating_system} onChange={onInput} />
                                 <FI label="Water & Dust Rating" name="water_and_dust_rating" value={form.water_and_dust_rating} onChange={onInput} />
                             </div>
@@ -174,7 +174,7 @@ function PhoneModal({ phone, onClose, onSaved }) {
                                 <h6 className="flex items-center gap-2 text-indigo-700 font-bold text-xs tracking-widest uppercase mb-3 pb-2 border-b border-indigo-100">
                                     <Cpu className="w-4 h-4" /> Processor & Performance
                                 </h6>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-8">
                                     <FI label="Processor" name="processor" value={form.processor} onChange={onInput} />
                                     <FI label="GPU" name="gpu" value={form.gpu} onChange={onInput} />
                                 </div>
@@ -183,7 +183,7 @@ function PhoneModal({ phone, onClose, onSaved }) {
                                 <h6 className="flex items-center gap-2 text-indigo-700 font-bold text-xs tracking-widest uppercase mb-3 pb-2 border-b border-indigo-100">
                                     <MemoryStick className="w-4 h-4" /> Memory
                                 </h6>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-8">
                                     <FI label="RAM" name="ram" value={form.ram} onChange={onInput} />
                                     <FI label="ROM/Storage" name="rom" value={form.rom} onChange={onInput} />
                                     <FI label="Expandable Memory" name="expandable_memory" value={form.expandable_memory} onChange={onInput} />
@@ -193,8 +193,8 @@ function PhoneModal({ phone, onClose, onSaved }) {
                     )}
                     
                     {activeTab === 'display' && (
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-5">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-8">
                                 <FI label="Display Size (inches)" name="display_size" value={form.display_size} onChange={onInput} type="number" step="0.01" />
                                 <FS label="Display Type" name="display_type" value={form.display_type} onChange={onInput} options={[
                                     {v:'LCD',l:'LCD'}, {v:'IPS_LCD',l:'IPS LCD'}, {v:'OLED',l:'OLED'}, 
@@ -202,7 +202,7 @@ function PhoneModal({ phone, onClose, onSaved }) {
                                 ]} />
                                 <FI label="Resolution" name="resolution" value={form.resolution} onChange={onInput} />
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-8">
                                 <FI label="Refresh Rate" name="refresh_rate" value={form.refresh_rate} onChange={onInput} />
                                 <FI label="HDR Support" name="hdr_support" value={form.hdr_support} onChange={onInput} />
                                 <FI label="Display Features" name="display_features" value={form.display_features} onChange={onInput} />
@@ -216,12 +216,12 @@ function PhoneModal({ phone, onClose, onSaved }) {
                                 <h6 className="flex items-center gap-2 text-indigo-700 font-bold text-xs tracking-widest uppercase mb-3 pb-2 border-b border-indigo-100">
                                     <Camera className="w-4 h-4" /> Rear Camera
                                 </h6>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-8 mb-5">
                                     <FI label="Main Sensor" name="rear_camera_main" value={form.rear_camera_main} onChange={onInput} />
                                     <FI label="Ultrawide" name="rear_camera_ultrawide" value={form.rear_camera_ultrawide} onChange={onInput} />
                                     <FI label="Telephoto" name="rear_camera_telephoto" value={form.rear_camera_telephoto} onChange={onInput} />
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-8">
                                     <FI label="Optical Zoom" name="optical_zoom" value={form.optical_zoom} onChange={onInput} />
                                     <FI label="Rear Camera Features" name="rear_camera_features" value={form.rear_camera_features} onChange={onInput} />
                                 </div>
@@ -230,7 +230,7 @@ function PhoneModal({ phone, onClose, onSaved }) {
                                 <h6 className="flex items-center gap-2 text-indigo-700 font-bold text-xs tracking-widest uppercase mb-3 pb-2 border-b border-indigo-100">
                                     <Camera className="w-4 h-4" /> Front Camera
                                 </h6>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-8">
                                     <FI label="Front Camera" name="front_camera" value={form.front_camera} onChange={onInput} />
                                     <FI label="Front Features" name="front_camera_features" value={form.front_camera_features} onChange={onInput} />
                                 </div>
@@ -240,12 +240,12 @@ function PhoneModal({ phone, onClose, onSaved }) {
                     
                     {activeTab === 'battery' && (
                         <div className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-8">
                                 <FI label="Battery Capacity" name="battery_capacity" value={form.battery_capacity} onChange={onInput} />
                                 <FI label="Fast Charging" name="fast_charging" value={form.fast_charging} onChange={onInput} />
                                 <FI label="Connector Type" name="connector" value={form.connector} onChange={onInput} />
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-8">
                                 <FI label="Wireless Charging" name="wireless_charging" value={form.wireless_charging} onChange={onInput} />
                                 <FI label="Reverse Charging" name="reverse_charging" value={form.reverse_charging} onChange={onInput} />
                             </div>
@@ -253,7 +253,7 @@ function PhoneModal({ phone, onClose, onSaved }) {
                                 <h6 className="flex items-center gap-2 text-indigo-700 font-bold text-xs tracking-widest uppercase mb-3 pb-2 border-b border-indigo-100">
                                     <Wifi className="w-4 h-4" /> Connectivity
                                 </h6>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-8">
                                     <FI label="SIM Support" name="sim_card" value={form.sim_card} onChange={onInput} />
                                     <FI label="NFC Support" name="nfc" value={form.nfc} onChange={onInput} />
                                     <FI label="Wireless standard" name="wireless_connectivity" value={form.wireless_connectivity} onChange={onInput} />
@@ -263,14 +263,14 @@ function PhoneModal({ phone, onClose, onSaved }) {
                     )}
                     
                     {activeTab === 'physical' && (
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="space-y-5">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-8">
                                 <FI label="Length (mm)" name="length_mm" value={form.length_mm} onChange={onInput} type="number" step="0.1" />
                                 <FI label="Width (mm)" name="width_mm" value={form.width_mm} onChange={onInput} type="number" step="0.1" />
                                 <FI label="Thickness (mm)" name="thickness_mm" value={form.thickness_mm} onChange={onInput} type="number" step="0.1" />
                                 <FI label="Weight (g)" name="weight_g" value={form.weight_g} onChange={onInput} type="number" step="0.1" />
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-8">
                                 <FI label="Security Features" name="security_features" value={form.security_features} onChange={onInput} />
                                 <FI label="Sensors" name="sensors" value={form.sensors} onChange={onInput} />
                             </div>
@@ -283,7 +283,7 @@ function PhoneModal({ phone, onClose, onSaved }) {
                     
                     {activeTab === 'warranty' && (
                         <div className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-8">
                                 <FI label="Warranty (months)" name="warranty_months" value={form.warranty_months} onChange={onInput} type="number" />
                                 <FS label="Warranty Type" name="warranty_type" value={form.warranty_type} onChange={onInput} options={[
                                     {v:'MANUFACTURER',l:'Manufacturer'}, 
@@ -296,11 +296,11 @@ function PhoneModal({ phone, onClose, onSaved }) {
                                 <h6 className="flex items-center gap-2 text-indigo-700 font-bold text-xs tracking-widest uppercase mb-4 pb-2 border-b border-indigo-100">
                                     <ToggleLeft className="w-4 h-4" /> Product Status
                                 </h6>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-8 mb-8">
                                     <CB label="Active Listing" name="is_active" checked={form.is_active} onChange={onInput} text="Available for sale in catalog" />
                                     <CB label="Discontinued" name="is_discontinued" checked={form.is_discontinued} onChange={onInput} text="By manufacturer (EOL)" />
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-8">
                                     <FI label="Launch Date" name="launch_date" value={form.launch_date} onChange={onInput} type="date" />
                                     <FI label="End of Life Date" name="end_of_life_date" value={form.end_of_life_date} onChange={onInput} type="date" />
                                 </div>

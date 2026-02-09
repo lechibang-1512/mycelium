@@ -185,7 +185,7 @@ function RoleModal({ role, onClose, onSaved }) {
             </div>
         } onClose={onClose}>
             <form onSubmit={handleSubmit}>
-                <div className="p-6 space-y-4">
+                <div className="p-6 space-y-5">
                     <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1.5">Role Name <span className="text-rose-500">*</span></label>
                         <input 

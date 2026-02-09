@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../utils/api.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
-const IC = 'w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary bg-white';
-const Spinner = () => <div className="text-center py-10"><svg className="animate-spin h-8 w-8 text-primary mx-auto" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>;
+const IC = 'w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/40 focus:border-indigo-600 bg-white';
+const Spinner = () => <div className="text-center py-10"><svg className="animate-spin h-8 w-8 text-indigo-600 mx-auto" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>;
 
 const CATEGORIES = ['DISPLAY','BATTERY','MOTHERBOARD','CAMERA_REAR','CAMERA_FRONT','CHARGING_PORT','SPEAKER','MICROPHONE','BUTTON','CASE','ANTENNA','FLEX_CABLE','OTHER'];
 const INITIAL = {
@@ -20,19 +20,19 @@ function getStockStatus(p) {
     const qty = p.available_quantity ?? p.total_quantity ?? 0;
     const min = p.minimum_stock_level || 0;
     const reorder = p.reorder_point || 0;
-    if (qty === 0) return { col: 'bg-danger', text: 'Out of Stock', icon: 'fa-ban' };
-    if (qty < min) return { col: 'bg-danger', text: 'Critical', icon: 'fa-exclamation-circle' };
-    if (qty <= reorder) return { col: 'bg-warning', text: 'Low Stock', icon: 'fa-exclamation-triangle' };
-    return { col: 'bg-success', text: 'In Stock', icon: 'fa-check-circle' };
+    if (qty === 0) return { col: 'bg-rose-600', text: 'Out of Stock', icon: 'fa-ban' };
+    if (qty < min) return { col: 'bg-rose-600', text: 'Critical', icon: 'fa-exclamation-circle' };
+    if (qty <= reorder) return { col: 'bg-amber-500', text: 'Low Stock', icon: 'fa-exclamation-triangle' };
+    return { col: 'bg-emerald-600', text: 'In Stock', icon: 'fa-check-circle' };
 }
 
 function Section({ title, icon, defaultOpen = true, children }) {
     const [open, setOpen] = useState(defaultOpen);
     return (
-        <div className="border border-border rounded-lg mb-2">
-            <button type="button" onClick={() => setOpen(o => !o)} className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-left hover:bg-surface-body transition-colors cursor-pointer rounded-lg">
-                <span><i className={`fas ${icon} mr-2 text-primary`}></i>{title}</span>
-                <i className={`fas fa-chevron-${open ? 'up' : 'down'} text-text-muted text-xs`}></i>
+        <div className="border border-slate-200 rounded-lg mb-2">
+            <button type="button" onClick={() => setOpen(o => !o)} className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-left hover:bg-slate-100 transition-colors cursor-pointer rounded-lg">
+                <span><i className={`fas ${icon} mr-2 text-indigo-600`}></i>{title}</span>
+                <i className={`fas fa-chevron-${open ? 'up' : 'down'} text-slate-500 text-xs`}></i>
             </button>
             {open && <div className="px-4 pb-3 mt-2">{children}</div>}
         </div>
@@ -55,10 +55,10 @@ function SparePartModal({ part, devices, suppliers, onClose, onSaved }) {
     const onInp = e => { const { name, type, checked, value } = e.target; set(name, type === 'checkbox' ? checked : value); };
 
     const F = ({ label, name, type = 'text', step, list, placeholder, hint, req = false }) => (
-        <div className="mb-2">
-            <label className="block text-sm font-medium text-text-secondary mb-1">{label}{req && <span className="text-danger ml-1">*</span>}</label>
+        <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}{req && <span className="text-rose-600 ml-1">*</span>}</label>
             <input type={type} name={name} value={form[name] ?? ''} onChange={onInp} required={req} step={step} list={list} placeholder={placeholder} className={IC} />
-            {hint && <p className="text-text-muted text-xs mt-1">{hint}</p>}
+            {hint && <p className="text-slate-500 text-xs mt-1">{hint}</p>}
         </div>
     );
 
@@ -88,30 +88,30 @@ function SparePartModal({ part, devices, suppliers, onClose, onSaved }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/40" onClick={onClose}></div>
             <div className="relative bg-white rounded-xl shadow-xl w-full max-w-3xl z-10 flex flex-col max-h-[92vh]">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 flex-shrink-0">
                     <h3 className="text-lg font-semibold"><i className={`fas ${isEdit ? 'fa-edit' : 'fa-plus-circle'} mr-2`}></i>{isEdit ? 'Edit Spare Part' : 'Create Spare Part'}</h3>
-                    <button onClick={onClose} className="cursor-pointer text-xl text-text-muted">&times;</button>
+                    <button onClick={onClose} className="cursor-pointer text-xl text-slate-500">&times;</button>
                 </div>
                 <form onSubmit={handleSubmit} className="overflow-y-auto flex-1">
                     <div className="px-6 py-4">
                         <Section title="Basic Information" icon="fa-info-circle">
-                            <div className="grid grid-cols-6 gap-3">
+                            <div className="grid grid-cols-6 gap-x-5 gap-y-8">
                                 <div className="col-span-3"><F label="Part Name" name="part_name" req placeholder="e.g., iPhone 14 Pro Display" /></div>
                                 <div className="col-span-2"><F label="Part Code" name="part_code" placeholder="Auto-generated" hint="Leave blank to auto-generate" /></div>
                                 <div className="col-span-1">
-                                    <div className="mb-2"><label className="block text-sm font-medium text-text-secondary mb-1">Status</label><select name="is_active" value={form.is_active ? 'true' : 'false'} onChange={e => set('is_active', e.target.value === 'true')} className={IC}><option value="true">Active</option><option value="false">Inactive</option></select></div>
+                                    <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Status</label><select name="is_active" value={form.is_active ? 'true' : 'false'} onChange={e => set('is_active', e.target.value === 'true')} className={IC}><option value="true">Active</option><option value="false">Inactive</option></select></div>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-3 mb-2">
-                                <div><label className="block text-sm font-medium text-text-secondary mb-1">Category</label><select name="part_category" value={form.part_category} onChange={onInp} className={IC}>{CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+                            <div className="grid grid-cols-2 gap-x-5 gap-y-8 mt-5 mb-5">
+                                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Category</label><select name="part_category" value={form.part_category} onChange={onInp} className={IC}>{CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
                                 <F label="Part Type" name="part_type" placeholder="e.g., OLED, Li-Ion" />
                             </div>
-                            <div className="mb-2"><label className="block text-sm font-medium text-text-secondary mb-1">Description</label><textarea name="description" rows="2" value={form.description || ''} onChange={onInp} className={IC}></textarea></div>
+                            <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Description</label><textarea name="description" rows="2" value={form.description || ''} onChange={onInp} className={IC}></textarea></div>
                         </Section>
 
                         <Section title="Device Compatibility" icon="fa-mobile-alt">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div><label className="block text-sm font-medium text-text-secondary mb-1">Compatible Device <span className="text-danger">*</span></label><select name="compatible_product_id" value={form.compatible_product_id || ''} onChange={onInp} required className={IC}><option value="">-- Select a device --</option>{devices.map(d => <option key={d.product_id} value={d.product_id}>{d.device_maker} {d.device_name} {(d.rom || d.ram || d.color) ? `(${[d.rom, d.ram, d.color].filter(Boolean).join(' / ')})` : ''}</option>)}</select></div>
+                            <div className="grid grid-cols-2 gap-x-5 gap-y-8">
+                                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Compatible Device <span className="text-rose-600">*</span></label><select name="compatible_product_id" value={form.compatible_product_id || ''} onChange={onInp} required className={IC}><option value="">-- Select a device --</option>{devices.map(d => <option key={d.product_id} value={d.product_id}>{d.device_maker} {d.device_name} {(d.rom || d.ram || d.color) ? `(${[d.rom, d.ram, d.color].filter(Boolean).join(' / ')})` : ''}</option>)}</select></div>
                                 <F label="Device Category" name="compatible_device_category" placeholder="e.g., Flagship, Mid-range" />
                                 <F label="Compatible Brands" name="compatible_brands" placeholder="Apple, Samsung" hint="Comma-separated" />
                                 <F label="Compatible Models" name="compatible_models" placeholder="iPhone 14" hint="Comma-separated" />
@@ -119,7 +119,7 @@ function SparePartModal({ part, devices, suppliers, onClose, onSaved }) {
                         </Section>
 
                         <Section title="Physical Specifications" icon="fa-ruler-combined" defaultOpen={false}>
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-3 gap-x-5 gap-y-8">
                                 <F label="Dimensions" name="dimensions" placeholder="155x71mm" />
                                 <F label="Weight (g)" name="weight_g" type="number" step="0.01" />
                                 <F label="Color Variants" name="color_variants" placeholder="Black, White" hint="Comma-separated" />
@@ -127,46 +127,46 @@ function SparePartModal({ part, devices, suppliers, onClose, onSaved }) {
                         </Section>
 
                         <Section title="Quality & Warranty" icon="fa-award" defaultOpen={false}>
-                            <div className="grid grid-cols-3 gap-3 mb-2">
+                            <div className="grid grid-cols-3 gap-x-5 gap-y-8 mb-5">
                                 <F label="Manufacturer" name="manufacturer" placeholder="Select or type..." />
                                 <F label="Manufacturer Part #" name="manufacturer_part_number" placeholder="OEM part" />
-                                <div><label className="block text-sm font-medium text-text-secondary mb-1">Quality Grade</label><select name="quality_grade" value={form.quality_grade} onChange={onInp} className={IC}>{[['OEM','OEM'],['ORIGINAL','Original'],['PREMIUM','Premium Aftermarket'],['STANDARD','Standard'],['ECONOMY','Economy']].map(([k,v]) => <option key={k} value={k}>{v}</option>)}</select></div>
+                                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Quality Grade</label><select name="quality_grade" value={form.quality_grade} onChange={onInp} className={IC}>{[['OEM','OEM'],['ORIGINAL','Original'],['PREMIUM','Premium Aftermarket'],['STANDARD','Standard'],['ECONOMY','Economy']].map(([k,v]) => <option key={k} value={k}>{v}</option>)}</select></div>
                             </div>
-                            <div className="grid grid-cols-3 gap-3"><div className="col-span-1"><F label="Warranty (months)" name="warranty_months" type="number" /></div></div>
+                            <div className="grid grid-cols-3 gap-x-5 gap-y-8"><div className="col-span-1"><F label="Warranty (months)" name="warranty_months" type="number" /></div></div>
                         </Section>
 
                         <Section title="Pricing" icon="fa-dollar-sign" defaultOpen={false}>
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-3 gap-x-5 gap-y-8">
                                 <F label="Unit Cost" name="unit_cost" type="number" step="0.01" hint="Your purchase price" />
                                 <F label="Unit Price" name="unit_price" type="number" step="0.01" hint="Selling price" />
-                                <div><label className="block text-sm font-medium text-text-secondary mb-1">Currency</label><select name="currency" value={form.currency} onChange={onInp} className={IC}><option value="USD">USD</option><option value="VND">VND</option><option value="EUR">EUR</option></select></div>
+                                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Currency</label><select name="currency" value={form.currency} onChange={onInp} className={IC}><option value="USD">USD</option><option value="VND">VND</option><option value="EUR">EUR</option></select></div>
                             </div>
                         </Section>
 
                         <Section title="Inventory Settings" icon="fa-boxes" defaultOpen={false}>
-                            <div className="grid grid-cols-3 gap-3 mb-2">
+                            <div className="grid grid-cols-3 gap-x-5 gap-y-8 mb-5">
                                 <F label="Min Stock Level" name="minimum_stock_level" type="number" />
                                 <F label="Max Stock Level" name="max_stock_level" type="number" />
                                 <F label="Reorder Point" name="reorder_point" type="number" />
                             </div>
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-3 gap-x-5 gap-y-8">
                                 <F label="Reorder Quantity" name="reorder_quantity" type="number" />
                                 <F label="Lead Time (days)" name="lead_time_days" type="number" />
-                                <div><label className="block text-sm font-medium text-text-secondary mb-1">Default Supplier</label><select name="default_supplier_id" value={form.default_supplier_id || ''} onChange={onInp} className={IC}><option value="">-- Select --</option>{suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+                                <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Default Supplier</label><select name="default_supplier_id" value={form.default_supplier_id || ''} onChange={onInp} className={IC}><option value="">-- Select --</option>{suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
                             </div>
                         </Section>
 
                         <Section title="Tracking & Notes" icon="fa-clipboard-list" defaultOpen={false}>
-                            <div className="grid grid-cols-2 gap-3 mb-3">
-                                <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" name="is_hazardous" checked={!!form.is_hazardous} onChange={onInp} className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 w-4 h-4 cursor-pointer" />Hazardous Material <span className="text-xs text-text-muted">(special handling)</span></label>
-                                <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" name="requires_serial_tracking" checked={!!form.requires_serial_tracking} onChange={onInp} className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 w-4 h-4 cursor-pointer" />Requires Serial Tracking <span className="text-xs text-text-muted">(high-value)</span></label>
+                            <div className="grid grid-cols-2 gap-x-5 gap-y-8 mb-5 mt-2">
+                                <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" name="is_hazardous" checked={!!form.is_hazardous} onChange={onInp} className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 w-4 h-4 cursor-pointer" />Hazardous Material <span className="text-xs text-slate-500">(special handling)</span></label>
+                                <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" name="requires_serial_tracking" checked={!!form.requires_serial_tracking} onChange={onInp} className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 w-4 h-4 cursor-pointer" />Requires Serial Tracking <span className="text-xs text-slate-500">(high-value)</span></label>
                             </div>
-                            <div><label className="block text-sm font-medium text-text-secondary mb-1">Notes</label><textarea name="notes" rows="3" value={form.notes || ''} onChange={onInp} className={IC}></textarea></div>
+                            <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Notes</label><textarea name="notes" rows="3" value={form.notes || ''} onChange={onInp} className={IC}></textarea></div>
                         </Section>
                     </div>
-                    <div className="flex justify-end gap-2 px-6 py-4 border-t border-border flex-shrink-0">
-                        <button type="button" onClick={onClose} className="rounded-md bg-secondary px-4 py-2 text-sm text-white cursor-pointer">Cancel</button>
-                        <button type="submit" disabled={saving} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white cursor-pointer disabled:opacity-60">{saving ? 'Saving...' : 'Save Spare Part'}</button>
+                    <div className="flex justify-end gap-2 px-6 py-4 border-t border-slate-200 flex-shrink-0">
+                        <button type="button" onClick={onClose} className="rounded-md bg-slate-500 px-4 py-2 text-sm text-white cursor-pointer">Cancel</button>
+                        <button type="submit" disabled={saving} className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white cursor-pointer disabled:opacity-60">{saving ? 'Saving...' : 'Save Spare Part'}</button>
                     </div>
                 </form>
             </div>
@@ -257,28 +257,28 @@ export default function SpecsParts() {
     return (
         <div className="w-full py-4 px-4">
             <div className="flex items-center justify-between mb-4">
-                <div><h1 className="text-xl font-bold text-text-primary flex items-center gap-2"><i className="fas fa-tools text-primary"></i>Spare Parts Catalog</h1><p className="text-sm text-text-muted mt-0.5">Manage spare part specifications and inventory settings</p></div>
-                {canWrite && <button onClick={() => setModal('new')} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white cursor-pointer hover:bg-primary-dark"><i className="fas fa-plus mr-2"></i>Add Spare Part</button>}
+                <div><h1 className="text-xl font-bold text-slate-900 flex items-center gap-2"><i className="fas fa-tools text-indigo-600"></i>Spare Parts Catalog</h1><p className="text-sm text-slate-500 mt-0.5">Manage spare part specifications and inventory settings</p></div>
+                {canWrite && <button onClick={() => setModal('new')} className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white cursor-pointer hover:bg-indigo-600-dark"><i className="fas fa-plus mr-2"></i>Add Spare Part</button>}
             </div>
 
-            {msg && <div className={`mb-4 flex items-center justify-between rounded-lg border px-4 py-2 text-sm ${msg.type === 'success' ? 'bg-success/10 border-success/30 text-success' : 'bg-danger/10 border-danger/30 text-danger'}`}><span>{msg.text}</span><button onClick={() => setMsg(null)} className="cursor-pointer font-bold">&times;</button></div>}
+            {msg && <div className={`mb-4 flex items-center justify-between rounded-lg border px-4 py-2 text-sm ${msg.type === 'success' ? 'bg-emerald-600/10 border-emerald-600/30 text-emerald-600' : 'bg-rose-600/10 border-rose-600/30 text-rose-600'}`}><span>{msg.text}</span><button onClick={() => setMsg(null)} className="cursor-pointer font-bold">&times;</button></div>}
 
             <div className="bg-white rounded-lg shadow-sm p-3 mb-4 flex flex-wrap gap-3 items-center">
                 <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search parts..." className={`${IC} flex-1 min-w-[180px]`} />
                 <select value={category} onChange={e => setCategory(e.target.value)} className={`${IC} min-w-[140px]`}><option value="">All Categories</option>{categories.map(c => <option key={c} value={c}>{c}</option>)}</select>
                 <select value={stock} onChange={e => setStock(e.target.value)} className={`${IC} min-w-[140px]`}><option value="">All Stock</option><option value="out">Out of Stock</option><option value="critical">Critical</option><option value="low">Low Stock</option></select>
                 <label className="flex items-center gap-2 text-sm cursor-pointer whitespace-nowrap"><input type="checkbox" checked={includeInactive} onChange={e => { setIncludeInactive(e.target.checked); fetchParts(e.target.checked); }} className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 w-4 h-4 cursor-pointer" />Show Inactive</label>
-                <small className="text-text-muted ml-auto">Showing {parts.length} of {allParts.length} parts</small>
+                <small className="text-slate-500 ml-auto">Showing {parts.length} of {allParts.length} parts</small>
             </div>
 
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                 {loading ? <Spinner /> : parts.length === 0 ? (
-                    <div className="text-center py-12 text-text-muted"><i className="fas fa-tools fa-3x opacity-25 mb-3 block"></i><p>No spare parts found</p></div>
+                    <div className="text-center py-12 text-slate-500"><i className="fas fa-tools fa-3x opacity-25 mb-3 block"></i><p>No spare parts found</p></div>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
-                            <thead><tr className="bg-surface-light border-b border-border">
-                                {['Code','Part Name','Category','Compatible Device','Cost','Price','Stock','New','Used','Status', (canWrite || canDelete) ? 'Actions' : null].filter(Boolean).map(h => <th key={h} className="px-3 py-2 text-left text-xs font-medium text-text-secondary">{h}</th>)}
+                            <thead><tr className="bg-slate-50 border-b border-slate-200">
+                                {['Code','Part Name','Category','Compatible Device','Cost','Price','Stock','New','Used','Status', (canWrite || canDelete) ? 'Actions' : null].filter(Boolean).map(h => <th key={h} className="px-3 py-2 text-left text-xs font-medium text-slate-700">{h}</th>)}
                             </tr></thead>
                             <tbody className="divide-y divide-border">
                                 {parts.map((p, i) => {
@@ -286,23 +286,23 @@ export default function SpecsParts() {
                                     const qty = p.available_quantity ?? p.total_quantity ?? 0;
                                     const st = getStockStatus(p);
                                     return (
-                                        <tr key={i} className="hover:bg-surface-body transition-colors">
+                                        <tr key={i} className="hover:bg-slate-100 transition-colors">
                                             <td className="px-3 py-2"><code className="text-xs">{p.part_code || 'N/A'}</code></td>
-                                            <td className="px-3 py-2">{p.part_name || 'Unnamed'}{!p.is_active && <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[0.65rem] font-medium bg-secondary text-white">Inactive</span>}{p.quality_grade && <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[0.65rem] font-medium bg-info text-white">{p.quality_grade}</span>}</td>
-                                            <td className="px-3 py-2"><span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary text-white">{p.part_category || 'Uncategorized'}</span></td>
-                                            <td className="px-3 py-2">{p.device_name ? <small className="text-primary"><i className="fas fa-mobile-alt mr-1"></i>{p.device_maker} {p.device_name}</small> : <small className="text-text-muted">Universal</small>}</td>
+                                            <td className="px-3 py-2">{p.part_name || 'Unnamed'}{!p.is_active && <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[0.65rem] font-medium bg-slate-500 text-white">Inactive</span>}{p.quality_grade && <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[0.65rem] font-medium bg-cyan-600 text-white">{p.quality_grade}</span>}</td>
+                                            <td className="px-3 py-2"><span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-500 text-white">{p.part_category || 'Uncategorized'}</span></td>
+                                            <td className="px-3 py-2">{p.device_name ? <small className="text-indigo-600"><i className="fas fa-mobile-alt mr-1"></i>{p.device_maker} {p.device_name}</small> : <small className="text-slate-500">Universal</small>}</td>
                                             <td className="px-3 py-2">${parseFloat(p.unit_cost || 0).toFixed(2)}</td>
                                             <td className="px-3 py-2">${parseFloat(p.unit_price || 0).toFixed(2)}</td>
-                                            <td className="px-3 py-2 text-center"><strong className={qty === 0 ? 'text-danger' : ''}>{qty}</strong></td>
+                                            <td className="px-3 py-2 text-center"><strong className={qty === 0 ? 'text-rose-600' : ''}>{qty}</strong></td>
                                             <td className="px-3 py-2 text-center">{p.new_quantity || 0}</td>
                                             <td className="px-3 py-2 text-center">{p.used_quantity || 0}</td>
                                             <td className="px-3 py-2"><span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-white ${st.col}`}><i className={`fas ${st.icon} mr-1`}></i>{st.text}</span></td>
                                             {(canWrite || canDelete) && (
                                                 <td className="px-3 py-2">
                                                     <div className="flex gap-1">
-                                                        {canWrite && <button onClick={() => setModal(p)} className="px-2 py-1 text-xs border border-primary text-primary rounded hover:bg-primary hover:text-white transition-colors cursor-pointer"><i className="fas fa-edit"></i></button>}
-                                                        {canWrite && <button onClick={() => toggleActive(p)} className={`px-2 py-1 text-xs border rounded transition-colors cursor-pointer ${p.is_active ? 'border-warning text-warning hover:bg-warning hover:text-white' : 'border-success text-success hover:bg-success hover:text-white'}`}><i className={`fas ${p.is_active ? 'fa-ban' : 'fa-check'}`}></i></button>}
-                                                        {canDelete && <button onClick={() => handleDelete(id)} className="px-2 py-1 text-xs border border-danger text-danger rounded hover:bg-danger hover:text-white transition-colors cursor-pointer"><i className="fas fa-trash"></i></button>}
+                                                        {canWrite && <button onClick={() => setModal(p)} className="px-2 py-1 text-xs border border-indigo-600 text-indigo-600 rounded hover:bg-indigo-600 hover:text-white transition-colors cursor-pointer"><i className="fas fa-edit"></i></button>}
+                                                        {canWrite && <button onClick={() => toggleActive(p)} className={`px-2 py-1 text-xs border rounded transition-colors cursor-pointer ${p.is_active ? 'border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-white' : 'border-emerald-600 text-emerald-600 hover:bg-emerald-600 hover:text-white'}`}><i className={`fas ${p.is_active ? 'fa-ban' : 'fa-check'}`}></i></button>}
+                                                        {canDelete && <button onClick={() => handleDelete(id)} className="px-2 py-1 text-xs border border-rose-600 text-rose-600 rounded hover:bg-rose-600 hover:text-white transition-colors cursor-pointer"><i className="fas fa-trash"></i></button>}
                                                     </div>
                                                 </td>
                                             )}

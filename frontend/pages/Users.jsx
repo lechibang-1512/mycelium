@@ -57,7 +57,7 @@ function UserModal({ user, onClose, onSaved }) {
     return (
         <Modal isOpen={true} title={isEdit ? 'Edit User' : 'Create User'} onClose={onClose}>
             <form onSubmit={handleSubmit}>
-                <div className="p-6 space-y-4">
+                <div className="p-6 space-y-5">
                     {error && (
                         <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 font-medium shadow-sm">
                             {error}

@@ -45,13 +45,13 @@ function SupplierModal({ supplier, categories, onClose, onSaved }) {
     return (
         <Modal isOpen={true} title={supplier ? 'Edit Supplier' : 'Add New Supplier'} onClose={onClose} size="lg">
             <form onSubmit={handleSubmit}>
-                <div className="p-6 space-y-4">
+                <div className="p-6 space-y-5">
                     {error && (
                         <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 font-medium shadow-sm">
                             {error}
                         </div>
                     )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-8">
                         <F k="name" label="Company Name" req />
                         <F k="tax_code" label="Tax Code" />
                         <div>
@@ -67,7 +67,7 @@ function SupplierModal({ supplier, categories, onClose, onSaved }) {
                     </div>
                     
                     <h6 className="text-indigo-700 font-bold text-xs tracking-widest uppercase mt-4 mb-2 pb-2 border-b border-indigo-100">Location</h6>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-8">
                         <F k="address" label="Address" />
                         <F k="city" label="City" />
                         <F k="province" label="Province" />

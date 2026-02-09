@@ -462,7 +462,7 @@ export default function PCComponentForm() {
     const renderField = (f) => {
         if (f._section) {
             return (
-                <div key={`section-${f._section}`} className="col-span-full mt-6 mb-3">
+                <div key={`section-${f._section}`} className="col-span-full mt-2">
                     <h6 className="text-indigo-700 font-bold text-sm tracking-widest uppercase pb-2 border-b border-indigo-100">{f._section}</h6>
                 </div>
             );
@@ -473,23 +473,26 @@ export default function PCComponentForm() {
 
         if (f.type === 'checkbox') {
             return (
-                <div key={f.key} className="mb-3">
-                    <label className="flex items-center gap-2 text-sm mt-2">
-                        <input 
-                            type="checkbox" 
-                            name={f.key} 
-                            checked={!!val} 
-                            onChange={handleChange} 
-                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 w-4 h-4 cursor-pointer"
-                        />
-                        {f.label}
-                    </label>
+                <div key={f.key}>
+                    <label className="block text-sm font-bold text-slate-700 mb-1.5">&nbsp;</label>
+                    <div className="flex items-center h-[38px]">
+                        <label className="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer select-none">
+                            <input 
+                                type="checkbox" 
+                                name={f.key} 
+                                checked={!!val} 
+                                onChange={handleChange} 
+                                className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 w-4 h-4 cursor-pointer"
+                            />
+                            {f.label}
+                        </label>
+                    </div>
                 </div>
             );
         }
 
         return (
-            <div key={f.key} className="mb-4">
+            <div key={f.key}>
                 <label className="block text-sm font-bold text-slate-700 mb-1.5">{f.label}</label>
                 {f.type === 'textarea' ? (
                     <textarea 
@@ -563,7 +566,7 @@ export default function PCComponentForm() {
                     
                     <Card>
                         <div className="p-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8">
                                 {fields.map(renderField)}
                             </div>
                         </div>

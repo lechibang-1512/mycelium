@@ -138,29 +138,29 @@ export default function InventoryReceive() {
     return (
         <div className="w-full py-4 px-4 max-w-7xl">
             <div className="mb-4">
-                <h1 className="text-xl font-bold text-text-primary flex items-center gap-2">
-                    <i className="fas fa-arrow-down text-success"></i>Receive Stock
+                <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <i className="fas fa-arrow-down text-emerald-600"></i>Receive Stock
                 </h1>
-                <p className="text-sm text-text-muted mt-0.5">Receive items from supplier invoices into warehouse bins</p>
+                <p className="text-sm text-slate-500 mt-0.5">Receive items from supplier invoices into warehouse bins</p>
             </div>
 
-            {error && <div className="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-danger text-sm flex items-center justify-between" role="alert">
+            {error && <div className="mb-4 rounded-lg border border-rose-600/30 bg-rose-600/10 px-4 py-3 text-rose-600 text-sm flex items-center justify-between" role="alert">
                 <span><i className="fas fa-exclamation-triangle mr-2"></i>{error}</span>
                 <button onClick={() => setError(null)} className="cursor-pointer"><i className="fas fa-times"></i></button>
             </div>}
-            {success && <div className="mb-4 rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-success text-sm flex items-center justify-between">
+            {success && <div className="mb-4 rounded-lg border border-emerald-600/30 bg-emerald-600/10 px-4 py-3 text-emerald-600 text-sm flex items-center justify-between">
                 <span><i className="fas fa-check-circle mr-2"></i>{success}</span>
                 <button onClick={() => setSuccess(null)} className="cursor-pointer"><i className="fas fa-times"></i></button>
             </div>}
 
             <form onSubmit={handleSubmit}>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-5 gap-y-8">
                     {/* Left: Invoice + Manifest */}
                     <div className="lg:col-span-1 space-y-4">
                         {/* Invoice select */}
                         <div className="bg-white rounded-lg shadow-sm p-4">
-                            <h6 className="font-semibold text-sm mb-3"><i className="fas fa-file-invoice text-primary mr-2"></i>Select Invoice</h6>
-                            <select value={selInvoice} onChange={handleInvoiceChange} className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
+                            <h6 className="font-semibold text-sm mb-3"><i className="fas fa-file-invoice text-indigo-600 mr-2"></i>Select Invoice</h6>
+                            <select value={selInvoice} onChange={handleInvoiceChange} className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/40">
                                 <option value="">Choose an invoice to receive...</option>
                                 {invoices.map(inv => {
                                     const amt = inv.total_amount ? ` | ${parseFloat(inv.total_amount).toLocaleString('vi-VN')} ${inv.currency || 'VND'}` : '';
@@ -173,17 +173,17 @@ export default function InventoryReceive() {
                         {/* Invoice summary */}
                         {inv && (
                             <div className="bg-white rounded-lg shadow-sm p-4">
-                                <h6 className="font-semibold text-sm mb-3"><i className="fas fa-info-circle text-info mr-2"></i>Invoice Summary</h6>
+                                <h6 className="font-semibold text-sm mb-3"><i className="fas fa-info-circle text-cyan-600 mr-2"></i>Invoice Summary</h6>
                                 <div className="grid grid-cols-2 gap-3 text-center">
                                     {[
-                                        { label: 'Invoice #', value: inv.invoice_number, color: 'text-primary' },
-                                        { label: 'Supplier', value: inv.supplier_name, color: 'text-info' },
-                                        { label: 'Items', value: items.length, color: 'text-warning' },
-                                        { label: inv.currency || 'VND', value: new Intl.NumberFormat('vi-VN').format(inv.total_amount || 0), color: 'text-success' },
+                                        { label: 'Invoice #', value: inv.invoice_number, color: 'text-indigo-600' },
+                                        { label: 'Supplier', value: inv.supplier_name, color: 'text-cyan-600' },
+                                        { label: 'Items', value: items.length, color: 'text-amber-500' },
+                                        { label: inv.currency || 'VND', value: new Intl.NumberFormat('vi-VN').format(inv.total_amount || 0), color: 'text-emerald-600' },
                                     ].map((s, i) => (
                                         <div key={i}>
                                             <div className={`${s.color} text-lg font-bold`}>{s.value}</div>
-                                            <small className="text-text-muted">{s.label}</small>
+                                            <small className="text-slate-500">{s.label}</small>
                                         </div>
                                     ))}
                                 </div>
@@ -193,25 +193,25 @@ export default function InventoryReceive() {
                         {/* Manifest items */}
                         {items.length > 0 && (
                             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                                <div className="px-4 py-3 border-b border-border flex justify-between items-center">
-                                    <h6 className="font-semibold text-sm"><i className="fas fa-list mr-2 text-primary"></i>Manifest Items</h6>
-                                    <span className="text-xs text-text-muted">{items.filter(i => i.is_product_resolved).length}/{items.length} resolved</span>
+                                <div className="px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+                                    <h6 className="font-semibold text-sm"><i className="fas fa-list mr-2 text-indigo-600"></i>Manifest Items</h6>
+                                    <span className="text-xs text-slate-500">{items.filter(i => i.is_product_resolved).length}/{items.length} resolved</span>
                                 </div>
                                 <div className="divide-y divide-border max-h-64 overflow-y-auto">
                                     {items.map((item, idx) => (
                                         <button key={idx} type="button"
                                             onClick={() => { setSelectedItem(item); setQuantity(String(item.quantity_remaining ?? item.quantity ?? '')); }}
-                                            className={`w-full text-left px-4 py-2 hover:bg-surface-light transition-colors cursor-pointer ${selectedItem?.item_id === item.item_id ? 'bg-primary/5 font-bold text-primary' : ''} ${item.receiving_complete ? 'text-text-muted' : ''}`}>
+                                            className={`w-full text-left px-4 py-2 hover:bg-slate-50 transition-colors cursor-pointer ${selectedItem?.item_id === item.item_id ? 'bg-indigo-600/5 font-bold text-indigo-600' : ''} ${item.receiving_complete ? 'text-slate-500' : ''}`}>
                                             <div className="flex justify-between items-start">
                                                 <div className="flex-1">
                                                     <span className="text-sm">{item.product_name || item.invoice_product_name || item.description}</span>
-                                                    {item.receiving_complete && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary text-white ml-1">Received</span>}
-                                                    <div className="text-text-muted text-xs mt-0.5">
+                                                    {item.receiving_complete && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-500 text-white ml-1">Received</span>}
+                                                    <div className="text-slate-500 text-xs mt-0.5">
                                                         Remaining: <strong>{item.quantity_remaining}/{item.quantity}</strong>
                                                         <span className="ml-2">Price: <strong>{new Intl.NumberFormat().format(item.unit_price || item.unit_cost || 0)}</strong></span>
                                                     </div>
                                                 </div>
-                                                {item.requires_serial_tracking && <i className="fas fa-barcode text-text-muted ml-2" title="Requires serial tracking"></i>}
+                                                {item.requires_serial_tracking && <i className="fas fa-barcode text-slate-500 ml-2" title="Requires serial tracking"></i>}
                                             </div>
                                         </button>
                                     ))}
@@ -224,14 +224,14 @@ export default function InventoryReceive() {
                     <div className="lg:col-span-2 space-y-4">
                         {/* Selected item indicator */}
                         {selectedItem && (
-                            <div className="bg-success/5 border border-success/30 rounded-lg px-4 py-3">
+                            <div className="bg-emerald-600/5 border border-emerald-600/30 rounded-lg px-4 py-3">
                                 <div className="flex justify-between items-center">
                                     <div>
-                                        <div className="flex items-center gap-2"><i className="fas fa-check-circle text-success"></i><strong className="text-sm">Product Selected</strong></div>
+                                        <div className="flex items-center gap-2"><i className="fas fa-check-circle text-emerald-600"></i><strong className="text-sm">Product Selected</strong></div>
                                         <div className="mt-1"><span className="font-bold text-sm">{selectedItem.product_name || selectedItem.invoice_product_name || ''}</span></div>
-                                        <small className="text-text-muted text-xs">Type: {selectedItem.product_type || 'Device'}</small>
+                                        <small className="text-slate-500 text-xs">Type: {selectedItem.product_type || 'Device'}</small>
                                     </div>
-                                    <button type="button" onClick={() => { setSelectedItem(null); setQuantity(''); }} className="rounded border border-border px-3 py-1 text-xs text-text-secondary hover:bg-surface-light cursor-pointer">
+                                    <button type="button" onClick={() => { setSelectedItem(null); setQuantity(''); }} className="rounded border border-slate-200 px-3 py-1 text-xs text-slate-700 hover:bg-slate-50 cursor-pointer">
                                         <i className="fas fa-times mr-1"></i>Clear
                                     </button>
                                 </div>
@@ -241,11 +241,11 @@ export default function InventoryReceive() {
                         {/* Warehouse */}
                         {manifest && (
                             <div className="bg-white rounded-lg shadow-sm p-4">
-                                <h6 className="font-semibold text-sm mb-3"><i className="fas fa-warehouse text-success mr-2"></i>Select Destination</h6>
-                                <div className="space-y-3">
+                                <h6 className="font-semibold text-sm mb-3"><i className="fas fa-warehouse text-emerald-600 mr-2"></i>Select Destination</h6>
+                                <div className="space-y-5">
                                     <div>
-                                        <label className="block text-xs font-medium text-text-muted mb-1">Warehouse</label>
-                                        <select value={selWarehouse} onChange={handleWarehouseChange} className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
+                                        <label className="block text-xs font-medium text-slate-500 mb-1">Warehouse</label>
+                                        <select value={selWarehouse} onChange={handleWarehouseChange} className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/40">
                                             <option value="">Select Warehouse...</option>
                                             {warehouses.map(w => <option key={w.warehouse_id} value={w.warehouse_id}>{w.name}{w.location ? ` (${w.location})` : ''}</option>)}
                                         </select>
@@ -253,8 +253,8 @@ export default function InventoryReceive() {
 
                                     {columns.length > 0 && (
                                         <div>
-                                            <label className="block text-xs font-medium text-text-muted mb-1">Column</label>
-                                            <select value={selColumn} onChange={handleColumnChange} className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
+                                            <label className="block text-xs font-medium text-slate-500 mb-1">Column</label>
+                                            <select value={selColumn} onChange={handleColumnChange} className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/40">
                                                 <option value="">Select Column...</option>
                                                 {columns.map(c => <option key={c} value={c}>Column {c}</option>)}
                                             </select>
@@ -263,8 +263,8 @@ export default function InventoryReceive() {
 
                                     {rows.length > 0 && (
                                         <div>
-                                            <label className="block text-xs font-medium text-text-muted mb-1">Row</label>
-                                            <select value={selRow} onChange={handleRowChange} className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
+                                            <label className="block text-xs font-medium text-slate-500 mb-1">Row</label>
+                                            <select value={selRow} onChange={handleRowChange} className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/40">
                                                 <option value="">Select Row...</option>
                                                 {rows.map(r => <option key={r} value={r}>Row {r}</option>)}
                                             </select>
@@ -273,12 +273,12 @@ export default function InventoryReceive() {
 
                                     {bins.length > 0 && (
                                         <div>
-                                            <label className="block text-xs font-medium text-text-muted mb-1">Bin</label>
-                                            <select value={selBin} onChange={e => setSelBin(e.target.value)} className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
+                                            <label className="block text-xs font-medium text-slate-500 mb-1">Bin</label>
+                                            <select value={selBin} onChange={e => setSelBin(e.target.value)} className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/40">
                                                 <option value="">Select Bin...</option>
                                                 {bins.map(b => <option key={b.bin_id} value={b.bin_id}>{b.bin_code} (Position B{b.bin_position})</option>)}
                                             </select>
-                                            {selColumn && selRow && <p className="text-xs text-text-muted mt-1"><i className="fas fa-map-marker-alt mr-1"></i>Location: C{selColumn}-R{selRow}</p>}
+                                            {selColumn && selRow && <p className="text-xs text-slate-500 mt-1"><i className="fas fa-map-marker-alt mr-1"></i>Location: C{selColumn}-R{selRow}</p>}
                                         </div>
                                     )}
                                 </div>
@@ -288,10 +288,10 @@ export default function InventoryReceive() {
                         {/* Quantity + Submit */}
                         {manifest && (
                             <div className="bg-white rounded-lg shadow-sm p-4">
-                                <h6 className="font-semibold text-sm mb-3"><i className="fas fa-hashtag text-warning mr-2"></i>Quantity</h6>
+                                <h6 className="font-semibold text-sm mb-3"><i className="fas fa-hashtag text-amber-500 mr-2"></i>Quantity</h6>
                                 <input type="number" value={quantity} onChange={e => setQuantity(e.target.value)} min="1" placeholder="Enter quantity to receive"
-                                    className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 mb-4" />
-                                <button type="submit" disabled={submitting} className="w-full rounded-lg bg-success px-4 py-3 text-sm font-semibold text-white hover:bg-success-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer">
+                                    className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/40 mb-4" />
+                                <button type="submit" disabled={submitting} className="w-full rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-600-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer">
                                     {submitting ? <><Spinner />Processing...</> : <><i className="fas fa-check mr-2"></i>Receive Stock</>}
                                 </button>
                             </div>

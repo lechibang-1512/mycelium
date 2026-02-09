@@ -45,7 +45,7 @@ function EditWarehouseModal({ warehouse, warehouseId, onClose, onSaved }) {
     return (
         <Modal isOpen={true} title="Edit Warehouse" onClose={onClose}>
             <form onSubmit={handleSubmit}>
-                <div className="p-6 space-y-4">
+                <div className="p-6 space-y-5">
                     {error && <div className="text-rose-700 text-sm bg-rose-50 border border-rose-200 rounded-lg px-4 py-3 flex items-center gap-2"><AlertTriangle className="w-4 h-4"/>{error}</div>}
                     <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Name *</label><input value={name} onChange={e => setName(e.target.value)} required className={IC} /></div>
                     <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Location</label><input value={loc} onChange={e => setLoc(e.target.value)} className={IC} /></div>
@@ -113,7 +113,7 @@ function BinFormModal({ bin, warehouseId, onClose, onSaved }) {
                     
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
                         <h6 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2"><LayoutGrid className="w-4 h-4 text-indigo-600"/> Position Setup</h6>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-5 gap-y-8">
                             <div><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Column *</label><input value={col} onChange={e => { setCol(e.target.value); updateCode(e.target.value, row, binPos); }} required className={IC} /></div>
                             <div><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Row *</label><input value={row} onChange={e => { setRow(e.target.value); updateCode(col, e.target.value, binPos); }} required className={IC} /></div>
                             <div><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Bin *</label><input value={binPos} onChange={e => { setBinPos(e.target.value); updateCode(col, row, e.target.value); }} required className={IC} /></div>
@@ -122,7 +122,7 @@ function BinFormModal({ bin, warehouseId, onClose, onSaved }) {
 
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
                         <h6 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2"><Boxes className="w-4 h-4 text-indigo-600"/> Bin Details</h6>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-8">
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Bin Code *</label>
                                 <input value={code} onChange={e => setCode(e.target.value)} required className={IC} />
@@ -139,11 +139,14 @@ function BinFormModal({ bin, warehouseId, onClose, onSaved }) {
                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Max Capacity</label>
                                 <input type="number" value={maxCap} onChange={e => setMaxCap(e.target.value)} min="1" className={IC} />
                             </div>
-                            <div className="flex flex-col justify-end pb-2">
-                                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer select-none">
-                                    <input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 w-4 h-4" />
-                                    Active Bin
-                                </label>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">&nbsp;</label>
+                                <div className="flex items-center h-[38px]">
+                                    <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer select-none">
+                                        <input type="checkbox" checked={active} onChange={e => setActive(e.target.checked)} className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 w-4 h-4" />
+                                        Active Bin
+                                    </label>
+                                </div>
                             </div>
                         </div>
                         <div>
@@ -390,7 +393,7 @@ function TransferModal({ bins, warehouseId, onClose, onTransferred }) {
             <div className="p-6 space-y-5">
                 {error && <div className="text-rose-700 text-sm bg-rose-50 border border-rose-200 rounded-lg px-4 py-3 flex items-center gap-2"><AlertTriangle className="w-4 h-4"/>{error}</div>}
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-8">
                     <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1.5">From Bin *</label>
                         <select value={fromBin} onChange={e => { setFromBin(e.target.value); setSelectedItem(null); setToBin(''); loadFromContents(e.target.value); }} className={IC} required>
@@ -464,7 +467,7 @@ function TransferModal({ bins, warehouseId, onClose, onTransferred }) {
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2 border-t border-slate-100">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-8 pt-2 border-t border-slate-100">
                     <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Quantity to move *</label><input type="number" value={qty} onChange={e => setQty(e.target.value)} min="1" disabled={!selectedItem} className={IC} /></div>
                     <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Reason / Reference</label><input value={reason} onChange={e => setReason(e.target.value)} className={IC} placeholder="e.g. consolidation" /></div>
                 </div>

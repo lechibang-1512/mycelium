@@ -188,7 +188,7 @@ export default function PCBuildForm() {
                     <Card>
                         <div className="p-6">
                             <h6 className="text-indigo-700 font-bold text-sm tracking-widest uppercase mb-4 pb-2 border-b border-indigo-100">Basic Info</h6>
-                            <div className="grid grid-cols-1 md:grid-cols-12 gap-5 mb-5">
+                            <div className="grid grid-cols-1 md:grid-cols-12 gap-x-5 gap-y-8 mb-8">
                                 <div className="md:col-span-6">
                                     <label className="block text-sm font-bold text-slate-700 mb-1.5 flex items-center gap-1">Build Name <span className="text-rose-500">*</span></label>
                                     <input type="text" name="name" required value={formData.name} onChange={handleChange} className={IC} />
@@ -225,7 +225,7 @@ export default function PCBuildForm() {
                     <Card>
                         <div className="p-6">
                             <h6 className="text-indigo-700 font-bold text-sm tracking-widest uppercase mb-4 pb-2 border-b border-indigo-100">Core Components</h6>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-8">
                                 {COMPONENT_TYPES.map(t => {
                                     const keyName = t === 'motherboard' ? 'motherboard_id' : t === 'case' ? 'case_id' : t === 'cooling' ? 'cooler_id' : `${t}_id`;
                                     const label = t === 'cpu' ? 'CPU' : t === 'gpu' ? 'GPU' : t === 'psu' ? 'PSU' : t.charAt(0).toUpperCase() + t.slice(1);
@@ -250,13 +250,13 @@ export default function PCBuildForm() {
                     <Card>
                         <div className="p-6">
                             <h6 className="text-indigo-700 font-bold text-sm tracking-widest uppercase mb-4 pb-2 border-b border-indigo-100">Metadata & Extras</h6>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-5">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-8 mb-8">
                                 <div><label className="block text-sm font-bold text-slate-700 mb-1.5">Total TDP (W)</label><input type="number" name="total_tdp_watts" value={formData.total_tdp_watts} onChange={handleChange} className={IC} /></div>
                                 <div><label className="block text-sm font-bold text-slate-700 mb-1.5">Estimated Price</label><input type="number" name="estimated_price" value={formData.estimated_price} onChange={handleChange} className={IC} /></div>
                                 <div><label className="block text-sm font-bold text-slate-700 mb-1.5">Total Price</label><input type="number" name="total_price" value={formData.total_price} onChange={handleChange} className={IC} /></div>
                                 <div><label className="block text-sm font-bold text-slate-700 mb-1.5">Currency</label><input type="text" name="currency" value={formData.currency} onChange={handleChange} className={IC} /></div>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-12 gap-5 mb-5">
+                            <div className="grid grid-cols-1 md:grid-cols-12 gap-x-5 gap-y-8 mb-8">
                                 <div className="md:col-span-4">
                                     <label className="block text-sm font-bold text-slate-700 mb-1.5">Image URL</label>
                                     <input type="text" name="image_url" value={formData.image_url} onChange={handleChange} className={IC} />
@@ -274,11 +274,14 @@ export default function PCBuildForm() {
                                         <option value="incompatible">Incompatible</option>
                                     </select>
                                 </div>
-                                <div className="md:col-span-2 flex items-center pt-6">
-                                    <label className="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer select-none">
-                                        <input type="checkbox" name="is_public" checked={formData.is_public} onChange={handleChange} className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 w-4 h-4 cursor-pointer" />
-                                        Public Build
-                                    </label>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-bold text-slate-700 mb-1.5">&nbsp;</label>
+                                    <div className="flex items-center h-[38px]">
+                                        <label className="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer select-none">
+                                            <input type="checkbox" name="is_public" checked={formData.is_public} onChange={handleChange} className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 w-4 h-4 cursor-pointer" />
+                                            Public Build
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                             <div>
