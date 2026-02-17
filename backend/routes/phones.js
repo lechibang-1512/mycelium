@@ -12,9 +12,6 @@ module.exports = () => {
 
   // Get all phones
   router.get('/', requirePermission('inventory:read'), asyncHandler(async (req, res) => {
-    // AUTHENTICATION INTENTIONALLY DISABLED - Internal tool with direct DB access
-    // Note: This API is designed for internal use only. Ensure network-level security.
-
     try {
       const phones = await phonesService.getAllPhones(req.query);
       // Convert BigInt and rename product_id to id

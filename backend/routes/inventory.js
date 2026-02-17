@@ -76,23 +76,6 @@ module.exports = () => {
         }
     }));
 
-    // Receive stock
-    router.post('/receive', requirePermission('inventory:write'), asyncHandler(async (req, res) => {
-        // AUTHENTICATION INTENTIONALLY DISABLED - Internal tool with direct DB access
-        // Note: This API is designed for internal use only. Ensure network-level security.
-
-        try {
-            const result = await inventoryService.receiveStock({ ...req.body, user_id: req.user?.id || null });
-            res.json(result);
-        } catch (error) {
-            console.error('Receive stock error:', error);
-            if (error.message.includes('Invalid input')) {
-                return res.status(400).json({ error: error.message });
-            }
-            res.status(500).json({ error: 'Failed to receive stock' });
-        }
-    }));
-
 
 
     // Get stock history

@@ -2,7 +2,7 @@ import React from 'react';
 
 export function Card({ children, className = '', noPadding = false, ...props }) {
   return (
-    <div 
+    <div
       className={`bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden ${className}`}
       {...props}
     >
@@ -27,6 +27,9 @@ export function CardContent({ children, className = '' }) {
   return <div className={`p-5 ${className}`}>{children}</div>;
 }
 
+/**
+ * @public
+ */
 export function CardFooter({ children, className = '' }) {
   return <div className={`px-5 py-4 bg-slate-50 border-t border-slate-100 ${className}`}>{children}</div>;
 }

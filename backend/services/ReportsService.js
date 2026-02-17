@@ -231,11 +231,7 @@ class ReportsService {
         `, { type: QueryTypes.SELECT });
     }
 
-    /**
-     * @deprecated Use specific report methods instead
-     */
-    async generateReport() { return {}; }
-    async getStockReport() { return []; }
+
 }
 
 module.exports = ReportsService;

@@ -101,6 +101,7 @@ export function getStatusColor(status) {
  * Escape HTML to prevent XSS when inserting dynamic text
  * @param {string} str
  * @returns {string}
+ * @public
  */
 export function escapeHtml(str) {
     if (str == null) return '';

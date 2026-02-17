@@ -58,12 +58,10 @@ module.exports = () => {
     // INVENTORY DOMAIN
     // ========================================================================
     const inventoryAPI = require('./inventory')();
-    const inventoryOpsAPI = require('./inventory-ops')();
     const receivingAPI = require('./receiving')();
 
     router.use('/inventory', inventoryAPI);
     router.use('/receiving', receivingAPI);
-    router.use('/', inventoryOpsAPI);
 
     // Serialized inventory management
     const serializedInventoryAPI = require('./serialized-inventory')();

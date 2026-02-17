@@ -2,9 +2,9 @@
     "$schema": "https://unpkg.com/knip@latest/schema.json",
     "entry": [
         "backend/jobs/*.js",
+        "backend/models/master/index.js",
         "scripts/tools/utils-*.js",
-        "scripts/tools/seed-db.js",
-        "frontend/components/ui/Card.jsx"
+        "scripts/tools/seed-db.js"
     ],
     "project": [
         "backend/**/*.{js,cjs,mjs}",
