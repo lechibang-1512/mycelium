@@ -25,7 +25,7 @@ const dbConfig = {
     connectionLimit: 5
 };
 
-const pool = mariadb.createPool(dbConfig);
+const dbPool = mariadb.createPool(dbConfig);
 
 async function generateEfficiencyReports() {
     console.log('='.repeat(70));
@@ -35,10 +35,10 @@ async function generateEfficiencyReports() {
 
     try {
         const WarehouseZoneService = require('../services/WarehouseZoneService');
-        const warehouseZoneService = new WarehouseZoneService(pool);
+        const warehouseZoneService = new WarehouseZoneService(dbPool);
 
         // Get all warehouses
-        const conn = await pool.getConnection();
+        const conn = await dbPool.getConnection();
         const warehouses = await conn.query(
             'SELECT warehouse_id, name, location FROM warehouses WHERE is_active = 1'
         );
@@ -173,7 +173,7 @@ if (require.main === module) {
             process.exit(1);
         })
         .finally(() => {
-            pool.end();
+            dbPool.end();
         });
 }
 

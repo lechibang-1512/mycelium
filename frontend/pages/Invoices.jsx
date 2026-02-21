@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '../utils/api.js';
-import { formatDate, formatCurrency } from '../utils/formatters.js';
+import { formatDate, formatCurrency, getStatusVariant } from '../utils/formatters.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import { Badge } from '../components/ui/Badge.jsx';
@@ -9,18 +9,8 @@ import { PageHeader } from '../components/ui/PageHeader.jsx';
 import { FileText, Plus, Eye, Send, Save } from 'lucide-react';
 import { Modal, ModalFooter } from '../components/ui/Modal.jsx';
 
-const IC = 'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-colors shadow-sm';
+import { IC } from '../utils/styles.js';
 
-const getStatusVariant = (s) => {
-    const m = { 
-        draft: 'secondary', 
-        pending: 'warning', 
-        approved: 'info', 
-        paid: 'success', 
-        cancelled: 'danger' 
-    };
-    return m[s?.toLowerCase()] || 'secondary';
-};
 
 export default function Invoices() {
     const { hasAnyPermission } = useAuth();

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '../utils/api.js';
-import { formatDate, formatCurrency } from '../utils/formatters.js';
+import { formatDate, formatCurrency, getConditionVariant } from '../utils/formatters.js';
 import { Card } from '../components/ui/Card.jsx';
 import { Badge } from '../components/ui/Badge.jsx';
 import { Spinner } from '../components/ui/Spinner.jsx';
@@ -8,17 +8,7 @@ import { PageHeader } from '../components/ui/PageHeader.jsx';
 import { Receipt, Eye, FileText } from 'lucide-react';
 import { Modal, ModalFooter } from '../components/ui/Modal.jsx';
 
-const IC = 'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-colors shadow-sm';
-
-const getConditionVariant = (c) => {
-    const m = { 
-        new: 'success', 
-        used_good: 'info', 
-        used_fair: 'warning', 
-        poor: 'danger' 
-    };
-    return m[c?.toLowerCase()] || 'secondary';
-};
+import { IC } from '../utils/styles.js';
 
 export default function Receipts() {
     const [receipts, setReceipts] = useState([]);

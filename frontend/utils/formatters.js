@@ -109,3 +109,84 @@ export function escapeHtml(str) {
     div.textContent = String(str);
     return div.innerHTML;
 }
+
+/**
+ * Maps general statuses to Badge variant names.
+ * @param {string} status 
+ * @returns {string}
+ */
+export function getStatusVariant(status) {
+    const s = (status || '').toLowerCase();
+    const m = {
+        draft: 'secondary',
+        pending: 'warning',
+        planned: 'warning',
+        reserved: 'warning',
+        awaiting_return: 'warning',
+        partially_received: 'warning',
+        approved: 'info',
+        issued: 'info',
+        in_repair: 'info',
+        paid: 'success',
+        completed: 'success',
+        resolved: 'success',
+        closed: 'success',
+        available: 'success',
+        received: 'success',
+        cancelled: 'danger',
+        disposed: 'danger',
+        in_progress: 'primary',
+        processing: 'primary'
+    };
+    if (m[s] !== undefined) return m[s];
+    if (s.includes('pending')) return 'secondary';
+    if (s.includes('progress') || s.includes('processing')) return 'primary';
+    if (s.includes('completed') || s.includes('resolved') || s.includes('closed')) return 'success';
+    if (s.includes('ordered')) return 'warning';
+    return 'secondary';
+}
+
+/**
+ * Maps priority values to Badge variant names.
+ * @param {string} priority 
+ * @returns {string}
+ */
+export function getPriorityVariant(priority) {
+    const p = (priority || '').toLowerCase();
+    if (p === 'low') return 'secondary';
+    if (p === 'medium' || p === 'normal') return 'info';
+    if (p === 'high') return 'warning';
+    if (p === 'urgent' || p === 'critical') return 'danger';
+    return 'secondary';
+}
+
+/**
+ * Maps condition states for receipts to Badge variant names.
+ * @param {string} condition 
+ * @returns {string}
+ */
+export function getConditionVariant(condition) {
+    const c = (condition || '').toLowerCase();
+    const m = { 
+        new: 'success', 
+        used_good: 'info', 
+        used_fair: 'warning', 
+        poor: 'danger' 
+    };
+    return m[c] || 'secondary';
+}
+
+/**
+ * Maps condition states for device inventory to Badge variant names.
+ * @param {string} condition 
+ * @returns {string}
+ */
+export function getDeviceConditionVariant(condition) {
+    const c = (condition || '').toLowerCase();
+    if (c === 'new') return 'primary';
+    if (c === 'used') return 'info';
+    if (c === 'refurbished') return 'warning';
+    if (c === 'testing') return 'secondary';
+    return 'secondary';
+}
+

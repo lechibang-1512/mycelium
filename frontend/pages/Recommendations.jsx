@@ -17,7 +17,7 @@ const urgencyColor = {
     LOW: 'secondary' 
 };
 
-const IC = 'block w-full py-2 px-3 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-colors bg-white';
+import { IC } from '../utils/styles.js';
 
 function RecCard({ rec, type, onAction, selected, onToggle }) {
     const isProduct = type === 'reorder';

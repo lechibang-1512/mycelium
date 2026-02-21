@@ -1,7 +1,7 @@
 const mariadb = require('mariadb');
 require('dotenv').config();
 
-const pool = mariadb.createPool({
+const dbPool = mariadb.createPool({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'lechibang',
     password: process.env.DB_PASSWORD || '1212',
@@ -12,7 +12,7 @@ const pool = mariadb.createPool({
 async function cleanupTestPhones() {
     let conn;
     try {
-        conn = await pool.getConnection();
+        conn = await dbPool.getConnection();
         console.log('Connected to database...');
 
         // 1. Find Test Phones
@@ -41,7 +41,7 @@ async function cleanupTestPhones() {
         console.error('Error during cleanup:', err);
     } finally {
         if (conn) conn.release();
-        pool.end();
+        dbPool.end();
     }
 }
 

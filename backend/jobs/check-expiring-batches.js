@@ -13,14 +13,14 @@ const dbConfig = {
     connectionLimit: 5
 };
 
-const pool = mariadb.createPool(dbConfig);
+const dbPool = mariadb.createPool(dbConfig);
 
 async function checkExpiringBatches() {
     let conn;
     try {
         console.log('🔍 Checking for expiring batches...');
 
-        conn = await pool.getConnection();
+        conn = await dbPool.getConnection();
 
         // Check for batches expiring in 30 days (warning)
         const expiring30Days = await conn.query(`
@@ -109,7 +109,7 @@ if (require.main === module) {
             process.exit(1);
         })
         .finally(() => {
-            pool.end();
+            dbPool.end();
         });
 }
 

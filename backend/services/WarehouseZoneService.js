@@ -3,8 +3,8 @@
  * Calculates efficiency, utilization, activity, and turnover ratios for warehouse zones.
  */
 class WarehouseZoneService {
-    constructor(pool) {
-        this.pool = pool;
+    constructor(dbPool) {
+        this.dbPool = dbPool;
     }
 
     /**
@@ -15,7 +15,7 @@ class WarehouseZoneService {
     async getWarehouseZoneEfficiency(warehouseId) {
         let conn;
         try {
-            conn = await this.pool.getConnection();
+            conn = await this.dbPool.getConnection();
             const zones = await conn.query(
                 `SELECT zone_id, name as zone_name, zone_type, capacity_limit 
                  FROM warehouse_zones 

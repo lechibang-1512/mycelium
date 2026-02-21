@@ -7,6 +7,7 @@ const { QueryTypes } = require('sequelize');
 const { sequelizeMaster } = require('../config/sequelize');
 const { generateId } = require('../utils/generateId');
 const { CapacityError, InsufficientStockError, ValidationError } = require('../utils/errors');
+const { roundCurrency, sanitizeDate, generateReceiptId } = require('../utils/serviceHelpers');
 
 const MAX_QUANTITY_PER_TRANSACTION = 10000;
 
@@ -16,22 +17,6 @@ class InventoryTransactionService {
         this.retryDelay = 100;
     }
 
-    roundCurrency(num) {
-        return Math.round((parseFloat(num) || 0) * 100) / 100;
-    }
-
-    _sanitizeDate(date) {
-        if (!date || date === '' || date === 'NaN' || date === 'undefined') return null;
-        return new Date(date);
-    }
-
-    _generateReceiptId(type) {
-        const date = new Date();
-        const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-        const prefix = type === 'IN' ? 'IN' : 'OUT';
-        const uniqueSuffix = generateId().slice(-8);
-        return `${prefix}-${dateStr}-${uniqueSuffix}`;
-    }
 
     async _checkBinCapacity(t, binId, additionalQuantity) {
         if (!binId) return;
@@ -61,10 +46,6 @@ class InventoryTransactionService {
         }
     }
 
-    async getReceivingManifest(_invoiceUuid) {
-        // Placeholder - implement when needed
-        return null;
-    }
 
     // =========================================================================
     // RECEIVE STOCK (Inbound)
@@ -85,7 +66,7 @@ class InventoryTransactionService {
 
         try {
             return await sequelizeMaster.transaction(async (t) => {
-                const receiptId = this._generateReceiptId('IN');
+                const receiptId = generateReceiptId('IN');
                 const processedItems = [];
                 const transactionItems = [];
                 let totalSubtotal = 0;
@@ -100,8 +81,8 @@ class InventoryTransactionService {
 
                     processedItems.push(itemResult);
 
-                    const itemSubtotal = this.roundCurrency((item.quantity || 1) * (item.unit_cost || 0));
-                    const itemTax = this.roundCurrency(item.tax_amount || 0);
+                    const itemSubtotal = roundCurrency((item.quantity || 1) * (item.unit_cost || 0));
+                    const itemTax = roundCurrency(item.tax_amount || 0);
                     totalSubtotal += itemSubtotal;
                     totalTaxAmount += itemTax;
 
@@ -177,7 +158,7 @@ class InventoryTransactionService {
             condition = 'NEW', location_notes = null
         } = item;
 
-        const sanitizedExpiry = this._sanitizeDate(expiry_date);
+        const sanitizedExpiry = sanitizeDate(expiry_date);
 
         if (quantity > MAX_QUANTITY_PER_TRANSACTION) {
             throw new CapacityError(`Quantity exceeds max of ${MAX_QUANTITY_PER_TRANSACTION}`);
@@ -280,7 +261,7 @@ class InventoryTransactionService {
 
         try {
             return await sequelizeMaster.transaction(async (t) => {
-                const receiptId = this._generateReceiptId('OUT');
+                const receiptId = generateReceiptId('OUT');
                 const processedItems = [];
                 const transactionItems = [];
                 let totalSubtotal = 0;
@@ -294,8 +275,8 @@ class InventoryTransactionService {
 
                     processedItems.push(itemResult);
 
-                    const itemSubtotal = this.roundCurrency((item.quantity || 1) * (item.unit_price || 0));
-                    const itemTax = this.roundCurrency(item.tax_amount || 0);
+                    const itemSubtotal = roundCurrency((item.quantity || 1) * (item.unit_price || 0));
+                    const itemTax = roundCurrency(item.tax_amount || 0);
                     totalSubtotal += itemSubtotal;
                     totalTaxAmount += itemTax;
 

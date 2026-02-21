@@ -5,7 +5,7 @@ const { randomUUID } = require('crypto');
  * Analyzes stock levels against reorder points and daily usage trends to generate purchase recommendations.
  */
 class RecommendationService {
-    static pool = null;
+    static dbPool = null;
     static recommendations = [];
 
     /**
@@ -13,11 +13,11 @@ class RecommendationService {
      * @param {object} pool
      */
     static setPool(pool) {
-        this.pool = pool;
+        this.dbPool = pool;
     }
 
     static getPool() {
-        if (!this.pool) {
+        if (!this.dbPool) {
             const mariadb = require('mariadb');
             const dbConfig = {
                 host: process.env.DB_HOST || '127.0.0.1',
@@ -27,9 +27,9 @@ class RecommendationService {
                 database: process.env.DB_NAME || 'master_db',
                 connectionLimit: 10
             };
-            this.pool = mariadb.createPool(dbConfig);
+            this.dbPool = mariadb.createPool(dbConfig);
         }
-        return this.pool;
+        return this.dbPool;
     }
 
     /**
@@ -38,10 +38,10 @@ class RecommendationService {
      * @returns {Promise<Array>}
      */
     static async generateRecommendations(_options = {}) {
-        const pool = this.getPool();
+        const dbPool = this.getPool();
         let conn;
         try {
-            conn = await pool.getConnection();
+            conn = await dbPool.getConnection();
 
             // 1. Get products below reorder point
             const productsQuery = `

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '../utils/api.js';
-import { formatDate, formatCurrency } from '../utils/formatters.js';
+import { formatDate, formatCurrency, getStatusVariant } from '../utils/formatters.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import { Badge } from '../components/ui/Badge.jsx';
@@ -9,18 +9,7 @@ import { PageHeader } from '../components/ui/PageHeader.jsx';
 import { ShoppingCart, Plus, Eye, PackagePlus, HelpCircle, AlertTriangle, CheckCircle, XCircle, FileText, Check, AlertCircle, Save } from 'lucide-react';
 import { Modal, ModalFooter } from '../components/ui/Modal.jsx';
 
-const IC = 'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-colors shadow-sm';
-
-const getPOStatusVariant = (s) => {
-    const m = { 
-        draft: 'secondary', 
-        issued: 'info', 
-        partially_received: 'warning', 
-        received: 'success', 
-        cancelled: 'danger' 
-    };
-    return m[s?.toLowerCase()] || 'secondary';
-};
+import { IC } from '../utils/styles.js';
 
 const MatchIcon = ({ status }) => {
     if (!status) return null;
@@ -190,7 +179,7 @@ export default function PurchaseOrders() {
                                             {formatDate(po.po_date || po.created_at)}
                                         </td>
                                         <td className="px-5 py-4">
-                                            <Badge variant={getPOStatusVariant(po.status)}>
+                                            <Badge variant={getStatusVariant(po.status)}>
                                                 {(po.status || 'UNKNOWN').replace('_', ' ').toUpperCase()}
                                             </Badge>
                                         </td>
@@ -277,7 +266,7 @@ export default function PurchaseOrders() {
                             <h2 className="text-2xl font-bold text-slate-900 mb-1">{activeModal.data?.po_number}</h2>
                             <p className="text-slate-500">Created on {formatDate(activeModal.data?.created_at)}</p>
                         </div>
-                        <Badge variant={getPOStatusVariant(activeModal.data?.status)} className="text-sm px-3 py-1">
+                        <Badge variant={getStatusVariant(activeModal.data?.status)} className="text-sm px-3 py-1">
                             {(activeModal.data?.status || 'UNKNOWN').replace('_', ' ').toUpperCase()}
                         </Badge>
                     </div>

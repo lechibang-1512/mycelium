@@ -1,32 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../utils/api.js';
-import { formatCurrency } from '../utils/formatters.js';
+import { formatCurrency, getStatusVariant, getPriorityVariant } from '../utils/formatters.js';
 import { Card } from '../components/ui/Card.jsx';
 import { Badge } from '../components/ui/Badge.jsx';
 import { Spinner } from '../components/ui/Spinner.jsx';
 import { PageHeader } from '../components/ui/PageHeader.jsx';
 import { Wrench, Undo2, Search, Settings } from 'lucide-react';
 
-const getStatusVariant = (st) => {
-    const s = (st || '').toLowerCase();
-    if (s.includes('pending')) return 'secondary';
-    if (s.includes('ordered') || s.includes('awaiting_return')) return 'warning';
-    if (s.includes('progress') || s.includes('processing')) return 'primary';
-    if (s.includes('completed') || s.includes('resolved') || s.includes('closed')) return 'success';
-    if (s.includes('cancelled')) return 'danger';
-    return 'secondary';
-};
-
-const getPriorityVariant = (p) => {
-    const pr = (p || '').toLowerCase();
-    if (pr === 'low') return 'secondary';
-    if (pr === 'medium' || pr === 'normal') return 'info';
-    if (pr === 'high') return 'warning';
-    if (pr === 'urgent' || pr === 'critical') return 'danger';
-    return 'secondary';
-};
-
-const IC = 'block w-full py-2 px-3 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-colors bg-white';
+import { IC } from '../utils/styles.js';
 
 function RepairsPanel() {
     const [data, setData] = useState([]);

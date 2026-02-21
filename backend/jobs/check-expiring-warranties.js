@@ -13,14 +13,14 @@ const dbConfig = {
     connectionLimit: 5
 };
 
-const pool = mariadb.createPool(dbConfig);
+const dbPool = mariadb.createPool(dbConfig);
 
 async function checkExpiringWarranties() {
     let conn;
     try {
         console.log('🔍 Checking for expiring warranties...');
 
-        conn = await pool.getConnection();
+        conn = await dbPool.getConnection();
 
         // Check for warranties expiring in 30 days from assets table
         const expiring30Days = await conn.query(`
@@ -126,7 +126,7 @@ if (require.main === module) {
             process.exit(1);
         })
         .finally(() => {
-            pool.end();
+            dbPool.end();
         });
 }
 

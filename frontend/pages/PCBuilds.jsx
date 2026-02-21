@@ -1,20 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api.js';
-import { formatDate } from '../utils/formatters.js';
+import { formatDate, getStatusVariant } from '../utils/formatters.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import { Badge } from '../components/ui/Badge.jsx';
 import { Spinner } from '../components/ui/Spinner.jsx';
 import { PageHeader } from '../components/ui/PageHeader.jsx';
 import { Monitor, Plus, Pencil, Trash2 } from 'lucide-react';
-
-const getStatusVariant = (s) => ({
-    completed: 'success',
-    in_progress: 'primary',
-    planned: 'warning',
-    draft: 'secondary'
-}[s || 'draft'] || 'secondary');
 
 export default function PCBuilds() {
     const navigate = useNavigate();

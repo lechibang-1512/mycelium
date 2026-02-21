@@ -8,24 +8,7 @@ import { Smartphone, Search, RefreshCw, AlertTriangle, Inbox } from 'lucide-reac
 
 const LIMIT = 50;
 
-const getStatusVariant = (status) => {
-    const s = (status || '').toLowerCase();
-    if (s === 'available') return 'success';
-    if (s === 'reserved') return 'warning';
-    if (s === 'sold') return 'secondary';
-    if (s === 'in_repair') return 'info';
-    if (s === 'disposed') return 'danger';
-    return 'secondary';
-};
-
-const getConditionVariant = (cond) => {
-    const c = (cond || '').toLowerCase();
-    if (c === 'new') return 'primary';
-    if (c === 'used') return 'info';
-    if (c === 'refurbished') return 'warning';
-    if (c === 'testing') return 'secondary';
-    return 'secondary';
-};
+import { getStatusVariant, getDeviceConditionVariant as getConditionVariant } from '../utils/formatters.js';
 
 export default function DeviceInventory() {
     const [devices, setDevices] = useState([]);

@@ -11,7 +11,7 @@ import {
     MemoryStick, Wifi, ToggleLeft, Plus, Pencil, Trash2, Search, Palette
 } from 'lucide-react';
 
-const IC = 'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-colors shadow-sm';
+import { IC } from '../utils/styles.js';
 
 const TABS = [
     { key: 'basic', icon: Info, label: 'Basic Info' },

@@ -30,7 +30,7 @@ function getOptionLabel(type, item) {
     }
 }
 
-const IC = "w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-colors bg-white shadow-sm";
+import { IC } from '../utils/styles.js';
 
 export default function PCBuildForm() {
     const { id } = useParams();

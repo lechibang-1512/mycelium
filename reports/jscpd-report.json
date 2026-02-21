@@ -1,0 +1,3873 @@
+{
+  "duplicates": [
+    {
+      "firstFile": {
+        "end": 18,
+        "endLoc": {
+          "column": 14,
+          "line": 18,
+          "position": 421
+        },
+        "name": "./backend/jobs/check-expiring-batches.js",
+        "start": 3,
+        "startLoc": {
+          "column": 0,
+          "line": 3,
+          "position": 21
+        }
+      },
+      "format": "javascript",
+      "fragment": "require('dotenv').config();\nconst mariadb = require('mariadb');\n\n// Database configuration\nconst dbConfig = {\n    host: process.env.DB_HOST || '127.0.0.1',\n    port: process.env.DB_PORT || 3306,\n    user: process.env.DB_USER,\n    password: process.env.DB_PASSWORD,\n    database: process.env.DB_NAME || 'master_db',\n    connectionLimit: 5\n};\n\nconst pool = mariadb.createPool(dbConfig);\n\nasync function checkExpiringBatches() {",
+      "lines": 16,
+      "secondFile": {
+        "end": 18,
+        "endLoc": {
+          "column": 14,
+          "line": 18,
+          "position": 421
+        },
+        "name": "./backend/jobs/check-expiring-warranties.js",
+        "start": 3,
+        "startLoc": {
+          "column": 0,
+          "line": 3,
+          "position": 21
+        }
+      },
+      "tokens": 84
+    },
+    {
+      "firstFile": {
+        "end": 18,
+        "endLoc": {
+          "column": 14,
+          "line": 18,
+          "position": 421
+        },
+        "name": "./backend/jobs/check-expiring-batches.js",
+        "start": 3,
+        "startLoc": {
+          "column": 0,
+          "line": 3,
+          "position": 21
+        }
+      },
+      "format": "javascript",
+      "fragment": "require('dotenv').config();\nconst mariadb = require('mariadb');\n\n// Database configuration\nconst dbConfig = {\n    host: process.env.DB_HOST || '127.0.0.1',\n    port: process.env.DB_PORT || 3306,\n    user: process.env.DB_USER,\n    password: process.env.DB_PASSWORD,\n    database: process.env.DB_NAME || 'master_db',\n    connectionLimit: 5\n};\n\nconst pool = mariadb.createPool(dbConfig);\n\nasync function checkExpiringBatches() {",
+      "lines": 16,
+      "secondFile": {
+        "end": 30,
+        "endLoc": {
+          "column": 14,
+          "line": 30,
+          "position": 757
+        },
+        "name": "./backend/jobs/generate-efficiency-reports.js",
+        "start": 15,
+        "startLoc": {
+          "column": 0,
+          "line": 15,
+          "position": 357
+        }
+      },
+      "tokens": 84
+    },
+    {
+      "firstFile": {
+        "end": 18,
+        "endLoc": {
+          "column": 14,
+          "line": 18,
+          "position": 421
+        },
+        "name": "./backend/jobs/check-expiring-batches.js",
+        "start": 4,
+        "startLoc": {
+          "column": 33,
+          "line": 4,
+          "position": 82
+        }
+      },
+      "format": "javascript",
+      "fragment": "const mariadb = require('mariadb');\n\n// Database configuration\nconst dbConfig = {\n    host: process.env.DB_HOST || '127.0.0.1',\n    port: process.env.DB_PORT || 3306,\n    user: process.env.DB_USER,\n    password: process.env.DB_PASSWORD,\n    database: process.env.DB_NAME || 'master_db',\n    connectionLimit: 5\n};\n\nconst pool = mariadb.createPool(dbConfig);\n\nasync function checkExpiringBatches() {",
+      "lines": 15,
+      "secondFile": {
+        "end": 25,
+        "endLoc": {
+          "column": 14,
+          "line": 25,
+          "position": 644
+        },
+        "name": "./backend/jobs/generate-reorder-recommendations.js",
+        "start": 11,
+        "startLoc": {
+          "column": 73,
+          "line": 11,
+          "position": 317
+        }
+      },
+      "tokens": 69
+    },
+    {
+      "firstFile": {
+        "end": 13,
+        "endLoc": {
+          "column": 20,
+          "line": 13,
+          "position": 356
+        },
+        "name": "./backend/jobs/check-expiring-batches.js",
+        "start": 4,
+        "startLoc": {
+          "column": 0,
+          "line": 4,
+          "position": 49
+        }
+      },
+      "format": "javascript",
+      "fragment": "const mariadb = require('mariadb');\n\n// Database configuration\nconst dbConfig = {\n    host: process.env.DB_HOST || '127.0.0.1',\n    port: process.env.DB_PORT || 3306,\n    user: process.env.DB_USER,\n    password: process.env.DB_PASSWORD,\n    database: process.env.DB_NAME || 'master_db',\n    connectionLimit: 5",
+      "lines": 10,
+      "secondFile": {
+        "end": 28,
+        "endLoc": {
+          "column": 32,
+          "line": 28,
+          "position": 842
+        },
+        "name": "./backend/services/RecommendationService.js",
+        "start": 21,
+        "startLoc": {
+          "column": 12,
+          "line": 21,
+          "position": 478
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 116,
+        "endLoc": {
+          "column": 16,
+          "line": 116,
+          "position": 3781
+        },
+        "name": "./backend/jobs/check-expiring-batches.js",
+        "start": 104,
+        "startLoc": {
+          "column": 59,
+          "line": 104,
+          "position": 3533
+        }
+      },
+      "format": "javascript",
+      "fragment": "            console.log(`  Total Expired: ${summary.expired}`);\n            process.exit(0);\n        })\n        .catch((error) => {\n            console.error('💥 Fatal error:', error);\n            process.exit(1);\n        })\n        .finally(() => {\n            pool.end();\n        });\n}\n\nmodule.exports = checkExpiringBatches;",
+      "lines": 13,
+      "secondFile": {
+        "end": 133,
+        "endLoc": {
+          "column": 16,
+          "line": 133,
+          "position": 4830
+        },
+        "name": "./backend/jobs/check-expiring-warranties.js",
+        "start": 121,
+        "startLoc": {
+          "column": 62,
+          "line": 121,
+          "position": 4582
+        }
+      },
+      "tokens": 59
+    },
+    {
+      "firstFile": {
+        "end": 116,
+        "endLoc": {
+          "column": 16,
+          "line": 116,
+          "position": 3781
+        },
+        "name": "./backend/jobs/check-expiring-batches.js",
+        "start": 104,
+        "startLoc": {
+          "column": 59,
+          "line": 104,
+          "position": 3533
+        }
+      },
+      "format": "javascript",
+      "fragment": "            console.log(`  Total Expired: ${summary.expired}`);\n            process.exit(0);\n        })\n        .catch((error) => {\n            console.error('💥 Fatal error:', error);\n            process.exit(1);\n        })\n        .finally(() => {\n            pool.end();\n        });\n}\n\nmodule.exports = checkExpiringBatches;",
+      "lines": 13,
+      "secondFile": {
+        "end": 180,
+        "endLoc": {
+          "column": 16,
+          "line": 180,
+          "position": 6957
+        },
+        "name": "./backend/jobs/generate-efficiency-reports.js",
+        "start": 168,
+        "startLoc": {
+          "column": 67,
+          "line": 168,
+          "position": 6709
+        }
+      },
+      "tokens": 59
+    },
+    {
+      "firstFile": {
+        "end": 116,
+        "endLoc": {
+          "column": 16,
+          "line": 116,
+          "position": 3781
+        },
+        "name": "./backend/jobs/check-expiring-batches.js",
+        "start": 104,
+        "startLoc": {
+          "column": 59,
+          "line": 104,
+          "position": 3533
+        }
+      },
+      "format": "javascript",
+      "fragment": "            console.log(`  Total Expired: ${summary.expired}`);\n            process.exit(0);\n        })\n        .catch((error) => {\n            console.error('💥 Fatal error:', error);\n            process.exit(1);\n        })\n        .finally(() => {\n            pool.end();\n        });\n}\n\nmodule.exports = checkExpiringBatches;",
+      "lines": 13,
+      "secondFile": {
+        "end": 94,
+        "endLoc": {
+          "column": 16,
+          "line": 94,
+          "position": 2961
+        },
+        "name": "./backend/jobs/generate-reorder-recommendations.js",
+        "start": 82,
+        "startLoc": {
+          "column": 49,
+          "line": 82,
+          "position": 2757
+        }
+      },
+      "tokens": 59
+    },
+    {
+      "firstFile": {
+        "end": 58,
+        "endLoc": {
+          "column": 14,
+          "line": 58,
+          "position": 1502
+        },
+        "name": "./backend/models/master/Inventory.js",
+        "start": 35,
+        "startLoc": {
+          "column": 24,
+          "line": 35,
+          "position": 950
+        }
+      },
+      "format": "javascript",
+      "fragment": "            warehouse_id: {\n                type: DataTypes.STRING(36),\n                allowNull: true,\n        primaryKey: true,\n                \n                \n                \n            },\n            zone_id: {\n                type: DataTypes.INTEGER,\n                allowNull: true,\n        primaryKey: true,\n                \n                \n                \n            },\n            bin_id: {\n                type: DataTypes.STRING(36),\n                allowNull: true,\n        primaryKey: true,\n                \n                \n                \n            },",
+      "lines": 24,
+      "secondFile": {
+        "end": 66,
+        "endLoc": {
+          "column": 14,
+          "line": 66,
+          "position": 1692
+        },
+        "name": "./backend/models/master/Transaction.js",
+        "start": 43,
+        "startLoc": {
+          "column": 29,
+          "line": 43,
+          "position": 1140
+        }
+      },
+      "tokens": 62
+    },
+    {
+      "firstFile": {
+        "end": 58,
+        "endLoc": {
+          "column": 14,
+          "line": 58,
+          "position": 1502
+        },
+        "name": "./backend/models/master/Inventory.js",
+        "start": 35,
+        "startLoc": {
+          "column": 12,
+          "line": 35,
+          "position": 938
+        }
+      },
+      "format": "javascript",
+      "fragment": "            warehouse_id: {\n                type: DataTypes.STRING(36),\n                allowNull: true,\n        primaryKey: true,\n                \n                \n                \n            },\n            zone_id: {\n                type: DataTypes.INTEGER,\n                allowNull: true,\n        primaryKey: true,\n                \n                \n                \n            },\n            bin_id: {\n                type: DataTypes.STRING(36),\n                allowNull: true,\n        primaryKey: true,\n                \n                \n                \n            },",
+      "lines": 24,
+      "secondFile": {
+        "end": 28,
+        "endLoc": {
+          "column": 14,
+          "line": 28,
+          "position": 746
+        },
+        "name": "./backend/models/master/WarehouseBin.js",
+        "start": 5,
+        "startLoc": {
+          "column": 12,
+          "line": 5,
+          "position": 182
+        }
+      },
+      "tokens": 63
+    },
+    {
+      "firstFile": {
+        "end": 236,
+        "endLoc": {
+          "column": 14,
+          "line": 236,
+          "position": 5870
+        },
+        "name": "./backend/models/master/Inventory.js",
+        "start": 203,
+        "startLoc": {
+          "column": 31,
+          "line": 203,
+          "position": 5134
+        }
+      },
+      "format": "javascript",
+      "fragment": "                allowNull: true,\n                \n                \n                \n            },\n            notes: {\n                type: DataTypes.TEXT,\n                allowNull: true,\n                \n                \n                \n            },\n            created_at: {\n                type: DataTypes.DATE,\n                allowNull: true,\n                \n                \n                \n            },\n            updated_at: {\n                type: DataTypes.DATE,\n                allowNull: true,\n                \n                \n                \n            },\n            id: {\n                type: DataTypes.CHAR(36),\n                allowNull: true,\n        primaryKey: true,\n                \n                \n                \n            },",
+      "lines": 34,
+      "secondFile": {
+        "end": 161,
+        "endLoc": {
+          "column": 14,
+          "line": 161,
+          "position": 4180
+        },
+        "name": "./backend/models/master/Invoice.js",
+        "start": 131,
+        "startLoc": {
+          "column": 37,
+          "line": 131,
+          "position": 3495
+        }
+      },
+      "tokens": 70
+    },
+    {
+      "firstFile": {
+        "end": 238,
+        "endLoc": {
+          "column": 21,
+          "line": 238,
+          "position": 5921
+        },
+        "name": "./backend/models/master/Inventory.js",
+        "start": 208,
+        "startLoc": {
+          "column": 17,
+          "line": 208,
+          "position": 5219
+        }
+      },
+      "format": "javascript",
+      "fragment": "            notes: {\n                type: DataTypes.TEXT,\n                allowNull: true,\n                \n                \n                \n            },\n            created_at: {\n                type: DataTypes.DATE,\n                allowNull: true,\n                \n                \n                \n            },\n            updated_at: {\n                type: DataTypes.DATE,\n                allowNull: true,\n                \n                \n                \n            },\n            id: {\n                type: DataTypes.CHAR(36),\n                allowNull: true,\n        primaryKey: true,\n                \n                \n                \n            },\n            spare_part_id: {\n                type: DataTypes.CHAR(36),",
+      "lines": 31,
+      "secondFile": {
+        "end": 193,
+        "endLoc": {
+          "column": 14,
+          "line": 193,
+          "position": 4802
+        },
+        "name": "./backend/models/master/Rma.js",
+        "start": 163,
+        "startLoc": {
+          "column": 26,
+          "line": 163,
+          "position": 4131
+        }
+      },
+      "tokens": 71
+    },
+    {
+      "firstFile": {
+        "end": 111,
+        "endLoc": {
+          "column": 14,
+          "line": 111,
+          "position": 2940
+        },
+        "name": "./backend/models/master/Invoice.js",
+        "start": 91,
+        "startLoc": {
+          "column": 22,
+          "line": 91,
+          "position": 2395
+        }
+      },
+      "format": "javascript",
+      "fragment": "            tax_amount: {\n                type: DataTypes.DECIMAL,\n                allowNull: true,\n                \n                \n                defaultValue: '0.00',\n            },\n            shipping_fee: {\n                type: DataTypes.DECIMAL,\n                allowNull: true,\n                \n                \n                defaultValue: '0.00',\n            },\n            discount_amount: {\n                type: DataTypes.DECIMAL,\n                allowNull: true,\n                \n                \n                defaultValue: '0.00',\n            },",
+      "lines": 21,
+      "secondFile": {
+        "end": 101,
+        "endLoc": {
+          "column": 14,
+          "line": 101,
+          "position": 2634
+        },
+        "name": "./backend/models/master/Transaction.js",
+        "start": 81,
+        "startLoc": {
+          "column": 24,
+          "line": 81,
+          "position": 2089
+        }
+      },
+      "tokens": 56
+    },
+    {
+      "firstFile": {
+        "end": 193,
+        "endLoc": {
+          "column": 14,
+          "line": 193,
+          "position": 4802
+        },
+        "name": "./backend/models/master/Rma.js",
+        "start": 154,
+        "startLoc": {
+          "column": 36,
+          "line": 154,
+          "position": 3930
+        }
+      },
+      "format": "javascript",
+      "fragment": "                defaultValue: '0.00',\n            },\n            notes: {\n                type: DataTypes.TEXT,\n                allowNull: true,\n                \n                \n                \n            },\n            internal_notes: {\n                type: DataTypes.TEXT,\n                allowNull: true,\n                \n                \n                \n            },\n            created_at: {\n                type: DataTypes.DATE,\n                allowNull: true,\n                \n                \n                \n            },\n            updated_at: {\n                type: DataTypes.DATE,\n                allowNull: true,\n                \n                \n                \n            },\n            id: {\n                type: DataTypes.CHAR(36),\n                allowNull: true,\n        primaryKey: true,\n                \n                \n                \n            },\n}, {\n    tableName: 'rmas',",
+      "lines": 40,
+      "secondFile": {
+        "end": 199,
+        "endLoc": {
+          "column": 14,
+          "line": 199,
+          "position": 4940
+        },
+        "name": "./backend/models/master/Transaction.js",
+        "start": 157,
+        "startLoc": {
+          "column": 31,
+          "line": 157,
+          "position": 4017
+        }
+      },
+      "tokens": 90
+    },
+    {
+      "firstFile": {
+        "end": 115,
+        "endLoc": {
+          "column": 14,
+          "line": 115,
+          "position": 2824
+        },
+        "name": "./backend/models/master/StocktakeItem.js",
+        "start": 92,
+        "startLoc": {
+          "column": 36,
+          "line": 92,
+          "position": 2324
+        }
+      },
+      "format": "javascript",
+      "fragment": "                type: DataTypes.DATE,\n                allowNull: true,\n                \n                \n                \n            },\n            stocktake_id: {\n                type: DataTypes.CHAR(36),\n                allowNull: true,\n        primaryKey: true,\n                \n                \n                \n            },\n            id: {\n                type: DataTypes.CHAR(36),\n                allowNull: true,\n        primaryKey: true,\n                \n                \n                \n            },\n}, {\n    tableName: 'stocktake_items',",
+      "lines": 24,
+      "secondFile": {
+        "end": 57,
+        "endLoc": {
+          "column": 14,
+          "line": 57,
+          "position": 1414
+        },
+        "name": "./backend/models/master/StocktakeStatusHistory.js",
+        "start": 34,
+        "startLoc": {
+          "column": 36,
+          "line": 34,
+          "position": 914
+        }
+      },
+      "tokens": 56
+    },
+    {
+      "firstFile": {
+        "end": 158,
+        "endLoc": {
+          "column": 14,
+          "line": 158,
+          "position": 3831
+        },
+        "name": "./backend/models/master/Supplier.js",
+        "start": 132,
+        "startLoc": {
+          "column": 36,
+          "line": 132,
+          "position": 3224
+        }
+      },
+      "format": "javascript",
+      "fragment": "                type: DataTypes.TEXT,\n                allowNull: true,\n                \n                \n                \n            },\n            is_active: {\n                type: DataTypes.TINYINT,\n                allowNull: true,\n                \n                \n                defaultValue: 1,\n            },\n            created_at: {\n                type: DataTypes.DATE,\n                allowNull: true,\n                \n                \n                \n            },\n            updated_at: {\n                type: DataTypes.DATE,\n                allowNull: true,\n                \n                \n                \n            },",
+      "lines": 27,
+      "secondFile": {
+        "end": 83,
+        "endLoc": {
+          "column": 14,
+          "line": 83,
+          "position": 2082
+        },
+        "name": "./backend/models/master/Warehouse.js",
+        "start": 57,
+        "startLoc": {
+          "column": 43,
+          "line": 57,
+          "position": 1475
+        }
+      },
+      "tokens": 56
+    },
+    {
+      "firstFile": {
+        "end": 37,
+        "endLoc": {
+          "column": 14,
+          "line": 37,
+          "position": 833
+        },
+        "name": "./backend/models/security/Role.js",
+        "start": 22,
+        "startLoc": {
+          "column": 28,
+          "line": 22,
+          "position": 546
+        }
+      },
+      "format": "javascript",
+      "fragment": "        type: DataTypes.TEXT,\n        allowNull: true,\n    },\n\n    created_at: {\n        type: DataTypes.DATE,\n        allowNull: true,\n        defaultValue: DataTypes.NOW,\n    },\n    updated_at: {\n        type: DataTypes.DATE,\n        allowNull: true,\n        defaultValue: DataTypes.NOW,\n    }\n}, {\n    tableName: 'roles',",
+      "lines": 16,
+      "secondFile": {
+        "end": 61,
+        "endLoc": {
+          "column": 14,
+          "line": 61,
+          "position": 1361
+        },
+        "name": "./backend/models/security/User.js",
+        "start": 47,
+        "startLoc": {
+          "column": 28,
+          "line": 47,
+          "position": 1075
+        }
+      },
+      "tokens": 53
+    },
+    {
+      "firstFile": {
+        "end": 261,
+        "endLoc": {
+          "column": 1,
+          "line": 261,
+          "position": 6635
+        },
+        "name": "./backend/public/style.css",
+        "start": 252,
+        "startLoc": {
+          "column": 5,
+          "line": 252,
+          "position": 6443
+        }
+      },
+      "format": "css",
+      "fragment": ".spec-section {\n    background: white;\n    border-radius: var(--border-radius);\n    box-shadow: var(--card-shadow);\n    transition: all 0.3s ease;\n    padding: 1.5rem;\n    margin-bottom: 1rem;\n}\n\n.spec-section:hover {",
+      "lines": 10,
+      "secondFile": {
+        "end": 366,
+        "endLoc": {
+          "column": 1,
+          "line": 366,
+          "position": 8566
+        },
+        "name": "./backend/public/style.css",
+        "start": 357,
+        "startLoc": {
+          "column": 5,
+          "line": 357,
+          "position": 8374
+        }
+      },
+      "tokens": 54
+    },
+    {
+      "firstFile": {
+        "end": 47,
+        "endLoc": {
+          "column": 15,
+          "line": 47,
+          "position": 2009
+        },
+        "name": "./backend/routes/inventory.js",
+        "start": 28,
+        "startLoc": {
+          "column": 29,
+          "line": 28,
+          "position": 1245
+        }
+      },
+      "format": "javascript",
+      "fragment": "    router.get('/product/:id', requirePermission('inventory:read'), asyncHandler(async (req, res) => {\n        // AUTHENTICATION INTENTIONALLY DISABLED - Internal tool with direct DB access\n        // Note: This API is designed for internal use only. Ensure network-level security.\n\n        try {\n            const product = await inventoryService.getProductById(req.params.id);\n\n            if (!product) {\n                return res.status(404).json({ error: 'Product not found' });\n            }\n\n            res.json(convertBigIntToNumber(product));\n        } catch (error) {\n            console.error('Product fetch error:', error);\n            res.status(500).json({ error: 'Failed to fetch product' });\n        }\n    }));\n\n    // Get product inventory logs by product_id\n    router.get('/product/:id/logs', requirePermission('inventory:read'), asyncHandler(async (req, res) => {",
+      "lines": 20,
+      "secondFile": {
+        "end": 82,
+        "endLoc": {
+          "column": 15,
+          "line": 82,
+          "position": 3418
+        },
+        "name": "./backend/routes/inventory.js",
+        "start": 61,
+        "startLoc": {
+          "column": 21,
+          "line": 61,
+          "position": 2675
+        }
+      },
+      "tokens": 107
+    },
+    {
+      "firstFile": {
+        "end": 221,
+        "endLoc": {
+          "column": 13,
+          "line": 221,
+          "position": 10677
+        },
+        "name": "./backend/routes/location.js",
+        "start": 214,
+        "startLoc": {
+          "column": 28,
+          "line": 214,
+          "position": 10365
+        }
+      },
+      "format": "javascript",
+      "fragment": "    binsRouter.get('/:binId', requirePermission('warehouse:read'), async (req, res) => {\n        try {\n            const binId = req.params.binId;\n            const bin = await warehouseService.getBinById(binId);\n\n            if (!bin) {\n                return res.status(404).json({ success: false, error: 'Bin not found' });\n            }",
+      "lines": 8,
+      "secondFile": {
+        "end": 239,
+        "endLoc": {
+          "column": 13,
+          "line": 239,
+          "position": 11418
+        },
+        "name": "./backend/routes/location.js",
+        "start": 231,
+        "startLoc": {
+          "column": 37,
+          "line": 231,
+          "position": 11072
+        }
+      },
+      "tokens": 64
+    },
+    {
+      "firstFile": {
+        "end": 10,
+        "endLoc": {
+          "column": 7,
+          "line": 10,
+          "position": 374
+        },
+        "name": "./backend/routes/phones.js",
+        "start": 1,
+        "startLoc": {
+          "column": 0,
+          "line": 1,
+          "position": 0
+        }
+      },
+      "format": "javascript",
+      "fragment": "const asyncHandler = require('../utils/asyncHandler');\nconst express = require('express');\nconst router = express.Router();\nconst SanitizationService = require('../services/SanitizationService');\nconst { requirePermission } = require('../middleware/rbacMiddleware');\n\nconst convertBigIntToNumber = SanitizationService.convertBigIntToNumber;\n\nmodule.exports = () => {\n  const PhonesService = require('../services/PhonesService');",
+      "lines": 10,
+      "secondFile": {
+        "end": 14,
+        "endLoc": {
+          "column": 9,
+          "line": 14,
+          "position": 504
+        },
+        "name": "./backend/routes/serialized-inventory.js",
+        "start": 1,
+        "startLoc": {
+          "column": 0,
+          "line": 1,
+          "position": 0
+        }
+      },
+      "tokens": 59
+    },
+    {
+      "firstFile": {
+        "end": 10,
+        "endLoc": {
+          "column": 7,
+          "line": 10,
+          "position": 374
+        },
+        "name": "./backend/routes/phones.js",
+        "start": 1,
+        "startLoc": {
+          "column": 0,
+          "line": 1,
+          "position": 0
+        }
+      },
+      "format": "javascript",
+      "fragment": "const asyncHandler = require('../utils/asyncHandler');\nconst express = require('express');\nconst router = express.Router();\nconst SanitizationService = require('../services/SanitizationService');\nconst { requirePermission } = require('../middleware/rbacMiddleware');\n\nconst convertBigIntToNumber = SanitizationService.convertBigIntToNumber;\n\nmodule.exports = () => {\n  const PhonesService = require('../services/PhonesService');",
+      "lines": 10,
+      "secondFile": {
+        "end": 13,
+        "endLoc": {
+          "column": 7,
+          "line": 13,
+          "position": 433
+        },
+        "name": "./backend/routes/suppliers.js",
+        "start": 1,
+        "startLoc": {
+          "column": 0,
+          "line": 1,
+          "position": 0
+        }
+      },
+      "tokens": 59
+    },
+    {
+      "firstFile": {
+        "end": 53,
+        "endLoc": {
+          "column": 28,
+          "line": 53,
+          "position": 2263
+        },
+        "name": "./backend/routes/receiving.js",
+        "start": 37,
+        "startLoc": {
+          "column": 38,
+          "line": 37,
+          "position": 1555
+        }
+      },
+      "format": "javascript",
+      "fragment": "    router.post('/invoices/upload-xml', requirePermission('inventory:write'), upload.single('xmlFile'), asyncHandler(async (req, res) => {\n        let xmlString;\n\n        if (req.file) {\n            // Mode 1: File uploaded via multipart/form-data\n            xmlString = req.file.buffer.toString('utf-8');\n        } else if (typeof req.body === 'string' && req.body.trim().startsWith('<')) {\n            // Mode 2: Raw XML body (text/xml or application/xml)\n            xmlString = req.body;\n        } else {\n            return res.status(400).json({\n                success: false,\n                error: 'No XML content provided. Upload an .xml file or send raw XML in the request body.'\n            });\n        }\n\n        const result = await xmlIngestionService.ingestXmlInvoice(xmlString);",
+      "lines": 17,
+      "secondFile": {
+        "end": 216,
+        "endLoc": {
+          "column": 28,
+          "line": 216,
+          "position": 7996
+        },
+        "name": "./backend/routes/receiving.js",
+        "start": 202,
+        "startLoc": {
+          "column": 33,
+          "line": 202,
+          "position": 7415
+        }
+      },
+      "tokens": 106
+    },
+    {
+      "firstFile": {
+        "end": 33,
+        "endLoc": {
+          "column": 15,
+          "line": 33,
+          "position": 1189
+        },
+        "name": "./backend/routes/recommendations.js",
+        "start": 17,
+        "startLoc": {
+          "column": 82,
+          "line": 17,
+          "position": 781
+        }
+      },
+      "format": "javascript",
+      "fragment": "        let list = RecommendationService.recommendations.filter(r => r.product_id && r.status === 'PENDING');\n        \n        if (urgency_level) {\n            list = list.filter(r => r.urgency_level === urgency_level);\n        }\n        \n        res.json({\n            success: true,\n            data: list.map(convertBigIntToNumber)\n        });\n    }));\n\n    /**\n     * @route GET /api/recommendations/summary\n     * @desc Get product recommendations summary stats\n     */\n    router.get('/summary', requirePermission('inventory:read'), asyncHandler(async (req, res) => {",
+      "lines": 17,
+      "secondFile": {
+        "end": 58,
+        "endLoc": {
+          "column": 13,
+          "line": 58,
+          "position": 2133
+        },
+        "name": "./backend/routes/spare-parts.js",
+        "start": 44,
+        "startLoc": {
+          "column": 81,
+          "line": 44,
+          "position": 1786
+        }
+      },
+      "tokens": 57
+    },
+    {
+      "firstFile": {
+        "end": 83,
+        "endLoc": {
+          "column": 8,
+          "line": 83,
+          "position": 3142
+        },
+        "name": "./backend/routes/recommendations.js",
+        "start": 69,
+        "startLoc": {
+          "column": 28,
+          "line": 69,
+          "position": 2608
+        }
+      },
+      "format": "javascript",
+      "fragment": "    router.put('/:id/status', requirePermission('inventory:write'), asyncHandler(async (req, res) => {\n        const { id } = req.params;\n        const { status } = req.body;\n        \n        const rec = RecommendationService.recommendations.find(r => r.recommendation_id === id);\n        if (!rec) {\n            return res.status(404).json({ success: false, error: 'Recommendation not found' });\n        }\n        \n        rec.status = status;\n        res.json({\n            success: true,\n            message: `Status updated to ${status}`\n        });\n    }));",
+      "lines": 15,
+      "secondFile": {
+        "end": 108,
+        "endLoc": {
+          "column": 6,
+          "line": 108,
+          "position": 3902
+        },
+        "name": "./backend/routes/spare-parts.js",
+        "start": 94,
+        "startLoc": {
+          "column": 42,
+          "line": 94,
+          "position": 3428
+        }
+      },
+      "tokens": 107
+    },
+    {
+      "firstFile": {
+        "end": 369,
+        "endLoc": {
+          "column": 17,
+          "line": 369,
+          "position": 12829
+        },
+        "name": "./backend/routes/repair-management.js",
+        "start": 362,
+        "startLoc": {
+          "column": 44,
+          "line": 362,
+          "position": 12534
+        }
+      },
+      "format": "javascript",
+      "fragment": "            const { jobIds, job_ids, status } = req.body;\n            const ids = jobIds || job_ids;\n            const userId = req.user?.id || 1;\n\n            if (!ids || !Array.isArray(ids) || ids.length === 0) {\n                return res.status(400).json({ success: false, message: 'jobIds required' });\n            }\n            if (!status) {",
+      "lines": 8,
+      "secondFile": {
+        "end": 417,
+        "endLoc": {
+          "column": 17,
+          "line": 417,
+          "position": 15053
+        },
+        "name": "./backend/routes/repair-management.js",
+        "start": 410,
+        "startLoc": {
+          "column": 46,
+          "line": 410,
+          "position": 14758
+        }
+      },
+      "tokens": 69
+    },
+    {
+      "firstFile": {
+        "end": 368,
+        "endLoc": {
+          "column": 13,
+          "line": 368,
+          "position": 12811
+        },
+        "name": "./backend/routes/repair-management.js",
+        "start": 362,
+        "startLoc": {
+          "column": 44,
+          "line": 362,
+          "position": 12534
+        }
+      },
+      "format": "javascript",
+      "fragment": "            const { jobIds, job_ids, status } = req.body;\n            const ids = jobIds || job_ids;\n            const userId = req.user?.id || 1;\n\n            if (!ids || !Array.isArray(ids) || ids.length === 0) {\n                return res.status(400).json({ success: false, message: 'jobIds required' });\n            }",
+      "lines": 7,
+      "secondFile": {
+        "end": 442,
+        "endLoc": {
+          "column": 13,
+          "line": 442,
+          "position": 16253
+        },
+        "name": "./backend/routes/repair-management.js",
+        "start": 436,
+        "startLoc": {
+          "column": 44,
+          "line": 436,
+          "position": 15976
+        }
+      },
+      "tokens": 66
+    },
+    {
+      "firstFile": {
+        "end": 369,
+        "endLoc": {
+          "column": 17,
+          "line": 369,
+          "position": 12829
+        },
+        "name": "./backend/routes/repair-management.js",
+        "start": 363,
+        "startLoc": {
+          "column": 41,
+          "line": 363,
+          "position": 12589
+        }
+      },
+      "format": "javascript",
+      "fragment": "            const ids = jobIds || job_ids;\n            const userId = req.user?.id || 1;\n\n            if (!ids || !Array.isArray(ids) || ids.length === 0) {\n                return res.status(400).json({ success: false, message: 'jobIds required' });\n            }\n            if (!status) {",
+      "lines": 7,
+      "secondFile": {
+        "end": 396,
+        "endLoc": {
+          "column": 17,
+          "line": 396,
+          "position": 14102
+        },
+        "name": "./backend/routes/repair-management.js",
+        "start": 390,
+        "startLoc": {
+          "column": 51,
+          "line": 390,
+          "position": 13862
+        }
+      },
+      "tokens": 57
+    },
+    {
+      "firstFile": {
+        "end": 114,
+        "endLoc": {
+          "column": 18,
+          "line": 114,
+          "position": 3477
+        },
+        "name": "./backend/routes/rma.js",
+        "start": 105,
+        "startLoc": {
+          "column": 26,
+          "line": 105,
+          "position": 3184
+        }
+      },
+      "format": "javascript",
+      "fragment": "  router.get('/:rmaNumber', requirePermission('rma:read'), asyncHandler(async (req, res, next) => {\n    try {\n      const { rmaNumber } = req.params;\n      const rma = await rmaService.getRMAById(rmaNumber);\n\n      if (!rma) {\n        return res.status(404).json({ error: 'RMA not found' });\n      }\n\n      res.json(rma);",
+      "lines": 10,
+      "secondFile": {
+        "end": 231,
+        "endLoc": {
+          "column": 18,
+          "line": 231,
+          "position": 6666
+        },
+        "name": "./backend/routes/rma.js",
+        "start": 222,
+        "startLoc": {
+          "column": 34,
+          "line": 222,
+          "position": 6373
+        }
+      },
+      "tokens": 69
+    },
+    {
+      "firstFile": {
+        "end": 125,
+        "endLoc": {
+          "column": 9,
+          "line": 125,
+          "position": 3657
+        },
+        "name": "./backend/routes/rma.js",
+        "start": 108,
+        "startLoc": {
+          "column": 55,
+          "line": 108,
+          "position": 3363
+        }
+      },
+      "format": "javascript",
+      "fragment": "      const rma = await rmaService.getRMAById(rmaNumber);\n\n      if (!rma) {\n        return res.status(404).json({ error: 'RMA not found' });\n      }\n\n      res.json(rma);\n    } catch (error) {\n      next(error);\n    }\n  }));\n\n  /**\n   * @route   PUT /api/rma/:rmaNumber\n   * @desc    Update RMA request details\n   * @access  Private\n   */\n  router.put('/:rmaNumber', requirePermission('rma:write'), asyncHandler(async (req, res, next) => {",
+      "lines": 18,
+      "secondFile": {
+        "end": 148,
+        "endLoc": {
+          "column": 9,
+          "line": 148,
+          "position": 4260
+        },
+        "name": "./backend/routes/rma.js",
+        "start": 131,
+        "startLoc": {
+          "column": 78,
+          "line": 131,
+          "position": 3950
+        }
+      },
+      "tokens": 51
+    },
+    {
+      "firstFile": {
+        "end": 380,
+        "endLoc": {
+          "column": 11,
+          "line": 380,
+          "position": 11436
+        },
+        "name": "./backend/routes/rma.js",
+        "start": 370,
+        "startLoc": {
+          "column": 41,
+          "line": 370,
+          "position": 11101
+        }
+      },
+      "format": "javascript",
+      "fragment": "      const { rmaNumbers, status, reason } = req.body;\n      const userId = req.user?.id || 1;\n\n      // Support both rmaIds (legacy) and rmaNumbers\n      const numbers = rmaNumbers || req.body.rmaIds;\n\n      if (!numbers || !Array.isArray(numbers) || numbers.length === 0) {\n        return res.status(400).json({ error: 'rmaNumbers array is required' });\n      }\n\n      if (!status) {",
+      "lines": 11,
+      "secondFile": {
+        "end": 411,
+        "endLoc": {
+          "column": 11,
+          "line": 411,
+          "position": 12360
+        },
+        "name": "./backend/routes/rma.js",
+        "start": 401,
+        "startLoc": {
+          "column": 37,
+          "line": 401,
+          "position": 12025
+        }
+      },
+      "tokens": 69
+    },
+    {
+      "firstFile": {
+        "end": 53,
+        "endLoc": {
+          "column": 26,
+          "line": 53,
+          "position": 2120
+        },
+        "name": "./backend/routes/serialized-inventory.js",
+        "start": 32,
+        "startLoc": {
+          "column": 34,
+          "line": 32,
+          "position": 1411
+        }
+      },
+      "format": "javascript",
+      "fragment": "                type: type || null,\n                status: status || null,\n                warehouseId: warehouse_id || null,\n                search: search || null,\n                limit: parseInt(limit),\n                offset: parseInt(offset)\n            };\n\n            const items = await serializedInventoryService.getAll(filters);\n            const responseData = convertBigIntToNumber(items);\n\n            res.json({\n                success: true,\n                data: responseData,\n                pagination: {\n                    limit: filters.limit,\n                    offset: filters.offset,\n                    count: responseData.length\n                }\n            });\n        } catch (error) {\n            console.error('Error fetching serialized inventory:', error);",
+      "lines": 22,
+      "secondFile": {
+        "end": 92,
+        "endLoc": {
+          "column": 26,
+          "line": 92,
+          "position": 3483
+        },
+        "name": "./backend/routes/serialized-inventory.js",
+        "start": 71,
+        "startLoc": {
+          "column": 30,
+          "line": 71,
+          "position": 2774
+        }
+      },
+      "tokens": 100
+    },
+    {
+      "firstFile": {
+        "end": 53,
+        "endLoc": {
+          "column": 26,
+          "line": 53,
+          "position": 2120
+        },
+        "name": "./backend/routes/serialized-inventory.js",
+        "start": 32,
+        "startLoc": {
+          "column": 34,
+          "line": 32,
+          "position": 1411
+        }
+      },
+      "format": "javascript",
+      "fragment": "                type: type || null,\n                status: status || null,\n                warehouseId: warehouse_id || null,\n                search: search || null,\n                limit: parseInt(limit),\n                offset: parseInt(offset)\n            };\n\n            const items = await serializedInventoryService.getAll(filters);\n            const responseData = convertBigIntToNumber(items);\n\n            res.json({\n                success: true,\n                data: responseData,\n                pagination: {\n                    limit: filters.limit,\n                    offset: filters.offset,\n                    count: responseData.length\n                }\n            });\n        } catch (error) {\n            console.error('Error fetching serialized inventory:', error);",
+      "lines": 22,
+      "secondFile": {
+        "end": 131,
+        "endLoc": {
+          "column": 26,
+          "line": 131,
+          "position": 4817
+        },
+        "name": "./backend/routes/serialized-inventory.js",
+        "start": 110,
+        "startLoc": {
+          "column": 34,
+          "line": 110,
+          "position": 4108
+        }
+      },
+      "tokens": 100
+    },
+    {
+      "firstFile": {
+        "end": 137,
+        "endLoc": {
+          "column": 9,
+          "line": 137,
+          "position": 4408
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 131,
+        "startLoc": {
+          "column": 55,
+          "line": 131,
+          "position": 4173
+        }
+      },
+      "format": "javascript",
+      "fragment": "  router.get('/:id', requirePermission('stocktake:read'), asyncHandler(async (req, res) => {\n    const stocktake_id = parseIdParam(req.params.id, 'stocktake_id');\n    if (!stocktake_id) {\n      return res.status(400).json({ success: false, error: 'Invalid stocktake ID' });\n    }\n\n    const stocktake = await StocktakeService.getStocktakeById(stocktake_id);",
+      "lines": 7,
+      "secondFile": {
+        "end": 147,
+        "endLoc": {
+          "column": 9,
+          "line": 147,
+          "position": 4825
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 141,
+        "startLoc": {
+          "column": 56,
+          "line": 141,
+          "position": 4590
+        }
+      },
+      "tokens": 55
+    },
+    {
+      "firstFile": {
+        "end": 137,
+        "endLoc": {
+          "column": 9,
+          "line": 137,
+          "position": 4408
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 131,
+        "startLoc": {
+          "column": 55,
+          "line": 131,
+          "position": 4173
+        }
+      },
+      "format": "javascript",
+      "fragment": "  router.get('/:id', requirePermission('stocktake:read'), asyncHandler(async (req, res) => {\n    const stocktake_id = parseIdParam(req.params.id, 'stocktake_id');\n    if (!stocktake_id) {\n      return res.status(400).json({ success: false, error: 'Invalid stocktake ID' });\n    }\n\n    const stocktake = await StocktakeService.getStocktakeById(stocktake_id);",
+      "lines": 7,
+      "secondFile": {
+        "end": 172,
+        "endLoc": {
+          "column": 9,
+          "line": 172,
+          "position": 5966
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 166,
+        "startLoc": {
+          "column": 60,
+          "line": 166,
+          "position": 5731
+        }
+      },
+      "tokens": 55
+    },
+    {
+      "firstFile": {
+        "end": 137,
+        "endLoc": {
+          "column": 9,
+          "line": 137,
+          "position": 4408
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 131,
+        "startLoc": {
+          "column": 19,
+          "line": 131,
+          "position": 4137
+        }
+      },
+      "format": "javascript",
+      "fragment": "  router.get('/:id', requirePermission('stocktake:read'), asyncHandler(async (req, res) => {\n    const stocktake_id = parseIdParam(req.params.id, 'stocktake_id');\n    if (!stocktake_id) {\n      return res.status(400).json({ success: false, error: 'Invalid stocktake ID' });\n    }\n\n    const stocktake = await StocktakeService.getStocktakeById(stocktake_id);",
+      "lines": 7,
+      "secondFile": {
+        "end": 311,
+        "endLoc": {
+          "column": 9,
+          "line": 311,
+          "position": 11560
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 305,
+        "startLoc": {
+          "column": 25,
+          "line": 305,
+          "position": 11289
+        }
+      },
+      "tokens": 59
+    },
+    {
+      "firstFile": {
+        "end": 147,
+        "endLoc": {
+          "column": 32,
+          "line": 147,
+          "position": 4848
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 141,
+        "startLoc": {
+          "column": 19,
+          "line": 141,
+          "position": 4553
+        }
+      },
+      "format": "javascript",
+      "fragment": "  router.put('/:id', requirePermission('stocktake:write'), asyncHandler(async (req, res) => {\n    const stocktake_id = parseIdParam(req.params.id, 'stocktake_id');\n    if (!stocktake_id) {\n      return res.status(400).json({ success: false, error: 'Invalid stocktake ID' });\n    }\n\n    const { notes, warehouse_id, count_type } = req.body;",
+      "lines": 7,
+      "secondFile": {
+        "end": 190,
+        "endLoc": {
+          "column": 45,
+          "line": 190,
+          "position": 6667
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 184,
+        "startLoc": {
+          "column": 25,
+          "line": 184,
+          "position": 6359
+        }
+      },
+      "tokens": 64
+    },
+    {
+      "firstFile": {
+        "end": 147,
+        "endLoc": {
+          "column": 51,
+          "line": 147,
+          "position": 4867
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 141,
+        "startLoc": {
+          "column": 19,
+          "line": 141,
+          "position": 4553
+        }
+      },
+      "format": "javascript",
+      "fragment": "  router.put('/:id', requirePermission('stocktake:write'), asyncHandler(async (req, res) => {\n    const stocktake_id = parseIdParam(req.params.id, 'stocktake_id');\n    if (!stocktake_id) {\n      return res.status(400).json({ success: false, error: 'Invalid stocktake ID' });\n    }\n\n    const { notes, warehouse_id, count_type } = req.body;",
+      "lines": 7,
+      "secondFile": {
+        "end": 200,
+        "endLoc": {
+          "column": 71,
+          "line": 200,
+          "position": 7184
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 194,
+        "startLoc": {
+          "column": 28,
+          "line": 194,
+          "position": 6850
+        }
+      },
+      "tokens": 68
+    },
+    {
+      "firstFile": {
+        "end": 147,
+        "endLoc": {
+          "column": 51,
+          "line": 147,
+          "position": 4867
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 141,
+        "startLoc": {
+          "column": 19,
+          "line": 141,
+          "position": 4553
+        }
+      },
+      "format": "javascript",
+      "fragment": "  router.put('/:id', requirePermission('stocktake:write'), asyncHandler(async (req, res) => {\n    const stocktake_id = parseIdParam(req.params.id, 'stocktake_id');\n    if (!stocktake_id) {\n      return res.status(400).json({ success: false, error: 'Invalid stocktake ID' });\n    }\n\n    const { notes, warehouse_id, count_type } = req.body;",
+      "lines": 7,
+      "secondFile": {
+        "end": 210,
+        "endLoc": {
+          "column": 71,
+          "line": 210,
+          "position": 7676
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 204,
+        "startLoc": {
+          "column": 27,
+          "line": 204,
+          "position": 7342
+        }
+      },
+      "tokens": 68
+    },
+    {
+      "firstFile": {
+        "end": 147,
+        "endLoc": {
+          "column": 11,
+          "line": 147,
+          "position": 4827
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 141,
+        "startLoc": {
+          "column": 19,
+          "line": 141,
+          "position": 4553
+        }
+      },
+      "format": "javascript",
+      "fragment": "  router.put('/:id', requirePermission('stocktake:write'), asyncHandler(async (req, res) => {\n    const stocktake_id = parseIdParam(req.params.id, 'stocktake_id');\n    if (!stocktake_id) {\n      return res.status(400).json({ success: false, error: 'Invalid stocktake ID' });\n    }\n\n    const { notes, warehouse_id, count_type } = req.body;",
+      "lines": 7,
+      "secondFile": {
+        "end": 219,
+        "endLoc": {
+          "column": 11,
+          "line": 219,
+          "position": 8103
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 214,
+        "startLoc": {
+          "column": 26,
+          "line": 214,
+          "position": 7830
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 147,
+        "endLoc": {
+          "column": 11,
+          "line": 147,
+          "position": 4827
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 141,
+        "startLoc": {
+          "column": 19,
+          "line": 141,
+          "position": 4553
+        }
+      },
+      "format": "javascript",
+      "fragment": "  router.put('/:id', requirePermission('stocktake:write'), asyncHandler(async (req, res) => {\n    const stocktake_id = parseIdParam(req.params.id, 'stocktake_id');\n    if (!stocktake_id) {\n      return res.status(400).json({ success: false, error: 'Invalid stocktake ID' });\n    }\n\n    const { notes, warehouse_id, count_type } = req.body;",
+      "lines": 7,
+      "secondFile": {
+        "end": 237,
+        "endLoc": {
+          "column": 11,
+          "line": 237,
+          "position": 8839
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 232,
+        "startLoc": {
+          "column": 26,
+          "line": 232,
+          "position": 8566
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 272,
+        "endLoc": {
+          "column": 9,
+          "line": 272,
+          "position": 10027
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 253,
+        "startLoc": {
+          "column": 30,
+          "line": 253,
+          "position": 9324
+        }
+      },
+      "format": "javascript",
+      "fragment": "  router.put('/items/:item_id', requirePermission('stocktake:write'), asyncHandler(async (req, res) => {\n    const item_id = parseIdParam(req.params.item_id, 'item_id');\n    if (!item_id) {\n      return res.status(400).json({ success: false, error: 'Invalid item ID' });\n    }\n    const { counted_quantity, notes } = req.body;\n    if (counted_quantity === undefined || counted_quantity === null) {\n      return res.status(400).json({ error: 'counted_quantity is required' });\n    }\n\n    const item = await StocktakeService.updateItem(item_id, {\n      counted_quantity: parseInt(counted_quantity),\n      counted_by: 1,\n      notes\n    });\n\n    res.json({ success: true, message: 'Item count recorded', data: item });\n  }));\n\n  router.put('/items/:item_id/count', requirePermission('stocktake:write'), asyncHandler(async (req, res) => {",
+      "lines": 20,
+      "secondFile": {
+        "end": 291,
+        "endLoc": {
+          "column": 9,
+          "line": 291,
+          "position": 10757
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 272,
+        "startLoc": {
+          "column": 36,
+          "line": 272,
+          "position": 10054
+        }
+      },
+      "tokens": 149
+    },
+    {
+      "firstFile": {
+        "end": 258,
+        "endLoc": {
+          "column": 9,
+          "line": 258,
+          "position": 9580
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 253,
+        "startLoc": {
+          "column": 67,
+          "line": 253,
+          "position": 9361
+        }
+      },
+      "format": "javascript",
+      "fragment": "  router.put('/items/:item_id', requirePermission('stocktake:write'), asyncHandler(async (req, res) => {\n    const item_id = parseIdParam(req.params.item_id, 'item_id');\n    if (!item_id) {\n      return res.status(400).json({ success: false, error: 'Invalid item ID' });\n    }\n    const { counted_quantity, notes } = req.body;",
+      "lines": 6,
+      "secondFile": {
+        "end": 297,
+        "endLoc": {
+          "column": 9,
+          "line": 297,
+          "position": 11039
+        },
+        "name": "./backend/routes/stocktake.js",
+        "start": 291,
+        "startLoc": {
+          "column": 71,
+          "line": 291,
+          "position": 10819
+        }
+      },
+      "tokens": 55
+    },
+    {
+      "firstFile": {
+        "end": 131,
+        "endLoc": {
+          "column": 7,
+          "line": 131,
+          "position": 4264
+        },
+        "name": "./backend/routes/suppliers.js",
+        "start": 122,
+        "startLoc": {
+          "column": 55,
+          "line": 122,
+          "position": 3994
+        }
+      },
+      "format": "javascript",
+      "fragment": "  router.get('/:id', requirePermission('inventory:read'), asyncHandler(async (req, res) => {\n    try {\n      const supplier = await supplierService.getSupplierById(req.params.id);\n\n      if (!supplier) {\n        return res.status(404).json({\n          success: false,\n          error: 'Supplier not found'\n        });\n      }",
+      "lines": 10,
+      "secondFile": {
+        "end": 264,
+        "endLoc": {
+          "column": 7,
+          "line": 264,
+          "position": 8426
+        },
+        "name": "./backend/routes/suppliers.js",
+        "start": 255,
+        "startLoc": {
+          "column": 72,
+          "line": 255,
+          "position": 8156
+        }
+      },
+      "tokens": 57
+    },
+    {
+      "firstFile": {
+        "end": 174,
+        "endLoc": {
+          "column": 74,
+          "line": 174,
+          "position": 5691
+        },
+        "name": "./backend/routes/suppliers.js",
+        "start": 154,
+        "startLoc": {
+          "column": 17,
+          "line": 154,
+          "position": 4795
+        }
+      },
+      "format": "javascript",
+      "fragment": "  router.post('/', requirePermission('inventory:write'), asyncHandler(async (req, res) => {\n    try {\n      const supplierData = {\n        name: req.body.name,\n        category: req.body.category,\n        contact_person: req.body.contact_person,\n        contact_position: req.body.contact_position,\n        email: req.body.email,\n        phone: req.body.phone,\n        website: req.body.website,\n        address: req.body.address,\n        city: req.body.city,\n        province: req.body.province,\n        ward: req.body.ward,\n        district: req.body.district,\n        notes: req.body.notes,\n        brands: req.body.brands,\n        tax_code: req.body.tax_code,\n        additional_contacts: req.body.additional_contacts,\n        // Pass is_active through only when explicitly set. The service will preserve current value when undefined.\n        is_active: req.body.is_active !== undefined ? req.body.is_active : undefined",
+      "lines": 21,
+      "secondFile": {
+        "end": 225,
+        "endLoc": {
+          "column": 74,
+          "line": 225,
+          "position": 7332
+        },
+        "name": "./backend/routes/suppliers.js",
+        "start": 206,
+        "startLoc": {
+          "column": 19,
+          "line": 206,
+          "position": 6552
+        }
+      },
+      "tokens": 166
+    },
+    {
+      "firstFile": {
+        "end": 223,
+        "endLoc": {
+          "column": 21,
+          "line": 223,
+          "position": 9209
+        },
+        "name": "./backend/services/AsnService.js",
+        "start": 214,
+        "startLoc": {
+          "column": 62,
+          "line": 214,
+          "position": 8926
+        }
+      },
+      "format": "javascript",
+      "fragment": "        sql += ` GROUP BY asn.id ORDER BY asn.created_at DESC`;\n\n        if (filters.limit) {\n            sql += ` LIMIT ?`;\n            params.push(parseInt(filters.limit));\n        }\n\n        const rows = await sequelizeMaster.query(sql, { replacements: params, type: QueryTypes.SELECT });\n        return rows.map(r => ({\n            id: r.id,",
+      "lines": 10,
+      "secondFile": {
+        "end": 114,
+        "endLoc": {
+          "column": 21,
+          "line": 114,
+          "position": 4634
+        },
+        "name": "./backend/services/InvoiceReceivingService.js",
+        "start": 106,
+        "startLoc": {
+          "column": 44,
+          "line": 106,
+          "position": 4352
+        }
+      },
+      "tokens": 63
+    },
+    {
+      "firstFile": {
+        "end": 222,
+        "endLoc": {
+          "column": 24,
+          "line": 222,
+          "position": 9180
+        },
+        "name": "./backend/services/AsnService.js",
+        "start": 214,
+        "startLoc": {
+          "column": 62,
+          "line": 214,
+          "position": 8926
+        }
+      },
+      "format": "javascript",
+      "fragment": "        sql += ` GROUP BY asn.id ORDER BY asn.created_at DESC`;\n\n        if (filters.limit) {\n            sql += ` LIMIT ?`;\n            params.push(parseInt(filters.limit));\n        }\n\n        const rows = await sequelizeMaster.query(sql, { replacements: params, type: QueryTypes.SELECT });\n        return rows.map(r => ({",
+      "lines": 9,
+      "secondFile": {
+        "end": 61,
+        "endLoc": {
+          "column": 24,
+          "line": 61,
+          "position": 1935
+        },
+        "name": "./backend/services/InvoiceService.js",
+        "start": 53,
+        "startLoc": {
+          "column": 79,
+          "line": 53,
+          "position": 1681
+        }
+      },
+      "tokens": 53
+    },
+    {
+      "firstFile": {
+        "end": 222,
+        "endLoc": {
+          "column": 28,
+          "line": 222,
+          "position": 9184
+        },
+        "name": "./backend/services/AsnService.js",
+        "start": 214,
+        "startLoc": {
+          "column": 62,
+          "line": 214,
+          "position": 8926
+        }
+      },
+      "format": "javascript",
+      "fragment": "        sql += ` GROUP BY asn.id ORDER BY asn.created_at DESC`;\n\n        if (filters.limit) {\n            sql += ` LIMIT ?`;\n            params.push(parseInt(filters.limit));\n        }\n\n        const rows = await sequelizeMaster.query(sql, { replacements: params, type: QueryTypes.SELECT });\n        return rows.map(r => ({",
+      "lines": 9,
+      "secondFile": {
+        "end": 55,
+        "endLoc": {
+          "column": 28,
+          "line": 55,
+          "position": 1956
+        },
+        "name": "./backend/services/PurchaseOrderService.js",
+        "start": 47,
+        "startLoc": {
+          "column": 60,
+          "line": 47,
+          "position": 1698
+        }
+      },
+      "tokens": 55
+    },
+    {
+      "firstFile": {
+        "end": 499,
+        "endLoc": {
+          "column": 13,
+          "line": 499,
+          "position": 20546
+        },
+        "name": "./backend/services/AsnService.js",
+        "start": 494,
+        "startLoc": {
+          "column": 12,
+          "line": 494,
+          "position": 20283
+        }
+      },
+      "format": "javascript",
+      "fragment": "            let serials = [];\n            if (item.SerialNumbers?.Serial) {\n                serials = Array.isArray(item.SerialNumbers.Serial)\n                    ? item.SerialNumbers.Serial.map(String)\n                    : [String(item.SerialNumbers.Serial)];\n            }",
+      "lines": 6,
+      "secondFile": {
+        "end": 174,
+        "endLoc": {
+          "column": 13,
+          "line": 174,
+          "position": 6592
+        },
+        "name": "./backend/services/XmlIngestionService.js",
+        "start": 169,
+        "startLoc": {
+          "column": 12,
+          "line": 169,
+          "position": 6329
+        }
+      },
+      "tokens": 51
+    },
+    {
+      "firstFile": {
+        "end": 36,
+        "endLoc": {
+          "column": 9,
+          "line": 36,
+          "position": 1144
+        },
+        "name": "./backend/services/InventoryService.js",
+        "start": 13,
+        "startLoc": {
+          "column": 20,
+          "line": 13,
+          "position": 399
+        }
+      },
+      "format": "javascript",
+      "fragment": "    constructor() { }\n\n    // =========================================================================\n    // Helpers\n    // =========================================================================\n\n    roundCurrency(num) {\n        return Math.round((parseFloat(num) || 0) * 100) / 100;\n    }\n\n    _sanitizeDate(date) {\n        if (!date || date === '' || date === 'NaN' || date === 'undefined') return null;\n        return new Date(date);\n    }\n\n    _generateReceiptId(type) {\n        const date = new Date();\n        const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');\n        const prefix = type === 'IN' ? 'IN' : 'OUT';\n        const uniqueSuffix = generateId().slice(-8);\n        return `${prefix}-${dateStr}-${uniqueSuffix}`;\n    }\n\n    async getReceivingManifest(_invoiceUuid) {",
+      "lines": 24,
+      "secondFile": {
+        "end": 36,
+        "endLoc": {
+          "column": 9,
+          "line": 36,
+          "position": 1126
+        },
+        "name": "./backend/services/InventoryTransactionService.js",
+        "start": 17,
+        "startLoc": {
+          "column": 4,
+          "line": 17,
+          "position": 559
+        }
+      },
+      "tokens": 130
+    },
+    {
+      "firstFile": {
+        "end": 219,
+        "endLoc": {
+          "column": 31,
+          "line": 219,
+          "position": 8032
+        },
+        "name": "./backend/services/InventoryService.js",
+        "start": 207,
+        "startLoc": {
+          "column": 58,
+          "line": 207,
+          "position": 7528
+        }
+      },
+      "format": "javascript",
+      "fragment": "        sql += ` ORDER BY t.transaction_date DESC LIMIT ?`;\n        params.push(parseInt(limit));\n\n        const rows = await sequelizeMaster.query(sql, { replacements: params, type: QueryTypes.SELECT });\n\n        return rows.map(row => ({\n            log_id: row.transaction_id.toString(),\n            product_id: row.product_id,\n            transaction_type: row.transaction_type,\n            quantity_changed: row.quantity_changed,\n            transaction_date: row.transaction_date,\n            warehouse_id: row.warehouse_id,\n            bin_id: row.bin_id,",
+      "lines": 13,
+      "secondFile": {
+        "end": 263,
+        "endLoc": {
+          "column": 31,
+          "line": 263,
+          "position": 9759
+        },
+        "name": "./backend/services/InventoryService.js",
+        "start": 252,
+        "startLoc": {
+          "column": 56,
+          "line": 252,
+          "position": 9256
+        }
+      },
+      "tokens": 89
+    },
+    {
+      "firstFile": {
+        "end": 214,
+        "endLoc": {
+          "column": 39,
+          "line": 214,
+          "position": 7800
+        },
+        "name": "./backend/services/InventoryService.js",
+        "start": 208,
+        "startLoc": {
+          "column": 34,
+          "line": 208,
+          "position": 7564
+        }
+      },
+      "format": "javascript",
+      "fragment": "        params.push(parseInt(limit));\n\n        const rows = await sequelizeMaster.query(sql, { replacements: params, type: QueryTypes.SELECT });\n\n        return rows.map(row => ({\n            log_id: row.transaction_id.toString(),\n            product_id: row.product_id,",
+      "lines": 7,
+      "secondFile": {
+        "end": 324,
+        "endLoc": {
+          "column": 39,
+          "line": 324,
+          "position": 12112
+        },
+        "name": "./backend/services/InventoryService.js",
+        "start": 319,
+        "startLoc": {
+          "column": 52,
+          "line": 319,
+          "position": 11877
+        }
+      },
+      "tokens": 51
+    },
+    {
+      "firstFile": {
+        "end": 473,
+        "endLoc": {
+          "column": 55,
+          "line": 473,
+          "position": 18300
+        },
+        "name": "./backend/services/InventoryService.js",
+        "start": 463,
+        "startLoc": {
+          "column": 4,
+          "line": 463,
+          "position": 17903
+        }
+      },
+      "format": "javascript",
+      "fragment": "    }\n\n    async adjustStock(adjustmentData) {\n        const {\n            product_id, spare_part_id, warehouse_id, bin_id = null,\n            quantity_change, reason, user_id = 1\n        } = adjustmentData;\n\n        return await sequelizeMaster.transaction(async (t) => {\n            const inventoryType = spare_part_id ? 'spare_part' : 'bulk';\n            const itemId = spare_part_id || product_id;",
+      "lines": 11,
+      "secondFile": {
+        "end": 491,
+        "endLoc": {
+          "column": 55,
+          "line": 491,
+          "position": 22093
+        },
+        "name": "./backend/services/InventoryTransactionService.js",
+        "start": 481,
+        "startLoc": {
+          "column": 4,
+          "line": 481,
+          "position": 21696
+        }
+      },
+      "tokens": 58
+    },
+    {
+      "firstFile": {
+        "end": 520,
+        "endLoc": {
+          "column": 5,
+          "line": 520,
+          "position": 20574
+        },
+        "name": "./backend/services/InventoryService.js",
+        "start": 500,
+        "startLoc": {
+          "column": 45,
+          "line": 500,
+          "position": 19672
+        }
+      },
+      "format": "javascript",
+      "fragment": "                 `, { replacements: paramRepl, type: QueryTypes.SELECT, transaction: t });\n\n            const transId = generateId();\n            await sequelizeMaster.query(`\n                    INSERT INTO transactions (\n                        id, transaction_group_id, transaction_type, transaction_date,\n                        warehouse_id, bin_id, user_id, notes,\n                        product_id, spare_part_id, quantity_changed\n                    ) VALUES (?, ?, 'adjustment', NOW(), ?, ?, ?, ?, ?, ?, ?)\n                 `, {\n                replacements: [\n                    transId, `ADJ-${Date.now()}`, warehouse_id, bin_id, user_id, reason,\n                    spare_part_id ? null : product_id, spare_part_id, quantity_change\n                ],\n                type: QueryTypes.INSERT,\n                transaction: t\n            });\n\n            return { success: true, new_quantity: row ? row.quantity : 0 };\n        });\n    }",
+      "lines": 21,
+      "secondFile": {
+        "end": 541,
+        "endLoc": {
+          "column": 5,
+          "line": 541,
+          "position": 24376
+        },
+        "name": "./backend/services/InventoryTransactionService.js",
+        "start": 518,
+        "startLoc": {
+          "column": 39,
+          "line": 518,
+          "position": 23430
+        }
+      },
+      "tokens": 93
+    },
+    {
+      "firstFile": {
+        "end": 96,
+        "endLoc": {
+          "column": 50,
+          "line": 96,
+          "position": 3402
+        },
+        "name": "./backend/services/InventoryTransactionService.js",
+        "start": 88,
+        "startLoc": {
+          "column": 62,
+          "line": 88,
+          "position": 3073
+        }
+      },
+      "format": "javascript",
+      "fragment": "                const receiptId = this._generateReceiptId('IN');\n                const processedItems = [];\n                const transactionItems = [];\n                let totalSubtotal = 0;\n                let totalTaxAmount = 0;\n\n                for (let idx = 0; idx < items.length; idx++) {\n                    const item = items[idx];\n                    const itemResult = await this._processInboundItem(",
+      "lines": 9,
+      "secondFile": {
+        "end": 291,
+        "endLoc": {
+          "column": 50,
+          "line": 291,
+          "position": 12837
+        },
+        "name": "./backend/services/InventoryTransactionService.js",
+        "start": 283,
+        "startLoc": {
+          "column": 63,
+          "line": 283,
+          "position": 12508
+        }
+      },
+      "tokens": 55
+    },
+    {
+      "firstFile": {
+        "end": 111,
+        "endLoc": {
+          "column": 60,
+          "line": 111,
+          "position": 4163
+        },
+        "name": "./backend/services/InventoryTransactionService.js",
+        "start": 103,
+        "startLoc": {
+          "column": 99,
+          "line": 103,
+          "position": 3746
+        }
+      },
+      "format": "javascript",
+      "fragment": "                    const itemSubtotal = this.roundCurrency((item.quantity || 1) * (item.unit_cost || 0));\n                    const itemTax = this.roundCurrency(item.tax_amount || 0);\n                    totalSubtotal += itemSubtotal;\n                    totalTaxAmount += itemTax;\n\n                    transactionItems.push({\n                        product_id: item.product_id || null,\n                        spare_part_id: item.spare_part_id || null,\n                        serial_number: item.serial_number || null,",
+      "lines": 9,
+      "secondFile": {
+        "end": 305,
+        "endLoc": {
+          "column": 60,
+          "line": 305,
+          "position": 13528
+        },
+        "name": "./backend/services/InventoryTransactionService.js",
+        "start": 297,
+        "startLoc": {
+          "column": 100,
+          "line": 297,
+          "position": 13111
+        }
+      },
+      "tokens": 54
+    },
+    {
+      "firstFile": {
+        "end": 426,
+        "endLoc": {
+          "column": 64,
+          "line": 426,
+          "position": 19199
+        },
+        "name": "./backend/services/InventoryTransactionService.js",
+        "start": 406,
+        "startLoc": {
+          "column": 58,
+          "line": 406,
+          "position": 18431
+        }
+      },
+      "format": "javascript",
+      "fragment": "                replacements: [spare_part_id, warehouseId],\n                type: QueryTypes.SELECT,\n                transaction: t\n            });\n\n            let remaining = quantity;\n            for (const row of rows) {\n                if (remaining <= 0) break;\n                const deduct = Math.min(row.quantity, remaining);\n                await sequelizeMaster.query(`\n                    UPDATE inventory SET quantity = quantity - ?, last_movement_at = NOW(), last_movement_type = 'outgoing'\n                    WHERE id = ?\n                `, {\n                    replacements: [deduct, row.id],\n                    type: QueryTypes.UPDATE,\n                    transaction: t\n                });\n                remaining -= deduct;\n            }\n\n            if (remaining > 0) throw new InsufficientStockError(`Insufficient spare parts: needed ${quantity}, short ${remaining}`);",
+      "lines": 21,
+      "secondFile": {
+        "end": 468,
+        "endLoc": {
+          "column": 64,
+          "line": 468,
+          "position": 21118
+        },
+        "name": "./backend/services/InventoryTransactionService.js",
+        "start": 448,
+        "startLoc": {
+          "column": 42,
+          "line": 448,
+          "position": 20350
+        }
+      },
+      "tokens": 93
+    },
+    {
+      "firstFile": {
+        "end": 366,
+        "endLoc": {
+          "column": 17,
+          "line": 366,
+          "position": 16095
+        },
+        "name": "./backend/services/InvoiceReceivingService.js",
+        "start": 345,
+        "startLoc": {
+          "column": 50,
+          "line": 345,
+          "position": 15043
+        }
+      },
+      "format": "javascript",
+      "fragment": "                        replacements: [sparePartId, txItem.warehouse_id, txItem.to_bin_id || null],\n                        type: QueryTypes.SELECT,\n                        transaction: t\n                    });\n\n                    if (invRow) {\n                        const newQty = Math.max(0, Number(invRow.quantity) - Number(txItem.quantity_changed));\n                        if (newQty === 0) {\n                            await sequelizeMaster.query('DELETE FROM inventory WHERE id = ?', {\n                                replacements: [invRow.id],\n                                type: QueryTypes.DELETE,\n                                transaction: t\n                            });\n                        } else {\n                            await sequelizeMaster.query('UPDATE inventory SET quantity = ? WHERE id = ?', {\n                                replacements: [newQty, invRow.id],\n                                type: QueryTypes.UPDATE,\n                                transaction: t\n                            });\n                        }\n                    }\n                } else if (productId) {",
+      "lines": 22,
+      "secondFile": {
+        "end": 395,
+        "endLoc": {
+          "column": 17,
+          "line": 395,
+          "position": 17603
+        },
+        "name": "./backend/services/InvoiceReceivingService.js",
+        "start": 374,
+        "startLoc": {
+          "column": 48,
+          "line": 374,
+          "position": 16551
+        }
+      },
+      "tokens": 124
+    },
+    {
+      "firstFile": {
+        "end": 180,
+        "endLoc": {
+          "column": 10,
+          "line": 180,
+          "position": 6318
+        },
+        "name": "./backend/services/PCBuildService.js",
+        "start": 171,
+        "startLoc": {
+          "column": 31,
+          "line": 171,
+          "position": 5870
+        }
+      },
+      "format": "javascript",
+      "fragment": "        const id = generateId();\n\n        const jsonFields = ['tags', 'compatibility_issues'];\n        const allowed = [\n            'name', 'user_id', 'description', 'build_purpose', 'tags',\n            'cpu_id', 'motherboard_id', 'gpu_id', 'psu_id', 'case_id', 'cooler_id',\n            'total_tdp_watts', 'estimated_price', 'total_price', 'currency',\n            'image_url', 'notes', 'is_public',\n            'status', 'compatibility_status', 'compatibility_issues'\n        ];",
+      "lines": 10,
+      "secondFile": {
+        "end": 227,
+        "endLoc": {
+          "column": 10,
+          "line": 227,
+          "position": 8020
+        },
+        "name": "./backend/services/PCBuildService.js",
+        "start": 218,
+        "startLoc": {
+          "column": 25,
+          "line": 218,
+          "position": 7572
+        }
+      },
+      "tokens": 57
+    },
+    {
+      "firstFile": {
+        "end": 196,
+        "endLoc": {
+          "column": 13,
+          "line": 196,
+          "position": 6763
+        },
+        "name": "./backend/services/PCBuildService.js",
+        "start": 187,
+        "startLoc": {
+          "column": 29,
+          "line": 187,
+          "position": 6494
+        }
+      },
+      "format": "javascript",
+      "fragment": "                keys.push(key);\n                if (jsonFields.includes(key) && typeof data[key] !== 'string') {\n                    values.push(JSON.stringify(data[key]));\n                } else {\n                    values.push(data[key]);\n                }\n            }\n        }\n\n        const placeholders = keys.map(() => '?').join(', ');",
+      "lines": 10,
+      "secondFile": {
+        "end": 240,
+        "endLoc": {
+          "column": 13,
+          "line": 240,
+          "position": 8415
+        },
+        "name": "./backend/services/PCBuildService.js",
+        "start": 231,
+        "startLoc": {
+          "column": 44,
+          "line": 231,
+          "position": 8146
+        }
+      },
+      "tokens": 52
+    },
+    {
+      "firstFile": {
+        "end": 158,
+        "endLoc": {
+          "column": 9,
+          "line": 158,
+          "position": 5372
+        },
+        "name": "./backend/services/PCComponentService.js",
+        "start": 134,
+        "startLoc": {
+          "column": 30,
+          "line": 134,
+          "position": 4449
+        }
+      },
+      "format": "javascript",
+      "fragment": "        const id = generateId();\n\n        const schema = await this.getSchema(type);\n        const validColumns = schema.map(c => c.Field);\n\n        // Separate base product columns from spec columns\n        const baseKeys = [];\n        const baseValues = [];\n        const specKeys = [];\n        const specValues = [];\n\n        for (const key of Object.keys(data)) {\n            if (data[key] !== undefined && validColumns.includes(key) && key !== 'product_id' && key !== 'created_at' && key !== 'updated_at') {\n                if (!isValidIdentifier(key)) {\n                    throw new ValidationError(`Invalid column name: '${key}'`);\n                }\n                if (PRODUCT_COLUMNS.includes(key)) {\n                    baseKeys.push(key);\n                    baseValues.push(data[key]);\n                } else {\n                    specKeys.push(key);\n                    specValues.push(data[key]);\n                }\n            }\n        }",
+      "lines": 25,
+      "secondFile": {
+        "end": 229,
+        "endLoc": {
+          "column": 9,
+          "line": 229,
+          "position": 8215
+        },
+        "name": "./backend/services/PCComponentService.js",
+        "start": 206,
+        "startLoc": {
+          "column": 52,
+          "line": 206,
+          "position": 7351
+        }
+      },
+      "tokens": 162
+    },
+    {
+      "firstFile": {
+        "end": 53,
+        "endLoc": {
+          "column": 14,
+          "line": 53,
+          "position": 1667
+        },
+        "name": "./backend/services/RBACService.js",
+        "start": 40,
+        "startLoc": {
+          "column": 21,
+          "line": 40,
+          "position": 1233
+        }
+      },
+      "format": "javascript",
+      "fragment": "    async getRoleById(roleId) {\n        if (!roleId) throw new ValidationError('Role ID is required');\n\n        const role = await Role.findByPk(roleId, {\n            include: [{\n                model: Permission,\n                attributes: ['permission_id', 'name', 'description', 'resource', 'action'],\n                through: { attributes: [] }\n            }]\n        });\n\n        if (!role) throw new NotFoundError('Role not found');\n\n        return {",
+      "lines": 14,
+      "secondFile": {
+        "end": 202,
+        "endLoc": {
+          "column": 14,
+          "line": 202,
+          "position": 6800
+        },
+        "name": "./backend/services/RBACService.js",
+        "start": 189,
+        "startLoc": {
+          "column": 28,
+          "line": 189,
+          "position": 6366
+        }
+      },
+      "tokens": 75
+    },
+    {
+      "firstFile": {
+        "end": 111,
+        "endLoc": {
+          "column": 20,
+          "line": 111,
+          "position": 3858
+        },
+        "name": "./backend/services/RMAService.js",
+        "start": 100,
+        "startLoc": {
+          "column": 9,
+          "line": 100,
+          "position": 3560
+        }
+      },
+      "format": "javascript",
+      "fragment": "        `;\n        const params = [];\n\n        if (filters.status) {\n            sql += ` AND r.status = ?`;\n            params.push(filters.status);\n        }\n        if (filters.priority) {\n            sql += ` AND r.priority = ?`;\n            params.push(filters.priority);\n        }\n        if (filters.warehouse_id) {",
+      "lines": 12,
+      "secondFile": {
+        "end": 145,
+        "endLoc": {
+          "column": 20,
+          "line": 145,
+          "position": 4917
+        },
+        "name": "./backend/services/RepairService.js",
+        "start": 134,
+        "startLoc": {
+          "column": 9,
+          "line": 134,
+          "position": 4619
+        }
+      },
+      "tokens": 53
+    },
+    {
+      "firstFile": {
+        "end": 501,
+        "endLoc": {
+          "column": 9,
+          "line": 501,
+          "position": 18576
+        },
+        "name": "./backend/services/RMAService.js",
+        "start": 489,
+        "startLoc": {
+          "column": 70,
+          "line": 489,
+          "position": 18294
+        }
+      },
+      "format": "javascript",
+      "fragment": "                await this.updateRMAStatus(num, status, userId, reason);\n                results.push({ rmaNumber: num, success: true });\n            } catch (e) {\n                results.push({ rmaNumber: num, success: false, error: e.message });\n            }\n        }\n        return results;\n    }\n\n    /**\n     * Bulk assign RMAs\n     */\n    async bulkAssign(numbers, assignedTo, userId) {",
+      "lines": 13,
+      "secondFile": {
+        "end": 517,
+        "endLoc": {
+          "column": 9,
+          "line": 517,
+          "position": 19081
+        },
+        "name": "./backend/services/RMAService.js",
+        "start": 505,
+        "startLoc": {
+          "column": 84,
+          "line": 505,
+          "position": 18786
+        }
+      },
+      "tokens": 51
+    },
+    {
+      "firstFile": {
+        "end": 130,
+        "endLoc": {
+          "column": 35,
+          "line": 130,
+          "position": 5470
+        },
+        "name": "./backend/services/RecommendationService.js",
+        "start": 116,
+        "startLoc": {
+          "column": 66,
+          "line": 116,
+          "position": 4848
+        }
+      },
+      "format": "javascript",
+      "fragment": "                const totalOutgoing = productUsageMap[p.product_id] || 0;\n                const avgDailyUsage = parseFloat((totalOutgoing / 30).toFixed(2));\n\n                let estimatedStockoutDays = 999;\n                let estimatedStockoutDate = null;\n                if (avgDailyUsage > 0) {\n                    estimatedStockoutDays = Math.round(currentStock / avgDailyUsage);\n                    const date = new Date();\n                    date.setDate(date.getDate() + estimatedStockoutDays);\n                    estimatedStockoutDate = date.toISOString();\n                }\n\n                // Priority\n                let priority = 'HIGH';\n                if (currentStock <= safetyStock || currentStock <= (reorderPoint * 0.5)) {",
+      "lines": 15,
+      "secondFile": {
+        "end": 179,
+        "endLoc": {
+          "column": 35,
+          "line": 179,
+          "position": 7722
+        },
+        "name": "./backend/services/RecommendationService.js",
+        "start": 165,
+        "startLoc": {
+          "column": 67,
+          "line": 165,
+          "position": 7100
+        }
+      },
+      "tokens": 88
+    },
+    {
+      "firstFile": {
+        "end": 492,
+        "endLoc": {
+          "column": 9,
+          "line": 492,
+          "position": 17658
+        },
+        "name": "./backend/services/RepairService.js",
+        "start": 480,
+        "startLoc": {
+          "column": 50,
+          "line": 480,
+          "position": 17379
+        }
+      },
+      "format": "javascript",
+      "fragment": "                await this.updateJob(id, { status });\n                results.push({ jobId: id, success: true });\n            } catch (e) {\n                results.push({ jobId: id, success: false, error: e.message });\n            }\n        }\n        return results;\n    }\n\n    /**\n     * Bulk assign technician\n     */\n    async bulkAssignTechnician(ids, technicianId, _userId) {",
+      "lines": 13,
+      "secondFile": {
+        "end": 508,
+        "endLoc": {
+          "column": 9,
+          "line": 508,
+          "position": 18167
+        },
+        "name": "./backend/services/RepairService.js",
+        "start": 496,
+        "startLoc": {
+          "column": 102,
+          "line": 496,
+          "position": 17890
+        }
+      },
+      "tokens": 52
+    },
+    {
+      "firstFile": {
+        "end": 492,
+        "endLoc": {
+          "column": 9,
+          "line": 492,
+          "position": 17658
+        },
+        "name": "./backend/services/RepairService.js",
+        "start": 480,
+        "startLoc": {
+          "column": 50,
+          "line": 480,
+          "position": 17379
+        }
+      },
+      "format": "javascript",
+      "fragment": "                await this.updateJob(id, { status });\n                results.push({ jobId: id, success: true });\n            } catch (e) {\n                results.push({ jobId: id, success: false, error: e.message });\n            }\n        }\n        return results;\n    }\n\n    /**\n     * Bulk assign technician\n     */\n    async bulkAssignTechnician(ids, technicianId, _userId) {",
+      "lines": 13,
+      "secondFile": {
+        "end": 524,
+        "endLoc": {
+          "column": 9,
+          "line": 524,
+          "position": 18616
+        },
+        "name": "./backend/services/RepairService.js",
+        "start": 512,
+        "startLoc": {
+          "column": 52,
+          "line": 512,
+          "position": 18343
+        }
+      },
+      "tokens": 52
+    },
+    {
+      "firstFile": {
+        "end": 492,
+        "endLoc": {
+          "column": 9,
+          "line": 492,
+          "position": 17658
+        },
+        "name": "./backend/services/RepairService.js",
+        "start": 480,
+        "startLoc": {
+          "column": 50,
+          "line": 480,
+          "position": 17379
+        }
+      },
+      "format": "javascript",
+      "fragment": "                await this.updateJob(id, { status });\n                results.push({ jobId: id, success: true });\n            } catch (e) {\n                results.push({ jobId: id, success: false, error: e.message });\n            }\n        }\n        return results;\n    }\n\n    /**\n     * Bulk assign technician\n     */\n    async bulkAssignTechnician(ids, technicianId, _userId) {",
+      "lines": 13,
+      "secondFile": {
+        "end": 540,
+        "endLoc": {
+          "column": 9,
+          "line": 540,
+          "position": 19103
+        },
+        "name": "./backend/services/RepairService.js",
+        "start": 528,
+        "startLoc": {
+          "column": 85,
+          "line": 528,
+          "position": 18815
+        }
+      },
+      "tokens": 52
+    },
+    {
+      "firstFile": {
+        "end": 305,
+        "endLoc": {
+          "column": 9,
+          "line": 305,
+          "position": 12562
+        },
+        "name": "./backend/services/WarehouseService.js",
+        "start": 296,
+        "startLoc": {
+          "column": 8,
+          "line": 296,
+          "position": 12282
+        }
+      },
+      "format": "javascript",
+      "fragment": "        if (fields.length === 0) return false;\n\n        params.push(binId);\n        await sequelizeMaster.query(`UPDATE warehouse_bins SET ${fields.join(', ')} WHERE bin_id = ?`, {\n            replacements: params, type: QueryTypes.UPDATE\n        });\n        return true;\n    }\n\n    async deleteBin(binId) {",
+      "lines": 10,
+      "secondFile": {
+        "end": 777,
+        "endLoc": {
+          "column": 9,
+          "line": 777,
+          "position": 33890
+        },
+        "name": "./backend/services/WarehouseService.js",
+        "start": 768,
+        "startLoc": {
+          "column": 8,
+          "line": 768,
+          "position": 33610
+        }
+      },
+      "tokens": 50
+    },
+    {
+      "firstFile": {
+        "end": 703,
+        "endLoc": {
+          "column": 13,
+          "line": 703,
+          "position": 30917
+        },
+        "name": "./backend/services/WarehouseService.js",
+        "start": 690,
+        "startLoc": {
+          "column": 8,
+          "line": 690,
+          "position": 30173
+        }
+      },
+      "format": "javascript",
+      "fragment": "        return await sequelizeMaster.transaction(async (t) => {\n            let [zone] = await sequelizeMaster.query('SELECT zone_id FROM warehouse_zones WHERE warehouse_id = ? LIMIT 1', {\n                replacements: [warehouseId], type: QueryTypes.SELECT, transaction: t\n            });\n            let zoneId;\n            if (zone) {\n                zoneId = zone.zone_id;\n            } else {\n                const zoneUuid = generateId();\n                await sequelizeMaster.query('INSERT INTO warehouse_zones (id, warehouse_id, zone_id, name) VALUES (?, ?, 1, ?)', {\n                    replacements: [zoneUuid, warehouseId, 'Default Zone'], type: QueryTypes.INSERT, transaction: t\n                });\n                zoneId = 1;\n            }",
+      "lines": 14,
+      "secondFile": {
+        "end": 870,
+        "endLoc": {
+          "column": 13,
+          "line": 870,
+          "position": 38979
+        },
+        "name": "./backend/services/WarehouseService.js",
+        "start": 857,
+        "startLoc": {
+          "column": 8,
+          "line": 857,
+          "position": 38235
+        }
+      },
+      "tokens": 102
+    },
+    {
+      "firstFile": {
+        "end": 27,
+        "endLoc": {
+          "column": 42,
+          "line": 27,
+          "position": 1217
+        },
+        "name": "./frontend/pages/Disposal.jsx",
+        "start": 18,
+        "startLoc": {
+          "column": 28,
+          "line": 18,
+          "position": 882
+        }
+      },
+      "format": "jsx",
+      "fragment": "    const [reason, setReason] = useState('');\n    const [notes, setNotes] = useState('');\n    const [submitting, setSubmitting] = useState(false);\n    const [error, setError] = useState(null);\n\n    const handleSubmit = async (e) => {\n        e.preventDefault();\n        setSubmitting(true); setError(null);\n        try {\n            const res = await disposalAPI.moveToDisposal({ item_type: type, item_id: parseInt(id, 10), reason, notes });",
+      "lines": 10,
+      "secondFile": {
+        "end": 82,
+        "endLoc": {
+          "column": 42,
+          "line": 82,
+          "position": 4914
+        },
+        "name": "./frontend/pages/Disposal.jsx",
+        "start": 73,
+        "startLoc": {
+          "column": 28,
+          "line": 73,
+          "position": 4579
+        }
+      },
+      "tokens": 76
+    },
+    {
+      "firstFile": {
+        "end": 62,
+        "endLoc": {
+          "column": 78,
+          "line": 62,
+          "position": 4191
+        },
+        "name": "./frontend/pages/Disposal.jsx",
+        "start": 54,
+        "startLoc": {
+          "column": 239,
+          "line": 54,
+          "position": 3448
+        }
+      },
+      "format": "jsx",
+      "fragment": "                        <input type=\"text\" value={reason} onChange={e => setReason(e.target.value)} required className=\"w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/40\" />\n                    </div>\n                    <div>\n                        <label className=\"block text-xs font-medium mb-1\">Notes</label>\n                        <textarea value={notes} onChange={e => setNotes(e.target.value)} rows=\"2\" className=\"w-full border border-slate-200 rounded-md px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-600/40\"></textarea>\n                    </div>\n                    <div className=\"flex gap-3 justify-end pt-2\">\n                        <button type=\"button\" onClick={onClose} className=\"rounded-md border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50 cursor-pointer\">Cancel</button>\n                        <button type=\"submit\" disabled={submitting} className=\"rounded-md bg-amber-500 text-amber-500-text px-4 py-2 text-sm cursor-pointer disabled:opacity-60\">",
+      "lines": 9,
+      "secondFile": {
+        "end": 117,
+        "endLoc": {
+          "column": 78,
+          "line": 117,
+          "position": 7654
+        },
+        "name": "./frontend/pages/Disposal.jsx",
+        "start": 109,
+        "startLoc": {
+          "column": 32,
+          "line": 109,
+          "position": 6911
+        }
+      },
+      "tokens": 100
+    },
+    {
+      "firstFile": {
+        "end": 9,
+        "endLoc": {
+          "column": 8,
+          "line": 9,
+          "position": 464
+        },
+        "name": "./frontend/pages/Invoices.jsx",
+        "start": 1,
+        "startLoc": {
+          "column": 0,
+          "line": 1,
+          "position": 0
+        }
+      },
+      "format": "jsx",
+      "fragment": "import React, { useState, useEffect, useRef, useCallback } from 'react';\nimport { api } from '../utils/api.js';\nimport { formatDate, formatCurrency } from '../utils/formatters.js';\nimport { useAuth } from '../contexts/AuthContext.jsx';\nimport { Card } from '../components/ui/Card.jsx';\nimport { Badge } from '../components/ui/Badge.jsx';\nimport { Spinner } from '../components/ui/Spinner.jsx';\nimport { PageHeader } from '../components/ui/PageHeader.jsx';\nimport { FileText, Plus, Eye, Send, Save } from 'lucide-react';",
+      "lines": 9,
+      "secondFile": {
+        "end": 9,
+        "endLoc": {
+          "column": 8,
+          "line": 9,
+          "position": 464
+        },
+        "name": "./frontend/pages/PurchaseOrders.jsx",
+        "start": 1,
+        "startLoc": {
+          "column": 0,
+          "line": 1,
+          "position": 0
+        }
+      },
+      "tokens": 68
+    },
+    {
+      "firstFile": {
+        "end": 35,
+        "endLoc": {
+          "column": 9,
+          "line": 35,
+          "position": 1583
+        },
+        "name": "./frontend/pages/Invoices.jsx",
+        "start": 29,
+        "startLoc": {
+          "column": 49,
+          "line": 29,
+          "position": 1284
+        }
+      },
+      "format": "jsx",
+      "fragment": "    const [suppliers, setSuppliers] = useState([]);\n    const [loading, setLoading] = useState(false);\n    const [filters, setFilters] = useState({ search: '', supplier_id: '', status: '', date_from: '', date_to: '' });\n    const [activeModal, setActiveModal] = useState({ type: null, data: null });\n    const searchTimer = useRef(null);\n\n    const fetchInvoices = useCallback(async (f = filters) => {",
+      "lines": 7,
+      "secondFile": {
+        "end": 47,
+        "endLoc": {
+          "column": 9,
+          "line": 47,
+          "position": 2330
+        },
+        "name": "./frontend/pages/PurchaseOrders.jsx",
+        "start": 41,
+        "startLoc": {
+          "column": 41,
+          "line": 41,
+          "position": 2031
+        }
+      },
+      "tokens": 75
+    },
+    {
+      "firstFile": {
+        "end": 64,
+        "endLoc": {
+          "column": 46,
+          "line": 64,
+          "position": 2663
+        },
+        "name": "./frontend/pages/Invoices.jsx",
+        "start": 57,
+        "startLoc": {
+          "column": 21,
+          "line": 57,
+          "position": 2446
+        }
+      },
+      "format": "jsx",
+      "fragment": "        fetchInvoices();\n    };\n\n    const handleFilter = (key, val) => {\n        const next = { ...filters, [key]: val };\n        setFilters(next);\n        clearTimeout(searchTimer.current);\n        searchTimer.current = setTimeout(() => fetchInvoices(next), key === 'search' ? 300 : 0);",
+      "lines": 8,
+      "secondFile": {
+        "end": 82,
+        "endLoc": {
+          "column": 46,
+          "line": 82,
+          "position": 3614
+        },
+        "name": "./frontend/pages/PurchaseOrders.jsx",
+        "start": 75,
+        "startLoc": {
+          "column": 16,
+          "line": 75,
+          "position": 3397
+        }
+      },
+      "tokens": 50
+    },
+    {
+      "firstFile": {
+        "end": 116,
+        "endLoc": {
+          "column": 30,
+          "line": 116,
+          "position": 4909
+        },
+        "name": "./frontend/pages/Invoices.jsx",
+        "start": 100,
+        "startLoc": {
+          "column": 20,
+          "line": 100,
+          "position": 4123
+        }
+      },
+      "format": "jsx",
+      "fragment": "                    className={`${IC} flex-1 min-w-[200px]`} \n                />\n                <select \n                    value={filters.supplier_id} \n                    onChange={e => handleFilter('supplier_id', e.target.value)} \n                    className={`${IC} min-w-[180px] w-auto`}\n                >\n                    <option value=\"\">All Suppliers</option>\n                    {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}\n                </select>\n                <select \n                    value={filters.status} \n                    onChange={e => handleFilter('status', e.target.value)} \n                    className={`${IC} min-w-[160px] w-auto`}\n                >\n                    <option value=\"\">All Statuses</option>\n                    {['draft','pending','approved','paid','cancelled'].map(s => (",
+      "lines": 17,
+      "secondFile": {
+        "end": 142,
+        "endLoc": {
+          "column": 30,
+          "line": 142,
+          "position": 6821
+        },
+        "name": "./frontend/pages/PurchaseOrders.jsx",
+        "start": 126,
+        "startLoc": {
+          "column": 20,
+          "line": 126,
+          "position": 6035
+        }
+      },
+      "tokens": 147
+    },
+    {
+      "firstFile": {
+        "end": 135,
+        "endLoc": {
+          "column": 75,
+          "line": 135,
+          "position": 5708
+        },
+        "name": "./frontend/pages/Invoices.jsx",
+        "start": 117,
+        "startLoc": {
+          "column": 52,
+          "line": 117,
+          "position": 5013
+        }
+      },
+      "format": "jsx",
+      "fragment": "                        <option key={s} value={s}>{s.toUpperCase()}</option>\n                    ))}\n                </select>\n                <input \n                    type=\"date\" \n                    value={filters.date_from} \n                    onChange={e => handleFilter('date_from', e.target.value)} \n                    className={`${IC} w-auto`} \n                />\n                <input \n                    type=\"date\" \n                    value={filters.date_to} \n                    onChange={e => handleFilter('date_to', e.target.value)} \n                    className={`${IC} w-auto`} \n                />\n            </div>\n\n            <Card noPadding>\n                {loading ? <Spinner fullPage={false} className=\"py-16\" /> : invoices.length === 0 ? (",
+      "lines": 19,
+      "secondFile": {
+        "end": 161,
+        "endLoc": {
+          "column": 75,
+          "line": 161,
+          "position": 7651
+        },
+        "name": "./frontend/pages/PurchaseOrders.jsx",
+        "start": 143,
+        "startLoc": {
+          "column": 70,
+          "line": 143,
+          "position": 6956
+        }
+      },
+      "tokens": 120
+    },
+    {
+      "firstFile": {
+        "end": 135,
+        "endLoc": {
+          "column": 75,
+          "line": 135,
+          "position": 5708
+        },
+        "name": "./frontend/pages/Invoices.jsx",
+        "start": 119,
+        "startLoc": {
+          "column": 24,
+          "line": 119,
+          "position": 5086
+        }
+      },
+      "format": "jsx",
+      "fragment": "                </select>\n                <input \n                    type=\"date\" \n                    value={filters.date_from} \n                    onChange={e => handleFilter('date_from', e.target.value)} \n                    className={`${IC} w-auto`} \n                />\n                <input \n                    type=\"date\" \n                    value={filters.date_to} \n                    onChange={e => handleFilter('date_to', e.target.value)} \n                    className={`${IC} w-auto`} \n                />\n            </div>\n\n            <Card noPadding>\n                {loading ? <Spinner fullPage={false} className=\"py-16\" /> : invoices.length === 0 ? (",
+      "lines": 17,
+      "secondFile": {
+        "end": 88,
+        "endLoc": {
+          "column": 75,
+          "line": 88,
+          "position": 3604
+        },
+        "name": "./frontend/pages/Receipts.jsx",
+        "start": 72,
+        "startLoc": {
+          "column": 17,
+          "line": 72,
+          "position": 2982
+        }
+      },
+      "tokens": 104
+    },
+    {
+      "firstFile": {
+        "end": 154,
+        "endLoc": {
+          "column": 33,
+          "line": 154,
+          "position": 6983
+        },
+        "name": "./frontend/pages/Invoices.jsx",
+        "start": 146,
+        "startLoc": {
+          "column": 119,
+          "line": 146,
+          "position": 6519
+        }
+      },
+      "format": "jsx",
+      "fragment": "                                        <th key={h} className={`px-5 py-3 font-semibold text-slate-600 ${h === 'Total' ? 'text-right' : ''}`}>\n                                            {h}\n                                        </th>\n                                    ))}\n                                    <th className=\"px-5 py-3 font-semibold text-slate-600 text-right\">Actions</th>\n                                </tr>\n                            </thead>\n                            <tbody className=\"divide-y divide-slate-100 bg-white\">\n                                {invoices.map((inv, i) => (",
+      "lines": 9,
+      "secondFile": {
+        "end": 107,
+        "endLoc": {
+          "column": 33,
+          "line": 107,
+          "position": 4913
+        },
+        "name": "./frontend/pages/Receipts.jsx",
+        "start": 99,
+        "startLoc": {
+          "column": 138,
+          "line": 99,
+          "position": 4449
+        }
+      },
+      "tokens": 50
+    },
+    {
+      "firstFile": {
+        "end": 205,
+        "endLoc": {
+          "column": 123,
+          "line": 205,
+          "position": 10695
+        },
+        "name": "./frontend/pages/Invoices.jsx",
+        "start": 191,
+        "startLoc": {
+          "column": 62,
+          "line": 191,
+          "position": 10083
+        }
+      },
+      "format": "jsx",
+      "fragment": "                                                        <Send className=\"w-4 h-4\" />\n                                                    </button>\n                                                )}\n                                            </div>\n                                        </td>\n                                    </tr>\n                                ))}\n                            </tbody>\n                        </table>\n                    </div>\n                )}\n            </Card>\n\n            {/* Create Invoice Modal */}\n            <Modal isOpen={activeModal.type === 'create'} onClose={() => setActiveModal({ type: null, data: null })} title=\"Create Invoice\" wide>",
+      "lines": 15,
+      "secondFile": {
+        "end": 232,
+        "endLoc": {
+          "column": 123,
+          "line": 232,
+          "position": 12775
+        },
+        "name": "./frontend/pages/PurchaseOrders.jsx",
+        "start": 218,
+        "startLoc": {
+          "column": 69,
+          "line": 218,
+          "position": 12168
+        }
+      },
+      "tokens": 88
+    },
+    {
+      "firstFile": {
+        "end": 204,
+        "endLoc": {
+          "column": 13,
+          "line": 204,
+          "position": 10544
+        },
+        "name": "./frontend/pages/Invoices.jsx",
+        "start": 191,
+        "startLoc": {
+          "column": 62,
+          "line": 191,
+          "position": 10083
+        }
+      },
+      "format": "jsx",
+      "fragment": "                                                        <Send className=\"w-4 h-4\" />\n                                                    </button>\n                                                )}\n                                            </div>\n                                        </td>\n                                    </tr>\n                                ))}\n                            </tbody>\n                        </table>\n                    </div>\n                )}\n            </Card>\n\n            {/* Create Invoice Modal */}",
+      "lines": 14,
+      "secondFile": {
+        "end": 311,
+        "endLoc": {
+          "column": 13,
+          "line": 311,
+          "position": 17353
+        },
+        "name": "./frontend/pages/Suppliers.jsx",
+        "start": 298,
+        "startLoc": {
+          "column": 64,
+          "line": 298,
+          "position": 16892
+        }
+      },
+      "tokens": 54
+    },
+    {
+      "firstFile": {
+        "end": 216,
+        "endLoc": {
+          "column": 93,
+          "line": 216,
+          "position": 11394
+        },
+        "name": "./frontend/pages/Invoices.jsx",
+        "start": 205,
+        "startLoc": {
+          "column": 140,
+          "line": 205,
+          "position": 10712
+        }
+      },
+      "format": "jsx",
+      "fragment": "            <Modal isOpen={activeModal.type === 'create'} onClose={() => setActiveModal({ type: null, data: null })} title=\"Create Invoice\" wide>\n                <div className=\"p-6 space-y-6\">\n                    <div className=\"grid grid-cols-2 gap-4\">\n                        <div>\n                            <label className=\"block text-sm font-medium text-slate-700 mb-1\">Supplier</label>\n                            <select className={IC}>\n                                <option value=\"\">Select a supplier...</option>\n                                {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}\n                            </select>\n                        </div>\n                        <div>\n                            <label className=\"block text-sm font-medium text-slate-700 mb-1\">Due Date</label>",
+      "lines": 12,
+      "secondFile": {
+        "end": 243,
+        "endLoc": {
+          "column": 93,
+          "line": 243,
+          "position": 13481
+        },
+        "name": "./frontend/pages/PurchaseOrders.jsx",
+        "start": 232,
+        "startLoc": {
+          "column": 147,
+          "line": 232,
+          "position": 12799
+        }
+      },
+      "tokens": 110
+    },
+    {
+      "firstFile": {
+        "end": 228,
+        "endLoc": {
+          "column": 29,
+          "line": 228,
+          "position": 12208
+        },
+        "name": "./frontend/pages/Invoices.jsx",
+        "start": 218,
+        "startLoc": {
+          "column": 29,
+          "line": 218,
+          "position": 11505
+        }
+      },
+      "format": "jsx",
+      "fragment": "                        </div>\n                    </div>\n                    <div className=\"border border-slate-200 rounded-lg overflow-hidden\">\n                        <div className=\"bg-slate-50 px-4 py-2 border-b border-slate-200 font-medium text-sm text-slate-700 flex justify-between items-center\">\n                            <span>Line Items</span>\n                            <button className=\"text-indigo-600 hover:text-indigo-700 text-sm font-semibold flex items-center gap-1\">\n                                <Plus className=\"w-4 h-4\" /> Add Item\n                            </button>\n                        </div>\n                        <div className=\"p-8 text-center text-slate-400\">\n                            <FileText className=\"w-8 h-8 mx-auto mb-2 opacity-50\" />",
+      "lines": 11,
+      "secondFile": {
+        "end": 259,
+        "endLoc": {
+          "column": 29,
+          "line": 259,
+          "position": 14594
+        },
+        "name": "./frontend/pages/PurchaseOrders.jsx",
+        "start": 249,
+        "startLoc": {
+          "column": 127,
+          "line": 249,
+          "position": 13891
+        }
+      },
+      "tokens": 63
+    },
+    {
+      "firstFile": {
+        "end": 245,
+        "endLoc": {
+          "column": 42,
+          "line": 245,
+          "position": 13323
+        },
+        "name": "./frontend/pages/Invoices.jsx",
+        "start": 239,
+        "startLoc": {
+          "column": 82,
+          "line": 239,
+          "position": 12960
+        }
+      },
+      "format": "jsx",
+      "fragment": "                            <input type=\"number\" className={IC} defaultValue=\"0\" />\n                        </div>\n                    </div>\n                </div>\n                <ModalFooter>\n                    <button onClick={() => setActiveModal({ type: null, data: null })} className=\"px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors\">Cancel</button>\n                    <button onClick={() => handleCreateInvoice({})} className=\"px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors flex items-center gap-2\">",
+      "lines": 7,
+      "secondFile": {
+        "end": 266,
+        "endLoc": {
+          "column": 42,
+          "line": 266,
+          "position": 15101
+        },
+        "name": "./frontend/pages/PurchaseOrders.jsx",
+        "start": 260,
+        "startLoc": {
+          "column": 84,
+          "line": 260,
+          "position": 14738
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 245,
+        "endLoc": {
+          "column": 42,
+          "line": 245,
+          "position": 13323
+        },
+        "name": "./frontend/pages/Invoices.jsx",
+        "start": 240,
+        "startLoc": {
+          "column": 29,
+          "line": 240,
+          "position": 12991
+        }
+      },
+      "format": "jsx",
+      "fragment": "                        </div>\n                    </div>\n                </div>\n                <ModalFooter>\n                    <button onClick={() => setActiveModal({ type: null, data: null })} className=\"px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors\">Cancel</button>\n                    <button onClick={() => handleCreateInvoice({})} className=\"px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors flex items-center gap-2\">",
+      "lines": 6,
+      "secondFile": {
+        "end": 368,
+        "endLoc": {
+          "column": 42,
+          "line": 368,
+          "position": 22445
+        },
+        "name": "./frontend/pages/PurchaseOrders.jsx",
+        "start": 363,
+        "startLoc": {
+          "column": 135,
+          "line": 363,
+          "position": 22113
+        }
+      },
+      "tokens": 55
+    },
+    {
+      "firstFile": {
+        "end": 252,
+        "endLoc": {
+          "column": 122,
+          "line": 252,
+          "position": 13799
+        },
+        "name": "./frontend/pages/Invoices.jsx",
+        "start": 247,
+        "startLoc": {
+          "column": 20,
+          "line": 247,
+          "position": 13576
+        }
+      },
+      "format": "jsx",
+      "fragment": "                    </button>\n                </ModalFooter>\n            </Modal>\n\n            {/* View Detail Modal */}\n            <Modal isOpen={activeModal.type === 'view'} onClose={() => setActiveModal({ type: null, data: null })} title={`Invoice Details: ${activeModal.data?.invoice_number}`} wide>",
+      "lines": 6,
+      "secondFile": {
+        "end": 273,
+        "endLoc": {
+          "column": 122,
+          "line": 273,
+          "position": 15579
+        },
+        "name": "./frontend/pages/PurchaseOrders.jsx",
+        "start": 268,
+        "startLoc": {
+          "column": 20,
+          "line": 268,
+          "position": 15356
+        }
+      },
+      "tokens": 51
+    },
+    {
+      "firstFile": {
+        "end": 267,
+        "endLoc": {
+          "column": 71,
+          "line": 267,
+          "position": 15045
+        },
+        "name": "./frontend/pages/Invoices.jsx",
+        "start": 259,
+        "startLoc": {
+          "column": 56,
+          "line": 259,
+          "position": 14360
+        }
+      },
+      "format": "jsx",
+      "fragment": "                        <Badge variant={getStatusVariant(activeModal.data?.status)} className=\"text-sm px-3 py-1\">\n                            {(activeModal.data?.status || 'UNKNOWN').replace('_', ' ').toUpperCase()}\n                        </Badge>\n                    </div>\n                    <div className=\"grid grid-cols-2 gap-8 mb-8\">\n                        <div className=\"bg-slate-50 p-4 rounded-xl border border-slate-100\">\n                            <h4 className=\"text-xs font-bold text-slate-400 uppercase tracking-wider mb-2\">Supplier Info</h4>\n                            <p className=\"font-medium text-slate-900\">{activeModal.data?.supplier_name}</p>\n                            <p className=\"text-sm text-slate-600 mt-1\">Payment Method: {activeModal.data?.payment_method || 'TM/CK'}</p>",
+      "lines": 9,
+      "secondFile": {
+        "end": 288,
+        "endLoc": {
+          "column": 71,
+          "line": 288,
+          "position": 16783
+        },
+        "name": "./frontend/pages/PurchaseOrders.jsx",
+        "start": 280,
+        "startLoc": {
+          "column": 58,
+          "line": 280,
+          "position": 16098
+        }
+      },
+      "tokens": 96
+    },
+    {
+      "firstFile": {
+        "end": 311,
+        "endLoc": {
+          "column": 20,
+          "line": 311,
+          "position": 18379
+        },
+        "name": "./frontend/pages/Invoices.jsx",
+        "start": 281,
+        "startLoc": {
+          "column": 130,
+          "line": 281,
+          "position": 16404
+        }
+      },
+      "format": "jsx",
+      "fragment": "                                <span className=\"font-bold text-indigo-700\">{formatCurrency(activeModal.data?.total_amount_cache)}</span>\n                            </div>\n                        </div>\n                    </div>\n                    <div className=\"border border-slate-200 rounded-lg overflow-hidden\">\n                        <table className=\"w-full text-sm text-left\">\n                            <thead className=\"bg-slate-50 border-b border-slate-200\">\n                                <tr>\n                                    <th className=\"px-4 py-3 font-semibold text-slate-600\">Item</th>\n                                    <th className=\"px-4 py-3 font-semibold text-slate-600 text-right\">Qty</th>\n                                    <th className=\"px-4 py-3 font-semibold text-slate-600 text-right\">Unit Price</th>\n                                    <th className=\"px-4 py-3 font-semibold text-slate-600 text-right\">Total</th>\n                                </tr>\n                            </thead>\n                            <tbody className=\"divide-y divide-slate-100\">\n                                <tr>\n                                    <td colSpan=\"4\" className=\"px-4 py-8 text-center text-slate-500 bg-white\">\n                                        Line items will be displayed here.\n                                    </td>\n                                </tr>\n                            </tbody>\n                        </table>\n                    </div>\n                </div>\n                <ModalFooter>\n                    <button onClick={() => setActiveModal({ type: null, data: null })} className=\"px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors\">Close</button>\n                    <button className=\"px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors flex items-center gap-2\">\n                        <FileText className=\"w-4 h-4\" /> Download PDF\n                    </button>\n                </ModalFooter>\n            </Modal>",
+      "lines": 31,
+      "secondFile": {
+        "end": 328,
+        "endLoc": {
+          "column": 20,
+          "line": 328,
+          "position": 19674
+        },
+        "name": "./frontend/pages/PurchaseOrders.jsx",
+        "start": 298,
+        "startLoc": {
+          "column": 78,
+          "line": 298,
+          "position": 17699
+        }
+      },
+      "tokens": 218
+    },
+    {
+      "firstFile": {
+        "end": 308,
+        "endLoc": {
+          "column": 56,
+          "line": 308,
+          "position": 18284
+        },
+        "name": "./frontend/pages/Invoices.jsx",
+        "start": 303,
+        "startLoc": {
+          "column": 26,
+          "line": 303,
+          "position": 17777
+        }
+      },
+      "format": "jsx",
+      "fragment": "                    </div>\n                </div>\n                <ModalFooter>\n                    <button onClick={() => setActiveModal({ type: null, data: null })} className=\"px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors\">Close</button>\n                    <button className=\"px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors flex items-center gap-2\">\n                        <FileText className=\"w-4 h-4\" /> Download PDF",
+      "lines": 6,
+      "secondFile": {
+        "end": 213,
+        "endLoc": {
+          "column": 56,
+          "line": 213,
+          "position": 13029
+        },
+        "name": "./frontend/pages/Receipts.jsx",
+        "start": 208,
+        "startLoc": {
+          "column": 22,
+          "line": 208,
+          "position": 12522
+        }
+      },
+      "tokens": 55
+    },
+    {
+      "firstFile": {
+        "end": 9,
+        "endLoc": {
+          "column": 8,
+          "line": 9,
+          "position": 438
+        },
+        "name": "./frontend/pages/PCBuildForm.jsx",
+        "start": 1,
+        "startLoc": {
+          "column": 0,
+          "line": 1,
+          "position": 0
+        }
+      },
+      "format": "jsx",
+      "fragment": "import React, { useState, useEffect } from 'react';\nimport { useParams, useNavigate } from 'react-router-dom';\nimport { api } from '../utils/api.js';\nimport { useAuth } from '../contexts/AuthContext.jsx';\nimport { useToast } from '../contexts/ToastContext.jsx';\nimport { Card } from '../components/ui/Card.jsx';\nimport { Spinner } from '../components/ui/Spinner.jsx';\nimport { PageHeader } from '../components/ui/PageHeader.jsx';\nimport { Monitor, ArrowLeft, Save, Loader2, AlertTriangle } from 'lucide-react';",
+      "lines": 9,
+      "secondFile": {
+        "end": 9,
+        "endLoc": {
+          "column": 8,
+          "line": 9,
+          "position": 438
+        },
+        "name": "./frontend/pages/PCComponentForm.jsx",
+        "start": 1,
+        "startLoc": {
+          "column": 0,
+          "line": 1,
+          "position": 0
+        }
+      },
+      "tokens": 64
+    },
+    {
+      "firstFile": {
+        "end": 78,
+        "endLoc": {
+          "column": 38,
+          "line": 78,
+          "position": 2886
+        },
+        "name": "./frontend/pages/PCBuildForm.jsx",
+        "start": 67,
+        "startLoc": {
+          "column": 47,
+          "line": 67,
+          "position": 2559
+        }
+      },
+      "format": "jsx",
+      "fragment": "    const [loading, setLoading] = useState(true);\n    const [submitting, setSubmitting] = useState(false);\n    const [error, setError] = useState(null);\n\n    useEffect(() => {\n        if (!canWrite) {\n            setError(\"You do not have permission to access this page.\");\n            setLoading(false);\n            return;\n        }\n\n        const loadData = async () => {",
+      "lines": 12,
+      "secondFile": {
+        "end": 392,
+        "endLoc": {
+          "column": 38,
+          "line": 392,
+          "position": 27181
+        },
+        "name": "./frontend/pages/PCComponentForm.jsx",
+        "start": 381,
+        "startLoc": {
+          "column": 49,
+          "line": 381,
+          "position": 26854
+        }
+      },
+      "tokens": 59
+    },
+    {
+      "firstFile": {
+        "end": 131,
+        "endLoc": {
+          "column": 45,
+          "line": 131,
+          "position": 4902
+        },
+        "name": "./frontend/pages/PCBuildForm.jsx",
+        "start": 116,
+        "startLoc": {
+          "column": 38,
+          "line": 116,
+          "position": 4508
+        }
+      },
+      "format": "jsx",
+      "fragment": "    }, [isEdit, id, canWrite, user?.id]);\n\n    const handleChange = (e) => {\n        const { name, value, type, checked } = e.target;\n        setFormData(prev => ({\n            ...prev,\n            [name]: type === 'checkbox' ? checked : value\n        }));\n    };\n\n    const handleSubmit = async (e) => {\n        e.preventDefault();\n        setSubmitting(true);\n        setError(null);\n\n        const dataToSubmit = { ...formData };",
+      "lines": 16,
+      "secondFile": {
+        "end": 426,
+        "endLoc": {
+          "column": 45,
+          "line": 426,
+          "position": 28225
+        },
+        "name": "./frontend/pages/PCComponentForm.jsx",
+        "start": 411,
+        "startLoc": {
+          "column": 34,
+          "line": 411,
+          "position": 27831
+        }
+      },
+      "tokens": 85
+    },
+    {
+      "firstFile": {
+        "end": 190,
+        "endLoc": {
+          "column": 29,
+          "line": 190,
+          "position": 7455
+        },
+        "name": "./frontend/pages/PCBuildForm.jsx",
+        "start": 164,
+        "startLoc": {
+          "column": 60,
+          "line": 164,
+          "position": 6111
+        }
+      },
+      "format": "jsx",
+      "fragment": "                        onClick={() => navigate('/pc-builds')} \n                        className=\"flex items-center gap-2 rounded-lg bg-white border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm\"\n                    >\n                        <ArrowLeft className=\"w-4 h-4\" /> Back\n                    </button>\n                }\n            />\n\n            {loading ? (\n                <Card noPadding><Spinner fullPage={false} className=\"py-20\" /></Card>\n            ) : !canWrite ? (\n                <div className=\"rounded-xl border border-rose-200 bg-rose-50 px-6 py-4 text-rose-800 font-medium shadow-sm flex items-center gap-3\">\n                    <AlertTriangle className=\"w-5 h-5\" />\n                    You do not have permission to access this page.\n                </div>\n            ) : (\n                <form onSubmit={handleSubmit} className=\"space-y-6\">\n                    {error && (\n                        <div className=\"rounded-xl border border-rose-200 bg-rose-50 px-6 py-4 text-rose-800 font-medium shadow-sm flex items-center gap-3\">\n                            <AlertTriangle className=\"w-5 h-5\" />\n                            {error}\n                        </div>\n                    )}\n                    \n                    <Card>\n                        <div className=\"p-6\">\n                            <h6 className=\"text-indigo-700 font-bold text-sm tracking-widest uppercase mb-4 pb-2 border-b border-indigo-100\">Basic Info</h6>",
+      "lines": 27,
+      "secondFile": {
+        "end": 569,
+        "endLoc": {
+          "column": 29,
+          "line": 569,
+          "position": 34597
+        },
+        "name": "./frontend/pages/PCComponentForm.jsx",
+        "start": 543,
+        "startLoc": {
+          "column": 72,
+          "line": 543,
+          "position": 33253
+        }
+      },
+      "tokens": 129
+    },
+    {
+      "firstFile": {
+        "end": 310,
+        "endLoc": {
+          "column": 62,
+          "line": 310,
+          "position": 17302
+        },
+        "name": "./frontend/pages/PCBuildForm.jsx",
+        "start": 297,
+        "startLoc": {
+          "column": 64,
+          "line": 297,
+          "position": 16436
+        }
+      },
+      "format": "jsx",
+      "fragment": "                            onClick={() => navigate('/pc-builds')} \n                            className=\"rounded-lg bg-white border border-slate-200 px-6 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm\" \n                        >\n                            Cancel\n                        </button>\n                        <button \n                            type=\"submit\" \n                            disabled={submitting} \n                            className=\"flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 shadow-sm transition-colors disabled:opacity-50\"\n                        >\n                            {submitting ? (\n                                <><Loader2 className=\"w-4 h-4 animate-spin\" /> Saving...</>\n                            ) : (\n                                <><Save className=\"w-4 h-4\" /> Save Build</>",
+      "lines": 14,
+      "secondFile": {
+        "end": 591,
+        "endLoc": {
+          "column": 62,
+          "line": 591,
+          "position": 35949
+        },
+        "name": "./frontend/pages/PCComponentForm.jsx",
+        "start": 578,
+        "startLoc": {
+          "column": 76,
+          "line": 578,
+          "position": 35084
+        }
+      },
+      "tokens": 56
+    },
+    {
+      "firstFile": {
+        "end": 131,
+        "endLoc": {
+          "column": 19,
+          "line": 131,
+          "position": 7189
+        },
+        "name": "./frontend/pages/PCBuilds.jsx",
+        "start": 118,
+        "startLoc": {
+          "column": 56,
+          "line": 118,
+          "position": 6614
+        }
+      },
+      "format": "jsx",
+      "fragment": "                                                        >\n                                                            <Trash2 className=\"w-4 h-4\" />\n                                                        </button>\n                                                    )}\n                                                </div>\n                                            </td>\n                                        )}\n                                    </tr>\n                                ))}\n                            </tbody>\n                        </table>\n                    </div>\n                )}\n            </Card>",
+      "lines": 14,
+      "secondFile": {
+        "end": 532,
+        "endLoc": {
+          "column": 19,
+          "line": 532,
+          "position": 32188
+        },
+        "name": "./frontend/pages/SpecsPhones.jsx",
+        "start": 519,
+        "startLoc": {
+          "column": 56,
+          "line": 519,
+          "position": 31613
+        }
+      },
+      "tokens": 58
+    },
+    {
+      "firstFile": {
+        "end": 175,
+        "endLoc": {
+          "column": 19,
+          "line": 175,
+          "position": 9768
+        },
+        "name": "./frontend/pages/PCComponents.jsx",
+        "start": 161,
+        "startLoc": {
+          "column": 60,
+          "line": 161,
+          "position": 9126
+        }
+      },
+      "format": "jsx",
+      "fragment": "                                                            >\n                                                                <Trash2 className=\"w-4 h-4\" />\n                                                            </button>\n                                                        )}\n                                                    </div>\n                                                </td>\n                                            )}\n                                        </tr>\n                                    );\n                                })}\n                            </tbody>\n                        </table>\n                    </div>\n                )}\n            </Card>",
+      "lines": 15,
+      "secondFile": {
+        "end": 276,
+        "endLoc": {
+          "column": 19,
+          "line": 276,
+          "position": 13824
+        },
+        "name": "./frontend/pages/Users.jsx",
+        "start": 262,
+        "startLoc": {
+          "column": 60,
+          "line": 262,
+          "position": 13182
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 14,
+        "endLoc": {
+          "column": 8,
+          "line": 14,
+          "position": 651
+        },
+        "name": "./frontend/pages/PCInventory.jsx",
+        "start": 3,
+        "startLoc": {
+          "column": 53,
+          "line": 3,
+          "position": 144
+        }
+      },
+      "format": "jsx",
+      "fragment": "import { useAuth } from '../contexts/AuthContext.jsx';\n\nconst Spinner = () => (\n    <div className=\"text-center py-10\">\n        <svg className=\"animate-spin h-8 w-8 text-indigo-600 mx-auto\" fill=\"none\" viewBox=\"0 0 24 24\">\n            <circle className=\"opacity-25\" cx=\"12\" cy=\"12\" r=\"10\" stroke=\"currentColor\" strokeWidth=\"4\"></circle>\n            <path className=\"opacity-75\" fill=\"currentColor\" d=\"M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z\"></path>\n        </svg>\n    </div>\n);\n\nfunction AdjustModal({ item, onClose, onSaved }) {",
+      "lines": 12,
+      "secondFile": {
+        "end": 33,
+        "endLoc": {
+          "column": 8,
+          "line": 33,
+          "position": 2459
+        },
+        "name": "./frontend/pages/Stocktake.jsx",
+        "start": 20,
+        "startLoc": {
+          "column": 1,
+          "line": 20,
+          "position": 1732
+        }
+      },
+      "tokens": 83
+    },
+    {
+      "firstFile": {
+        "end": 44,
+        "endLoc": {
+          "column": 38,
+          "line": 44,
+          "position": 1851
+        },
+        "name": "./frontend/pages/Service.jsx",
+        "start": 31,
+        "startLoc": {
+          "column": 21,
+          "line": 31,
+          "position": 1406
+        }
+      },
+      "format": "jsx",
+      "fragment": "function RepairsPanel() {\n    const [data, setData] = useState([]);\n    const [loading, setLoading] = useState(false);\n    const [search, setSearch] = useState('');\n    const [status, setStatus] = useState('');\n    const t = useRef(null);\n\n    const load = async (s = search, st = status) => {\n        setLoading(true);\n        try {\n            const p = {};\n            if (s) p.search = s;\n            if (st) p.status = st;\n            const res = await api.get('/repair-jobs', p);",
+      "lines": 14,
+      "secondFile": {
+        "end": 142,
+        "endLoc": {
+          "column": 38,
+          "line": 142,
+          "position": 7645
+        },
+        "name": "./frontend/pages/Service.jsx",
+        "start": 129,
+        "startLoc": {
+          "column": 17,
+          "line": 129,
+          "position": 7200
+        }
+      },
+      "tokens": 116
+    },
+    {
+      "firstFile": {
+        "end": 66,
+        "endLoc": {
+          "column": 36,
+          "line": 66,
+          "position": 2861
+        },
+        "name": "./frontend/pages/Service.jsx",
+        "start": 44,
+        "startLoc": {
+          "column": 52,
+          "line": 44,
+          "position": 1865
+        }
+      },
+      "format": "jsx",
+      "fragment": "            const res = await api.get('/repair-jobs', p);\n            setData(Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res?.data) ? res.data : []));\n        } catch (e) {\n            console.error(e);\n        } finally { setLoading(false); }\n    };\n\n    useEffect(() => { load(); }, []);\n\n    const handleSearch = (v) => { setSearch(v); clearTimeout(t.current); t.current = setTimeout(() => load(v, status), 300); };\n    const handleStatus = (v) => { setStatus(v); load(search, v); };\n\n    return (\n        <div className=\"space-y-4\">\n            <div className=\"flex flex-col sm:flex-row gap-4\">\n                <div className=\"flex-1 relative\">\n                    <div className=\"absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none\">\n                        <Search className=\"h-5 w-5 text-slate-400\" />\n                    </div>\n                    <input \n                        value={search} \n                        onChange={e => handleSearch(e.target.value)} \n                        placeholder=\"Search repairs by job, IMEI, or customer...\" ",
+      "lines": 23,
+      "secondFile": {
+        "end": 164,
+        "endLoc": {
+          "column": 36,
+          "line": 164,
+          "position": 8647
+        },
+        "name": "./frontend/pages/Service.jsx",
+        "start": 142,
+        "startLoc": {
+          "column": 44,
+          "line": 142,
+          "position": 7651
+        }
+      },
+      "tokens": 211
+    },
+    {
+      "firstFile": {
+        "end": 73,
+        "endLoc": {
+          "column": 26,
+          "line": 73,
+          "position": 3266
+        },
+        "name": "./frontend/pages/Service.jsx",
+        "start": 67,
+        "startLoc": {
+          "column": 24,
+          "line": 67,
+          "position": 2932
+        }
+      },
+      "format": "jsx",
+      "fragment": "                        className={IC.replace('px-3', 'pl-10 pr-3')} \n                    />\n                </div>\n                <div className=\"w-full sm:w-48\">\n                    <select value={status} onChange={e => handleStatus(e.target.value)} className={IC}>\n                        <option value=\"\">All Statuses</option>\n                        {['PENDING','PARTS_ORDERED','IN_PROGRESS','COMPLETED','CANCELLED'].map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}",
+      "lines": 7,
+      "secondFile": {
+        "end": 171,
+        "endLoc": {
+          "column": 26,
+          "line": 171,
+          "position": 9023
+        },
+        "name": "./frontend/pages/Service.jsx",
+        "start": 165,
+        "startLoc": {
+          "column": 24,
+          "line": 165,
+          "position": 8689
+        }
+      },
+      "tokens": 69
+    },
+    {
+      "firstFile": {
+        "end": 81,
+        "endLoc": {
+          "column": 25,
+          "line": 81,
+          "position": 3707
+        },
+        "name": "./frontend/pages/Service.jsx",
+        "start": 73,
+        "startLoc": {
+          "column": 145,
+          "line": 73,
+          "position": 3385
+        }
+      },
+      "format": "jsx",
+      "fragment": "                        {['PENDING','PARTS_ORDERED','IN_PROGRESS','COMPLETED','CANCELLED'].map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}\n                    </select>\n                </div>\n            </div>\n            \n            <Card noPadding>\n                {loading ? <Spinner fullPage={false} className=\"py-12\" /> : data.length === 0 ? (\n                    <div className=\"text-center py-16 text-slate-400\">\n                        <Wrench className=\"w-12 h-12 mx-auto mb-3 opacity-20\" />",
+      "lines": 9,
+      "secondFile": {
+        "end": 179,
+        "endLoc": {
+          "column": 25,
+          "line": 179,
+          "position": 9475
+        },
+        "name": "./frontend/pages/Service.jsx",
+        "start": 171,
+        "startLoc": {
+          "column": 156,
+          "line": 171,
+          "position": 9153
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 95,
+        "endLoc": {
+          "column": 43,
+          "line": 95,
+          "position": 4644
+        },
+        "name": "./frontend/pages/Service.jsx",
+        "start": 89,
+        "startLoc": {
+          "column": 111,
+          "line": 89,
+          "position": 4260
+        }
+      },
+      "format": "jsx",
+      "fragment": "                                    {['Job #','Device','IMEI/Serial','Customer','Status','Priority','Est. Cost'].map(h => (\n                                        <th key={h} className=\"px-5 py-3 font-semibold text-slate-600 whitespace-nowrap\">{h}</th>\n                                    ))}\n                                </tr>\n                            </thead>\n                            <tbody className=\"divide-y divide-slate-100 bg-white\">\n                                {data.map((j, i) => (",
+      "lines": 7,
+      "secondFile": {
+        "end": 193,
+        "endLoc": {
+          "column": 43,
+          "line": 193,
+          "position": 10389
+        },
+        "name": "./frontend/pages/Service.jsx",
+        "start": 187,
+        "startLoc": {
+          "column": 96,
+          "line": 187,
+          "position": 10005
+        }
+      },
+      "tokens": 52
+    },
+    {
+      "firstFile": {
+        "end": 85,
+        "endLoc": {
+          "column": 13,
+          "line": 85,
+          "position": 5285
+        },
+        "name": "./frontend/pages/Stocktake.jsx",
+        "start": 78,
+        "startLoc": {
+          "column": 41,
+          "line": 78,
+          "position": 5064
+        }
+      },
+      "format": "jsx",
+      "fragment": "    const [limit, setLimit] = useState(50);\n    const [saving, setSaving] = useState(false);\n    const [error, setError] = useState(null);\n\n    const handleSubmit = async (e) => {\n        e.preventDefault();\n        setSaving(true); setError(null);\n        try {",
+      "lines": 8,
+      "secondFile": {
+        "end": 34,
+        "endLoc": {
+          "column": 13,
+          "line": 34,
+          "position": 1781
+        },
+        "name": "./frontend/pages/WarehouseDetail.jsx",
+        "start": 28,
+        "startLoc": {
+          "column": 70,
+          "line": 28,
+          "position": 1568
+        }
+      },
+      "tokens": 53
+    },
+    {
+      "firstFile": {
+        "end": 10,
+        "endLoc": {
+          "column": 8,
+          "line": 10,
+          "position": 517
+        },
+        "name": "./frontend/pages/Suppliers.jsx",
+        "start": 1,
+        "startLoc": {
+          "column": 43,
+          "line": 1,
+          "position": 43
+        }
+      },
+      "format": "jsx",
+      "fragment": "import React, { useState, useEffect, useRef, useCallback } from 'react';\nimport { api } from '../utils/api.js';\nimport { useAuth } from '../contexts/AuthContext.jsx';\nimport { useToast } from '../contexts/ToastContext.jsx';\nimport { Card } from '../components/ui/Card.jsx';\nimport { Badge } from '../components/ui/Badge.jsx';\nimport { Spinner } from '../components/ui/Spinner.jsx';\nimport { PageHeader } from '../components/ui/PageHeader.jsx';\nimport { Modal, ModalFooter } from '../components/ui/Modal.jsx';\nimport { Truck, Plus, Edit, Trash2, Ban, CheckCircle, ExternalLink } from 'lucide-react';",
+      "lines": 10,
+      "secondFile": {
+        "end": 10,
+        "endLoc": {
+          "column": 8,
+          "line": 10,
+          "position": 509
+        },
+        "name": "./frontend/pages/UserRoles.jsx",
+        "start": 1,
+        "startLoc": {
+          "column": 35,
+          "line": 1,
+          "position": 35
+        }
+      },
+      "tokens": 66
+    },
+    {
+      "firstFile": {
+        "end": 10,
+        "endLoc": {
+          "column": 8,
+          "line": 10,
+          "position": 517
+        },
+        "name": "./frontend/pages/Suppliers.jsx",
+        "start": 1,
+        "startLoc": {
+          "column": 57,
+          "line": 1,
+          "position": 57
+        }
+      },
+      "format": "jsx",
+      "fragment": "import React, { useState, useEffect, useRef, useCallback } from 'react';\nimport { api } from '../utils/api.js';\nimport { useAuth } from '../contexts/AuthContext.jsx';\nimport { useToast } from '../contexts/ToastContext.jsx';\nimport { Card } from '../components/ui/Card.jsx';\nimport { Badge } from '../components/ui/Badge.jsx';\nimport { Spinner } from '../components/ui/Spinner.jsx';\nimport { PageHeader } from '../components/ui/PageHeader.jsx';\nimport { Modal, ModalFooter } from '../components/ui/Modal.jsx';\nimport { Truck, Plus, Edit, Trash2, Ban, CheckCircle, ExternalLink } from 'lucide-react';",
+      "lines": 10,
+      "secondFile": {
+        "end": 10,
+        "endLoc": {
+          "column": 8,
+          "line": 10,
+          "position": 496
+        },
+        "name": "./frontend/pages/Users.jsx",
+        "start": 1,
+        "startLoc": {
+          "column": 36,
+          "line": 1,
+          "position": 36
+        }
+      },
+      "tokens": 64
+    },
+    {
+      "firstFile": {
+        "end": 24,
+        "endLoc": {
+          "column": 13,
+          "line": 24,
+          "position": 1422
+        },
+        "name": "./frontend/pages/Suppliers.jsx",
+        "start": 17,
+        "startLoc": {
+          "column": 120,
+          "line": 17,
+          "position": 1181
+        }
+      },
+      "format": "jsx",
+      "fragment": "    const [form, setForm] = useState(supplier ? { ...EMPTY, ...supplier, is_active: !!supplier.is_active } : { ...EMPTY });\n    const [saving, setSaving] = useState(false);\n    const [error, setError] = useState(null);\n    const set = (k, v) => setForm(p => ({ ...p, [k]: v }));\n\n    const handleSubmit = async (e) => {\n        e.preventDefault();\n        if (!form.name) { setError('Company Name is required'); return; }",
+      "lines": 8,
+      "secondFile": {
+        "end": 29,
+        "endLoc": {
+          "column": 13,
+          "line": 29,
+          "position": 1336
+        },
+        "name": "./frontend/pages/Users.jsx",
+        "start": 22,
+        "startLoc": {
+          "column": 4,
+          "line": 22,
+          "position": 1095
+        }
+      },
+      "tokens": 72
+    },
+    {
+      "firstFile": {
+        "end": 62,
+        "endLoc": {
+          "column": 47,
+          "line": 62,
+          "position": 4287
+        },
+        "name": "./frontend/pages/WarehouseDetail.jsx",
+        "start": 57,
+        "startLoc": {
+          "column": 27,
+          "line": 57,
+          "position": 3763
+        }
+      },
+      "format": "jsx",
+      "fragment": "                    </label>\n                </div>\n                <ModalFooter>\n                    <button type=\"button\" onClick={onClose} className=\"rounded-lg bg-white border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors\">Cancel</button>\n                    <button type=\"submit\" disabled={saving} className=\"rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50\">\n                        {saving ? 'Saving...' : 'Save Changes'}",
+      "lines": 6,
+      "secondFile": {
+        "end": 161,
+        "endLoc": {
+          "column": 47,
+          "line": 161,
+          "position": 11347
+        },
+        "name": "./frontend/pages/WarehouseDetail.jsx",
+        "start": 156,
+        "startLoc": {
+          "column": 25,
+          "line": 156,
+          "position": 10823
+        }
+      },
+      "tokens": 51
+    }
+  ],
+  "statistics": {
+    "detectionDate": "2026-06-13T04:08:22.774Z",
+    "formats": {
+      "css": {
+        "clones": 1,
+        "duplicatedLines": 9,
+        "duplicatedTokens": 54,
+        "lines": 1297,
+        "newClones": 0,
+        "newDuplicatedLines": 0,
+        "percentage": 0.6939090208172706,
+        "percentageTokens": 0.6875477463712758,
+        "sources": 4,
+        "tokens": 7854
+      },
+      "javascript": {
+        "clones": 68,
+        "duplicatedLines": 917,
+        "duplicatedTokens": 4922,
+        "lines": 18892,
+        "newClones": 0,
+        "newDuplicatedLines": 0,
+        "percentage": 4.853906415413932,
+        "percentageTokens": 5.416588715623591,
+        "sources": 101,
+        "tokens": 90869
+      },
+      "jsx": {
+        "clones": 37,
+        "duplicatedLines": 406,
+        "duplicatedTokens": 3048,
+        "lines": 8859,
+        "newClones": 0,
+        "newDuplicatedLines": 0,
+        "percentage": 4.582910034992663,
+        "percentageTokens": 3.941396299121979,
+        "sources": 35,
+        "tokens": 77333
+      }
+    },
+    "total": {
+      "clones": 106,
+      "duplicatedLines": 1332,
+      "duplicatedTokens": 8024,
+      "lines": 29048,
+      "newClones": 0,
+      "newDuplicatedLines": 0,
+      "percentage": 4.585513632608097,
+      "percentageTokens": 4.557640750670242,
+      "sources": 140,
+      "tokens": 176056
+    }
+  }
+}

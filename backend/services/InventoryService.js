@@ -16,26 +16,7 @@ class InventoryService {
     // Helpers
     // =========================================================================
 
-    roundCurrency(num) {
-        return Math.round((parseFloat(num) || 0) * 100) / 100;
-    }
 
-    _sanitizeDate(date) {
-        if (!date || date === '' || date === 'NaN' || date === 'undefined') return null;
-        return new Date(date);
-    }
-
-    _generateReceiptId(type) {
-        const date = new Date();
-        const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-        const prefix = type === 'IN' ? 'IN' : 'OUT';
-        const uniqueSuffix = generateId().slice(-8);
-        return `${prefix}-${dateStr}-${uniqueSuffix}`;
-    }
-
-    async getReceivingManifest(_invoiceUuid) {
-        return null;
-    }
 
     // =========================================================================
     // Query Operations
@@ -462,62 +443,6 @@ class InventoryService {
         return { success: true, items: results };
     }
 
-    async adjustStock(adjustmentData) {
-        const {
-            product_id, spare_part_id, warehouse_id, bin_id = null,
-            quantity_change, reason, user_id = 1
-        } = adjustmentData;
-
-        return await sequelizeMaster.transaction(async (t) => {
-            const inventoryType = spare_part_id ? 'spare_part' : 'bulk';
-            const itemId = spare_part_id || product_id;
-            const invId = generateId();
-
-            await sequelizeMaster.query(`
-                    INSERT INTO inventory (
-                        id, inventory_type, product_id, spare_part_id, warehouse_id, bin_id, quantity, 
-                        condition_status, last_movement_at, last_movement_type
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, 'NEW', NOW(), 'adjustment')
-                    ON DUPLICATE KEY UPDATE 
-                        quantity = quantity + ?, 
-                        last_movement_at = NOW(), 
-                        last_movement_type = 'adjustment'
-                `, {
-                replacements: [
-                    invId, inventoryType, spare_part_id ? null : product_id, spare_part_id, warehouse_id, bin_id, quantity_change,
-                    quantity_change
-                ],
-                type: QueryTypes.INSERT,
-                transaction: t
-            });
-
-            let paramRepl = bin_id ? [itemId, warehouse_id, bin_id, inventoryType] : [itemId, warehouse_id, inventoryType];
-            let binFilt = bin_id ? 'AND bin_id = ?' : 'AND bin_id IS NULL';
-
-            const [row] = await sequelizeMaster.query(`
-                    SELECT quantity FROM inventory 
-                    WHERE product_id = ? AND warehouse_id = ? ${binFilt} AND inventory_type = ?
-                 `, { replacements: paramRepl, type: QueryTypes.SELECT, transaction: t });
-
-            const transId = generateId();
-            await sequelizeMaster.query(`
-                    INSERT INTO transactions (
-                        id, transaction_group_id, transaction_type, transaction_date,
-                        warehouse_id, bin_id, user_id, notes,
-                        product_id, spare_part_id, quantity_changed
-                    ) VALUES (?, ?, 'adjustment', NOW(), ?, ?, ?, ?, ?, ?, ?)
-                 `, {
-                replacements: [
-                    transId, `ADJ-${Date.now()}`, warehouse_id, bin_id, user_id, reason,
-                    spare_part_id ? null : product_id, spare_part_id, quantity_change
-                ],
-                type: QueryTypes.INSERT,
-                transaction: t
-            });
-
-            return { success: true, new_quantity: row ? row.quantity : 0 };
-        });
-    }
 
     // =========================================================================
     // Warehouse Transfer
